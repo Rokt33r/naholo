@@ -5,6 +5,7 @@ import {
   timestamp,
   boolean,
   integer,
+  AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { issues } from './issues'
@@ -17,7 +18,7 @@ export const tasks = pgTable('tasks', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  parentTaskId: uuid('parent_task_id').references(() => tasks.id, {
+  parentTaskId: uuid('parent_task_id').references((): AnyPgColumn => tasks.id, {
     onDelete: 'cascade',
   }), // self-referencing for hierarchy
   content: text('content').notNull(), // markdown content
