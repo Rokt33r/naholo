@@ -8,7 +8,7 @@ import { success, failure } from '@/server/types'
 /**
  * Send OTP to email
  */
-export async function sendOTP(
+export async function sendOTPAction(
   email: string,
 ): Promise<ActionResult<{ otpId: string; signature: string }>> {
   const result = await auth.prepare({
@@ -27,7 +27,7 @@ export async function sendOTP(
 /**
  * Verify OTP and create session
  */
-export async function verifyOTP(
+export async function verifyOTPAction(
   email: string,
   otpId: string,
   code: string,
@@ -50,34 +50,9 @@ export async function verifyOTP(
 }
 
 /**
- * Get authenticated user
- */
-export async function getAuthUser(): Promise<
-  ActionResult<{ id: string; name: string } | null>
-> {
-  const result = await auth.verifySession()
-
-  if (!result.success) {
-    return success(null)
-  }
-
-  const session = result.data
-  const user = await auth.storage.getUserById(session.userId)
-
-  if (!user) {
-    return success(null)
-  }
-
-  return success({
-    id: user.id,
-    name: user.name,
-  })
-}
-
-/**
  * Refresh current session
  */
-export async function refreshSession(): Promise<ActionResult<undefined>> {
+export async function refreshSessionAction(): Promise<ActionResult<undefined>> {
   const result = await auth.refreshSession()
 
   if (!result.success) {
@@ -90,7 +65,7 @@ export async function refreshSession(): Promise<ActionResult<undefined>> {
 /**
  * Logout (invalidate session)
  */
-export async function logout(): Promise<ActionResult<undefined>> {
+export async function logoutAction(): Promise<ActionResult<undefined>> {
   await auth.signOut()
   return success()
 }
