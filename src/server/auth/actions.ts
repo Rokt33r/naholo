@@ -10,10 +10,11 @@ import { success, failure } from '@/server/types'
  */
 export async function sendOTPAction(
   email: string,
+  intent: 'sign-in' | 'sign-up',
 ): Promise<ActionResult<{ otpId: string; signature: string }>> {
   const result = await auth.prepare({
     type: 'email-otp',
-    intent: 'sign-in',
+    intent,
     data: { email },
   })
 
@@ -31,13 +32,15 @@ export async function verifyOTPAction(
   email: string,
   otpId: string,
   code: string,
+  intent: 'sign-in' | 'sign-up',
+  name?: string,
 ): Promise<ActionResult<undefined>> {
   const metadata = await getRequestMetadata()
 
   const result = await auth.authenticate({
     type: 'email-otp',
-    intent: 'sign-in',
-    data: { email, otpId, code },
+    intent,
+    data: { email, otpId, code, name },
     ipAddress: metadata.ipAddress,
     userAgent: metadata.userAgent,
   })
