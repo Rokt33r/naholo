@@ -9,9 +9,13 @@ import {
 } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { issues } from './issues'
+import { projects } from './projects'
 
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
   issueId: uuid('issue_id')
     .notNull()
     .references(() => issues.id, { onDelete: 'cascade' }),

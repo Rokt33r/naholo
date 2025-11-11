@@ -68,7 +68,7 @@ export function SignInForm() {
   const loading = sendingOTP || verifying
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className='w-full max-w-md'>
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>
@@ -79,29 +79,29 @@ export function SignInForm() {
       </CardHeader>
       <CardContent>
         {step === 'email' ? (
-          <form onSubmit={handleSendOTP} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+          <form onSubmit={handleSendOTP} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='email'>Email</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
+                id='email'
+                type='email'
+                placeholder='you@example.com'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
               />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+            <Button type='submit' className='w-full' disabled={loading}>
               {sendingOTP ? 'Sending...' : 'Send Verification Code'}
             </Button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOTP} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleVerifyOTP} className='space-y-4'>
+            <div className='space-y-2'>
               <Label>Verification Code</Label>
-              <div className="flex justify-center">
+              <div className='flex justify-center'>
                 <InputOTP
                   maxLength={6}
                   value={code}
@@ -119,24 +119,24 @@ export function SignInForm() {
                 </InputOTP>
               </div>
               {signature && (
-                <p className="text-xs text-center text-zinc-500 mt-2">
-                  Signature: <span className="font-mono">{signature}</span>
+                <p className='text-xs text-center text-zinc-500 mt-2'>
+                  Signature: <span className='font-mono'>{signature}</span>
                 </p>
               )}
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <div className="space-y-2">
+            {error && <p className='text-sm text-red-500'>{error}</p>}
+            <div className='space-y-2'>
               <Button
-                type="submit"
-                className="w-full"
+                type='submit'
+                className='w-full'
                 disabled={loading || code.length !== 6}
               >
                 {verifying ? 'Verifying...' : 'Verify Code'}
               </Button>
               <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
+                type='button'
+                variant='ghost'
+                className='w-full'
                 onClick={() => {
                   setStep('email')
                   setCode('')
@@ -150,12 +150,12 @@ export function SignInForm() {
           </form>
         )}
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <CardFooter className='flex justify-center'>
+        <p className='text-sm text-zinc-600 dark:text-zinc-400'>
           Don&apos;t have an account?{' '}
           <Link
-            href="/sign-up"
-            className="font-medium text-zinc-950 dark:text-zinc-50 hover:underline"
+            href='/sign-up'
+            className='font-medium text-zinc-950 dark:text-zinc-50 hover:underline'
           >
             Sign up
           </Link>

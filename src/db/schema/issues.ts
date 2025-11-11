@@ -11,8 +11,8 @@ export const issues = pgTable('issues', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
-  archived: boolean('archived').notNull().default(false),
-  archivedAt: timestamp('archived_at'),
+  closed: boolean('closed').notNull().default(false),
+  closedAt: timestamp('closed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
