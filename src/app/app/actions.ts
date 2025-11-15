@@ -6,7 +6,7 @@ import { projects, issues, logs, tasks } from '@/db/schema'
 import { getAuthUser } from '@/server/auth/utils'
 import { success, failure } from '@/server/types'
 import type { ActionResult } from '@/server/types'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 
 /**
  * Projects
@@ -303,7 +303,7 @@ export async function createTaskAction(
         eq(tasks.userId, user.id),
         parentTaskId
           ? eq(tasks.parentTaskId, parentTaskId)
-          : eq(tasks.parentTaskId, null),
+          : isNull(tasks.parentTaskId),
       ),
     )
     .orderBy(tasks.position)
@@ -325,7 +325,6 @@ export async function createTaskAction(
     })
     .returning({ id: tasks.id })
 
-  // Update issue's updatedAt timestamp
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
@@ -355,7 +354,6 @@ export async function updateTaskAction(
     .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
 
   if (task) {
-    // Update issue's updatedAt timestamp
     await db
       .update(issues)
       .set({ updatedAt: new Date() })
@@ -386,7 +384,6 @@ export async function setTaskDoneAction(
     .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
 
   if (task) {
-    // Update issue's updatedAt timestamp
     await db
       .update(issues)
       .set({ updatedAt: new Date() })
@@ -412,7 +409,6 @@ export async function deleteTaskAction(
     .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
 
   if (task) {
-    // Update issue's updatedAt timestamp
     await db
       .update(issues)
       .set({ updatedAt: new Date() })
