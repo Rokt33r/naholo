@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/server/auth/utils'
 import { getProjects, getProject, getIssues } from '../../dal'
-import { ProjectSelector } from '@/components/projects/project-selector'
+import { ProjectSidebar } from '@/components/projects/project-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 
 type Props = {
@@ -30,9 +30,7 @@ export default async function ProjectLayout({ children, params }: Props) {
 
   return (
     <div className='flex h-screen'>
-      <div>
-        <ProjectSelector projects={projects} currentProjectId={projectId} />
-      </div>
+      <ProjectSidebar projects={projects} currentProjectId={projectId} />
       <div className='flex w-80 flex-col border-r'>
         <div className='border-b p-4'></div>
         <div className='flex-1 overflow-hidden'>
