@@ -1,10 +1,16 @@
 'use client'
 
-import { Plus, Settings, User } from 'lucide-react'
+import { Plus, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
-import { cn } from '@/lib/utils'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar'
 
 type Project = {
   id: string
@@ -29,62 +35,47 @@ export function ProjectSidebar({
   }
 
   return (
-    <div className='flex h-screen w-[72px] flex-col items-center gap-2 border-r bg-sidebar py-3'>
-      {/* Projects List */}
-      <div className='flex flex-1 flex-col items-center gap-2 overflow-y-auto'>
-        {projects.map((project) => (
-          <button
-            key={project.id}
-            className={cn(
-              'h-[45px] w-[45px] shrink-0 rounded-lg text-xs font-semibold transition-colors',
-              'inline-flex items-center justify-center',
-              currentProjectId === project.id
-                ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/80'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent',
-            )}
-            onClick={() => handleProjectClick(project.id)}
-            title={project.name}
-          >
-            {getProjectInitials(project.name)}
-          </button>
-        ))}
+    <Sidebar collapsible='none' className='items-center'>
+      <SidebarContent className='items-center py-2'>
+        <SidebarMenu className='items-center'>
+          {projects.map((project) => (
+            <SidebarMenuItem key={project.id}>
+              <SidebarMenuButton
+                size='xl'
+                isActive={currentProjectId === project.id}
+                onClick={() => handleProjectClick(project.id)}
+                tooltip={project.name}
+                className='font-semibold border-1'
+              >
+                {getProjectInitials(project.name)}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
 
-        {/* Add Project Button */}
-        <CreateProjectDialog>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-[45px] w-[45px] shrink-0 rounded-lg border-2 border-dashed border-sidebar-border text-sidebar-foreground hover:border-sidebar-foreground hover:bg-sidebar-accent'
-            title='Add project'
-          >
-            <Plus className='h-5 w-5' />
-          </Button>
-        </CreateProjectDialog>
-      </div>
+          <SidebarMenuItem>
+            <CreateProjectDialog>
+              <SidebarMenuButton
+                size='xl'
+                className='border-2 border-dashed border-sidebar-border hover:border-sidebar-foreground'
+                tooltip='Add project'
+              >
+                <Plus className='h-5 w-5' />
+              </SidebarMenuButton>
+            </CreateProjectDialog>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
 
-      {/* Bottom Section - User and Config */}
-      <div className='flex flex-col items-center gap-2'>
-        {/* User Button */}
-        <Button
-          variant='ghost'
-          size='icon'
-          className='h-[45px] w-[45px] shrink-0 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent'
-          title='User'
-        >
-          <User className='h-5 w-5' />
-        </Button>
-
-        {/* Config Button */}
-        <Button
-          variant='ghost'
-          size='icon'
-          className='h-[45px] w-[45px] shrink-0 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent'
-          title='Settings'
-        >
-          <Settings className='h-5 w-5' />
-        </Button>
-      </div>
-    </div>
+      <SidebarFooter className='items-center'>
+        <SidebarMenu className='items-center'>
+          <SidebarMenuItem>
+            <SidebarMenuButton size='xl' tooltip='Settings'>
+              <Settings className='h-5 w-5' />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   )
 }
 
