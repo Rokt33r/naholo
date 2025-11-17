@@ -2,7 +2,7 @@ import { cache } from 'react'
 import { db } from '@/db'
 import { projects, issues, logs, tasks } from '@/db/schema'
 import { getAuthUser } from '@/server/auth/utils'
-import { eq, and, desc, asc, isNull } from 'drizzle-orm'
+import { eq, and, desc, asc, isNull, count, sum, sql } from 'drizzle-orm'
 
 /**
  * Get all projects for current user
@@ -57,12 +57,18 @@ export const getIssues = cache(
       .select({
         id: issues.id,
         title: issues.title,
+        lastLogPreview: issues.lastLogPreview,
         closed: issues.closed,
         closedAt: issues.closedAt,
         createdAt: issues.createdAt,
         updatedAt: issues.updatedAt,
+        totalTasks: count(tasks.id).as('total_tasks'),
+        completedTasks: sum(sql`CASE WHEN ${tasks.done} THEN 1 ELSE 0 END`).as(
+          'completed_tasks',
+        ),
       })
       .from(issues)
+      .leftJoin(tasks, eq(tasks.issueId, issues.id))
       .where(
         and(
           eq(issues.projectId, projectId),
@@ -70,6 +76,7 @@ export const getIssues = cache(
           eq(issues.closed, closed),
         ),
       )
+      .groupBy(issues.id)
       .orderBy(desc(issues.updatedAt))
   },
 )

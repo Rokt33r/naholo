@@ -1,15 +1,19 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { formatDistanceToNow } from 'date-fns'
+import { CircleCheckBig } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatIssueDate } from '@/lib/date-utils'
 
 type Issue = {
   id: string
   title: string
+  lastLogPreview: string | null
   closed: boolean
   closedAt: Date | null
   updatedAt: Date
+  totalTasks: number
+  completedTasks: string | null
 }
 
 type IssueItemProps = {
@@ -25,28 +29,38 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
     router.push(`/app/projects/${projectId}/issues/${issue.id}`)
   }
 
+  const completedCount = issue.completedTasks
+    ? parseInt(issue.completedTasks, 10)
+    : 0
+  const totalCount = issue.totalTasks || 0
+
   return (
     <button
       onClick={handleClick}
       className={cn(
-        'w-full px-4 py-3 text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800',
-        isActive && 'bg-zinc-100 dark:bg-zinc-800',
+        'w-full border-b px-4 py-3 text-left transition-colors hover:bg-accent',
+        isActive && 'bg-accent',
       )}
     >
-      <div className='flex items-start justify-between gap-2'>
-        <div className='flex-1 overflow-hidden'>
-          <div className='truncate font-medium'>{issue.title}</div>
-          <div className='mt-1 text-xs text-zinc-500'>
-            {formatDistanceToNow(new Date(issue.updatedAt), {
-              addSuffix: true,
-            })}
+      {/* Row 1: Title and progress */}
+      <div className='flex items-center justify-between gap-2'>
+        <div className='flex-1 truncate font-bold'>{issue.title}</div>
+        {totalCount > 0 && (
+          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+            <CircleCheckBig className='h-4 w-4' />
+            <span>
+              {completedCount}/{totalCount}
+            </span>
           </div>
-        </div>
-        {issue.closed && (
-          <span className='rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'>
-            Closed
-          </span>
         )}
+      </div>
+
+      {/* Row 2: Content preview and date */}
+      <div className='mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground'>
+        <div className='flex-1 truncate'>
+          {issue.lastLogPreview || '(No log)'}
+        </div>
+        <div className='shrink-0'>{formatIssueDate(issue.updatedAt)}</div>
       </div>
     </button>
   )

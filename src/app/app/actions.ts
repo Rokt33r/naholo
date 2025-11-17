@@ -6,7 +6,7 @@ import { projects, issues, logs, tasks } from '@/db/schema'
 import { getAuthUser } from '@/server/auth/utils'
 import { success, failure } from '@/server/types'
 import type { ActionResult } from '@/server/types'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, isNull, desc } from 'drizzle-orm'
 
 /**
  * Projects
@@ -222,10 +222,14 @@ export async function createLogAction(
     })
     .returning({ id: logs.id })
 
-  // Update issue's updatedAt timestamp
+  // Update issue's updatedAt timestamp and lastLogPreview
+  const preview = content.trim().slice(0, 100)
   await db
     .update(issues)
-    .set({ updatedAt: new Date() })
+    .set({
+      updatedAt: new Date(),
+      lastLogPreview: preview || null,
+    })
     .where(eq(issues.id, issueId))
 
   revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
@@ -252,6 +256,26 @@ export async function updateLogAction(
     .returning({ projectId: logs.projectId, issueId: logs.issueId })
 
   if (log) {
+    // Get the most recent log for this issue
+    const [lastLog] = await db
+      .select({ id: logs.id })
+      .from(logs)
+      .where(eq(logs.issueId, log.issueId))
+      .orderBy(desc(logs.createdAt))
+      .limit(1)
+
+    const newValues: { updatedAt: Date; lastLogPreview?: string | null } = {
+      updatedAt: new Date(),
+    }
+
+    // Only update preview if this is the most recent log
+    if (lastLog && lastLog.id === id) {
+      const preview = content.trim().slice(0, 100)
+      newValues.lastLogPreview = preview || null
+    }
+
+    await db.update(issues).set(newValues).where(eq(issues.id, log.issueId))
+
     revalidatePath(`/app/projects/${log.projectId}/issues/${log.issueId}`)
   }
 
@@ -272,6 +296,28 @@ export async function deleteLogAction(
     .returning({ projectId: logs.projectId, issueId: logs.issueId })
 
   if (log) {
+    // Get the most recent log for this issue after deletion
+    const [lastLog] = await db
+      .select({ content: logs.content })
+      .from(logs)
+      .where(eq(logs.issueId, log.issueId))
+      .orderBy(desc(logs.createdAt))
+      .limit(1)
+
+    const newValues: { updatedAt: Date; lastLogPreview?: string | null } = {
+      updatedAt: new Date(),
+    }
+
+    // Update preview with the new most recent log, or null if no logs left
+    if (lastLog) {
+      const preview = lastLog.content.trim().slice(0, 100)
+      newValues.lastLogPreview = preview || null
+    } else {
+      newValues.lastLogPreview = null
+    }
+
+    await db.update(issues).set(newValues).where(eq(issues.id, log.issueId))
+
     revalidatePath(`/app/projects/${log.projectId}/issues/${log.issueId}`)
   }
 
