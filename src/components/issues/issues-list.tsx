@@ -10,9 +10,9 @@ import {
 import { Search, SquarePen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
-import { cn } from '@/lib/utils'
 
 type Issue = {
   id: string
@@ -81,23 +81,25 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
       {/* Header - Row 1: Project name and action buttons */}
       <div className='flex items-center justify-between border-b px-4 py-3'>
         <h2 className='font-semibold'>{projectName}</h2>
-        <div className='flex items-center gap-1'>
-          <Button
-            size='sm'
-            variant={filter === 'open' ? 'default' : 'ghost'}
-            onClick={() => handleFilterChange('open')}
-          >
-            Open
-          </Button>
-          <Button
-            size='sm'
-            variant={filter === 'closed' ? 'default' : 'ghost'}
-            onClick={() => handleFilterChange('closed')}
-          >
-            Closed
-          </Button>
+        <div className='flex items-center gap-2'>
+          <ButtonGroup>
+            <Button
+              size='sm'
+              variant={filter === 'open' ? 'secondary' : 'outline'}
+              onClick={() => handleFilterChange('open')}
+            >
+              Open
+            </Button>
+            <Button
+              size='sm'
+              variant={filter === 'closed' ? 'secondary' : 'outline'}
+              onClick={() => handleFilterChange('closed')}
+            >
+              Closed
+            </Button>
+          </ButtonGroup>
           <CreateIssueDialog projectId={projectId}>
-            <Button size='icon' variant='ghost' className='size-8'>
+            <Button size='icon' variant='outline' className='size-8'>
               <SquarePen className='h-4 w-4' />
             </Button>
           </CreateIssueDialog>
