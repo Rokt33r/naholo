@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreVertical, X } from 'lucide-react'
+import { MoreVertical, X, ListTodo } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { TasksList } from '@/components/tasks/tasks-list'
 import { LogsList } from '@/components/logs/logs-list'
 import { useAction } from '@/lib/use-action'
 import {
@@ -51,12 +50,23 @@ type IssueDetailProps = {
   issue: Issue
   tasks: Task[]
   logs: Log[]
+  showTasks: boolean
+  onToggleTasks: () => void
 }
 
-export function IssueDetail({ issue, tasks, logs }: IssueDetailProps) {
+export function IssueDetail({
+  issue,
+  tasks,
+  logs,
+  showTasks,
+  onToggleTasks,
+}: IssueDetailProps) {
   const router = useRouter()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState(issue.title)
+
+  const completedTasks = tasks.filter((task) => task.done).length
+  const totalTasks = tasks.length
 
   const { execute: updateIssue, loading: updateLoading } =
     useAction(updateIssueAction)
@@ -171,28 +181,20 @@ export function IssueDetail({ issue, tasks, logs }: IssueDetailProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            variant={showTasks ? 'default' : 'outline'}
+            size='sm'
+            onClick={onToggleTasks}
+          >
+            <ListTodo className='mr-2 h-4 w-4' />
+            {completedTasks}/{totalTasks}
+          </Button>
         </div>
       </div>
 
       {/* Content */}
-      <div className='flex-1 overflow-y-auto'>
-        {/* Tasks Section */}
-        <div className='border-b'>
-          <TasksList
-            projectId={issue.projectId}
-            issueId={issue.id}
-            tasks={tasks}
-          />
-        </div>
-
-        {/* Logs Section */}
-        <div className='flex-1'>
-          <LogsList
-            projectId={issue.projectId}
-            issueId={issue.id}
-            logs={logs}
-          />
-        </div>
+      <div className='flex-1 overflow-hidden'>
+        <LogsList projectId={issue.projectId} issueId={issue.id} logs={logs} />
       </div>
     </div>
   )

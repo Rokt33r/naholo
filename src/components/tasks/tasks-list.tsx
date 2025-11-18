@@ -40,16 +40,10 @@ export function TasksList({ projectId, issueId, tasks }: TasksListProps) {
 
   return (
     <div className='p-4'>
-      <div className='mb-3 flex items-center justify-between'>
+      <div className='mb-3'>
         <h2 className='text-sm font-semibold uppercase tracking-wide text-zinc-500'>
           Tasks
         </h2>
-        <CreateTaskDialog projectId={projectId} issueId={issueId}>
-          <Button size='sm' variant='ghost'>
-            <Plus className='mr-1 h-3 w-3' />
-            Add task
-          </Button>
-        </CreateTaskDialog>
       </div>
 
       {rootTasks.length === 0 ? (
@@ -93,6 +87,15 @@ export function TasksList({ projectId, issueId, tasks }: TasksListProps) {
           )}
         </>
       )}
+
+      <div className='mt-3'>
+        <CreateTaskDialog projectId={projectId} issueId={issueId}>
+          <Button size='sm' variant='outline' className='w-full'>
+            <Plus className='mr-1 h-4 w-4' />
+            Add task
+          </Button>
+        </CreateTaskDialog>
+      </div>
     </div>
   )
 }

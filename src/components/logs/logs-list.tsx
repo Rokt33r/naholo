@@ -55,12 +55,6 @@ export function LogsList({ projectId, issueId, logs }: LogsListProps) {
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='border-b p-4'>
-        <h2 className='text-sm font-semibold uppercase tracking-wide text-zinc-500'>
-          Logs
-        </h2>
-      </div>
-
       {/* Messages */}
       <div className='flex-1 space-y-4 overflow-y-auto p-4'>
         {logs.length === 0 ? (

@@ -99,7 +99,7 @@ export function TaskItem({
 
   return (
     <div className={cn('group', depth > 0 && 'ml-6')}>
-      <div className='flex items-start gap-2 rounded py-1 hover:bg-zinc-50 dark:hover:bg-zinc-900'>
+      <div className='flex items-center gap-2 rounded py-1 hover:bg-zinc-50 dark:hover:bg-zinc-900'>
         {/* Expand/collapse button */}
         {hasSubtasks ? (
           <Button
@@ -123,7 +123,7 @@ export function TaskItem({
           checked={task.done}
           onCheckedChange={handleToggleDone}
           disabled={isLoading}
-          className='mt-0.5 shrink-0'
+          className='shrink-0'
         />
 
         {/* Content */}
