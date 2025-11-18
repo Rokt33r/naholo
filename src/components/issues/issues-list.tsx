@@ -79,7 +79,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
   return (
     <div className='flex h-full flex-col'>
       {/* Header - Row 1: Project name and action buttons */}
-      <div className='flex items-center justify-between border-b px-4 py-3'>
+      <div className='flex items-center justify-between px-4 py-3'>
         <h2 className='font-semibold'>{projectName}</h2>
         <div className='flex items-center gap-2'>
           <ButtonGroup>
@@ -107,7 +107,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
       </div>
 
       {/* Header - Row 2: Search */}
-      <div className='border-b px-4 py-2'>
+      <div className='px-2 mb-2'>
         <div className='relative'>
           <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
           <Input
@@ -120,7 +120,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
       </div>
 
       {/* Issues list */}
-      <div className='flex-1 overflow-y-auto'>
+      <div className='flex-1 overflow-y-auto px-2'>
         {isLoading ? (
           <div className='p-4 text-center text-sm text-muted-foreground'>
             Loading...

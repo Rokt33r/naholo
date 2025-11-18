@@ -38,8 +38,8 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
     <button
       onClick={handleClick}
       className={cn(
-        'w-full border-b px-4 py-3 text-left transition-colors hover:bg-accent',
-        isActive && 'bg-accent',
+        'w-full px-4 py-3 text-left transition-colors hover:bg-ring rounded-md',
+        isActive && 'bg-accent hover:bg-accent',
       )}
     >
       {/* Row 1: Title and progress */}
