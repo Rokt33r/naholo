@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import {
   useParams,
   usePathname,
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
+import { fetcher } from '@/lib/fetcher'
 
 type Issue = {
   id: string
@@ -37,31 +39,17 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
   const params = useParams()
   const currentIssueId = params.issueId as string | undefined
   const [searchQuery, setSearchQuery] = useState('')
-  const [issues, setIssues] = useState<Issue[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
-  useEffect(() => {
-    async function fetchIssues() {
-      setIsLoading(true)
-      try {
-        const response = await fetch(
-          `/api/projects/${projectId}/issues?closed=${filter === 'closed'}`,
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setIssues(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch issues:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchIssues()
-  }, [projectId, filter])
+  const {
+    data: issues = [],
+    isLoading,
+    mutate,
+  } = useSWR<Issue[]>(
+    `/api/projects/${projectId}/issues?closed=${filter === 'closed'}`,
+    fetcher,
+  )
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch = issue.title
@@ -98,7 +86,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
               Closed
             </Button>
           </ButtonGroup>
-          <CreateIssueDialog projectId={projectId}>
+          <CreateIssueDialog projectId={projectId} onIssueCreated={mutate}>
             <Button size='icon' variant='outline' className='size-8'>
               <SquarePen className='h-4 w-4' />
             </Button>

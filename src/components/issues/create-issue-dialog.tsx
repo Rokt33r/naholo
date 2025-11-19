@@ -20,11 +20,13 @@ import { createIssueAction } from '@/app/app/actions'
 type CreateIssueDialogProps = {
   projectId: string
   children: React.ReactNode
+  onIssueCreated?: () => void
 }
 
 export function CreateIssueDialog({
   projectId,
   children,
+  onIssueCreated,
 }: CreateIssueDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -44,6 +46,7 @@ export function CreateIssueDialog({
     if (result.success) {
       setOpen(false)
       setTitle('')
+      onIssueCreated?.()
       router.push(`/app/projects/${projectId}/issues/${result.data.id}`)
     } else {
       alert('Failed to create issue: ' + result.error.message)
