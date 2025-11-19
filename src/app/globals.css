@@ -126,6 +126,7 @@
 /* Prose styles for markdown */
 .prose {
   @apply text-foreground;
+  white-space: pre-wrap;
 }
 
 .prose p {
@@ -184,4 +185,8 @@
 
 .prose-invert pre {
   @apply bg-primary/10;
+}
+
+.prose *:last-child {
+  margin-bottom: 0;
 }

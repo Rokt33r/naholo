@@ -74,38 +74,7 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
   }
 
   return (
-    <div className='group rounded-lg border bg-card p-4 hover:bg-accent/50'>
-      <div className='mb-2 flex items-center justify-between'>
-        <span className='text-xs text-zinc-500'>
-          {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
-          {log.updatedAt.getTime() !== log.createdAt.getTime() && ' (edited)'}
-        </span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-6 w-6 opacity-0 group-hover:opacity-100'
-              disabled={isLoading}
-            >
-              <MoreVertical className='h-3 w-3' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuItem onClick={handleEdit} disabled={isLoading}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDelete}
-              disabled={deleteLoading}
-              className='text-red-600'
-            >
-              {deleteLoading ? 'Deleting...' : 'Delete'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
+    <div className='group flex flex-row-reverse items-baseline-last'>
       {isEditing ? (
         <div>
           <textarea
@@ -133,12 +102,36 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
           </div>
         </div>
       ) : (
-        <div className='prose prose-sm dark:prose-invert max-w-none'>
+        <div className='prose prose-sm dark:prose-invert max-w-160 inline-block rounded-lg border bg-card p-2 hover:bg-accent/50'>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {log.content}
           </ReactMarkdown>
         </div>
       )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-6 w-6 opacity-0 group-hover:opacity-100'
+            disabled={isLoading}
+          >
+            <MoreVertical className='h-3 w-3' />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='end'>
+          <DropdownMenuItem onClick={handleEdit} disabled={isLoading}>
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleDelete}
+            disabled={deleteLoading}
+            className='text-red-600'
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete'}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

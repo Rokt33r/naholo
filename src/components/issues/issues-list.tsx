@@ -79,8 +79,8 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
   return (
     <div className='flex h-full flex-col'>
       {/* Header - Row 1: Project name and action buttons */}
-      <div className='flex items-center justify-between px-4 py-3'>
-        <h2 className='font-semibold'>{projectName}</h2>
+      <div className='flex items-center justify-between px-2 py-3'>
+        <h2 className='font-semibold px-2'>{projectName}</h2>
         <div className='flex items-center gap-2'>
           <ButtonGroup>
             <Button

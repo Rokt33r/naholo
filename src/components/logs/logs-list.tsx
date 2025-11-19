@@ -56,7 +56,7 @@ export function LogsList({ projectId, issueId, logs }: LogsListProps) {
   return (
     <div className='flex h-full flex-col'>
       {/* Messages */}
-      <div className='flex-1 space-y-4 overflow-y-auto p-4'>
+      <div className='flex-1 space-y-1 overflow-y-auto p-4'>
         {logs.length === 0 ? (
           <div className='py-8 text-center text-sm text-zinc-500'>
             No messages yet. Start a discussion below.

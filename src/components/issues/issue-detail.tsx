@@ -117,8 +117,8 @@ export function IssueDetail({
   return (
     <div className='flex h-full flex-col'>
       {/* Header */}
-      <div className='flex items-center justify-between border-b p-4'>
-        <div className='flex-1'>
+      <div className='flex items-center justify-between border-b p-2'>
+        <div className='flex-1 px-2'>
           {isEditingTitle ? (
             <input
               type='text'
