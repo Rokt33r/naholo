@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import useSWR from 'swr'
 import {
   useParams,
   usePathname,
@@ -14,18 +13,7 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
-import { fetcher } from '@/lib/fetcher'
-
-type Issue = {
-  id: string
-  title: string
-  lastLogPreview: string | null
-  closed: boolean
-  closedAt: Date | null
-  updatedAt: Date
-  totalTasks: number
-  completedTasks: string | null
-}
+import { useIssues } from '@/hooks/use-issues'
 
 type IssuesListProps = {
   projectId: string
@@ -42,14 +30,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
-  const {
-    data: issues = [],
-    isLoading,
-    mutate,
-  } = useSWR<Issue[]>(
-    `/api/projects/${projectId}/issues?closed=${filter === 'closed'}`,
-    fetcher,
-  )
+  const { issues, isLoading, mutate } = useIssues(projectId, filter)
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch = issue.title

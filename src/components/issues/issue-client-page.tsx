@@ -44,7 +44,8 @@ export function IssueClientPage({ issue, tasks, logs }: IssueClientPageProps) {
     <div className='flex h-full'>
       <div className='flex-1 overflow-hidden'>
         <IssueDetail
-          issue={issue}
+          projectId={issue.projectId}
+          issueId={issue.id}
           tasks={tasks}
           logs={logs}
           showTasks={showTasks}

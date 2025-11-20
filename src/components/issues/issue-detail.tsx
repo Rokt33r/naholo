@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreVertical, X, ListTodo } from 'lucide-react'
+import { MoreVertical, X, ListTodo, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,15 +11,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogsList } from '@/components/logs/logs-list'
-import { useAction } from '@/lib/use-action'
 import {
-  updateIssueAction,
-  closeIssueAction,
-  reopenIssueAction,
-  deleteIssueAction,
-} from '@/app/app/actions'
+  useIssue,
+  useUpdateIssueTitle,
+  useCloseIssue,
+  useReopenIssue,
+  useDeleteIssue,
+} from '@/hooks/use-issues'
 
-type Issue = {
+type IssueDetail = {
   id: string
   projectId: string
   title: string
@@ -47,7 +47,8 @@ type Log = {
 }
 
 type IssueDetailProps = {
-  issue: Issue
+  projectId: string
+  issueId: string
   tasks: Task[]
   logs: Log[]
   showTasks: boolean
@@ -55,7 +56,8 @@ type IssueDetailProps = {
 }
 
 export function IssueDetail({
-  issue,
+  projectId,
+  issueId,
   tasks,
   logs,
   showTasks,
@@ -63,55 +65,84 @@ export function IssueDetail({
 }: IssueDetailProps) {
   const router = useRouter()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [title, setTitle] = useState(issue.title)
+  const [title, setTitle] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const [isReopening, setIsReopening] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const { issue, isLoading } = useIssue(projectId, issueId)
+  const { updateTitle } = useUpdateIssueTitle()
+  const { closeIssue } = useCloseIssue()
+  const { reopenIssue } = useReopenIssue()
+  const { deleteIssue } = useDeleteIssue()
 
   const completedTasks = tasks.filter((task) => task.done).length
   const totalTasks = tasks.length
 
-  const { execute: updateIssue, loading: updateLoading } =
-    useAction(updateIssueAction)
-  const { execute: closeIssue, loading: closeLoading } =
-    useAction(closeIssueAction)
-  const { execute: reopenIssue, loading: reopenLoading } =
-    useAction(reopenIssueAction)
-  const { execute: deleteIssue, loading: deleteLoading } =
-    useAction(deleteIssueAction)
+  // Sync title with fetched issue
+  if (issue && title !== issue.title && !isEditingTitle) {
+    setTitle(issue.title)
+  }
 
   const handleCloseIssue = async () => {
-    const result = await closeIssue(issue.id)
-    if (!result.success) {
-      alert('Failed to close issue: ' + result.error.message)
+    if (!issue) return
+    setIsClosing(true)
+    try {
+      await closeIssue(projectId, issue.id)
+    } finally {
+      setIsClosing(false)
     }
   }
 
   const handleReopenIssue = async () => {
-    const result = await reopenIssue(issue.id)
-    if (!result.success) {
-      alert('Failed to reopen issue: ' + result.error.message)
+    if (!issue) return
+    setIsReopening(true)
+    try {
+      await reopenIssue(projectId, issue.id)
+    } finally {
+      setIsReopening(false)
     }
   }
 
   const handleDeleteIssue = async () => {
+    if (!issue) return
     if (!confirm('Are you sure you want to delete this issue?')) {
       return
     }
-    const result = await deleteIssue(issue.id)
-    if (result.success) {
-      router.push(`/app/projects/${issue.projectId}`)
-    } else {
-      alert('Failed to delete issue: ' + result.error.message)
+    setIsDeleting(true)
+    try {
+      await deleteIssue(projectId, issue.id)
+      router.push(`/app/projects/${projectId}`)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   const handleTitleSave = async () => {
-    if (title.trim() && title !== issue.title) {
-      const result = await updateIssue(issue.id, title.trim())
-      if (!result.success) {
-        alert('Failed to update title: ' + result.error.message)
-        setTitle(issue.title)
-      }
+    if (!issue || !title.trim() || title === issue.title) {
+      setIsEditingTitle(false)
+      return
     }
-    setIsEditingTitle(false)
+
+    setIsSaving(true)
+    try {
+      await updateTitle(projectId, issue.id, title.trim())
+    } catch (error) {
+      // Error is already toasted by the hook
+      setTitle(issue.title)
+    } finally {
+      setIsSaving(false)
+      setIsEditingTitle(false)
+    }
+  }
+
+  if (isLoading || !issue) {
+    return (
+      <div className='flex h-full items-center justify-center'>
+        <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+      </div>
+    )
   }
 
   return (
@@ -137,12 +168,17 @@ export function IssueDetail({
               autoFocus
             />
           ) : (
-            <h1
-              className='cursor-text text-xl font-semibold'
-              onClick={() => setIsEditingTitle(true)}
-            >
-              {issue.title}
-            </h1>
+            <div className='flex items-center gap-2'>
+              <h1
+                className='cursor-text text-xl font-semibold'
+                onClick={() => setIsEditingTitle(true)}
+              >
+                {issue.title}
+              </h1>
+              {isSaving && (
+                <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+              )}
+            </div>
           )}
         </div>
         <div className='flex items-center gap-2'>
@@ -151,24 +187,24 @@ export function IssueDetail({
               variant='outline'
               size='sm'
               onClick={handleReopenIssue}
-              disabled={reopenLoading}
+              disabled={isReopening}
             >
-              {reopenLoading ? 'Reopening...' : 'Reopen'}
+              {isReopening ? 'Reopening...' : 'Reopen'}
             </Button>
           ) : (
             <Button
               variant='outline'
               size='sm'
               onClick={handleCloseIssue}
-              disabled={closeLoading}
+              disabled={isClosing}
             >
               <X className='mr-2 h-4 w-4' />
-              {closeLoading ? 'Closing...' : 'Close'}
+              {isClosing ? 'Closing...' : 'Close'}
             </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size='icon' variant='ghost' disabled={deleteLoading}>
+              <Button size='icon' variant='ghost' disabled={isDeleting}>
                 <MoreVertical className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -177,7 +213,7 @@ export function IssueDetail({
                 onClick={handleDeleteIssue}
                 className='text-red-600'
               >
-                {deleteLoading ? 'Deleting...' : 'Delete issue'}
+                {isDeleting ? 'Deleting...' : 'Delete issue'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
