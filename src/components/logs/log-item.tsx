@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
 import { MoreVertical } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'

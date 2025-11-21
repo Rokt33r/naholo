@@ -28,6 +28,7 @@ export function LogsList({
   logs,
   isClosed,
 }: LogsListProps) {
+  const [mode, setMode] = useState<'log' | 'task' | 'ai'>('log')
   const [message, setMessage] = useState('')
   const [isClosing, setIsClosing] = useState(false)
   const [isReopening, setIsReopening] = useState(false)
@@ -134,9 +135,24 @@ export function LogsList({
         <div className='flex place-content-between mt-2'>
           <div className='flex'>
             <ButtonGroup>
-              <Button>Log Mode</Button>
-              <Button>Task Mode</Button>
-              <Button>AI Mode</Button>
+              <Button
+                variant={mode === 'log' ? 'secondary' : 'ghost'}
+                onClick={() => setMode('log')}
+              >
+                Log Mode
+              </Button>
+              <Button
+                variant={mode === 'task' ? 'secondary' : 'ghost'}
+                onClick={() => setMode('task')}
+              >
+                Task Mode
+              </Button>
+              {/* <Button
+                variant={mode === 'ai' ? 'secondary' : 'ghost'}
+                onClick={() => setMode('ai')}
+              >
+                AI Mode
+              </Button> */}
             </ButtonGroup>
           </div>
           <div className='flex gap-1'>

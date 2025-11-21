@@ -54,14 +54,14 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
           <ButtonGroup>
             <Button
               size='sm'
-              variant={filter === 'open' ? 'secondary' : 'outline'}
+              variant={filter === 'open' ? 'secondary' : 'ghost'}
               onClick={() => handleFilterChange('open')}
             >
               Open
             </Button>
             <Button
               size='sm'
-              variant={filter === 'closed' ? 'secondary' : 'outline'}
+              variant={filter === 'closed' ? 'secondary' : 'ghost'}
               onClick={() => handleFilterChange('closed')}
             >
               Closed
