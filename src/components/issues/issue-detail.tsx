@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreVertical, X, ListTodo, Loader2 } from 'lucide-react'
+import { MoreVertical, ListTodo, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,8 +14,6 @@ import { LogsList } from '@/components/logs/logs-list'
 import {
   useIssue,
   useUpdateIssueTitle,
-  useCloseIssue,
-  useReopenIssue,
   useDeleteIssue,
 } from '@/hooks/use-issues'
 
@@ -67,14 +65,10 @@ export function IssueDetail({
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [isClosing, setIsClosing] = useState(false)
-  const [isReopening, setIsReopening] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const { issue, isLoading } = useIssue(projectId, issueId)
   const { updateTitle } = useUpdateIssueTitle()
-  const { closeIssue } = useCloseIssue()
-  const { reopenIssue } = useReopenIssue()
   const { deleteIssue } = useDeleteIssue()
 
   const completedTasks = tasks.filter((task) => task.done).length
@@ -83,26 +77,6 @@ export function IssueDetail({
   // Sync title with fetched issue
   if (issue && title !== issue.title && !isEditingTitle) {
     setTitle(issue.title)
-  }
-
-  const handleCloseIssue = async () => {
-    if (!issue) return
-    setIsClosing(true)
-    try {
-      await closeIssue(projectId, issue.id)
-    } finally {
-      setIsClosing(false)
-    }
-  }
-
-  const handleReopenIssue = async () => {
-    if (!issue) return
-    setIsReopening(true)
-    try {
-      await reopenIssue(projectId, issue.id)
-    } finally {
-      setIsReopening(false)
-    }
   }
 
   const handleDeleteIssue = async () => {
@@ -182,26 +156,6 @@ export function IssueDetail({
           )}
         </div>
         <div className='flex items-center gap-2'>
-          {issue.closed ? (
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleReopenIssue}
-              disabled={isReopening}
-            >
-              {isReopening ? 'Reopening...' : 'Reopen'}
-            </Button>
-          ) : (
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleCloseIssue}
-              disabled={isClosing}
-            >
-              <X className='mr-2 h-4 w-4' />
-              {isClosing ? 'Closing...' : 'Close'}
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size='icon' variant='ghost' disabled={isDeleting}>
@@ -230,7 +184,12 @@ export function IssueDetail({
 
       {/* Content */}
       <div className='flex-1 overflow-hidden'>
-        <LogsList projectId={issue.projectId} issueId={issue.id} logs={logs} />
+        <LogsList
+          projectId={issue.projectId}
+          issueId={issue.id}
+          logs={logs}
+          isClosed={issue.closed}
+        />
       </div>
     </div>
   )
