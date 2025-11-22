@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Bocchi - Note App',
+  title: 'naholo - Note App',
   description: 'Messenger-style note taking app',
 }
 

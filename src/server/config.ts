@@ -16,7 +16,7 @@ export const config = {
   // Database
   databaseUrl: getOptionalEnv(
     'DATABASE_URL',
-    'postgresql://bocchi:bocchi@localhost:5432/bocchi',
+    'postgresql://naholo:naholo@localhost:5432/naholo',
   ),
 
   // Authentication
@@ -26,4 +26,10 @@ export const config = {
   nodeEnv: getOptionalEnv('NODE_ENV', 'development'),
   isProduction: process.env.NODE_ENV === 'production',
   isDevelopment: process.env.NODE_ENV !== 'production',
+
+  // AWS SES (Email)
+  aws: {
+    region: getOptionalEnv('AWS_REGION', 'ap-northeast-1'),
+    sesFromEmail: getOptionalEnv('AWS_SES_FROM_EMAIL', 'noreply@example.com'),
+  },
 } as const
