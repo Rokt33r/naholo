@@ -15,6 +15,10 @@ export function useAction<TArgs extends any[], TResult>(
       setLoading(true)
       try {
         const result = await action(...args)
+
+        if (!result.success) {
+          console.error(result.error)
+        }
         return result
       } catch (error) {
         console.error('Unhandled server action error:', error)

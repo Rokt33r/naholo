@@ -8,8 +8,8 @@ function getRequiredEnv(key: string): string {
   return value
 }
 
-function getOptionalEnv(key: string, defaultValue: string): string {
-  return process.env[key] || defaultValue
+function getOptionalEnv(key: string, defaultValue?: string): string {
+  return process.env[key] || defaultValue || ''
 }
 
 export const config = {
@@ -31,5 +31,12 @@ export const config = {
   aws: {
     region: getOptionalEnv('AWS_REGION', 'ap-northeast-1'),
     sesFromEmail: getOptionalEnv('AWS_SES_FROM_EMAIL', 'noreply@example.com'),
+  },
+
+  googleOAuth: {
+    clientId: getOptionalEnv('GOOGLE_OAUTH_CLIENT_ID'),
+    clientSecret: getOptionalEnv('GOOGLE_OAUTH_CLIENT_SECRET'),
+    redirectUri: getOptionalEnv('GOOGLE_OAUTH_REDIRECT_URI'),
+    stateSecret: getRequiredEnv('GOOGLE_OAUTH_STATE_SECRET'),
   },
 } as const

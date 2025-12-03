@@ -39,7 +39,7 @@ export function SignUpForm() {
     e.preventDefault()
     setError('')
 
-    const result = await sendOTP(email, 'sign-up')
+    const result = await sendOTP(email)
 
     if (!result.success) {
       setError(result.error.message)

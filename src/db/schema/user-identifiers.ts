@@ -6,6 +6,7 @@ import {
   jsonb,
   unique,
 } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { users } from './users'
 
 export const userIdentifiers = pgTable(
@@ -20,7 +21,15 @@ export const userIdentifiers = pgTable(
     data: jsonb('data'), // additional metadata from provider
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
-  (table) => ({
-    typeValueUnique: unique().on(table.type, table.value),
+  (table) => [unique('type_value').on(table.type, table.value)],
+)
+
+export const userIdentifiersRelations = relations(
+  userIdentifiers,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userIdentifiers.userId],
+      references: [users.id],
+    }),
   }),
 )

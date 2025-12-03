@@ -1,11 +1,11 @@
 import { eq, and } from 'drizzle-orm'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import type { KenmonStorage, KenmonSession, KenmonIdentifier } from 'kenmon'
-import type {
-  KenmonEmailOTPStorage,
-  KenmonEmailOTP,
-} from '@kenmon/email-otp-provider'
 import * as schema from '@/db/schema'
+import {
+  KenmonEmailOTP,
+  KenmonEmailOTPStorage,
+} from '@kenmon/email-otp-authenticator'
 
 // Type for user from database
 type User = typeof schema.users.$inferSelect
@@ -68,40 +68,52 @@ export class DrizzleStorage implements KenmonStorage<User> {
   }
 
   // Session operations
-  async createSession(
-    userId: string,
-    token: string,
-    expiresAt: Date,
-    ipAddress?: string,
-    userAgent?: string,
-  ): Promise<KenmonSession> {
+  async createSession(data: {
+    userId: string
+    token: string
+    expiresAt: Date
+    mfaEnabled: boolean
+    mfaVerified: boolean
+    ipAddress?: string
+    userAgent?: string
+  }): Promise<KenmonSession> {
     const now = new Date()
     const [session] = await this.db
       .insert(schema.sessions)
-      .values({
-        userId,
-        token,
-        expiresAt,
-        ipAddress,
-        userAgent,
-        createdAt: now,
-        refreshedAt: now,
-        usedAt: now,
-      })
+      .values({ ...data, createdAt: now, refreshedAt: now, usedAt: now })
       .returning()
 
     return {
-      id: session.id,
-      userId: session.userId,
-      token: session.token,
-      expiresAt: session.expiresAt,
-      createdAt: session.createdAt,
-      refreshedAt: session.refreshedAt,
-      usedAt: session.usedAt,
-      invalidated: session.invalidated,
-      invalidatedAt: session.invalidatedAt || undefined,
+      ...session,
       ipAddress: session.ipAddress || undefined,
       userAgent: session.userAgent || undefined,
+      invalidatedAt: session.invalidatedAt || undefined,
+      mfaEnabled: false,
+      mfaVerified: false,
+    }
+  }
+
+  async getUserAuthInfoByIdentifier(identifier: KenmonIdentifier) {
+    const result = await this.db.query.userIdentifiers.findFirst({
+      where: (userIdentifiers, { eq, and }) =>
+        and(
+          eq(userIdentifiers.type, identifier.type),
+          eq(userIdentifiers.value, identifier.value),
+        ),
+      with: {
+        user: true,
+      },
+    })
+
+    if (result == null) {
+      return null
+    }
+
+    const userId = result.userId
+
+    return {
+      userId,
+      mfaEnabled: false,
     }
   }
 
@@ -126,6 +138,8 @@ export class DrizzleStorage implements KenmonStorage<User> {
       invalidatedAt: session.invalidatedAt || undefined,
       ipAddress: session.ipAddress || undefined,
       userAgent: session.userAgent || undefined,
+      mfaEnabled: false,
+      mfaVerified: false,
     }
   }
 
@@ -163,6 +177,10 @@ export class DrizzleStorage implements KenmonStorage<User> {
       })
       .where(eq(schema.sessions.userId, userId))
   }
+
+  async enableMfa(userId: string): Promise<void> {}
+
+  async disableMfa(userId: string): Promise<void> {}
 }
 
 export class DrizzleEmailOTPStorage implements KenmonEmailOTPStorage {

@@ -1,6 +1,7 @@
 'use server'
 
 import { auth } from './auth'
+import { emailOTPAuthenticator } from './authenticators/email-otp'
 import { getRequestMetadata } from './utils'
 import type { ActionResult } from '@/server/types'
 import { success, failure } from '@/server/types'
@@ -10,24 +11,17 @@ import { success, failure } from '@/server/types'
  */
 export async function sendOTPAction(
   email: string,
-  intent: 'sign-in' | 'sign-up',
 ): Promise<ActionResult<{ otpId: string; signature: string }>> {
-  const result = await auth.prepare({
-    type: 'email-otp',
-    intent,
-    data: { email },
-  })
+  const result = await emailOTPAuthenticator.sendOTP(email)
 
   if (!result.success) {
+    console.error(result.error)
     return failure(result.error)
   }
 
   return success(result.data)
 }
 
-/**
- * Verify OTP and create session
- */
 export async function verifyOTPAction(
   email: string,
   otpId: string,
@@ -35,18 +29,38 @@ export async function verifyOTPAction(
   intent: 'sign-in' | 'sign-up',
   name?: string,
 ): Promise<ActionResult<undefined>> {
-  const metadata = await getRequestMetadata()
-
-  const result = await auth.authenticate({
-    type: 'email-otp',
-    intent,
-    data: { email, otpId, code, name },
-    ipAddress: metadata.ipAddress,
-    userAgent: metadata.userAgent,
+  const verifyingResult = await emailOTPAuthenticator.verifyOTP({
+    email,
+    otpId,
+    code,
   })
 
-  if (!result.success) {
-    return failure(result.error)
+  if (!verifyingResult.success) {
+    console.error(verifyingResult.error)
+    return failure(verifyingResult.error)
+  }
+
+  const identifier = verifyingResult.data
+
+  const { ipAddress, userAgent } = await getRequestMetadata()
+  const authenticationResult =
+    intent === 'sign-in'
+      ? await auth.signIn(identifier, {
+          ipAddress,
+          userAgent,
+        })
+      : await auth.signUp(
+          identifier,
+          { name },
+          {
+            ipAddress,
+            userAgent,
+          },
+        )
+
+  if (!authenticationResult.success) {
+    console.error(authenticationResult.error)
+    return failure(authenticationResult.error)
   }
 
   return success()

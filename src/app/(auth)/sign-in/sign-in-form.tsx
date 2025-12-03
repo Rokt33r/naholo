@@ -38,7 +38,7 @@ export function SignInForm() {
     e.preventDefault()
     setError('')
 
-    const result = await sendOTP(email, 'sign-in')
+    const result = await sendOTP(email)
 
     if (!result.success) {
       setError(result.error.message)
