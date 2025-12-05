@@ -91,23 +91,63 @@ Complete guide for deploying the naholo application to AWS ECS with RDS.
    aws acm list-certificates --region ap-northeast-1
    ```
 
-### 3. Verify SES Email
+### 3. Verify SES Email (Optional - if not already done)
 
-1. **Verify sender email address:**
+If you haven't already verified your domain for SES:
+
+1. **Verify your domain:**
 
    ```bash
-   aws ses verify-email-identity \
-     --email-address noreply@your-domain.com \
+   aws ses verify-domain-identity \
+     --domain naholo.app \
      --region ap-northeast-1
    ```
 
-2. **Check your email** and click the verification link
+2. **Add the TXT record** to your DNS with the verification token returned
 
-3. **(Optional) Request production access** to send emails to any address:
+3. **Verify the status:**
+
+   ```bash
+   aws ses get-identity-verification-attributes \
+     --identities naholo.app \
+     --region ap-northeast-1
+   ```
+
+4. **(Optional) Request production access** to send emails to any address:
    - By default, SES is in sandbox mode (can only send to verified addresses)
    - Submit a request in AWS Console: SES → Account Dashboard → Request production access
+   - Usually approved within 24 hours
 
-### 4. Install Terraform
+**Note:** If your domain is already verified, you can skip this step and proceed to the next section.
+
+### 4. Setup Google OAuth (Required)
+
+Google OAuth is used for user authentication in the application.
+
+1. **Go to Google Cloud Console:**
+   - Visit https://console.cloud.google.com
+   - Create a new project or select an existing one
+
+2. **Create OAuth 2.0 Credentials:**
+   - Go to "APIs & Services" → "Credentials"
+   - Click "Create Credentials" → "OAuth 2.0 Client ID"
+   - Configure consent screen if not already done:
+     - User Type: External
+     - App name: "naholo" (or your app name)
+     - User support email: your email
+     - Developer contact: your email
+     - Add your email as a test user in "Test users"
+   - Application type: "Web application"
+   - Name: "naholo"
+   - Authorized redirect URIs: Add `https://your-domain.com/api/auth/google/callback`
+   - Click "Create"
+
+3. **Save your credentials:**
+   - Copy the **Client ID** (looks like: `123456789.apps.googleusercontent.com`)
+   - Copy the **Client Secret**
+   - You'll add these to `terraform.tfvars` in the next step
+
+### 5. Install Terraform
 
 ```bash
 # macOS
@@ -145,10 +185,21 @@ terraform --version
 
    # Application Secrets
    session_secret = "GENERATE_THIS_WITH_COMMAND_BELOW"
+
+   # Google OAuth Configuration (from step 4)
+   google_oauth_client_id       = "YOUR_CLIENT_ID.apps.googleusercontent.com"
+   google_oauth_client_secret   = "YOUR_CLIENT_SECRET"
+   google_oauth_redirect_uri    = "https://your-domain.com/api/auth/google/callback"
+   google_oauth_state_secret    = "GENERATE_THIS_WITH_COMMAND_BELOW"
    ```
 
-3. **Generate session secret:**
+3. **Generate secrets:**
+
    ```bash
+   # Generate session secret
+   openssl rand -base64 32
+
+   # Generate Google OAuth state secret
    openssl rand -base64 32
    ```
 
@@ -203,7 +254,7 @@ terraform --version
 2. **Build Docker image:**
 
    ```bash
-   docker build -t naholo .
+   docker build --platform linux/amd64 -t naholo .
    ```
 
 3. **Tag and push:**
@@ -211,8 +262,8 @@ terraform --version
    ```bash
    ECR_URL=$(terraform -chdir=terraform output -raw ecr_repository_url)
 
-   docker tag naholo:latest $ECR_URL:latest
-   docker push $ECR_URL:latest
+   docker tag naholo:latest ${ECR_URL}:latest
+   docker push ${ECR_URL}:latest
    ```
 
 ### Step 4: Initialize Database Schema
@@ -379,6 +430,78 @@ Monitor deployment: Repository → Actions tab
 
 ---
 
+## Manual Deployment (Emergency)
+
+Use manual deployment when:
+
+- Testing changes locally before pushing to main
+- Emergency hotfixes needed immediately
+- GitHub Actions is unavailable or problematic
+
+### Complete Manual Deployment Process
+
+**1. Build Docker image for correct platform:**
+
+```bash
+# IMPORTANT: Build for linux/amd64 (ECS Fargate requires x86_64)
+docker build --platform linux/amd64 -t naholo .
+```
+
+**2. Login to ECR:**
+
+```bash
+aws ecr get-login-password --region ap-northeast-1 | \
+  docker login --username AWS --password-stdin $(terraform -chdir=terraform output -raw ecr_repository_url | cut -d/ -f1)
+```
+
+**3. Tag and push image:**
+
+```bash
+# Get ECR repository URL
+ECR_URL=$(terraform -chdir=terraform output -raw ecr_repository_url)
+
+# Tag with latest
+docker tag naholo:latest ${ECR_URL}:latest
+
+# Push to ECR
+docker push ${ECR_URL}:latest
+```
+
+**4. Force new deployment:**
+
+```bash
+# Trigger ECS to pull the new image and restart tasks
+aws ecs update-service \
+  --cluster naholo-cluster \
+  --service naholo-service \
+  --force-new-deployment \
+  --region ap-northeast-1
+
+# Wait for deployment to complete (optional)
+aws ecs wait services-stable \
+  --cluster naholo-cluster \
+  --services naholo-service \
+  --region ap-northeast-1
+```
+
+**5. Monitor deployment:**
+
+```bash
+# Watch service status
+aws ecs describe-services \
+  --cluster naholo-cluster \
+  --services naholo-service \
+  --region ap-northeast-1 \
+  --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,Events:events[:3]}'
+
+# Tail logs in real-time
+aws logs tail /ecs/naholo --follow --region ap-northeast-1
+```
+
+**Note:** This manual process is the same as what GitHub Actions does automatically when you push to main. Use GitHub Actions for regular deployments to maintain consistency and audit trail.
+
+---
+
 ## Environment Variables
 
 ### Production (ECS)
@@ -387,13 +510,16 @@ Stored in AWS Secrets Manager:
 
 - `DATABASE_URL` - Automatically constructed from RDS endpoint
 - `SESSION_SECRET` - Provided via terraform.tfvars
+- `GOOGLE_OAUTH_CLIENT_SECRET` - Google OAuth client secret (optional)
+- `GOOGLE_OAUTH_STATE_SECRET` - OAuth state parameter secret (required)
 
-Stored in Task Definition:
+Stored in Task Definition (Environment Variables):
 
 - `NODE_ENV=production`
 - `PORT=3000`
 - `AWS_REGION=ap-northeast-1` (from ECS metadata)
-- `AWS_SES_FROM_EMAIL` - Add to Terraform if needed
+- `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID (optional)
+- `GOOGLE_OAUTH_REDIRECT_URI` - OAuth callback URL (optional)
 
 ### Local Development
 
@@ -403,7 +529,12 @@ Create `.env.local`:
 DATABASE_URL=postgresql://naholo:naholo@localhost:5432/naholo
 SESSION_SECRET=your-dev-secret-key
 NODE_ENV=development
-AWS_SES_FROM_EMAIL=noreply@example.com
+
+# Google OAuth (get from Google Cloud Console)
+GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+GOOGLE_OAUTH_STATE_SECRET=your-state-secret
 ```
 
 ---
@@ -450,6 +581,35 @@ aws rds create-db-snapshot \
   --db-snapshot-identifier naholo-manual-$(date +%Y%m%d) \
   --region ap-northeast-1
 ```
+
+### Updating Task Definitions After Terraform Changes
+
+**Important:** ECS does NOT automatically use the latest task definition version. When you run `terraform apply` and it creates a new task definition (e.g., after changing environment variables, secrets, or container settings), you must manually trigger a deployment.
+
+**When to use this:**
+
+- After `terraform apply` creates a new task definition version
+- When you've updated infrastructure configuration (not code/images)
+- After adding new environment variables or secrets
+
+**How to deploy the new task definition:**
+
+```bash
+# This command forces a new deployment using the latest task definition
+aws ecs update-service \
+  --cluster naholo-cluster \
+  --service naholo-service \
+  --force-new-deployment \
+  --region ap-northeast-1
+
+# Wait for deployment to complete (optional)
+aws ecs wait services-stable \
+  --cluster naholo-cluster \
+  --services naholo-service \
+  --region ap-northeast-1
+```
+
+**Note:** GitHub Actions automatically handles task definition updates when you push code changes. This manual step is only needed for infrastructure changes made via Terraform.
 
 ### Scaling
 
