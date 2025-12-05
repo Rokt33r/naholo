@@ -32,6 +32,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
 }
 
 # Additional policy for accessing Secrets Manager
+# Grants access to all secrets with the project name prefix
 resource "aws_iam_role_policy" "ecs_execution_secrets" {
   name_prefix = "${var.project_name}-ecs-secrets-"
   role        = aws_iam_role.ecs_execution.id
@@ -44,10 +45,7 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = [
-          aws_secretsmanager_secret.database_url.arn,
-          aws_secretsmanager_secret.session_secret.arn
-        ]
+        Resource = "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}-*"
       }
     ]
   })

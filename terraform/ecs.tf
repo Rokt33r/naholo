@@ -79,7 +79,7 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
 
-      environment = [
+      environment = concat([
         {
           name  = "NODE_ENV"
           value = "production"
@@ -88,9 +88,22 @@ resource "aws_ecs_task_definition" "app" {
           name  = "PORT"
           value = tostring(var.app_port)
         }
-      ]
+        ],
+        var.google_oauth_client_id != "" ? [
+          {
+            name  = "GOOGLE_OAUTH_CLIENT_ID"
+            value = var.google_oauth_client_id
+          }
+        ] : [],
+        var.google_oauth_redirect_uri != "" ? [
+          {
+            name  = "GOOGLE_OAUTH_REDIRECT_URI"
+            value = var.google_oauth_redirect_uri
+          }
+        ] : []
+      )
 
-      secrets = [
+      secrets = concat([
         {
           name      = "DATABASE_URL"
           valueFrom = aws_secretsmanager_secret.database_url.arn
@@ -98,8 +111,19 @@ resource "aws_ecs_task_definition" "app" {
         {
           name      = "SESSION_SECRET"
           valueFrom = aws_secretsmanager_secret.session_secret.arn
+        },
+        {
+          name      = "GOOGLE_OAUTH_STATE_SECRET"
+          valueFrom = aws_secretsmanager_secret.google_oauth_state_secret.arn
         }
-      ]
+        ],
+        var.google_oauth_client_secret != "" ? [
+          {
+            name      = "GOOGLE_OAUTH_CLIENT_SECRET"
+            valueFrom = aws_secretsmanager_secret.google_oauth_client_secret[0].arn
+          }
+        ] : []
+      )
 
       logConfiguration = {
         logDriver = "awslogs"

@@ -92,3 +92,29 @@ variable "domain_name" {
   type        = string
   default     = ""
 }
+
+# Google OAuth Configuration
+variable "google_oauth_client_id" {
+  description = "Google OAuth Client ID (from Google Cloud Console)"
+  type        = string
+  default     = ""
+}
+
+variable "google_oauth_client_secret" {
+  description = "Google OAuth Client Secret (from Google Cloud Console)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "google_oauth_redirect_uri" {
+  description = "Google OAuth Redirect URI (e.g., https://your-domain.com/api/auth/google/callback)"
+  type        = string
+  default     = ""
+}
+
+variable "google_oauth_state_secret" {
+  description = "Secret for OAuth state parameter (generate with: openssl rand -base64 32)"
+  type        = string
+  sensitive   = true
+}

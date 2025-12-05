@@ -2,6 +2,16 @@
 
 function getRequiredEnv(key: string): string {
   const value = process.env[key]
+
+  // During Docker build, allow placeholder for server-only secrets
+  // They will be provided at runtime via ECS task definition
+  if (!value && process.env.NEXT_PHASE === 'phase-production-build') {
+    console.warn(
+      `⚠️  ${key} not set during build - will be required at runtime`,
+    )
+    return 'build-time-placeholder'
+  }
+
   if (!value) {
     throw new Error(`Missing required environment variable: ${key}`)
   }

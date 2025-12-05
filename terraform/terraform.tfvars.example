@@ -13,6 +13,12 @@ domain_name         = "naholo.yourdomain.com"
 # Application Secrets
 session_secret = "generate-with-openssl-rand-base64-32"
 
+# Google OAuth Configuration
+google_oauth_client_id       = "YOUR_CLIENT_ID.apps.googleusercontent.com"
+google_oauth_client_secret   = "YOUR_CLIENT_SECRET"
+google_oauth_redirect_uri    = "https://your-domain.com/api/auth/google/callback"
+google_oauth_state_secret    = "generate-with-openssl-rand-base64-32"
+
 # ECS Configuration (optional overrides)
 # ecs_task_cpu       = 256  # 0.25 vCPU
 # ecs_task_memory    = 512  # 512 MB
