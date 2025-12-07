@@ -37,7 +37,7 @@ Complete guide for deploying the naholo application to AWS ECS with RDS.
 
 - **Application Load Balancer (ALB)**: HTTPS termination, routing
 - **ECS Fargate**: Serverless container orchestration
-- **RDS PostgreSQL**: Database with IAM authentication
+- **RDS PostgreSQL**: Managed PostgreSQL database
 - **ECR**: Docker image registry
 - **Secrets Manager**: Secure secrets storage
 - **CloudWatch**: Logs and monitoring
@@ -50,73 +50,76 @@ Complete guide for deploying the naholo application to AWS ECS with RDS.
 
 ### 1. AWS Account Setup
 
-1. **Create AWS Account** (if you don't have one)
-2. **Install AWS CLI:**
+#### 1. Create AWS Account (if you don't have one)
 
-   ```bash
-   # macOS
-   brew install awscli
+#### 2. Install AWS CLI:
 
-   # Verify installation
-   aws --version
-   ```
+```bash
+# macOS
+brew install awscli
 
-3. **Configure AWS CLI:**
+# Verify installation
+aws --version
+```
 
-   ```bash
-   aws configure
+#### 3. Configure AWS CLI:
 
-   # Enter:
-   # AWS Access Key ID: [your-access-key]
-   # AWS Secret Access Key: [your-secret-key]
-   # Default region name: ap-northeast-1
-   # Default output format: json
-   ```
+```bash
+aws configure
+
+# Enter:
+# AWS Access Key ID: [your-access-key]
+# AWS Secret Access Key: [your-secret-key]
+# Default region name: ap-northeast-1
+# Default output format: json
+```
 
 ### 2. Domain and SSL Certificate
 
-1. **Request ACM Certificate** (in ap-northeast-1 region):
+#### 1. Request ACM Certificate (in ap-northeast-1 region):
 
-   ```bash
-   aws acm request-certificate \
-     --domain-name your-domain.com \
-     --validation-method DNS \
-     --region ap-northeast-1
-   ```
+```bash
+aws acm request-certificate \
+  --domain-name your-domain.com \
+  --validation-method DNS \
+  --region ap-northeast-1
+```
 
-2. **Validate the certificate** by adding DNS records (check email or Route 53)
+#### 2. Validate the certificate by adding DNS records (check email or Route 53)
 
-3. **Get the certificate ARN:**
-   ```bash
-   aws acm list-certificates --region ap-northeast-1
-   ```
+#### 3. Get the certificate ARN:
+
+```bash
+aws acm list-certificates --region ap-northeast-1
+```
 
 ### 3. Verify SES Email (Optional - if not already done)
 
 If you haven't already verified your domain for SES:
 
-1. **Verify your domain:**
+#### 1. Verify your domain:
 
-   ```bash
-   aws ses verify-domain-identity \
-     --domain naholo.app \
-     --region ap-northeast-1
-   ```
+```bash
+aws ses verify-domain-identity \
+  --domain naholo.app \
+  --region ap-northeast-1
+```
 
-2. **Add the TXT record** to your DNS with the verification token returned
+#### 2. Add the TXT record to your DNS with the verification token returned
 
-3. **Verify the status:**
+#### 3. Verify the status:
 
-   ```bash
-   aws ses get-identity-verification-attributes \
-     --identities naholo.app \
-     --region ap-northeast-1
-   ```
+```bash
+aws ses get-identity-verification-attributes \
+  --identities naholo.app \
+  --region ap-northeast-1
+```
 
-4. **(Optional) Request production access** to send emails to any address:
-   - By default, SES is in sandbox mode (can only send to verified addresses)
-   - Submit a request in AWS Console: SES → Account Dashboard → Request production access
-   - Usually approved within 24 hours
+#### 4. (Optional) Request production access to send emails to any address:
+
+- By default, SES is in sandbox mode (can only send to verified addresses)
+- Submit a request in AWS Console: SES → Account Dashboard → Request production access
+- Usually approved within 24 hours
 
 **Note:** If your domain is already verified, you can skip this step and proceed to the next section.
 
@@ -124,28 +127,31 @@ If you haven't already verified your domain for SES:
 
 Google OAuth is used for user authentication in the application.
 
-1. **Go to Google Cloud Console:**
-   - Visit https://console.cloud.google.com
-   - Create a new project or select an existing one
+#### 1. Go to Google Cloud Console:
 
-2. **Create OAuth 2.0 Credentials:**
-   - Go to "APIs & Services" → "Credentials"
-   - Click "Create Credentials" → "OAuth 2.0 Client ID"
-   - Configure consent screen if not already done:
-     - User Type: External
-     - App name: "naholo" (or your app name)
-     - User support email: your email
-     - Developer contact: your email
-     - Add your email as a test user in "Test users"
-   - Application type: "Web application"
-   - Name: "naholo"
-   - Authorized redirect URIs: Add `https://your-domain.com/api/auth/google/callback`
-   - Click "Create"
+- Visit https://console.cloud.google.com
+- Create a new project or select an existing one
 
-3. **Save your credentials:**
-   - Copy the **Client ID** (looks like: `123456789.apps.googleusercontent.com`)
-   - Copy the **Client Secret**
-   - You'll add these to `terraform.tfvars` in the next step
+#### 2. Create OAuth 2.0 Credentials:
+
+- Go to "APIs & Services" → "Credentials"
+- Click "Create Credentials" → "OAuth 2.0 Client ID"
+- Configure consent screen if not already done:
+  - User Type: External
+  - App name: "naholo" (or your app name)
+  - User support email: your email
+  - Developer contact: your email
+  - Add your email as a test user in "Test users"
+- Application type: "Web application"
+- Name: "naholo"
+- Authorized redirect URIs: Add `https://your-domain.com/api/auth/google/callback`
+- Click "Create"
+
+#### 3. Save your credentials:
+
+- Copy the **Client ID** (looks like: `123456789.apps.googleusercontent.com`)
+- Copy the **Client Secret**
+- You'll add these to `terraform.tfvars` in the next step
 
 ### 5. Install Terraform
 
@@ -164,103 +170,103 @@ terraform --version
 
 ### Step 1: Prepare Configuration
 
-1. **Create Terraform variables file:**
+#### 1. Create Terraform variables file:
 
-   ```bash
-   cd terraform
-   cp terraform.tfvars.example terraform.tfvars
-   ```
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+```
 
-2. **Edit `terraform.tfvars`:**
+#### 2. Edit `terraform.tfvars`:
 
-   ```hcl
-   # AWS Configuration
-   aws_region   = "ap-northeast-1"
-   project_name = "naholo"
-   environment  = "production"
+```hcl
+# AWS Configuration
+aws_region   = "ap-northeast-1"
+project_name = "naholo"
+environment  = "production"
 
-   # Domain and SSL
-   acm_certificate_arn = "arn:aws:acm:ap-northeast-1:YOUR_ACCOUNT:certificate/YOUR_CERT_ID"
-   domain_name         = "your-domain.com"
+# Domain and SSL
+acm_certificate_arn = "arn:aws:acm:ap-northeast-1:YOUR_ACCOUNT:certificate/YOUR_CERT_ID"
+domain_name         = "your-domain.com"
 
-   # Application Secrets
-   session_secret = "GENERATE_THIS_WITH_COMMAND_BELOW"
+# Application Secrets
+session_secret = "GENERATE_THIS_WITH_COMMAND_BELOW"
 
-   # Google OAuth Configuration (from step 4)
-   google_oauth_client_id       = "YOUR_CLIENT_ID.apps.googleusercontent.com"
-   google_oauth_client_secret   = "YOUR_CLIENT_SECRET"
-   google_oauth_redirect_uri    = "https://your-domain.com/api/auth/google/callback"
-   google_oauth_state_secret    = "GENERATE_THIS_WITH_COMMAND_BELOW"
-   ```
+# Google OAuth Configuration (from step 4)
+google_oauth_client_id       = "YOUR_CLIENT_ID.apps.googleusercontent.com"
+google_oauth_client_secret   = "YOUR_CLIENT_SECRET"
+google_oauth_redirect_uri    = "https://your-domain.com/api/auth/google/callback"
+google_oauth_state_secret    = "GENERATE_THIS_WITH_COMMAND_BELOW"
+```
 
-3. **Generate secrets:**
+#### 3. Generate secrets:
 
-   ```bash
-   openssl rand -base64 32
-   ```
+```bash
+openssl rand -base64 32
+```
 
 ### Step 2: Deploy Infrastructure
 
-1. **Initialize Terraform:**
+#### 1. Initialize Terraform:
 
-   ```bash
-   cd terraform
-   terraform init
-   ```
+```bash
+cd terraform
+terraform init
+```
 
-2. **Review the plan:**
+#### 2. Review the plan:
 
-   ```bash
-   terraform plan
+```bash
+terraform plan
 
-   # Should show: Plan: ~30 to add, 0 to change, 0 to destroy
-   ```
+# Should show: Plan: ~30 to add, 0 to change, 0 to destroy
+```
 
-3. **Deploy:**
+#### 3. Deploy:
 
-   ```bash
-   terraform apply
+```bash
+terraform apply
 
-   # Type 'yes' when prompted
-   # Wait ~10-15 minutes for resources to be created
-   ```
+# Type 'yes' when prompted
+# Wait ~10-15 minutes for resources to be created
+```
 
-4. **Retrieve outputs:**
+#### 4. Retrieve outputs:
 
-   ```bash
-   terraform output
+```bash
+terraform output
 
-   # View specific outputs:
-   terraform output ecr_repository_url
-   terraform output alb_dns_name
-   terraform output rds_endpoint
-   ```
+# View specific outputs:
+terraform output ecr_repository_url
+terraform output alb_dns_name
+terraform output rds_endpoint
+```
 
 ### Step 3: Build and Push Docker Image
 
-1. **Login to ECR:**
+#### 1. Login to ECR:
 
-   ```bash
-   cd .. # Back to project root
+```bash
+cd .. # Back to project root
 
-   aws ecr get-login-password --region ap-northeast-1 | \
-     docker login --username AWS --password-stdin $(terraform -chdir=terraform output -raw ecr_repository_url | cut -d/ -f1)
-   ```
+aws ecr get-login-password --region ap-northeast-1 | \
+  docker login --username AWS --password-stdin $(terraform -chdir=terraform output -raw ecr_repository_url | cut -d/ -f1)
+```
 
-2. **Build Docker image:**
+#### 2. Build Docker image:
 
-   ```bash
-   docker build --platform linux/amd64 -t naholo .
-   ```
+```bash
+docker build --platform linux/amd64 -t naholo .
+```
 
-3. **Tag and push:**
+#### 3. Tag and push:
 
-   ```bash
-   ECR_URL=$(terraform -chdir=terraform output -raw ecr_repository_url)
+```bash
+ECR_URL=$(terraform -chdir=terraform output -raw ecr_repository_url)
 
-   docker tag naholo:latest ${ECR_URL}:latest
-   docker push ${ECR_URL}:latest
-   ```
+docker tag naholo:latest ${ECR_URL}:latest
+docker push ${ECR_URL}:latest
+```
 
 ### Step 4: Initialize Database Schema
 
@@ -268,18 +274,9 @@ The database needs to be initialized with the schema. You have two options:
 
 **Option A: From local machine (requires RDS to be publicly accessible)**
 
+Configure .env.local or directly feed env vars and run the script below.
+
 ```bash
-# Get database URL from Secrets Manager
-DB_URL=$(aws secretsmanager get-secret-value \
-  --secret-id $(terraform -chdir=terraform output -raw rds_password_secret_arn) \
-  --region ap-northeast-1 \
-  --query SecretString \
-  --output text)
-
-# Export for drizzle-kit
-export DATABASE_URL="$DB_URL"
-
-# Push schema to database
 pnpm db:push
 ```
 
@@ -326,51 +323,48 @@ aws ecs wait services-stable \
 
 Point your domain to the load balancer:
 
-1. **Get ALB DNS name:**
+#### 1. Get ALB DNS name:
 
-   ```bash
-   terraform -chdir=terraform output alb_dns_name
-   ```
+```bash
+terraform -chdir=terraform output alb_dns_name
+```
 
-2. **Create CNAME record** in your DNS provider:
+#### 2. Create CNAME record in your DNS provider:
 
-   ```
-   Type: CNAME
-   Name: @ (or your-subdomain)
-   Value: naholo-alb-123456.ap-northeast-1.elb.amazonaws.com
-   TTL: 300
-   ```
+Configure in Route53
 
-3. **Wait for DNS propagation** (~5-10 minutes):
-   ```bash
-   dig your-domain.com
-   ```
+#### 3. Wait for DNS propagation (~5-10 minutes):
+
+```bash
+dig your-domain.com
+```
 
 ### Step 7: Verify Deployment
 
-1. **Check application health:**
+#### 1. Check application health:
 
-   ```bash
-   curl https://your-domain.com/api/health
+```bash
+curl https://naholo.app/api/health
 
-   # Should return:
-   # {"status":"healthy","timestamp":"...","database":"connected"}
-   ```
+# Should return:
+# {"status":"healthy","timestamp":"..."}
+```
 
-2. **View application logs:**
+#### 2. View application logs:
 
-   ```bash
-   aws logs tail /ecs/naholo --follow --region ap-northeast-1
-   ```
+```bash
+aws logs tail /ecs/naholo --follow --region ap-northeast-1
+```
 
-3. **Check ECS service status:**
-   ```bash
-   aws ecs describe-services \
-     --cluster naholo-cluster \
-     --services naholo-service \
-     --region ap-northeast-1 \
-     --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount}'
-   ```
+#### 3. Check ECS service status:
+
+```bash
+aws ecs describe-services \
+   --cluster naholo-cluster \
+   --services naholo-service \
+   --region ap-northeast-1 \
+   --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount}'
+```
 
 ---
 
@@ -380,24 +374,28 @@ Point your domain to the load balancer:
 
 **Option A: OIDC (Recommended - No long-lived credentials)**
 
-1. Create OIDC provider in AWS Console:
-   - IAM → Identity Providers → Add Provider
-   - Provider type: OpenID Connect
-   - Provider URL: `https://token.actions.githubusercontent.com`
-   - Audience: `sts.amazonaws.com`
+#### 1. Create OIDC provider in AWS Console:
 
-2. Create IAM role for GitHub:
-   ```bash
-   # Use Terraform or AWS Console to create role
-   # Trust policy should allow GitHub Actions from your repo
-   ```
+- IAM → Identity Providers → Add Provider
+- Provider type: OpenID Connect
+- Provider URL: `https://token.actions.githubusercontent.com`
+- Audience: `sts.amazonaws.com`
+
+#### 2. Create IAM role for GitHub:
+
+```bash
+# Use Terraform or AWS Console to create role
+# Trust policy should allow GitHub Actions from your repo
+```
 
 **Option B: IAM Access Keys (Simpler but less secure)**
 
-1. Create IAM user with programmatic access
-2. Attach policies:
-   - `AmazonEC2ContainerRegistryPowerUser`
-   - `AmazonECS_FullAccess` (or create custom policy with minimum permissions)
+#### 1. Create IAM user with programmatic access
+
+#### 2. Attach policies:
+
+- `AmazonEC2ContainerRegistryPowerUser`
+- `AmazonECS_FullAccess` (or create custom policy with minimum permissions)
 
 ### Step 2: Configure GitHub Secrets
 
@@ -436,21 +434,21 @@ Use manual deployment when:
 
 ### Complete Manual Deployment Process
 
-**1. Build Docker image for correct platform:**
+#### 1. Build Docker image for correct platform:
 
 ```bash
 # IMPORTANT: Build for linux/amd64 (ECS Fargate requires x86_64)
 docker build --platform linux/amd64 -t naholo .
 ```
 
-**2. Login to ECR:**
+#### 2. Login to ECR:
 
 ```bash
 aws ecr get-login-password --region ap-northeast-1 | \
   docker login --username AWS --password-stdin $(terraform -chdir=terraform output -raw ecr_repository_url | cut -d/ -f1)
 ```
 
-**3. Tag and push image:**
+#### 3. Tag and push image:
 
 ```bash
 # Get ECR repository URL
@@ -463,7 +461,7 @@ docker tag naholo:latest ${ECR_URL}:latest
 docker push ${ECR_URL}:latest
 ```
 
-**4. Force new deployment:**
+#### 4. Force new deployment:
 
 ```bash
 # Trigger ECS to pull the new image and restart tasks
@@ -480,7 +478,7 @@ aws ecs wait services-stable \
   --region ap-northeast-1
 ```
 
-**5. Monitor deployment:**
+#### 5. Monitor deployment:
 
 ```bash
 # Watch service status
@@ -504,7 +502,7 @@ aws logs tail /ecs/naholo --follow --region ap-northeast-1
 
 Stored in AWS Secrets Manager:
 
-- `DATABASE_URL` - Automatically constructed from RDS endpoint
+- `DB_PASSWORD` - Database password (from RDS)
 - `SESSION_SECRET` - Provided via terraform.tfvars
 - `GOOGLE_OAUTH_CLIENT_SECRET` - Google OAuth client secret (optional)
 - `GOOGLE_OAUTH_STATE_SECRET` - OAuth state parameter secret (required)
@@ -513,7 +511,12 @@ Stored in Task Definition (Environment Variables):
 
 - `NODE_ENV=production`
 - `PORT=3000`
-- `AWS_REGION=ap-northeast-1` (from ECS metadata)
+- `DB_HOST` - RDS endpoint hostname
+- `DB_PORT=5432` - Database port
+- `DB_NAME=naholo` - Database name
+- `DB_USER=naholo` - Database username
+- `AWS_REGION=ap-northeast-1` - AWS region for SES and other services
+- `AWS_SES_FROM_EMAIL` - Email address for sending emails (e.g., noreply@naholo.app)
 - `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID (optional)
 - `GOOGLE_OAUTH_REDIRECT_URI` - OAuth callback URL (optional)
 
@@ -522,9 +525,22 @@ Stored in Task Definition (Environment Variables):
 Create `.env.local`:
 
 ```env
-DATABASE_URL=postgresql://naholo:naholo@localhost:5432/naholo
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=naholo
+DB_USER=naholo
+DB_PASSWORD=naholo
+
+# Authentication
 SESSION_SECRET=your-dev-secret-key
+
+# Environment
 NODE_ENV=development
+
+# AWS SES (Email) - Optional for local development
+AWS_REGION=ap-northeast-1
+AWS_SES_FROM_EMAIL=noreply@example.com
 
 # Google OAuth (get from Google Cloud Console)
 GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
@@ -653,7 +669,15 @@ aws ecs describe-tasks \
 
 ```bash
 # Test database connectivity from local
-psql "$(aws secretsmanager get-secret-value --secret-id naholo-database-url --query SecretString --output text --region ap-northeast-1)"
+# Get DB password from Secrets Manager
+DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id naholo-db-password --query SecretString --output text --region ap-northeast-1)
+DB_HOST=$(terraform -chdir=terraform output -raw rds_endpoint)
+
+# Connect using psql
+PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U naholo -d naholo
+
+# Or test connection with a simple query
+PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U naholo -d naholo -c "SELECT version();"
 
 # Check security groups allow ECS → RDS
 aws ec2 describe-security-groups \
@@ -676,48 +700,12 @@ aws ecs describe-services \
 
 ---
 
-## Cost Optimization
-
-### Development/Staging
-
-**Stop RDS when not in use:**
-
-```bash
-# Stop (can stay stopped for up to 7 days)
-aws rds stop-db-instance --db-instance-identifier naholo-db
-
-# Start when needed
-aws rds start-db-instance --db-instance-identifier naholo-db
-```
-
-**Scale ECS to zero:**
-
-```bash
-aws ecs update-service \
-  --cluster naholo-cluster \
-  --service naholo-service \
-  --desired-count 0
-```
-
-### Complete Teardown
-
-```bash
-cd terraform
-terraform destroy
-
-# Type 'yes' when prompted
-# Deletes all resources (~5-10 minutes)
-```
-
----
-
 ## Security Best Practices
 
 ✅ **Implemented:**
 
 - HTTPS only (HTTP redirects to HTTPS)
 - Secrets in AWS Secrets Manager (not environment variables)
-- IAM authentication for RDS (production)
 - Least privilege IAM roles
 - RDS encryption at rest
 - Security groups restrict access
