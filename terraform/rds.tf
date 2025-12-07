@@ -1,6 +1,4 @@
-# RDS PostgreSQL with Hybrid Authentication
-# - IAM authentication for ECS tasks (production)
-# - Password authentication for local development
+# RDS PostgreSQL with Password Authentication
 
 # Security group for RDS
 resource "aws_security_group" "rds" {
@@ -68,10 +66,10 @@ resource "aws_db_instance" "main" {
 
   db_name  = var.db_name
   username = var.db_username
-  password = random_password.db_password.result # For local dev
+  password = random_password.db_password.result
 
-  # Enable IAM database authentication for ECS
-  iam_database_authentication_enabled = true
+  # IAM database authentication disabled - using password auth
+  iam_database_authentication_enabled = false
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]

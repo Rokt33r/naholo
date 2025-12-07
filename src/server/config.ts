@@ -24,10 +24,13 @@ function getOptionalEnv(key: string, defaultValue?: string): string {
 
 export const config = {
   // Database
-  databaseUrl: getOptionalEnv(
-    'DATABASE_URL',
-    'postgresql://naholo:naholo@localhost:5432/naholo',
-  ),
+  database: {
+    host: getOptionalEnv('DB_HOST', 'localhost'),
+    port: parseInt(getOptionalEnv('DB_PORT', '5432'), 10),
+    name: getOptionalEnv('DB_NAME', 'naholo'),
+    user: getOptionalEnv('DB_USER', 'naholo'),
+    password: getOptionalEnv('DB_PASSWORD', 'naholo'),
+  },
 
   // Authentication
   sessionSecret: getRequiredEnv('SESSION_SECRET'),

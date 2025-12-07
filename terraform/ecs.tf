@@ -87,6 +87,22 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "PORT"
           value = tostring(var.app_port)
+        },
+        {
+          name  = "DB_HOST"
+          value = split(":", aws_db_instance.main.endpoint)[0]
+        },
+        {
+          name  = "DB_PORT"
+          value = "5432"
+        },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        },
+        {
+          name  = "DB_USER"
+          value = var.db_username
         }
         ],
         var.google_oauth_client_id != "" ? [
@@ -105,8 +121,8 @@ resource "aws_ecs_task_definition" "app" {
 
       secrets = concat([
         {
-          name      = "DATABASE_URL"
-          valueFrom = aws_secretsmanager_secret.database_url.arn
+          name      = "DB_PASSWORD"
+          valueFrom = aws_secretsmanager_secret.db_password.arn
         },
         {
           name      = "SESSION_SECRET"
@@ -135,7 +151,7 @@ resource "aws_ecs_task_definition" "app" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:${var.app_port}/api/health || exit 1"]
+        command     = ["CMD-SHELL", "node -e \"require('http').get('http://$(hostname -i):${var.app_port}/api/health', (r) => {console.log('Status:', r.statusCode); process.exit(r.statusCode === 200 ? 0 : 1)})\""]
         interval    = 30
         timeout     = 5
         retries     = 3
@@ -168,6 +184,9 @@ resource "aws_ecs_service" "app" {
     container_name   = var.project_name
     container_port   = var.app_port
   }
+
+  # Enable ECS Exec for debugging
+  enable_execute_command = true
 
   # Allow external changes without Terraform plan difference
   lifecycle {

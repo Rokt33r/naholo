@@ -196,10 +196,6 @@ terraform --version
 3. **Generate secrets:**
 
    ```bash
-   # Generate session secret
-   openssl rand -base64 32
-
-   # Generate Google OAuth state secret
    openssl rand -base64 32
    ```
 
@@ -229,10 +225,10 @@ terraform --version
    # Wait ~10-15 minutes for resources to be created
    ```
 
-4. **Save important outputs:**
+4. **Retrieve outputs:**
 
    ```bash
-   terraform output -json > ../outputs.json
+   terraform output
 
    # View specific outputs:
    terraform output ecr_repository_url

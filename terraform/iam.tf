@@ -113,3 +113,25 @@ resource "aws_iam_role_policy" "ecs_task_ses" {
     ]
   })
 }
+
+# Policy for ECS Exec (debugging)
+resource "aws_iam_role_policy" "ecs_task_exec" {
+  name_prefix = "${var.project_name}-ecs-exec-"
+  role        = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}

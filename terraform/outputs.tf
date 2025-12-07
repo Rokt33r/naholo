@@ -30,12 +30,6 @@ output "rds_username" {
   value       = var.db_username
 }
 
-output "rds_password_secret_arn" {
-  description = "ARN of the secret containing RDS password"
-  value       = aws_secretsmanager_secret.database_url.arn
-  sensitive   = true
-}
-
 output "ecs_cluster_name" {
   description = "ECS cluster name"
   value       = aws_ecs_cluster.main.name
