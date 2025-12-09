@@ -6,16 +6,12 @@ import { getRequestMetadata } from './utils'
 import type { ActionResult } from '@/server/types'
 import { success, failure } from '@/server/types'
 
-/**
- * Send OTP to email
- */
 export async function sendOTPAction(
   email: string,
 ): Promise<ActionResult<{ otpId: string; signature: string }>> {
   const result = await emailOTPAuthenticator.sendOTP(email)
 
   if (!result.success) {
-    console.error(result.error)
     return failure(result.error)
   }
 
@@ -36,7 +32,6 @@ export async function verifyOTPAction(
   })
 
   if (!verifyingResult.success) {
-    console.error(verifyingResult.error)
     return failure(verifyingResult.error)
   }
 
@@ -59,29 +54,16 @@ export async function verifyOTPAction(
         )
 
   if (!authenticationResult.success) {
-    console.error(authenticationResult.error)
     return failure(authenticationResult.error)
   }
 
   return success()
 }
 
-/**
- * Refresh current session
- */
-export async function refreshSessionAction(): Promise<ActionResult<undefined>> {
-  const result = await auth.refreshSession()
-
-  if (!result.success) {
-    return failure(result.error)
-  }
-
-  return success()
+export async function refreshSessionAction() {
+  return auth.refreshSession()
 }
 
-/**
- * Logout (invalidate session)
- */
 export async function logoutAction(): Promise<ActionResult<undefined>> {
   await auth.signOut()
   return success()
