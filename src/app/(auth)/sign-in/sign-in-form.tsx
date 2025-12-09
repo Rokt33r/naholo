@@ -20,7 +20,11 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
-import { sendOTPAction, verifyOTPForSigningInAction } from '../actions'
+import {
+  sendOTPAction,
+  verifyOTPForSigningInAction,
+  initiateGoogleOAuthAction,
+} from '../actions'
 
 export function SignInForm() {
   const router = useRouter()
@@ -35,6 +39,8 @@ export function SignInForm() {
   const { execute: verifyOTP, loading: verifying } = useAction(
     verifyOTPForSigningInAction,
   )
+  const { execute: initiateGoogleOAuth, loading: initiatingGoogleOAuth } =
+    useAction(initiateGoogleOAuthAction)
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,7 +73,20 @@ export function SignInForm() {
     router.refresh()
   }
 
-  const loading = sendingOTP || verifying
+  const handleGoogleSignIn = async () => {
+    setError('')
+
+    const result = await initiateGoogleOAuth('sign-in')
+
+    if (!result.success) {
+      setError(result.error.message)
+      return
+    }
+
+    window.location.href = result.data.authUrl
+  }
+
+  const loading = sendingOTP || verifying || initiatingGoogleOAuth
 
   return (
     <Card className='w-full max-w-md'>
@@ -81,24 +100,47 @@ export function SignInForm() {
       </CardHeader>
       <CardContent>
         {step === 'email' ? (
-          <form onSubmit={handleSendOTP} className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                type='email'
-                placeholder='you@example.com'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
+          <div className='space-y-4'>
+            <form onSubmit={handleSendOTP} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='email'>Email</Label>
+                <Input
+                  id='email'
+                  type='email'
+                  placeholder='you@example.com'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              {error && <p className='text-sm text-red-500'>{error}</p>}
+              <Button type='submit' className='w-full' disabled={loading}>
+                {sendingOTP ? 'Sending...' : 'Send Verification Code'}
+              </Button>
+            </form>
+            <div className='relative'>
+              <div className='absolute inset-0 flex items-center'>
+                <span className='w-full border-t' />
+              </div>
+              <div className='relative flex justify-center text-xs uppercase'>
+                <span className='bg-white dark:bg-zinc-950 px-2 text-zinc-500'>
+                  Or
+                </span>
+              </div>
             </div>
-            {error && <p className='text-sm text-red-500'>{error}</p>}
-            <Button type='submit' className='w-full' disabled={loading}>
-              {sendingOTP ? 'Sending...' : 'Send Verification Code'}
+            <Button
+              type='button'
+              variant='outline'
+              className='w-full'
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+            >
+              {initiatingGoogleOAuth
+                ? 'Redirecting...'
+                : 'Continue with Google'}
             </Button>
-          </form>
+          </div>
         ) : (
           <form onSubmit={handleVerifyOTP} className='space-y-4'>
             <div className='space-y-2'>

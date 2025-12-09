@@ -2,6 +2,7 @@
 
 import { auth } from '../../server/auth/auth'
 import { emailOTPAuthenticator } from '../../server/auth/authenticators/email-otp'
+import { googleOAuthAuthenticator } from '../../server/auth/authenticators/google'
 import { getRequestMetadata } from '../../server/auth/utils'
 import { ActionResult, failure, success } from '../../server/types'
 
@@ -80,4 +81,11 @@ export async function verifyOTPForSigningInAction(
   }
 
   return success()
+}
+
+export async function initiateGoogleOAuthAction(
+  intent: 'sign-in' | 'sign-up',
+): Promise<ActionResult<{ authUrl: string }>> {
+  const authUrl = googleOAuthAuthenticator.getAuthUrl(intent)
+  return success({ authUrl })
 }

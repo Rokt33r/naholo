@@ -20,7 +20,11 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
-import { sendOTPAction, verifyOTPForSigningUpAction } from '../actions'
+import {
+  sendOTPAction,
+  verifyOTPForSigningUpAction,
+  initiateGoogleOAuthAction,
+} from '../actions'
 
 export function SignUpForm() {
   const router = useRouter()
@@ -36,6 +40,8 @@ export function SignUpForm() {
   const { execute: verifyOTP, loading: verifying } = useAction(
     verifyOTPForSigningUpAction,
   )
+  const { execute: initiateGoogleOAuth, loading: initiatingGoogleOAuth } =
+    useAction(initiateGoogleOAuthAction)
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,7 +74,20 @@ export function SignUpForm() {
     router.refresh()
   }
 
-  const loading = sendingOTP || verifying
+  const handleGoogleSignUp = async () => {
+    setError('')
+
+    const result = await initiateGoogleOAuth('sign-up')
+
+    if (!result.success) {
+      setError(result.error.message)
+      return
+    }
+
+    window.location.href = result.data.authUrl
+  }
+
+  const loading = sendingOTP || verifying || initiatingGoogleOAuth
 
   return (
     <Card className='w-full max-w-md'>
@@ -82,36 +101,59 @@ export function SignUpForm() {
       </CardHeader>
       <CardContent>
         {step === 'details' ? (
-          <form onSubmit={handleSendOTP} className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='name'>Name</Label>
-              <Input
-                id='name'
-                type='text'
-                placeholder='Your name'
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-              />
+          <div className='space-y-4'>
+            <form onSubmit={handleSendOTP} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Name</Label>
+                <Input
+                  id='name'
+                  type='text'
+                  placeholder='Your name'
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='email'>Email</Label>
+                <Input
+                  id='email'
+                  type='email'
+                  placeholder='you@example.com'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              {error && <p className='text-sm text-red-500'>{error}</p>}
+              <Button type='submit' className='w-full' disabled={loading}>
+                {sendingOTP ? 'Sending...' : 'Continue'}
+              </Button>
+            </form>
+            <div className='relative'>
+              <div className='absolute inset-0 flex items-center'>
+                <span className='w-full border-t' />
+              </div>
+              <div className='relative flex justify-center text-xs uppercase'>
+                <span className='bg-white dark:bg-zinc-950 px-2 text-zinc-500'>
+                  Or
+                </span>
+              </div>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                type='email'
-                placeholder='you@example.com'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            {error && <p className='text-sm text-red-500'>{error}</p>}
-            <Button type='submit' className='w-full' disabled={loading}>
-              {sendingOTP ? 'Sending...' : 'Continue'}
+            <Button
+              type='button'
+              variant='outline'
+              className='w-full'
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+            >
+              {initiatingGoogleOAuth
+                ? 'Redirecting...'
+                : 'Continue with Google'}
             </Button>
-          </form>
+          </div>
         ) : (
           <form onSubmit={handleVerifyOTP} className='space-y-4'>
             <div className='space-y-2'>
