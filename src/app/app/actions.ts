@@ -7,6 +7,16 @@ import { getAuthUser } from '@/server/auth/utils'
 import { success, failure } from '@/server/types'
 import type { ActionResult } from '@/server/types'
 import { eq, and, isNull, desc } from 'drizzle-orm'
+import { auth } from '../../server/auth/auth'
+
+export async function refreshSessionAction() {
+  return auth.refreshSession()
+}
+
+export async function logoutAction(): Promise<ActionResult<undefined>> {
+  await auth.signOut()
+  return success()
+}
 
 /**
  * Projects

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { sendOTPAction, verifyOTPAction } from '@/server/auth/actions'
 import { useAction } from '@/lib/use-action'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +20,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
+import { sendOTPAction, verifyOTPForSigningInAction } from '../actions'
 
 export function SignInForm() {
   const router = useRouter()
@@ -32,7 +32,9 @@ export function SignInForm() {
   const [error, setError] = useState('')
 
   const { execute: sendOTP, loading: sendingOTP } = useAction(sendOTPAction)
-  const { execute: verifyOTP, loading: verifying } = useAction(verifyOTPAction)
+  const { execute: verifyOTP, loading: verifying } = useAction(
+    verifyOTPForSigningInAction,
+  )
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,7 +56,7 @@ export function SignInForm() {
     e.preventDefault()
     setError('')
 
-    const result = await verifyOTP(email, otpId, code, 'sign-in')
+    const result = await verifyOTP(email, otpId, code)
 
     if (!result.success) {
       setError(result.error.message)

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/server/auth/utils'
 import { SessionRefresh } from '@kenmon/nextjs-adapter'
-import { refreshSessionAction } from '../../server/auth/actions'
+import { refreshSessionAction } from './actions'
 
 export default async function AppLayout({
   children,

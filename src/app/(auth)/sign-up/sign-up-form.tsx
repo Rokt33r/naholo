@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { sendOTPAction, verifyOTPAction } from '@/server/auth/actions'
 import { useAction } from '@/lib/use-action'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +20,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
+import { sendOTPAction, verifyOTPForSigningUpAction } from '../actions'
 
 export function SignUpForm() {
   const router = useRouter()
@@ -33,7 +33,9 @@ export function SignUpForm() {
   const [error, setError] = useState('')
 
   const { execute: sendOTP, loading: sendingOTP } = useAction(sendOTPAction)
-  const { execute: verifyOTP, loading: verifying } = useAction(verifyOTPAction)
+  const { execute: verifyOTP, loading: verifying } = useAction(
+    verifyOTPForSigningUpAction,
+  )
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +57,7 @@ export function SignUpForm() {
     e.preventDefault()
     setError('')
 
-    const result = await verifyOTP(email, otpId, code, 'sign-up', name)
+    const result = await verifyOTP(email, otpId, code, name)
 
     if (!result.success) {
       setError(result.error.message)
