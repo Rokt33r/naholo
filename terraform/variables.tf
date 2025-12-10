@@ -118,3 +118,10 @@ variable "google_oauth_state_secret" {
   type        = string
   sensitive   = true
 }
+
+# GitHub Actions Configuration
+variable "github_repository" {
+  description = "GitHub repository in format 'owner/repo-name' for OIDC authentication. Each repository should have its own IAM role for security isolation."
+  type        = string
+  default     = "iLuvGimbap/naholo"
+}

@@ -45,6 +45,11 @@ output "cloudwatch_log_group" {
   value       = aws_cloudwatch_log_group.ecs.name
 }
 
+output "github_actions_role_arn" {
+  description = "IAM Role ARN for GitHub Actions OIDC authentication - Add this to GitHub repository secrets as AWS_ROLE_ARN"
+  value       = aws_iam_role.github_actions.arn
+}
+
 output "domain_name" {
   description = "Custom domain name (if configured)"
   value       = var.domain_name != "" ? var.domain_name : "Not configured"

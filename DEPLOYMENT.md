@@ -370,57 +370,73 @@ aws ecs describe-services \
 
 ## Setting Up CI/CD with GitHub Actions
 
-### Step 1: Create IAM User or OIDC Role for GitHub Actions
+### Overview
 
-**Option A: OIDC (Recommended - No long-lived credentials)**
+The application uses GitHub Actions with OIDC (OpenID Connect) for secure, keyless authentication to AWS. Deployments are triggered by pushing version tags (e.g., `v1.0.0`), not by pushing to the main branch.
 
-#### 1. Create OIDC provider in AWS Console:
+### Step 1: Deploy OIDC Infrastructure with Terraform
 
-- IAM → Identity Providers → Add Provider
-- Provider type: OpenID Connect
-- Provider URL: `https://token.actions.githubusercontent.com`
-- Audience: `sts.amazonaws.com`
+The Terraform configuration automatically creates:
 
-#### 2. Create IAM role for GitHub:
+- GitHub OIDC provider in AWS
+- IAM role for GitHub Actions (restricted to your repository only)
+- Required permissions for ECR and ECS
+
+**Simply run:**
 
 ```bash
-# Use Terraform or AWS Console to create role
-# Trust policy should allow GitHub Actions from your repo
+cd terraform
+terraform apply
 ```
 
-**Option B: IAM Access Keys (Simpler but less secure)**
+**Note:** The OIDC provider and IAM role are already defined in [terraform/github-actions.tf](terraform/github-actions.tf). No manual AWS Console setup is needed.
 
-#### 1. Create IAM user with programmatic access
+### Step 2: Get the GitHub Actions Role ARN
 
-#### 2. Attach policies:
+After Terraform completes, get the role ARN:
 
-- `AmazonEC2ContainerRegistryPowerUser`
-- `AmazonECS_FullAccess` (or create custom policy with minimum permissions)
-
-### Step 2: Configure GitHub Secrets
-
-Go to your repository → Settings → Secrets and variables → Actions
-
-Add these secrets:
-
-```
-AWS_ROLE_ARN (if using OIDC)
-# OR
-AWS_ACCESS_KEY_ID (if using access keys)
-AWS_SECRET_ACCESS_KEY (if using access keys)
+```bash
+terraform output github_actions_role_arn
 ```
 
-### Step 3: Push to Main Branch
+Copy this ARN - you'll need it in the next step.
+
+### Step 3: Configure GitHub Repository Secret
+
+Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+
+Add a repository secret like below:
+
+| Name           | Value                                              | Description           |
+| -------------- | -------------------------------------------------- | --------------------- |
+| `AWS_ROLE_ARN` | `arn:aws:iam::...:role/naholo-github-actions-role` | From terraform output |
+
+### Step 4: Deploy by Creating a Version Tag
+
+Deployments are triggered by pushing version tags:
+
+```bash
+# Bump version and tag
+#pnpm version major
+#pnpm version minor
+pnpm version patch
+
+# Push commits and tags
+git push && git push --tags
+```
 
 GitHub Actions will automatically:
 
 1. Build Docker image
-2. Push to ECR
-3. Update ECS task definition
-4. Deploy new version
-5. Wait for service stability
+2. Tag image with version (e.g., `v1.0.0`) and `latest`
+3. Push to ECR
+4. Update ECS task definition
+5. Deploy new version
+6. Wait for service stability
 
-Monitor deployment: Repository → Actions tab
+**Monitor deployment:** Repository → Actions tab
+
+**Important:** Only version tags matching `v*.*.*` trigger deployments (e.g., `v1.0.0`, `v2.1.3`). Pushing to the main branch does NOT trigger automatic deployment.
 
 ---
 
@@ -428,9 +444,10 @@ Monitor deployment: Repository → Actions tab
 
 Use manual deployment when:
 
-- Testing changes locally before pushing to main
+- Testing changes locally before creating a version tag
 - Emergency hotfixes needed immediately
 - GitHub Actions is unavailable or problematic
+- You want to deploy without creating a version tag
 
 ### Complete Manual Deployment Process
 
@@ -492,7 +509,7 @@ aws ecs describe-services \
 aws logs tail /ecs/naholo --follow --region ap-northeast-1
 ```
 
-**Note:** This manual process is the same as what GitHub Actions does automatically when you push to main. Use GitHub Actions for regular deployments to maintain consistency and audit trail.
+**Note:** This manual process is the same as what GitHub Actions does automatically when you push a version tag. Use version tags for regular deployments to maintain consistency and audit trail.
 
 ---
 
