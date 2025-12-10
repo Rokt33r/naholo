@@ -1,10 +1,10 @@
 import { defineConfig } from 'drizzle-kit'
-import { existsSync, readFileSync } from 'fs'
+import { readFileSync } from 'fs'
 import { join } from 'path'
 import { config } from './src/server/config'
 
 const rdsCaPath = join(process.cwd(), 'certs', 'rds-ca-bundle.pem')
-const useRdsCa = config.isProduction && existsSync(rdsCaPath)
+const usingSsl = config.database.ssl === 'true'
 
 export default defineConfig({
   schema: './src/db/schema/*.ts',
@@ -16,6 +16,11 @@ export default defineConfig({
     database: config.database.name,
     user: config.database.user,
     password: config.database.password,
-    ssl: { rejectUnauthorized: false },
+    ssl: usingSsl
+      ? {
+          rejectUnauthorized: true,
+          ca: readFileSync(rdsCaPath),
+        }
+      : false,
   },
 })

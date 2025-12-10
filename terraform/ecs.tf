@@ -103,6 +103,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "DB_USER"
           value = var.db_username
+        },
+        {
+          name  = "DB_SSL"
+          value = var.db_ssl
         }
         ],
         var.google_oauth_client_id != "" ? [

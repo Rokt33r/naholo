@@ -32,6 +32,7 @@ export const config = {
     name: getOptionalEnv('DB_NAME', 'naholo'),
     user: getOptionalEnv('DB_USER', 'naholo'),
     password: getOptionalEnv('DB_PASSWORD', 'naholo'),
+    ssl: getOptionalEnv('DB_SSL', 'true'),
   },
 
   // Authentication

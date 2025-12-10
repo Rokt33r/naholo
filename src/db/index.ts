@@ -1,12 +1,12 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync } from 'fs'
 import { join } from 'path'
 import * as schema from './schema'
 import { config } from '../server/config'
 
 const rdsCaPath = join(process.cwd(), 'certs', 'rds-ca-bundle.pem')
-const useRdsCa = config.isProduction && existsSync(rdsCaPath)
+const usingSsl = config.database.ssl === 'true'
 
 const poolConfig = {
   host: config.database.host,
@@ -14,14 +14,12 @@ const poolConfig = {
   database: config.database.name,
   user: config.database.user,
   password: config.database.password,
-  ...(useRdsCa
+  ssl: usingSsl
     ? {
-        ssl: {
-          rejectUnauthorized: true,
-          ca: readFileSync(rdsCaPath).toString(),
-        },
+        rejectUnauthorized: true,
+        ca: readFileSync(rdsCaPath),
       }
-    : {}),
+    : false,
 }
 
 const pool = new Pool(poolConfig)

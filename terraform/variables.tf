@@ -68,6 +68,12 @@ variable "db_username" {
   default     = "naholo"
 }
 
+variable "db_ssl" {
+  description = "Enable SSL for Database access"
+  type        = string
+  default     = "true"
+}
+
 # Application Configuration
 variable "session_secret" {
   description = "Session secret for application (set via terraform.tfvars or environment)"

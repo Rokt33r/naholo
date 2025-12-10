@@ -32,6 +32,7 @@ github_repository = "iLuvGimbap/naholo"
 # db_allocated_storage  = 20
 # db_name              = "naholo"
 # db_username          = "naholo"
+# db_ssl               = "true"
 
 # Container Image (leave empty for first deployment)
 # container_image = ""
