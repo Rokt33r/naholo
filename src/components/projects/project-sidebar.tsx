@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Settings } from 'lucide-react'
+import { Plus, Settings, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
 import {
@@ -11,6 +11,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useAction } from '@/lib/use-action'
+import { logoutAction } from '@/app/app/actions'
 
 type Project = {
   id: string
@@ -29,9 +37,14 @@ export function ProjectSidebar({
   currentProjectId,
 }: ProjectSidebarProps) {
   const router = useRouter()
+  const { execute: logout } = useAction(logoutAction)
 
   const handleProjectClick = (projectId: string) => {
     router.push(`/app/projects/${projectId}`)
+  }
+
+  const handleLogout = async () => {
+    await logout()
   }
 
   return (
@@ -69,9 +82,19 @@ export function ProjectSidebar({
       <SidebarFooter className='items-center'>
         <SidebarMenu className='items-center'>
           <SidebarMenuItem>
-            <SidebarMenuButton size='xl' tooltip='Settings'>
-              <Settings className='h-5 w-5' />
-            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton size='xl' tooltip='Settings'>
+                  <Settings className='h-5 w-5' />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end' side='right'>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className='mr-2 h-4 w-4' />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
