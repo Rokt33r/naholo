@@ -1,4 +1,6 @@
-// Centralized configuration for all environment variables
+import { loadEnvConfig } from '@next/env'
+
+loadEnvConfig(process.cwd())
 
 function getRequiredEnv(key: string): string {
   const value = process.env[key]
