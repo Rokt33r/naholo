@@ -12,6 +12,7 @@ env:
   ECS_CLUSTER: naholo-cluster
   ECS_SERVICE: naholo-service
   ECS_TASK_DEFINITION: naholo
+  BASE_URL: https://naholo.app
 
 permissions:
   contents: read
