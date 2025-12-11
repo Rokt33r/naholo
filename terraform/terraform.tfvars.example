@@ -36,3 +36,5 @@ github_repository = "iLuvGimbap/naholo"
 
 # Container Image (leave empty for first deployment)
 # container_image = ""
+
+base_url="https://naholo.app"

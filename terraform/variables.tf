@@ -131,3 +131,9 @@ variable "github_repository" {
   type        = string
   default     = "iLuvGimbap/naholo"
 }
+
+# Application URL
+variable "base_url" {
+  description = "Base URL for the application (e.g., https://your-domain.com)"
+  type        = string
+}

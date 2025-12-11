@@ -25,6 +25,9 @@ function getOptionalEnv(key: string, defaultValue?: string): string {
 }
 
 export const config = {
+  // Application
+  baseUrl: getRequiredEnv('BASE_URL'),
+
   // Database
   database: {
     host: getOptionalEnv('DB_HOST', 'localhost'),

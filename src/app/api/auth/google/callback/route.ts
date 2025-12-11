@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '../../../../../server/auth/auth'
 import { googleOAuthAuthenticator } from '../../../../../server/auth/authenticators/google'
 import { getRequestMetadata } from '../../../../../server/auth/utils'
+import { config } from '../../../../../server/config'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   if (!code || !state) {
     return NextResponse.redirect(
-      new URL('/sign-in?error=missing_parameters', request.url),
+      new URL('/sign-in?error=missing_parameters', config.baseUrl),
     )
   }
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (!result.success) {
       console.error('Google OAuth verification failed:', result.error)
       return NextResponse.redirect(
-        new URL('/sign-in?error=oauth_verification_failed', request.url),
+        new URL('/sign-in?error=oauth_verification_failed', config.baseUrl),
       )
     }
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       if (!signInResult.success) {
         console.error('Sign-in failed:', signInResult.error)
         return NextResponse.redirect(
-          new URL('/sign-in?error=signin_failed', request.url),
+          new URL('/sign-in?error=signin_failed', config.baseUrl),
         )
       }
     } else {
@@ -53,16 +54,16 @@ export async function GET(request: NextRequest) {
       if (!signUpResult.success) {
         console.error('Sign-up failed:', signUpResult.error)
         return NextResponse.redirect(
-          new URL('/sign-up?error=signup_failed', request.url),
+          new URL('/sign-up?error=signup_failed', config.baseUrl),
         )
       }
     }
 
-    return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(new URL('/', config.baseUrl))
   } catch (error) {
     console.error('Google OAuth callback error:', error)
     return NextResponse.redirect(
-      new URL('/sign-in?error=internal_error', request.url),
+      new URL('/sign-in?error=internal_error', config.baseUrl),
     )
   }
 }
