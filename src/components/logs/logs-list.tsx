@@ -1,5 +1,6 @@
 'use client'
 
+import { CornerDownLeft } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LogItem } from './log-item'
@@ -182,6 +183,7 @@ export function LogsList({
               disabled={!message.trim() || createLoading}
             >
               Send
+              <CornerDownLeft className='h-4 w-4' />
             </Button>
           </div>
         </div>
