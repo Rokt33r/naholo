@@ -23,8 +23,6 @@ type TasksListProps = {
 }
 
 export function TasksList({ projectId, issueId, tasks }: TasksListProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
   // Separate root tasks (no parent) from subtasks
   const rootTasks = tasks
     .filter((task) => !task.parentTaskId)
@@ -34,9 +32,6 @@ export function TasksList({ projectId, issueId, tasks }: TasksListProps) {
     tasks
       .filter((task) => task.parentTaskId === parentId)
       .sort((a, b) => a.position - b.position)
-
-  const displayedTasks = isExpanded ? rootTasks : rootTasks.slice(0, 3)
-  const hasMore = rootTasks.length > 3
 
   return (
     <div className='p-4'>
@@ -53,7 +48,7 @@ export function TasksList({ projectId, issueId, tasks }: TasksListProps) {
       ) : (
         <>
           <div className='space-y-1'>
-            {displayedTasks.map((task) => (
+            {rootTasks.map((task) => (
               <TaskItem
                 key={task.id}
                 task={task}
@@ -64,27 +59,6 @@ export function TasksList({ projectId, issueId, tasks }: TasksListProps) {
               />
             ))}
           </div>
-
-          {hasMore && (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='mt-2 w-full'
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? (
-                <>
-                  <ChevronRight className='mr-1 h-4 w-4' />
-                  Show less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className='mr-1 h-4 w-4' />
-                  Show all {rootTasks.length} tasks
-                </>
-              )}
-            </Button>
-          )}
         </>
       )}
 
