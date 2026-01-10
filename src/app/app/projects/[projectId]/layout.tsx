@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/server/auth/utils'
-import { getProject } from '../../dal'
+import { getProject } from '@/dal/getProject'
 import { ProjectSidebar } from '@/components/projects/project-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 import { SidebarProvider } from '@/components/ui/sidebar'

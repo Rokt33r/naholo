@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/server/auth/utils'
-import { getProject, getIssues } from '../../dal'
+import { getProject } from '@/dal/getProject'
+import { listIssues } from '@/dal/listIssues'
 
 type Props = {
   params: Promise<{ projectId: string }>
@@ -20,7 +21,7 @@ export default async function ProjectPage({ params }: Props) {
     redirect('/app')
   }
 
-  const issues = await getIssues(projectId) // Show open issues by default
+  const issues = await listIssues(projectId) // Show open issues by default
 
   // Redirect to first issue or show empty state
   if (issues.length > 0) {

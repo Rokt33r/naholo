@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/server/auth/utils'
-import { getIssue, getLogs, getTasks } from '../../../../dal'
+import { getIssue } from '@/dal/getIssue'
+import { listTasks } from '@/dal/listTasks'
 import { IssueClientPage } from '@/components/issues/issue-client-page'
 
 type Props = {
@@ -21,7 +22,7 @@ export default async function IssuePage({ params }: Props) {
     redirect(`/app/projects/${projectId}`)
   }
 
-  const [logs, tasks] = await Promise.all([getLogs(issueId), getTasks(issueId)])
+  const [tasks] = await Promise.all([listTasks(issueId)])
 
-  return <IssueClientPage issue={issue} tasks={tasks} logs={logs} />
+  return <IssueClientPage issue={issue} tasks={tasks} />
 }
