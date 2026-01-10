@@ -5,25 +5,6 @@ import { getAuthUser } from '@/server/auth/utils'
 import { eq, and, desc, asc, isNull, count, sum, sql } from 'drizzle-orm'
 
 /**
- * Get all projects for current user
- */
-export const getProjects = cache(async () => {
-  const user = await getAuthUser()
-  if (!user) return []
-
-  return await db
-    .select({
-      id: projects.id,
-      name: projects.name,
-      description: projects.description,
-      createdAt: projects.createdAt,
-    })
-    .from(projects)
-    .where(eq(projects.userId, user.id))
-    .orderBy(desc(projects.createdAt))
-})
-
-/**
  * Get a single project
  */
 export const getProject = cache(async (projectId: string) => {

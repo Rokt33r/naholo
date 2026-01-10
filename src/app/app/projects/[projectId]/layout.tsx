@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/server/auth/utils'
-import { getProjects, getProject } from '../../dal'
+import { getProject } from '../../dal'
 import { ProjectSidebar } from '@/components/projects/project-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 import { SidebarProvider } from '@/components/ui/sidebar'
+import { listProjects } from '../../../../dal/listProjects'
 
 type Props = {
   children: React.ReactNode
@@ -19,7 +20,7 @@ export default async function ProjectLayout({ children, params }: Props) {
   }
 
   const [projects, project] = await Promise.all([
-    getProjects(),
+    listProjects(),
     getProject(projectId),
   ])
 
