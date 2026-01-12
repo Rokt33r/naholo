@@ -11,8 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAction } from '@/lib/use-action'
-import { updateLogAction, deleteLogAction } from '@/app/app/actions'
+import { useUpdateLog, useDeleteLog } from '@/hooks/use-logs'
 
 type Log = {
   id: string
@@ -31,10 +30,14 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(log.content)
 
-  const { execute: updateLog, loading: updateLoading } =
-    useAction(updateLogAction)
-  const { execute: deleteLog, loading: deleteLoading } =
-    useAction(deleteLogAction)
+  const { mutateAsync: updateLog, isPending: updateLoading } = useUpdateLog(
+    projectId,
+    issueId,
+  )
+  const { mutateAsync: deleteLog, isPending: deleteLoading } = useDeleteLog(
+    projectId,
+    issueId,
+  )
 
   const isLoading = updateLoading || deleteLoading
 
@@ -44,9 +47,10 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
 
   const handleSave = async () => {
     if (content.trim() && content !== log.content) {
-      const result = await updateLog(log.id, content.trim())
-      if (!result.success) {
-        alert('Failed to update log: ' + result.error.message)
+      try {
+        await updateLog({ logId: log.id, content: content.trim() })
+      } catch (error) {
+        console.error('Failed to update log:', error)
         setContent(log.content)
       }
     }
@@ -57,9 +61,10 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
     if (!confirm('Are you sure you want to delete this log?')) {
       return
     }
-    const result = await deleteLog(log.id)
-    if (!result.success) {
-      alert('Failed to delete log: ' + result.error.message)
+    try {
+      await deleteLog(log.id)
+    } catch (error) {
+      console.error('Failed to delete log:', error)
     }
   }
 

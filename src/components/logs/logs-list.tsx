@@ -4,10 +4,9 @@ import { CornerDownLeft } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LogItem } from './log-item'
-import { useAction } from '@/lib/use-action'
-import { createLogAction } from '@/app/app/actions'
 import { ButtonGroup } from '../ui/button-group'
 import { useCloseIssue, useReopenIssue } from '@/hooks/use-issues'
+import { useCreateLog } from '@/hooks/use-logs'
 
 type Log = {
   id: string
@@ -35,8 +34,10 @@ export function LogsList({
   const [isReopening, setIsReopening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { execute: createLog, loading: createLoading } =
-    useAction(createLogAction)
+  const { mutateAsync: createLog, isPending: createLoading } = useCreateLog(
+    projectId,
+    issueId,
+  )
   const { closeIssue } = useCloseIssue()
   const { reopenIssue } = useReopenIssue()
 
@@ -50,11 +51,11 @@ export function LogsList({
 
   const handleSendMessage = async () => {
     if (message.trim()) {
-      const result = await createLog(projectId, issueId, message.trim())
-      if (result.success) {
+      try {
+        await createLog(message.trim())
         setMessage('')
-      } else {
-        alert('Failed to send message: ' + result.error.message)
+      } catch (error) {
+        console.error('Failed to create log:', error)
       }
     }
   }
@@ -71,12 +72,13 @@ export function LogsList({
 
     // If there's content, create log first
     if (trimmedMessage) {
-      const result = await createLog(projectId, issueId, trimmedMessage)
-      if (!result.success) {
-        alert('Failed to send message: ' + result.error.message)
+      try {
+        await createLog(trimmedMessage)
+        setMessage('')
+      } catch (error) {
+        console.error('Failed to create log:', error)
         return
       }
-      setMessage('')
     }
 
     // Then close the issue
