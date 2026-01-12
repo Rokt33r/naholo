@@ -39,6 +39,7 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
     issueId,
   )
 
+  const isCreating = log.id.startsWith('temp-')
   const isLoading = updateLoading || deleteLoading
 
   const handleEdit = () => {
@@ -106,36 +107,45 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
           </div>
         </div>
       ) : (
-        <div className='prose prose-sm dark:prose-invert max-w-160 inline-block rounded-lg border bg-card p-2 hover:bg-accent/50'>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {log.content}
-          </ReactMarkdown>
+        <div>
+          <div
+            className={`prose prose-sm dark:prose-invert max-w-160 inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? 'opacity-70' : ''}`}
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {log.content}
+            </ReactMarkdown>
+          </div>
+          {isCreating && (
+            <div className='mt-1 text-xs text-muted-foreground'>Sending...</div>
+          )}
         </div>
       )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-6 w-6 opacity-0 group-hover:opacity-100'
-            disabled={isLoading}
-          >
-            <MoreVertical className='h-3 w-3' />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='end'>
-          <DropdownMenuItem onClick={handleEdit} disabled={isLoading}>
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleDelete}
-            disabled={deleteLoading}
-            className='text-red-600'
-          >
-            {deleteLoading ? 'Deleting...' : 'Delete'}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {!isCreating && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-6 w-6 opacity-0 group-hover:opacity-100'
+              disabled={isLoading}
+            >
+              <MoreVertical className='h-3 w-3' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuItem onClick={handleEdit} disabled={isLoading}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className='text-red-600'
+            >
+              {deleteLoading ? 'Deleting...' : 'Delete'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   )
 }
