@@ -33,6 +33,7 @@ export function LogsList({
   const [isClosing, setIsClosing] = useState(false)
   const [isReopening, setIsReopening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { mutateAsync: createLog, isPending: createLoading } = useCreateLog(
     projectId,
@@ -48,6 +49,14 @@ export function LogsList({
   useEffect(() => {
     scrollToBottom()
   }, [logs])
+
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.style.height = 'auto'
+      textarea.style.height = `${textarea.scrollHeight}px`
+    }
+  }, [message])
 
   const handleSendMessage = async () => {
     if (message.trim()) {
@@ -126,6 +135,7 @@ export function LogsList({
       <div className='border-t p-2'>
         <div className='flex'>
           <textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
