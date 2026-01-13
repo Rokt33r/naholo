@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { MoreVertical } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { Button } from '@/components/ui/button'
 import {
@@ -111,7 +112,7 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
           <div
             className={`prose prose-sm dark:prose-invert max-w-160 inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? 'opacity-70' : ''}`}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
               {log.content}
             </ReactMarkdown>
           </div>

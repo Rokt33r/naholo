@@ -126,7 +126,6 @@
 /* Prose styles for markdown */
 .prose {
   @apply text-foreground;
-  white-space: pre-wrap;
 }
 
 .prose p {
