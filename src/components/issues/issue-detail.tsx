@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreVertical, ListTodo, Loader2 } from 'lucide-react'
+import {
+  MoreVertical,
+  ListTodo,
+  Loader2,
+  CircleDot,
+  CircleCheck,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -123,7 +129,7 @@ export function IssueDetail({
     <div className='flex h-full flex-col'>
       {/* Header */}
       <div className='flex items-center justify-between border-b p-2'>
-        <div className='flex-1 px-2'>
+        <div className='flex-1 px-1'>
           {isEditingTitle ? (
             <input
               type='text'
@@ -143,6 +149,11 @@ export function IssueDetail({
             />
           ) : (
             <div className='flex items-center gap-2'>
+              {issue.closed ? (
+                <CircleCheck className='h-5 w-5 shrink-0 text-purple-600' />
+              ) : (
+                <CircleDot className='h-5 w-5 shrink-0 text-green-600' />
+              )}
               <h1
                 className='cursor-text text-xl font-semibold'
                 onClick={() => setIsEditingTitle(true)}

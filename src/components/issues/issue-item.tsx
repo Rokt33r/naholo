@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { CircleCheckBig } from 'lucide-react'
+import { CircleCheckBig, CircleDot, CircleCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatIssueDate } from '@/lib/date-utils'
 
@@ -38,13 +38,20 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
     <button
       onClick={handleClick}
       className={cn(
-        'w-full px-4 py-3 text-left transition-colors hover:bg-ring rounded-md',
+        'w-full px-3 py-3 text-left transition-colors hover:bg-ring rounded-md',
         isActive && 'bg-accent hover:bg-accent',
       )}
     >
       {/* Row 1: Title and progress */}
       <div className='flex items-center justify-between gap-2'>
-        <div className='flex-1 truncate font-bold'>{issue.title}</div>
+        <div className='flex items-center gap-1 flex-1 min-w-0'>
+          {issue.closed ? (
+            <CircleCheck className='h-4 w-4 shrink-0 text-purple-600' />
+          ) : (
+            <CircleDot className='h-4 w-4 shrink-0 text-green-600' />
+          )}
+          <div className='truncate font-bold'>{issue.title}</div>
+        </div>
         {totalCount > 0 && (
           <div className='flex items-center gap-1 text-xs text-muted-foreground'>
             <CircleCheckBig className='h-4 w-4' />
