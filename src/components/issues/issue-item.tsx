@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CircleCheckBig, CircleDot, CircleCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatIssueDate } from '@/lib/date-utils'
@@ -24,9 +24,13 @@ type IssueItemProps = {
 
 export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const handleClick = () => {
-    router.push(`/app/projects/${projectId}/issues/${issue.id}`)
+    const query = searchParams.toString()
+    router.push(
+      `/app/projects/${projectId}/issues/${issue.id}${query ? `?${query}` : ''}`,
+    )
   }
 
   const completedCount = issue.completedTasks

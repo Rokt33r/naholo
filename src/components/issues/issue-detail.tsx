@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   MoreVertical,
   ListTodo,
@@ -68,6 +68,7 @@ export function IssueDetail({
   onToggleTasks,
 }: IssueDetailProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -93,7 +94,8 @@ export function IssueDetail({
     setIsDeleting(true)
     try {
       await deleteIssue(projectId, issue.id)
-      router.push(`/app/projects/${projectId}`)
+      const query = searchParams.toString()
+      router.push(`/app/projects/${projectId}${query ? `?${query}` : ''}`)
     } finally {
       setIsDeleting(false)
     }
