@@ -1,27 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetcher } from '@/lib/fetcher'
+import { fetcher, createResponseError } from '@/lib/fetcher'
 
 type Log = {
   id: string
   content: string
   createdAt: Date
   updatedAt: Date
-}
-
-async function getErrorMessage(
-  response: Response,
-  fallback: string,
-): Promise<string> {
-  try {
-    const data = await response.json()
-    return data.error || fallback
-  } catch (parseError) {
-    console.error(parseError)
-    const parseMessage =
-      parseError instanceof Error ? parseError.message : 'Unknown parse error'
-    return `${fallback} (${response.status} ${response.statusText}, parse error: ${parseMessage})`
-  }
 }
 
 /**
@@ -53,7 +38,7 @@ export function useCreateLog(projectId: string, issueId: string) {
         },
       )
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Failed to create log'))
+        throw await createResponseError(response, 'Failed to create log')
       }
       return response.json() as Promise<Log>
     },
@@ -111,7 +96,7 @@ export function useUpdateLog(projectId: string, issueId: string) {
         },
       )
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Failed to update log'))
+        throw await createResponseError(response, 'Failed to update log')
       }
       return response.json() as Promise<Log>
     },
@@ -153,7 +138,7 @@ export function useDeleteLog(projectId: string, issueId: string) {
         { method: 'DELETE' },
       )
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, 'Failed to delete log'))
+        throw await createResponseError(response, 'Failed to delete log')
       }
     },
     onMutate: async (logId) => {

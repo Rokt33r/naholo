@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { IssueDetail } from './issue-detail'
-import { TasksList } from '@/components/tasks/tasks-list'
+import { LogsList } from '@/components/logs/logs-list'
 import { useLogs } from '@/hooks/use-logs'
+import { useNotes } from '@/hooks/use-notes'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,14 +36,29 @@ type Task = {
   updatedAt: Date
 }
 
+type Note = {
+  id: string
+  title: string
+  content: string
+  position: number
+  createdAt: Date
+  updatedAt: Date
+}
+
 type IssueClientPageProps = {
   issue: Issue
   tasks: Task[]
+  notes: Note[]
 }
 
-function IssueClientPageContent({ issue, tasks }: IssueClientPageProps) {
-  const [showTasks, setShowTasks] = useState(true)
+function IssueClientPageContent({
+  issue,
+  tasks,
+  notes: initialNotes,
+}: IssueClientPageProps) {
+  const [showLogs, setShowLogs] = useState(false)
   const { data: logs = [] } = useLogs(issue.projectId, issue.id)
+  const { data: notes = initialNotes } = useNotes(issue.projectId, issue.id)
 
   return (
     <div className='flex h-full'>
@@ -52,16 +68,18 @@ function IssueClientPageContent({ issue, tasks }: IssueClientPageProps) {
           issueId={issue.id}
           tasks={tasks}
           logs={logs}
-          showTasks={showTasks}
-          onToggleTasks={() => setShowTasks(!showTasks)}
+          notes={notes}
+          showLogs={showLogs}
+          onToggleLogs={() => setShowLogs(!showLogs)}
         />
       </div>
-      {showTasks && (
+      {showLogs && (
         <div className='w-80 border-l'>
-          <TasksList
+          <LogsList
             projectId={issue.projectId}
             issueId={issue.id}
-            tasks={tasks}
+            logs={logs}
+            isClosed={issue.closed}
           />
         </div>
       )}
@@ -69,10 +87,10 @@ function IssueClientPageContent({ issue, tasks }: IssueClientPageProps) {
   )
 }
 
-export function IssueClientPage({ issue, tasks }: IssueClientPageProps) {
+export function IssueClientPage({ issue, tasks, notes }: IssueClientPageProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <IssueClientPageContent issue={issue} tasks={tasks} />
+      <IssueClientPageContent issue={issue} tasks={tasks} notes={notes} />
     </QueryClientProvider>
   )
 }

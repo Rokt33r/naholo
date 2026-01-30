@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   MoreVertical,
-  ListTodo,
+  MessageSquare,
   Loader2,
   CircleDot,
   CircleCheck,
@@ -17,6 +17,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogsList } from '@/components/logs/logs-list'
+import { TasksList } from '@/components/tasks/tasks-list'
+import { NoteView } from '@/components/notes/note-view'
+import { IssueTabs } from './issue-tabs'
 import {
   useIssue,
   useUpdateIssueTitle,
@@ -50,13 +53,28 @@ type Log = {
   updatedAt: Date
 }
 
+type Note = {
+  id: string
+  title: string
+  content: string
+  position: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+type ActiveTab =
+  | { type: 'logs' }
+  | { type: 'tasks' }
+  | { type: 'note'; noteId: string }
+
 type IssueDetailProps = {
   projectId: string
   issueId: string
   tasks: Task[]
   logs: Log[]
-  showTasks: boolean
-  onToggleTasks: () => void
+  notes: Note[]
+  showLogs: boolean
+  onToggleLogs: () => void
 }
 
 export function IssueDetail({
@@ -64,9 +82,11 @@ export function IssueDetail({
   issueId,
   tasks,
   logs,
-  showTasks,
-  onToggleTasks,
+  notes,
+  showLogs,
+  onToggleLogs,
 }: IssueDetailProps) {
+  const [activeTab, setActiveTab] = useState<ActiveTab>({ type: 'logs' })
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -77,9 +97,6 @@ export function IssueDetail({
   const { issue, isLoading } = useIssue(projectId, issueId)
   const { updateTitle } = useUpdateIssueTitle()
   const { deleteIssue } = useDeleteIssue()
-
-  const completedTasks = tasks.filter((task) => task.done).length
-  const totalTasks = tasks.length
 
   // Sync title with fetched issue
   if (issue && title !== issue.title && !isEditingTitle) {
@@ -184,25 +201,64 @@ export function IssueDetail({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant={showTasks ? 'default' : 'outline'}
-            size='sm'
-            onClick={onToggleTasks}
-          >
-            <ListTodo className='mr-2 h-4 w-4' />
-            {completedTasks}/{totalTasks}
-          </Button>
+          {activeTab.type !== 'logs' && (
+            <Button
+              variant={showLogs ? 'default' : 'outline'}
+              size='sm'
+              onClick={onToggleLogs}
+            >
+              <MessageSquare className='mr-2 h-4 w-4' />
+              Logs
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Tabs */}
+      <IssueTabs
+        projectId={issue.projectId}
+        issueId={issue.id}
+        notes={notes}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
       {/* Content */}
       <div className='flex-1 overflow-hidden'>
-        <LogsList
-          projectId={issue.projectId}
-          issueId={issue.id}
-          logs={logs}
-          isClosed={issue.closed}
-        />
+        {activeTab.type === 'logs' && (
+          <LogsList
+            projectId={issue.projectId}
+            issueId={issue.id}
+            logs={logs}
+            isClosed={issue.closed}
+          />
+        )}
+        {activeTab.type === 'tasks' && (
+          <TasksList
+            projectId={issue.projectId}
+            issueId={issue.id}
+            tasks={tasks}
+          />
+        )}
+        {activeTab.type === 'note' &&
+          (() => {
+            const note = notes.find((n) => n.id === activeTab.noteId)
+            if (!note) {
+              return (
+                <div className='flex h-full items-center justify-center text-muted-foreground'>
+                  Note not found
+                </div>
+              )
+            }
+            return (
+              <NoteView
+                note={note}
+                projectId={issue.projectId}
+                issueId={issue.id}
+                onDeleted={() => setActiveTab({ type: 'logs' })}
+              />
+            )
+          })()}
       </div>
     </div>
   )
