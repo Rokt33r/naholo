@@ -1,11 +1,26 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { IssueDetail } from './issue-detail'
 import { LogsList } from '@/components/logs/logs-list'
 import { useLogs } from '@/hooks/use-logs'
 import { useNotes } from '@/hooks/use-notes'
+
+type ActiveTab =
+  | { type: 'logs' }
+  | { type: 'tasks' }
+  | { type: 'note'; noteId: string }
+
+function parseActiveTab(tabParam: string | null): ActiveTab {
+  if (!tabParam || tabParam === 'logs') return { type: 'logs' }
+  if (tabParam === 'tasks') return { type: 'tasks' }
+  if (tabParam.startsWith('note:')) {
+    return { type: 'note', noteId: tabParam.slice(5) }
+  }
+  return { type: 'logs' }
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,9 +71,27 @@ function IssueClientPageContent({
   tasks,
   notes: initialNotes,
 }: IssueClientPageProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [showLogs, setShowLogs] = useState(false)
   const { data: logs = [] } = useLogs(issue.projectId, issue.id)
   const { data: notes = initialNotes } = useNotes(issue.projectId, issue.id)
+
+  const activeTab = parseActiveTab(searchParams.get('tab'))
+
+  const handleTabChange = (newTab: ActiveTab) => {
+    const params = new URLSearchParams(searchParams)
+    if (newTab.type === 'logs') {
+      params.delete('tab')
+    } else if (newTab.type === 'tasks') {
+      params.set('tab', 'tasks')
+    } else if (newTab.type === 'note') {
+      params.set('tab', `note:${newTab.noteId}`)
+    }
+    const query = params.toString()
+    router.push(`${pathname}${query ? `?${query}` : ''}`)
+  }
 
   return (
     <div className='flex h-full'>
@@ -71,9 +104,11 @@ function IssueClientPageContent({
           notes={notes}
           showLogs={showLogs}
           onToggleLogs={() => setShowLogs(!showLogs)}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
         />
       </div>
-      {showLogs && (
+      {showLogs && activeTab.type !== 'logs' && (
         <div className='w-80 border-l'>
           <LogsList
             projectId={issue.projectId}

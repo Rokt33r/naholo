@@ -75,6 +75,8 @@ type IssueDetailProps = {
   notes: Note[]
   showLogs: boolean
   onToggleLogs: () => void
+  activeTab: ActiveTab
+  onTabChange: (tab: ActiveTab) => void
 }
 
 export function IssueDetail({
@@ -85,8 +87,9 @@ export function IssueDetail({
   notes,
   showLogs,
   onToggleLogs,
+  activeTab,
+  onTabChange,
 }: IssueDetailProps) {
-  const [activeTab, setActiveTab] = useState<ActiveTab>({ type: 'logs' })
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -220,7 +223,7 @@ export function IssueDetail({
         issueId={issue.id}
         notes={notes}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={onTabChange}
       />
 
       {/* Content */}
@@ -255,7 +258,7 @@ export function IssueDetail({
                 note={note}
                 projectId={issue.projectId}
                 issueId={issue.id}
-                onDeleted={() => setActiveTab({ type: 'logs' })}
+                onDeleted={() => onTabChange({ type: 'logs' })}
               />
             )
           })()}
