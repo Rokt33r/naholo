@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthUser } from '@/server/auth/utils'
-import { listNotes } from '@/dal/listNotes'
-import { db } from '@/db'
-import { notes, issues } from '@/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { getIssue } from '@/server/services/issue'
+import { listNotes, createNote } from '@/server/services/note'
 
 type RouteContext = {
   params: Promise<{
@@ -24,7 +22,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const { issueId } = await context.params
-  const notesData = await listNotes(issueId)
+  const notesData = await listNotes(user.id, issueId)
 
   return NextResponse.json(notesData)
 }
@@ -47,11 +45,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const { projectId, issueId } = await context.params
 
   // Check if issue exists and belongs to user
-  const [issue] = await db
-    .select({ id: issues.id })
-    .from(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.userId, user.id)))
-    .limit(1)
+  const issue = await getIssue(user.id, issueId)
 
   if (!issue) {
     return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
@@ -74,42 +68,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { title, content } = validation.data
 
-  // Get the maximum position for notes in this issue
-  const existingNotes = await db
-    .select({ position: notes.position })
-    .from(notes)
-    .where(and(eq(notes.issueId, issueId), eq(notes.userId, user.id)))
-    .orderBy(notes.position)
-
-  const maxPosition =
-    existingNotes.length > 0
-      ? Math.max(...existingNotes.map((n) => n.position))
-      : -1
-
-  const [note] = await db
-    .insert(notes)
-    .values({
-      projectId,
-      issueId,
-      userId: user.id,
-      title,
-      content,
-      position: maxPosition + 1,
-    })
-    .returning({
-      id: notes.id,
-      title: notes.title,
-      content: notes.content,
-      position: notes.position,
-      createdAt: notes.createdAt,
-      updatedAt: notes.updatedAt,
-    })
-
-  // Update issue's updatedAt timestamp
-  await db
-    .update(issues)
-    .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+  const note = await createNote(user.id, { projectId, issueId, title, content })
 
   return NextResponse.json(note, { status: 201 })
 }

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthUser } from '@/server/auth/utils'
-import { listLogs } from '@/dal/listLogs'
-import { db } from '@/db'
-import { logs, issues } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { listLogs, createLog } from '@/server/services/log'
 
 type RouteContext = {
   params: Promise<{
@@ -24,7 +21,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const { issueId } = await context.params
-  const logsData = await listLogs(issueId)
+  const logsData = await listLogs(user.id, issueId)
 
   return NextResponse.json(logsData)
 }
@@ -62,30 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { content } = validation.data
 
-  const [log] = await db
-    .insert(logs)
-    .values({
-      projectId,
-      issueId,
-      userId: user.id,
-      content,
-    })
-    .returning({
-      id: logs.id,
-      content: logs.content,
-      createdAt: logs.createdAt,
-      updatedAt: logs.updatedAt,
-    })
-
-  // Update issue's updatedAt timestamp and lastLogPreview
-  const preview = content.trim().slice(0, 100)
-  await db
-    .update(issues)
-    .set({
-      updatedAt: new Date(),
-      lastLogPreview: preview || null,
-    })
-    .where(eq(issues.id, issueId))
+  const log = await createLog(user.id, { projectId, issueId, content })
 
   return NextResponse.json(log, { status: 201 })
 }

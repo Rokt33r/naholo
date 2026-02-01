@@ -1,6 +1,6 @@
 import { KenmonAuthService } from 'kenmon'
 import { KenmonNextJSAdapter } from '@kenmon/nextjs-adapter'
-import { db } from '@/db'
+import { db } from '../db'
 import { config } from '@/server/config'
 import { DrizzleStorage } from './storage'
 

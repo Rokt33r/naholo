@@ -4,18 +4,19 @@ import { auth } from '../../server/auth/auth'
 import { emailOTPAuthenticator } from '../../server/auth/authenticators/email-otp'
 import { googleOAuthAuthenticator } from '../../server/auth/authenticators/google'
 import { getRequestMetadata } from '../../server/auth/utils'
-import { ActionResult, failure, success } from '../../server/types'
+import type { ReturnResult } from '@/lib/return-result'
+import { ok, err } from '@/lib/return-result'
 
 export async function sendOTPAction(
   email: string,
-): Promise<ActionResult<{ otpId: string; signature: string }>> {
+): Promise<ReturnResult<{ otpId: string; signature: string }>> {
   const result = await emailOTPAuthenticator.sendOTP(email)
 
   if (!result.success) {
-    return failure(result.error)
+    return err(result.error)
   }
 
-  return success(result.data)
+  return ok(result.data)
 }
 
 export async function verifyOTPForSigningUpAction(
@@ -23,7 +24,7 @@ export async function verifyOTPForSigningUpAction(
   otpId: string,
   code: string,
   name?: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const verifyingResult = await emailOTPAuthenticator.verifyOTP({
     email,
     otpId,
@@ -31,7 +32,7 @@ export async function verifyOTPForSigningUpAction(
   })
 
   if (!verifyingResult.success) {
-    return failure(verifyingResult.error)
+    return err(verifyingResult.error)
   }
 
   const identifier = verifyingResult.data
@@ -47,17 +48,17 @@ export async function verifyOTPForSigningUpAction(
   )
 
   if (!authenticationResult.success) {
-    return failure(authenticationResult.error)
+    return err(authenticationResult.error)
   }
 
-  return success()
+  return ok()
 }
 
 export async function verifyOTPForSigningInAction(
   email: string,
   otpId: string,
   code: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const verifyingResult = await emailOTPAuthenticator.verifyOTP({
     email,
     otpId,
@@ -65,7 +66,7 @@ export async function verifyOTPForSigningInAction(
   })
 
   if (!verifyingResult.success) {
-    return failure(verifyingResult.error)
+    return err(verifyingResult.error)
   }
 
   const identifier = verifyingResult.data
@@ -77,15 +78,15 @@ export async function verifyOTPForSigningInAction(
   })
 
   if (!authenticationResult.success) {
-    return failure(authenticationResult.error)
+    return err(authenticationResult.error)
   }
 
-  return success()
+  return ok()
 }
 
 export async function initiateGoogleOAuthAction(
   intent: 'sign-in' | 'sign-up',
-): Promise<ActionResult<{ authUrl: string }>> {
+): Promise<ReturnResult<{ authUrl: string }>> {
   const authUrl = googleOAuthAuthenticator.getAuthUrl(intent)
-  return success({ authUrl })
+  return ok({ authUrl })
 }

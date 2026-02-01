@@ -7,8 +7,8 @@ const rdsCaPath = join(process.cwd(), 'certs', 'rds-ca-bundle.pem')
 const usingSsl = config.database.ssl === 'true'
 
 export default defineConfig({
-  schema: './src/db/schema/*.ts',
-  out: './src/db/migrations',
+  schema: './src/server/db/schema/*.ts',
+  out: './src/server/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
     host: config.database.host,

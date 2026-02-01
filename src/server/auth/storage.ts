@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import type { KenmonStorage, KenmonSession, KenmonIdentifier } from 'kenmon'
-import * as schema from '@/db/schema'
+import * as schema from '../db/schema'
 import {
   KenmonEmailOTP,
   KenmonEmailOTPStorage,

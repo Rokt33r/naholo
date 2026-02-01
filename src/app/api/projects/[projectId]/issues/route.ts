@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/server/auth/utils'
-import { listIssues } from '@/dal/listIssues'
+import { listIssues } from '@/server/services/issue'
 
 export async function GET(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function GET(
   const searchParams = request.nextUrl.searchParams
   const closed = searchParams.get('closed') === 'true'
 
-  const issues = await listIssues(projectId, closed)
+  const issues = await listIssues(user.id, projectId, { closed })
 
   return NextResponse.json(issues)
 }

@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireAuthOrRedirect } from '@/server/auth/utils'
 import { SessionRefresh } from '@kenmon/nextjs-adapter'
 import { refreshSessionAction } from './actions'
 
@@ -8,11 +7,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const user = await getAuthUser()
-
-  if (!user) {
-    redirect('/sign-in')
-  }
+  await requireAuthOrRedirect()
 
   return (
     <>

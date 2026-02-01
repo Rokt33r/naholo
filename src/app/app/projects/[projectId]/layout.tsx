@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/server/auth/utils'
-import { getProject } from '@/dal/getProject'
+import { requireAuthOrRedirect } from '@/server/auth/utils'
+import { getProject, listProjects } from '@/server/services/project'
 import { ProjectSidebar } from '@/components/projects/project-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { listProjects } from '../../../../dal/listProjects'
 
 type Props = {
   children: React.ReactNode
@@ -12,16 +11,12 @@ type Props = {
 }
 
 export default async function ProjectLayout({ children, params }: Props) {
-  const user = await getAuthUser()
+  const user = await requireAuthOrRedirect()
   const { projectId } = await params
 
-  if (!user) {
-    redirect('/sign-in')
-  }
-
   const [projects, project] = await Promise.all([
-    listProjects(),
-    getProject(projectId),
+    listProjects(user.id),
+    getProject(user.id, projectId),
   ])
 
   if (!project) {

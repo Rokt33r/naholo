@@ -1,21 +1,31 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { db } from '@/db'
-import { projects, issues, logs, tasks } from '@/db/schema'
 import { getAuthUser } from '@/server/auth/utils'
-import { success, failure } from '@/server/types'
-import type { ActionResult } from '@/server/types'
-import { eq, and, isNull, desc } from 'drizzle-orm'
+import type { ReturnResult } from '@/lib/return-result'
+import { ok, err } from '@/lib/return-result'
 import { auth } from '../../server/auth/auth'
+import {
+  createProject,
+  updateProject,
+  deleteProject,
+} from '@/server/services/project'
+import { createIssue, updateIssue, deleteIssue } from '@/server/services/issue'
+import { createLog, updateLog, deleteLog } from '@/server/services/log'
+import {
+  createTask,
+  updateTask,
+  setTaskDone,
+  deleteTask,
+} from '@/server/services/task'
 
 export async function refreshSessionAction() {
   return auth.refreshSession()
 }
 
-export async function logoutAction(): Promise<ActionResult<undefined>> {
+export async function logoutAction(): Promise<ReturnResult<undefined>> {
   await auth.signOut()
-  return success()
+  return ok()
 }
 
 /**
@@ -25,65 +35,49 @@ export async function logoutAction(): Promise<ActionResult<undefined>> {
 export async function createProjectAction(
   name: string,
   description?: string,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string }>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [project] = await db
-    .insert(projects)
-    .values({
-      userId: user.id,
-      name,
-      description,
-    })
-    .returning({ id: projects.id })
+  const project = await createProject(user.id, { name, description })
 
   revalidatePath('/app')
 
-  return success({ id: project.id })
+  return ok({ id: project.id })
 }
 
 export async function updateProjectAction(
   id: string,
   name: string,
   description?: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  await db
-    .update(projects)
-    .set({
-      name,
-      description,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
+  await updateProject(user.id, id, { name, description })
 
   revalidatePath('/app')
 
-  return success()
+  return ok()
 }
 
 export async function deleteProjectAction(
   id: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  await db
-    .delete(projects)
-    .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
+  await deleteProject(user.id, id)
 
   revalidatePath('/app')
 
-  return success()
+  return ok()
 }
 
 /**
@@ -93,119 +87,52 @@ export async function deleteProjectAction(
 export async function createIssueAction(
   projectId: string,
   title: string,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string }>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [issue] = await db
-    .insert(issues)
-    .values({
-      projectId,
-      userId: user.id,
-      title,
-    })
-    .returning({ id: issues.id })
+  const issue = await createIssue(user.id, { projectId, title })
 
   revalidatePath(`/app/projects/${projectId}`)
 
-  return success({ id: issue.id })
+  return ok({ id: issue.id })
 }
 
 export async function updateIssueAction(
   id: string,
   title: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [issue] = await db
-    .update(issues)
-    .set({
-      title,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(issues.id, id), eq(issues.userId, user.id)))
-    .returning({ projectId: issues.projectId })
+  const issue = await updateIssue(user.id, id, { title })
 
   if (issue) {
     revalidatePath(`/app/projects/${issue.projectId}`)
   }
 
-  return success()
-}
-
-export async function closeIssueAction(
-  id: string,
-): Promise<ActionResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return failure(new Error('Unauthorized'))
-  }
-
-  const [issue] = await db
-    .update(issues)
-    .set({
-      closed: true,
-      closedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(and(eq(issues.id, id), eq(issues.userId, user.id)))
-    .returning({ projectId: issues.projectId })
-
-  if (issue) {
-    revalidatePath(`/app/projects/${issue.projectId}`)
-  }
-
-  return success()
-}
-
-export async function reopenIssueAction(
-  id: string,
-): Promise<ActionResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return failure(new Error('Unauthorized'))
-  }
-
-  const [issue] = await db
-    .update(issues)
-    .set({
-      closed: false,
-      closedAt: null,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(issues.id, id), eq(issues.userId, user.id)))
-    .returning({ projectId: issues.projectId })
-
-  if (issue) {
-    revalidatePath(`/app/projects/${issue.projectId}`)
-  }
-
-  return success()
+  return ok()
 }
 
 export async function deleteIssueAction(
   id: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [issue] = await db
-    .delete(issues)
-    .where(and(eq(issues.id, id), eq(issues.userId, user.id)))
-    .returning({ projectId: issues.projectId })
+  const issue = await deleteIssue(user.id, id)
 
   if (issue) {
     revalidatePath(`/app/projects/${issue.projectId}`)
   }
 
-  return success()
+  return ok()
 }
 
 /**
@@ -216,122 +143,52 @@ export async function createLogAction(
   projectId: string,
   issueId: string,
   content: string,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string }>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [log] = await db
-    .insert(logs)
-    .values({
-      projectId,
-      issueId,
-      userId: user.id,
-      content,
-    })
-    .returning({ id: logs.id })
-
-  // Update issue's updatedAt timestamp and lastLogPreview
-  const preview = content.trim().slice(0, 100)
-  await db
-    .update(issues)
-    .set({
-      updatedAt: new Date(),
-      lastLogPreview: preview || null,
-    })
-    .where(eq(issues.id, issueId))
+  const log = await createLog(user.id, { projectId, issueId, content })
 
   revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
 
-  return success({ id: log.id })
+  return ok({ id: log.id })
 }
 
 export async function updateLogAction(
   id: string,
   content: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [log] = await db
-    .update(logs)
-    .set({
-      content,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(logs.id, id), eq(logs.userId, user.id)))
-    .returning({ projectId: logs.projectId, issueId: logs.issueId })
+  const log = await updateLog(user.id, id, content)
 
   if (log) {
-    // Get the most recent log for this issue
-    const [lastLog] = await db
-      .select({ id: logs.id })
-      .from(logs)
-      .where(eq(logs.issueId, log.issueId))
-      .orderBy(desc(logs.createdAt))
-      .limit(1)
-
-    const newValues: { updatedAt: Date; lastLogPreview?: string | null } = {
-      updatedAt: new Date(),
-    }
-
-    // Only update preview if this is the most recent log
-    if (lastLog && lastLog.id === id) {
-      const preview = content.trim().slice(0, 100)
-      newValues.lastLogPreview = preview || null
-    }
-
-    await db.update(issues).set(newValues).where(eq(issues.id, log.issueId))
-
     revalidatePath(`/app/projects/${log.projectId}/issues/${log.issueId}`)
   }
 
-  return success()
+  return ok()
 }
 
 export async function deleteLogAction(
   id: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [log] = await db
-    .delete(logs)
-    .where(and(eq(logs.id, id), eq(logs.userId, user.id)))
-    .returning({ projectId: logs.projectId, issueId: logs.issueId })
+  const log = await deleteLog(user.id, id)
 
   if (log) {
-    // Get the most recent log for this issue after deletion
-    const [lastLog] = await db
-      .select({ content: logs.content })
-      .from(logs)
-      .where(eq(logs.issueId, log.issueId))
-      .orderBy(desc(logs.createdAt))
-      .limit(1)
-
-    const newValues: { updatedAt: Date; lastLogPreview?: string | null } = {
-      updatedAt: new Date(),
-    }
-
-    // Update preview with the new most recent log, or null if no logs left
-    if (lastLog) {
-      const preview = lastLog.content.trim().slice(0, 100)
-      newValues.lastLogPreview = preview || null
-    } else {
-      newValues.lastLogPreview = null
-    }
-
-    await db.update(issues).set(newValues).where(eq(issues.id, log.issueId))
-
     revalidatePath(`/app/projects/${log.projectId}/issues/${log.issueId}`)
   }
 
-  return success()
+  return ok()
 }
 
 /**
@@ -343,135 +200,73 @@ export async function createTaskAction(
   issueId: string,
   content: string,
   parentTaskId?: string,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string }>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  // Get the maximum position for tasks at this level
-  const existingTasks = await db
-    .select({ position: tasks.position })
-    .from(tasks)
-    .where(
-      and(
-        eq(tasks.issueId, issueId),
-        eq(tasks.userId, user.id),
-        parentTaskId
-          ? eq(tasks.parentTaskId, parentTaskId)
-          : isNull(tasks.parentTaskId),
-      ),
-    )
-    .orderBy(tasks.position)
-
-  const maxPosition =
-    existingTasks.length > 0
-      ? Math.max(...existingTasks.map((t) => t.position))
-      : -1
-
-  const [task] = await db
-    .insert(tasks)
-    .values({
-      projectId,
-      issueId,
-      userId: user.id,
-      parentTaskId: parentTaskId || null,
-      content,
-      position: maxPosition + 1,
-    })
-    .returning({ id: tasks.id })
-
-  await db
-    .update(issues)
-    .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+  const task = await createTask(user.id, {
+    projectId,
+    issueId,
+    content,
+    parentTaskId,
+  })
 
   revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
 
-  return success({ id: task.id })
+  return ok({ id: task.id })
 }
 
 export async function updateTaskAction(
   id: string,
   content: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [task] = await db
-    .update(tasks)
-    .set({
-      content,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(tasks.id, id), eq(tasks.userId, user.id)))
-    .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
+  const task = await updateTask(user.id, id, content)
 
   if (task) {
-    await db
-      .update(issues)
-      .set({ updatedAt: new Date() })
-      .where(eq(issues.id, task.issueId))
-
     revalidatePath(`/app/projects/${task.projectId}/issues/${task.issueId}`)
   }
 
-  return success()
+  return ok()
 }
 
 export async function setTaskDoneAction(
   id: string,
   done: boolean,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [task] = await db
-    .update(tasks)
-    .set({
-      done,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(tasks.id, id), eq(tasks.userId, user.id)))
-    .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
+  const task = await setTaskDone(user.id, id, done)
 
   if (task) {
-    await db
-      .update(issues)
-      .set({ updatedAt: new Date() })
-      .where(eq(issues.id, task.issueId))
-
     revalidatePath(`/app/projects/${task.projectId}/issues/${task.issueId}`)
   }
 
-  return success()
+  return ok()
 }
 
 export async function deleteTaskAction(
   id: string,
-): Promise<ActionResult<undefined>> {
+): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
-    return failure(new Error('Unauthorized'))
+    return err(new Error('Unauthorized'))
   }
 
-  const [task] = await db
-    .delete(tasks)
-    .where(and(eq(tasks.id, id), eq(tasks.userId, user.id)))
-    .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
+  const task = await deleteTask(user.id, id)
 
   if (task) {
-    await db
-      .update(issues)
-      .set({ updatedAt: new Date() })
-      .where(eq(issues.id, task.issueId))
-
     revalidatePath(`/app/projects/${task.projectId}/issues/${task.issueId}`)
   }
 
-  return success()
+  return ok()
 }

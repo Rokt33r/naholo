@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
-import type { ActionResult } from '@/server/types'
+import type { ReturnResult } from './return-result'
 
 type ActionFunction<TArgs extends any[], TResult> = (
   ...args: TArgs
-) => Promise<ActionResult<TResult>>
+) => Promise<ReturnResult<TResult>>
 
 export function useAction<TArgs extends any[], TResult>(
   action: ActionFunction<TArgs, TResult>,
@@ -11,7 +11,7 @@ export function useAction<TArgs extends any[], TResult>(
   const [loading, setLoading] = useState(false)
 
   const execute = useCallback(
-    async (...args: TArgs): Promise<ActionResult<TResult>> => {
+    async (...args: TArgs): Promise<ReturnResult<TResult>> => {
       setLoading(true)
       try {
         const result = await action(...args)

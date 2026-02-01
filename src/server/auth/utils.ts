@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { auth } from './auth'
 import { cache } from 'react'
 
@@ -52,3 +53,18 @@ export const getAuthUser = cache(
     }
   },
 )
+
+/**
+ * Requires authentication, redirects to sign-in if not authenticated.
+ * Use in server components at the top of the render function.
+ */
+export async function requireAuthOrRedirect(): Promise<{
+  id: string
+  name: string
+}> {
+  const user = await getAuthUser()
+  if (!user) {
+    redirect('/sign-in')
+  }
+  return user
+}

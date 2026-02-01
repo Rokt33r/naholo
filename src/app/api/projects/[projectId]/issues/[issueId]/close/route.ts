@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/server/auth/utils'
-import { db } from '@/db'
-import { issues } from '@/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { getIssue, closeIssue, reopenIssue } from '@/server/services/issue'
 
 type RouteContext = {
   params: Promise<{
@@ -23,27 +21,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { issueId } = await context.params
 
-  const [closedIssue] = await db
-    .update(issues)
-    .set({
-      closed: true,
-      closedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(and(eq(issues.id, issueId), eq(issues.userId, user.id)))
-    .returning({
-      id: issues.id,
-      projectId: issues.projectId,
-      title: issues.title,
-      closed: issues.closed,
-      closedAt: issues.closedAt,
-      createdAt: issues.createdAt,
-      updatedAt: issues.updatedAt,
-    })
+  const result = await closeIssue(user.id, issueId)
 
-  if (!closedIssue) {
-    return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
+
+  // Fetch the updated issue to return
+  const closedIssue = await getIssue(user.id, issueId)
 
   return NextResponse.json(closedIssue)
 }
@@ -60,27 +45,14 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
   const { issueId } = await context.params
 
-  const [reopenedIssue] = await db
-    .update(issues)
-    .set({
-      closed: false,
-      closedAt: null,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(issues.id, issueId), eq(issues.userId, user.id)))
-    .returning({
-      id: issues.id,
-      projectId: issues.projectId,
-      title: issues.title,
-      closed: issues.closed,
-      closedAt: issues.closedAt,
-      createdAt: issues.createdAt,
-      updatedAt: issues.updatedAt,
-    })
+  const result = await reopenIssue(user.id, issueId)
 
-  if (!reopenedIssue) {
-    return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
+
+  // Fetch the updated issue to return
+  const reopenedIssue = await getIssue(user.id, issueId)
 
   return NextResponse.json(reopenedIssue)
 }

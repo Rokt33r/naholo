@@ -3,7 +3,7 @@ import { Pool } from 'pg'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import * as schema from './schema'
-import { config } from '../server/config'
+import { config } from '../config'
 
 const rdsCaPath = join(process.cwd(), 'certs', 'rds-ca-bundle.pem')
 const usingSsl = config.database.ssl === 'true'

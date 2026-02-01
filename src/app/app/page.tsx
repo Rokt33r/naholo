@@ -1,17 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireAuthOrRedirect } from '@/server/auth/utils'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
 import { Button } from '@/components/ui/button'
-import { listProjects } from '../../dal/listProjects'
+import { listProjects } from '@/server/services/project'
 
 export default async function AppPage() {
-  const user = await getAuthUser()
+  const user = await requireAuthOrRedirect()
 
-  if (!user) {
-    redirect('/sign-in')
-  }
-
-  const projects = await listProjects()
+  const projects = await listProjects(user.id)
 
   // Redirect to first project or show empty state
   if (projects.length > 0) {

@@ -1,27 +1,23 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/server/auth/utils'
-import { getProject } from '@/dal/getProject'
-import { listIssues } from '@/dal/listIssues'
+import { requireAuthOrRedirect } from '@/server/auth/utils'
+import { getProject } from '@/server/services/project'
+import { listIssues } from '@/server/services/issue'
 
 type Props = {
   params: Promise<{ projectId: string }>
 }
 
 export default async function ProjectPage({ params }: Props) {
-  const user = await getAuthUser()
+  const user = await requireAuthOrRedirect()
   const { projectId } = await params
 
-  if (!user) {
-    redirect('/sign-in')
-  }
-
-  const project = await getProject(projectId)
+  const project = await getProject(user.id, projectId)
 
   if (!project) {
     redirect('/app')
   }
 
-  const issues = await listIssues(projectId) // Show open issues by default
+  const issues = await listIssues(user.id, projectId) // Show open issues by default
 
   // Redirect to first issue or show empty state
   if (issues.length > 0) {

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthUser } from '@/server/auth/utils'
-import { db } from '@/db'
-import { issues } from '@/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { getIssue, updateIssue, deleteIssue } from '@/server/services/issue'
 
 type RouteContext = {
   params: Promise<{
@@ -24,19 +22,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const { issueId } = await context.params
 
-  const [issue] = await db
-    .select({
-      id: issues.id,
-      projectId: issues.projectId,
-      title: issues.title,
-      closed: issues.closed,
-      closedAt: issues.closedAt,
-      createdAt: issues.createdAt,
-      updatedAt: issues.updatedAt,
-    })
-    .from(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.userId, user.id)))
-    .limit(1)
+  const issue = await getIssue(user.id, issueId)
 
   if (!issue) {
     return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
@@ -78,26 +64,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { title } = validation.data
 
-  const [updatedIssue] = await db
-    .update(issues)
-    .set({
-      title,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(issues.id, issueId), eq(issues.userId, user.id)))
-    .returning({
-      id: issues.id,
-      projectId: issues.projectId,
-      title: issues.title,
-      closed: issues.closed,
-      closedAt: issues.closedAt,
-      createdAt: issues.createdAt,
-      updatedAt: issues.updatedAt,
-    })
+  const result = await updateIssue(user.id, issueId, { title })
 
-  if (!updatedIssue) {
+  if (!result) {
     return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
   }
+
+  // Fetch the updated issue to return
+  const updatedIssue = await getIssue(user.id, issueId)
 
   return NextResponse.json(updatedIssue)
 }
@@ -114,14 +88,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
   const { issueId } = await context.params
 
-  const [deletedIssue] = await db
-    .delete(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.userId, user.id)))
-    .returning({ id: issues.id, projectId: issues.projectId })
+  const result = await deleteIssue(user.id, issueId)
 
-  if (!deletedIssue) {
+  if (!result) {
     return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
   }
 
-  return NextResponse.json({ success: true, projectId: deletedIssue.projectId })
+  return NextResponse.json({ success: true, projectId: result.projectId })
 }
