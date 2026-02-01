@@ -123,13 +123,13 @@ export async function createIssue(
 }
 
 /**
- * Update an issue. Returns projectId for revalidation.
+ * Update an issue.
  */
 export async function updateIssue(
   userId: string,
   issueId: string,
   data: UpdateIssueInput,
-): Promise<{ projectId: string } | null> {
+): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .update(issues)
     .set({
@@ -137,9 +137,11 @@ export async function updateIssue(
       updatedAt: new Date(),
     })
     .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
-    .returning({ projectId: issues.projectId })
+    .returning({ id: issues.id })
 
-  return issue || null
+  if (!issue) return err(new Error('Issue not found'))
+
+  return ok()
 }
 
 /**
@@ -191,18 +193,20 @@ export async function reopenIssue(
 }
 
 /**
- * Delete an issue. Returns projectId for revalidation.
+ * Delete an issue.
  */
 export async function deleteIssue(
   userId: string,
   issueId: string,
-): Promise<{ projectId: string } | null> {
+): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .delete(issues)
     .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
-    .returning({ projectId: issues.projectId })
+    .returning({ id: issues.id })
 
-  return issue || null
+  if (!issue) return err(new Error('Issue not found'))
+
+  return ok()
 }
 
 /**

@@ -25,7 +25,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { logId } = await context.params
+  const { issueId, logId } = await context.params
 
   let body
   try {
@@ -44,12 +44,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { content } = validation.data
 
-  const log = await updateLog(user.id, logId, content)
+  const result = await updateLog(user.id, issueId, logId, content)
 
-  if (!log) {
-    return NextResponse.json({ error: 'Log not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
 
+  const log = result.data
   return NextResponse.json({
     id: log.id,
     content: log.content,
@@ -68,12 +69,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { logId } = await context.params
+  const { issueId, logId } = await context.params
 
-  const log = await deleteLog(user.id, logId)
+  const result = await deleteLog(user.id, issueId, logId)
 
-  if (!log) {
-    return NextResponse.json({ error: 'Log not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
 
   return NextResponse.json({ success: true })

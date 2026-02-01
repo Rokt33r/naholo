@@ -2,6 +2,8 @@ import 'server-only'
 import { db } from '../db'
 import { logs, issues } from '../db/schema'
 import { eq, and, asc, desc } from 'drizzle-orm'
+import type { ReturnResult } from '@/lib/return-result'
+import { ok, err } from '@/lib/return-result'
 
 export type Log = {
   id: string
@@ -14,11 +16,6 @@ export type CreateLogInput = {
   projectId: string
   issueId: string
   content: string
-}
-
-export type LogContext = {
-  projectId: string
-  issueId: string
 }
 
 /**
@@ -76,13 +73,14 @@ export async function createLog(
 }
 
 /**
- * Update a log. Returns the updated log or null if not found.
+ * Update a log.
  */
 export async function updateLog(
   userId: string,
+  issueId: string,
   logId: string,
   content: string,
-): Promise<(Log & LogContext) | null> {
+): Promise<ReturnResult<Log>> {
   const [log] = await db
     .update(logs)
     .set({
@@ -95,17 +93,15 @@ export async function updateLog(
       content: logs.content,
       createdAt: logs.createdAt,
       updatedAt: logs.updatedAt,
-      projectId: logs.projectId,
-      issueId: logs.issueId,
     })
 
-  if (!log) return null
+  if (!log) return err(new Error('Log not found'))
 
   // Get the most recent log for this issue
   const [lastLog] = await db
     .select({ id: logs.id })
     .from(logs)
-    .where(eq(logs.issueId, log.issueId))
+    .where(eq(logs.issueId, issueId))
     .orderBy(desc(logs.createdAt))
     .limit(1)
 
@@ -119,30 +115,31 @@ export async function updateLog(
     newValues.lastLogPreview = preview || null
   }
 
-  await db.update(issues).set(newValues).where(eq(issues.id, log.issueId))
+  await db.update(issues).set(newValues).where(eq(issues.id, issueId))
 
-  return log
+  return ok(log)
 }
 
 /**
- * Delete a log. Returns context for revalidation.
+ * Delete a log.
  */
 export async function deleteLog(
   userId: string,
+  issueId: string,
   logId: string,
-): Promise<LogContext | null> {
+): Promise<ReturnResult<undefined>> {
   const [log] = await db
     .delete(logs)
     .where(and(eq(logs.id, logId), eq(logs.userId, userId)))
-    .returning({ projectId: logs.projectId, issueId: logs.issueId })
+    .returning({ id: logs.id })
 
-  if (!log) return null
+  if (!log) return err(new Error('Log not found'))
 
   // Get the most recent log for this issue after deletion
   const [lastLog] = await db
     .select({ content: logs.content })
     .from(logs)
-    .where(eq(logs.issueId, log.issueId))
+    .where(eq(logs.issueId, issueId))
     .orderBy(desc(logs.createdAt))
     .limit(1)
 
@@ -158,7 +155,7 @@ export async function deleteLog(
     newValues.lastLogPreview = null
   }
 
-  await db.update(issues).set(newValues).where(eq(issues.id, log.issueId))
+  await db.update(issues).set(newValues).where(eq(issues.id, issueId))
 
-  return { projectId: log.projectId, issueId: log.issueId }
+  return ok()
 }

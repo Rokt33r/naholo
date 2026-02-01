@@ -276,9 +276,6 @@ export function useDeleteIssue() {
         // Revalidate both open and closed issue lists
         await globalMutate(`/api/projects/${projectId}/issues?closed=false`)
         await globalMutate(`/api/projects/${projectId}/issues?closed=true`)
-
-        const result = await response.json()
-        return result.projectId
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'Failed to delete issue'

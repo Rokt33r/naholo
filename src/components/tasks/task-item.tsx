@@ -61,7 +61,12 @@ export function TaskItem({
   const isLoading = updateLoading || doneLoading || deleteLoading
 
   const handleToggleDone = async (checked: boolean) => {
-    const result = await setTaskDone(task.id, checked === true)
+    const result = await setTaskDone(
+      projectId,
+      issueId,
+      task.id,
+      checked === true,
+    )
     if (!result.success) {
       alert('Failed to update task: ' + result.error.message)
     }
@@ -73,7 +78,12 @@ export function TaskItem({
 
   const handleSave = async () => {
     if (content.trim() && content !== task.content) {
-      const result = await updateTask(task.id, content.trim())
+      const result = await updateTask(
+        projectId,
+        issueId,
+        task.id,
+        content.trim(),
+      )
       if (!result.success) {
         alert('Failed to update task: ' + result.error.message)
         setContent(task.content)
@@ -86,7 +96,7 @@ export function TaskItem({
     if (!confirm('Are you sure you want to delete this task?')) {
       return
     }
-    const result = await deleteTask(task.id)
+    const result = await deleteTask(projectId, issueId, task.id)
     if (!result.success) {
       alert('Failed to delete task: ' + result.error.message)
     }

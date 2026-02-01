@@ -66,8 +66,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const result = await updateIssue(user.id, issueId, { title })
 
-  if (!result) {
-    return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
 
   // Fetch the updated issue to return
@@ -90,9 +90,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
   const result = await deleteIssue(user.id, issueId)
 
-  if (!result) {
-    return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
 
-  return NextResponse.json({ success: true, projectId: result.projectId })
+  return NextResponse.json({ success: true })
 }

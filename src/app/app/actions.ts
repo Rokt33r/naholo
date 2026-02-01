@@ -10,8 +10,8 @@ import {
   updateProject,
   deleteProject,
 } from '@/server/services/project'
-import { createIssue, updateIssue, deleteIssue } from '@/server/services/issue'
-import { createLog, updateLog, deleteLog } from '@/server/services/log'
+import { createIssue } from '@/server/services/issue'
+import { createLog } from '@/server/services/log'
 import {
   createTask,
   updateTask,
@@ -100,41 +100,6 @@ export async function createIssueAction(
   return ok({ id: issue.id })
 }
 
-export async function updateIssueAction(
-  id: string,
-  title: string,
-): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
-
-  const issue = await updateIssue(user.id, id, { title })
-
-  if (issue) {
-    revalidatePath(`/app/projects/${issue.projectId}`)
-  }
-
-  return ok()
-}
-
-export async function deleteIssueAction(
-  id: string,
-): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
-
-  const issue = await deleteIssue(user.id, id)
-
-  if (issue) {
-    revalidatePath(`/app/projects/${issue.projectId}`)
-  }
-
-  return ok()
-}
-
 /**
  * Logs
  */
@@ -154,41 +119,6 @@ export async function createLogAction(
   revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
 
   return ok({ id: log.id })
-}
-
-export async function updateLogAction(
-  id: string,
-  content: string,
-): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
-
-  const log = await updateLog(user.id, id, content)
-
-  if (log) {
-    revalidatePath(`/app/projects/${log.projectId}/issues/${log.issueId}`)
-  }
-
-  return ok()
-}
-
-export async function deleteLogAction(
-  id: string,
-): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
-
-  const log = await deleteLog(user.id, id)
-
-  if (log) {
-    revalidatePath(`/app/projects/${log.projectId}/issues/${log.issueId}`)
-  }
-
-  return ok()
 }
 
 /**
@@ -219,6 +149,8 @@ export async function createTaskAction(
 }
 
 export async function updateTaskAction(
+  projectId: string,
+  issueId: string,
   id: string,
   content: string,
 ): Promise<ReturnResult<undefined>> {
@@ -227,16 +159,18 @@ export async function updateTaskAction(
     return err(new Error('Unauthorized'))
   }
 
-  const task = await updateTask(user.id, id, content)
+  const result = await updateTask(user.id, issueId, id, content)
 
-  if (task) {
-    revalidatePath(`/app/projects/${task.projectId}/issues/${task.issueId}`)
+  if (result.success) {
+    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
   }
 
-  return ok()
+  return result
 }
 
 export async function setTaskDoneAction(
+  projectId: string,
+  issueId: string,
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
@@ -245,16 +179,18 @@ export async function setTaskDoneAction(
     return err(new Error('Unauthorized'))
   }
 
-  const task = await setTaskDone(user.id, id, done)
+  const result = await setTaskDone(user.id, issueId, id, done)
 
-  if (task) {
-    revalidatePath(`/app/projects/${task.projectId}/issues/${task.issueId}`)
+  if (result.success) {
+    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
   }
 
-  return ok()
+  return result
 }
 
 export async function deleteTaskAction(
+  projectId: string,
+  issueId: string,
   id: string,
 ): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
@@ -262,11 +198,11 @@ export async function deleteTaskAction(
     return err(new Error('Unauthorized'))
   }
 
-  const task = await deleteTask(user.id, id)
+  const result = await deleteTask(user.id, issueId, id)
 
-  if (task) {
-    revalidatePath(`/app/projects/${task.projectId}/issues/${task.issueId}`)
+  if (result.success) {
+    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
   }
 
-  return ok()
+  return result
 }

@@ -2,6 +2,8 @@ import 'server-only'
 import { db } from '../db'
 import { tasks, issues } from '../db/schema'
 import { eq, and, asc, isNull } from 'drizzle-orm'
+import type { ReturnResult } from '@/lib/return-result'
+import { ok, err } from '@/lib/return-result'
 
 export type Task = {
   id: string
@@ -18,11 +20,6 @@ export type CreateTaskInput = {
   issueId: string
   content: string
   parentTaskId?: string
-}
-
-export type TaskContext = {
-  projectId: string
-  issueId: string
 }
 
 /**
@@ -95,13 +92,14 @@ export async function createTask(
 }
 
 /**
- * Update a task. Returns context for revalidation.
+ * Update a task.
  */
 export async function updateTask(
   userId: string,
+  issueId: string,
   taskId: string,
   content: string,
-): Promise<TaskContext | null> {
+): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .update(tasks)
     .set({
@@ -109,26 +107,27 @@ export async function updateTask(
       updatedAt: new Date(),
     })
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
-    .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
+    .returning({ id: tasks.id })
 
-  if (!task) return null
+  if (!task) return err(new Error('Task not found'))
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, task.issueId))
+    .where(eq(issues.id, issueId))
 
-  return { projectId: task.projectId, issueId: task.issueId }
+  return ok()
 }
 
 /**
- * Set a task's done status. Returns context for revalidation.
+ * Set a task's done status.
  */
 export async function setTaskDone(
   userId: string,
+  issueId: string,
   taskId: string,
   done: boolean,
-): Promise<TaskContext | null> {
+): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .update(tasks)
     .set({
@@ -136,36 +135,37 @@ export async function setTaskDone(
       updatedAt: new Date(),
     })
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
-    .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
+    .returning({ id: tasks.id })
 
-  if (!task) return null
+  if (!task) return err(new Error('Task not found'))
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, task.issueId))
+    .where(eq(issues.id, issueId))
 
-  return { projectId: task.projectId, issueId: task.issueId }
+  return ok()
 }
 
 /**
- * Delete a task. Returns context for revalidation.
+ * Delete a task.
  */
 export async function deleteTask(
   userId: string,
+  issueId: string,
   taskId: string,
-): Promise<TaskContext | null> {
+): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .delete(tasks)
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
-    .returning({ projectId: tasks.projectId, issueId: tasks.issueId })
+    .returning({ id: tasks.id })
 
-  if (!task) return null
+  if (!task) return err(new Error('Task not found'))
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, task.issueId))
+    .where(eq(issues.id, issueId))
 
-  return { projectId: task.projectId, issueId: task.issueId }
+  return ok()
 }
