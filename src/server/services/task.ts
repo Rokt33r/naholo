@@ -28,8 +28,8 @@ export type CreateTaskInput = {
 export async function listTasks(
   userId: string,
   issueId: string,
-): Promise<Task[]> {
-  return await db
+): Promise<ReturnResult<Task[]>> {
+  const result = await db
     .select({
       id: tasks.id,
       parentTaskId: tasks.parentTaskId,
@@ -42,6 +42,8 @@ export async function listTasks(
     .from(tasks)
     .where(and(eq(tasks.issueId, issueId), eq(tasks.userId, userId)))
     .orderBy(asc(tasks.position))
+
+  return ok(result)
 }
 
 /**
@@ -50,7 +52,16 @@ export async function listTasks(
 export async function createTask(
   userId: string,
   data: CreateTaskInput,
-): Promise<{ id: string }> {
+): Promise<ReturnResult<{ id: string }>> {
+  // Validate issue exists for user
+  const [issue] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
+    .limit(1)
+
+  if (!issue) return err(new Error('Issue not found'))
+
   // Get the maximum position for tasks at this level
   const existingTasks = await db
     .select({ position: tasks.position })
@@ -88,7 +99,7 @@ export async function createTask(
     .set({ updatedAt: new Date() })
     .where(eq(issues.id, data.issueId))
 
-  return { id: task.id }
+  return ok({ id: task.id })
 }
 
 /**

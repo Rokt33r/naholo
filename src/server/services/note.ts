@@ -2,6 +2,8 @@ import 'server-only'
 import { db } from '../db'
 import { notes, issues } from '../db/schema'
 import { eq, and, asc } from 'drizzle-orm'
+import type { ReturnResult } from '@/lib/return-result'
+import { ok, err } from '@/lib/return-result'
 
 export type Note = {
   id: string
@@ -30,8 +32,8 @@ export type UpdateNoteInput = {
 export async function listNotes(
   userId: string,
   issueId: string,
-): Promise<Note[]> {
-  return await db
+): Promise<ReturnResult<Note[]>> {
+  const result = await db
     .select({
       id: notes.id,
       title: notes.title,
@@ -43,6 +45,8 @@ export async function listNotes(
     .from(notes)
     .where(and(eq(notes.issueId, issueId), eq(notes.userId, userId)))
     .orderBy(asc(notes.position))
+
+  return ok(result)
 }
 
 /**
@@ -51,7 +55,16 @@ export async function listNotes(
 export async function createNote(
   userId: string,
   data: CreateNoteInput,
-): Promise<Note> {
+): Promise<ReturnResult<Note>> {
+  // Validate issue exists for user
+  const [issue] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
+    .limit(1)
+
+  if (!issue) return err(new Error('Issue not found'))
+
   // Get the maximum position for notes in this issue
   const existingNotes = await db
     .select({ position: notes.position })
@@ -89,18 +102,18 @@ export async function createNote(
     .set({ updatedAt: new Date() })
     .where(eq(issues.id, data.issueId))
 
-  return note
+  return ok(note)
 }
 
 /**
- * Update a note. Returns the updated note or null if not found.
+ * Update a note.
  */
 export async function updateNote(
   userId: string,
   noteId: string,
   issueId: string,
   data: UpdateNoteInput,
-): Promise<Note | null> {
+): Promise<ReturnResult<Note>> {
   const [note] = await db
     .update(notes)
     .set({
@@ -118,7 +131,7 @@ export async function updateNote(
       updatedAt: notes.updatedAt,
     })
 
-  if (!note) return null
+  if (!note) return err(new Error('Note not found'))
 
   // Update issue's updatedAt timestamp
   await db
@@ -126,23 +139,23 @@ export async function updateNote(
     .set({ updatedAt: new Date() })
     .where(eq(issues.id, issueId))
 
-  return note
+  return ok(note)
 }
 
 /**
- * Delete a note. Returns issueId for revalidation.
+ * Delete a note.
  */
 export async function deleteNote(
   userId: string,
   noteId: string,
   issueId: string,
-): Promise<{ issueId: string } | null> {
+): Promise<ReturnResult<undefined>> {
   const [note] = await db
     .delete(notes)
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning({ id: notes.id })
 
-  if (!note) return null
+  if (!note) return err(new Error('Note not found'))
 
   // Update issue's updatedAt timestamp
   await db
@@ -150,5 +163,5 @@ export async function deleteNote(
     .set({ updatedAt: new Date() })
     .where(eq(issues.id, issueId))
 
-  return { issueId }
+  return ok()
 }

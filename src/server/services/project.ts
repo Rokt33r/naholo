@@ -2,6 +2,8 @@ import 'server-only'
 import { db } from '../db'
 import { projects } from '../db/schema'
 import { eq, and, desc } from 'drizzle-orm'
+import type { ReturnResult } from '@/lib/return-result'
+import { ok, err } from '@/lib/return-result'
 
 export type Project = {
   id: string
@@ -26,7 +28,7 @@ export type UpdateProjectInput = {
 export async function getProject(
   userId: string,
   projectId: string,
-): Promise<Project | null> {
+): Promise<ReturnResult<Project | null>> {
   const [project] = await db
     .select({
       id: projects.id,
@@ -38,14 +40,16 @@ export async function getProject(
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
     .limit(1)
 
-  return project || null
+  return ok(project || null)
 }
 
 /**
  * List all projects for a user
  */
-export async function listProjects(userId: string): Promise<Project[]> {
-  return await db
+export async function listProjects(
+  userId: string,
+): Promise<ReturnResult<Project[]>> {
+  const result = await db
     .select({
       id: projects.id,
       name: projects.name,
@@ -55,6 +59,8 @@ export async function listProjects(userId: string): Promise<Project[]> {
     .from(projects)
     .where(eq(projects.userId, userId))
     .orderBy(desc(projects.createdAt))
+
+  return ok(result)
 }
 
 /**
@@ -63,7 +69,7 @@ export async function listProjects(userId: string): Promise<Project[]> {
 export async function createProject(
   userId: string,
   data: CreateProjectInput,
-): Promise<{ id: string }> {
+): Promise<ReturnResult<{ id: string }>> {
   const [project] = await db
     .insert(projects)
     .values({
@@ -73,7 +79,7 @@ export async function createProject(
     })
     .returning({ id: projects.id })
 
-  return { id: project.id }
+  return ok({ id: project.id })
 }
 
 /**
@@ -83,8 +89,8 @@ export async function updateProject(
   userId: string,
   projectId: string,
   data: UpdateProjectInput,
-): Promise<void> {
-  await db
+): Promise<ReturnResult<undefined>> {
+  const [project] = await db
     .update(projects)
     .set({
       name: data.name,
@@ -92,6 +98,11 @@ export async function updateProject(
       updatedAt: new Date(),
     })
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .returning({ id: projects.id })
+
+  if (!project) return err(new Error('Project not found'))
+
+  return ok()
 }
 
 /**
@@ -100,8 +111,13 @@ export async function updateProject(
 export async function deleteProject(
   userId: string,
   projectId: string,
-): Promise<void> {
-  await db
+): Promise<ReturnResult<undefined>> {
+  const [project] = await db
     .delete(projects)
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .returning({ id: projects.id })
+
+  if (!project) return err(new Error('Project not found'))
+
+  return ok()
 }

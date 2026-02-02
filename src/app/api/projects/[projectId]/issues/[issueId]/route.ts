@@ -22,13 +22,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const { issueId } = await context.params
 
-  const issue = await getIssue(user.id, issueId)
+  const result = await getIssue(user.id, issueId)
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 500 })
+  }
 
-  if (!issue) {
+  if (!result.data) {
     return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
   }
 
-  return NextResponse.json(issue)
+  return NextResponse.json(result.data)
 }
 
 const updateIssueSchema = z.object({
@@ -71,9 +74,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   // Fetch the updated issue to return
-  const updatedIssue = await getIssue(user.id, issueId)
+  const issueResult = await getIssue(user.id, issueId)
+  if (!issueResult.success || !issueResult.data) {
+    return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
+  }
 
-  return NextResponse.json(updatedIssue)
+  return NextResponse.json(issueResult.data)
 }
 
 /**

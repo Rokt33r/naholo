@@ -1,6 +1,6 @@
 import 'server-only'
 import { db } from '../db'
-import { issues, tasks } from '../db/schema'
+import { issues, tasks, projects } from '../db/schema'
 import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -42,7 +42,7 @@ export type UpdateIssueInput = {
 export async function getIssue(
   userId: string,
   issueId: string,
-): Promise<Issue | null> {
+): Promise<ReturnResult<Issue | null>> {
   const [issue] = await db
     .select({
       id: issues.id,
@@ -57,7 +57,7 @@ export async function getIssue(
     .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
     .limit(1)
 
-  return issue || null
+  return ok(issue || null)
 }
 
 /**
@@ -67,7 +67,7 @@ export async function listIssues(
   userId: string,
   projectId: string,
   options: { closed?: boolean } = {},
-): Promise<IssueWithStats[]> {
+): Promise<ReturnResult<IssueWithStats[]>> {
   const closed = options.closed ?? false
 
   const rows = await db
@@ -97,10 +97,12 @@ export async function listIssues(
     .orderBy(desc(issues.updatedAt))
 
   // Convert sum result (string | null) to number
-  return rows.map((row) => ({
-    ...row,
-    completedTasks: Number(row.completedTasks ?? 0),
-  }))
+  return ok(
+    rows.map((row) => ({
+      ...row,
+      completedTasks: Number(row.completedTasks ?? 0),
+    })),
+  )
 }
 
 /**
@@ -109,7 +111,16 @@ export async function listIssues(
 export async function createIssue(
   userId: string,
   data: CreateIssueInput,
-): Promise<{ id: string }> {
+): Promise<ReturnResult<{ id: string }>> {
+  // Validate project exists for user
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, data.projectId), eq(projects.userId, userId)))
+    .limit(1)
+
+  if (!project) return err(new Error('Project not found'))
+
   const [issue] = await db
     .insert(issues)
     .values({
@@ -119,7 +130,7 @@ export async function createIssue(
     })
     .returning({ id: issues.id })
 
-  return { id: issue.id }
+  return ok({ id: issue.id })
 }
 
 /**

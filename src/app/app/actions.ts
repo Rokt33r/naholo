@@ -41,11 +41,12 @@ export async function createProjectAction(
     return err(new Error('Unauthorized'))
   }
 
-  const project = await createProject(user.id, { name, description })
+  const result = await createProject(user.id, { name, description })
+  if (result.success) {
+    revalidatePath('/app')
+  }
 
-  revalidatePath('/app')
-
-  return ok({ id: project.id })
+  return result
 }
 
 export async function updateProjectAction(
@@ -58,11 +59,12 @@ export async function updateProjectAction(
     return err(new Error('Unauthorized'))
   }
 
-  await updateProject(user.id, id, { name, description })
+  const result = await updateProject(user.id, id, { name, description })
+  if (result.success) {
+    revalidatePath('/app')
+  }
 
-  revalidatePath('/app')
-
-  return ok()
+  return result
 }
 
 export async function deleteProjectAction(
@@ -73,11 +75,12 @@ export async function deleteProjectAction(
     return err(new Error('Unauthorized'))
   }
 
-  await deleteProject(user.id, id)
+  const result = await deleteProject(user.id, id)
+  if (result.success) {
+    revalidatePath('/app')
+  }
 
-  revalidatePath('/app')
-
-  return ok()
+  return result
 }
 
 /**
@@ -93,11 +96,12 @@ export async function createIssueAction(
     return err(new Error('Unauthorized'))
   }
 
-  const issue = await createIssue(user.id, { projectId, title })
+  const result = await createIssue(user.id, { projectId, title })
+  if (result.success) {
+    revalidatePath(`/app/projects/${projectId}`)
+  }
 
-  revalidatePath(`/app/projects/${projectId}`)
-
-  return ok({ id: issue.id })
+  return result
 }
 
 /**
@@ -114,11 +118,13 @@ export async function createLogAction(
     return err(new Error('Unauthorized'))
   }
 
-  const log = await createLog(user.id, { projectId, issueId, content })
+  const result = await createLog(user.id, { projectId, issueId, content })
+  if (result.success) {
+    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+    return ok({ id: result.data.id })
+  }
 
-  revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
-
-  return ok({ id: log.id })
+  return result
 }
 
 /**
@@ -136,16 +142,17 @@ export async function createTaskAction(
     return err(new Error('Unauthorized'))
   }
 
-  const task = await createTask(user.id, {
+  const result = await createTask(user.id, {
     projectId,
     issueId,
     content,
     parentTaskId,
   })
+  if (result.success) {
+    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+  }
 
-  revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
-
-  return ok({ id: task.id })
+  return result
 }
 
 export async function updateTaskAction(

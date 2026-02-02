@@ -21,9 +21,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const { issueId } = await context.params
-  const logsData = await listLogs(user.id, issueId)
+  const result = await listLogs(user.id, issueId)
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 500 })
+  }
 
-  return NextResponse.json(logsData)
+  return NextResponse.json(result.data)
 }
 
 const createLogSchema = z.object({
@@ -59,7 +62,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { content } = validation.data
 
-  const log = await createLog(user.id, { projectId, issueId, content })
+  const result = await createLog(user.id, { projectId, issueId, content })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
+  }
 
-  return NextResponse.json(log, { status: 201 })
+  return NextResponse.json(result.data, { status: 201 })
 }

@@ -7,11 +7,11 @@ import { listProjects } from '@/server/services/project'
 export default async function AppPage() {
   const user = await requireAuthOrRedirect()
 
-  const projects = await listProjects(user.id)
+  const result = await listProjects(user.id)
 
   // Redirect to first project or show empty state
-  if (projects.length > 0) {
-    redirect(`/app/projects/${projects[0].id}`)
+  if (result.success && result.data.length > 0) {
+    redirect(`/app/projects/${result.data[0].id}`)
   }
 
   return (

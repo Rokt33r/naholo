@@ -45,13 +45,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { title, content } = validation.data
 
-  const note = await updateNote(user.id, noteId, issueId, { title, content })
-
-  if (!note) {
-    return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+  const result = await updateNote(user.id, noteId, issueId, { title, content })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
 
-  return NextResponse.json(note)
+  return NextResponse.json(result.data)
 }
 
 /**
@@ -67,9 +66,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   const { issueId, noteId } = await context.params
 
   const result = await deleteNote(user.id, noteId, issueId)
-
-  if (!result) {
-    return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
   }
 
   return NextResponse.json({ success: true })

@@ -24,8 +24,8 @@ export type CreateLogInput = {
 export async function listLogs(
   userId: string,
   issueId: string,
-): Promise<Log[]> {
-  return await db
+): Promise<ReturnResult<Log[]>> {
+  const result = await db
     .select({
       id: logs.id,
       content: logs.content,
@@ -35,6 +35,8 @@ export async function listLogs(
     .from(logs)
     .where(and(eq(logs.issueId, issueId), eq(logs.userId, userId)))
     .orderBy(asc(logs.createdAt))
+
+  return ok(result)
 }
 
 /**
@@ -43,7 +45,16 @@ export async function listLogs(
 export async function createLog(
   userId: string,
   data: CreateLogInput,
-): Promise<Log> {
+): Promise<ReturnResult<Log>> {
+  // Validate issue exists for user
+  const [issue] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
+    .limit(1)
+
+  if (!issue) return err(new Error('Issue not found'))
+
   const [log] = await db
     .insert(logs)
     .values({
@@ -69,7 +80,7 @@ export async function createLog(
     })
     .where(eq(issues.id, data.issueId))
 
-  return log
+  return ok(log)
 }
 
 /**

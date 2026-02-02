@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthUser } from '@/server/auth/utils'
-import { getIssue } from '@/server/services/issue'
 import { listNotes, createNote } from '@/server/services/note'
 
 type RouteContext = {
@@ -22,9 +21,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const { issueId } = await context.params
-  const notesData = await listNotes(user.id, issueId)
+  const result = await listNotes(user.id, issueId)
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 500 })
+  }
 
-  return NextResponse.json(notesData)
+  return NextResponse.json(result.data)
 }
 
 const createNoteSchema = z.object({
@@ -44,13 +46,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { projectId, issueId } = await context.params
 
-  // Check if issue exists and belongs to user
-  const issue = await getIssue(user.id, issueId)
-
-  if (!issue) {
-    return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
-  }
-
   let body
   try {
     body = await request.json()
@@ -68,7 +63,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { title, content } = validation.data
 
-  const note = await createNote(user.id, { projectId, issueId, title, content })
+  const result = await createNote(user.id, {
+    projectId,
+    issueId,
+    title,
+    content,
+  })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 404 })
+  }
 
-  return NextResponse.json(note, { status: 201 })
+  return NextResponse.json(result.data, { status: 201 })
 }

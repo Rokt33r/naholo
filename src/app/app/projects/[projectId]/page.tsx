@@ -11,17 +11,17 @@ export default async function ProjectPage({ params }: Props) {
   const user = await requireAuthOrRedirect()
   const { projectId } = await params
 
-  const project = await getProject(user.id, projectId)
+  const projectResult = await getProject(user.id, projectId)
 
-  if (!project) {
+  if (!projectResult.success || !projectResult.data) {
     redirect('/app')
   }
 
-  const issues = await listIssues(user.id, projectId) // Show open issues by default
+  const issuesResult = await listIssues(user.id, projectId) // Show open issues by default
 
   // Redirect to first issue or show empty state
-  if (issues.length > 0) {
-    redirect(`/app/projects/${projectId}/issues/${issues[0].id}`)
+  if (issuesResult.success && issuesResult.data.length > 0) {
+    redirect(`/app/projects/${projectId}/issues/${issuesResult.data[0].id}`)
   }
 
   return (

@@ -15,7 +15,10 @@ export async function GET(
   const searchParams = request.nextUrl.searchParams
   const closed = searchParams.get('closed') === 'true'
 
-  const issues = await listIssues(user.id, projectId, { closed })
+  const result = await listIssues(user.id, projectId, { closed })
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.message }, { status: 500 })
+  }
 
-  return NextResponse.json(issues)
+  return NextResponse.json(result.data)
 }
