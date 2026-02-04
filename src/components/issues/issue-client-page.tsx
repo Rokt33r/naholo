@@ -2,6 +2,8 @@
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { useLocalStorage } from '@/hooks/use-local-storage'
+import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { IssueDetail } from './issue-detail'
 import { LogsList } from '@/components/logs/logs-list'
@@ -75,6 +77,10 @@ function IssueClientPageContent({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isWideScreen = useMediaQuery('(min-width: 1024px)')
+  const [logsPanelWidth, setLogsPanelWidth] = useLocalStorage(
+    'logs-panel-width',
+    320,
+  )
   const { data: logs = [] } = useLogs(issue.projectId, issue.id)
   const { data: notes = initialNotes } = useNotes(issue.projectId, issue.id)
 
@@ -107,14 +113,21 @@ function IssueClientPageContent({
         />
       </div>
       {isWideScreen && activeTab.type !== 'logs' && (
-        <div className='w-80 border-l'>
+        <ResizablePanel
+          width={logsPanelWidth}
+          onWidthChange={setLogsPanelWidth}
+          minWidth={240}
+          maxWidth={600}
+          side='right'
+          className='border-l'
+        >
           <LogsList
             projectId={issue.projectId}
             issueId={issue.id}
             logs={logs}
             isClosed={issue.closed}
           />
-        </div>
+        </ResizablePanel>
       )}
     </div>
   )
