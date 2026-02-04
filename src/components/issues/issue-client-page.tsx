@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { IssueDetail } from './issue-detail'
 import { LogsList } from '@/components/logs/logs-list'
@@ -74,7 +74,7 @@ function IssueClientPageContent({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [showLogs, setShowLogs] = useState(false)
+  const isWideScreen = useMediaQuery('(min-width: 1024px)')
   const { data: logs = [] } = useLogs(issue.projectId, issue.id)
   const { data: notes = initialNotes } = useNotes(issue.projectId, issue.id)
 
@@ -102,13 +102,11 @@ function IssueClientPageContent({
           tasks={tasks}
           logs={logs}
           notes={notes}
-          showLogs={showLogs}
-          onToggleLogs={() => setShowLogs(!showLogs)}
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
       </div>
-      {showLogs && activeTab.type !== 'logs' && (
+      {isWideScreen && activeTab.type !== 'logs' && (
         <div className='w-80 border-l'>
           <LogsList
             projectId={issue.projectId}

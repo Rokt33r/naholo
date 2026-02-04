@@ -2,13 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import {
-  MoreVertical,
-  MessageSquare,
-  Loader2,
-  CircleDot,
-  CircleCheck,
-} from 'lucide-react'
+import { MoreVertical, Loader2, CircleDot, CircleCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -73,8 +67,6 @@ type IssueDetailProps = {
   tasks: Task[]
   logs: Log[]
   notes: Note[]
-  showLogs: boolean
-  onToggleLogs: () => void
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
 }
@@ -85,8 +77,6 @@ export function IssueDetail({
   tasks,
   logs,
   notes,
-  showLogs,
-  onToggleLogs,
   activeTab,
   onTabChange,
 }: IssueDetailProps) {
@@ -204,16 +194,6 @@ export function IssueDetail({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {activeTab.type !== 'logs' && (
-            <Button
-              variant={showLogs ? 'default' : 'outline'}
-              size='sm'
-              onClick={onToggleLogs}
-            >
-              <MessageSquare className='mr-2 h-4 w-4' />
-              Logs
-            </Button>
-          )}
         </div>
       </div>
 
