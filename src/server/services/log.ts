@@ -4,6 +4,7 @@ import { logs, issues } from '../db/schema'
 import { eq, and, asc, desc } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { NotFoundError } from './errors'
 
 export type Log = {
   id: string
@@ -24,7 +25,7 @@ export type CreateLogInput = {
 export async function listLogs(
   userId: string,
   issueId: string,
-): Promise<ReturnResult<Log[]>> {
+): Promise<Log[]> {
   const result = await db
     .select({
       id: logs.id,
@@ -36,7 +37,7 @@ export async function listLogs(
     .where(and(eq(logs.issueId, issueId), eq(logs.userId, userId)))
     .orderBy(asc(logs.createdAt))
 
-  return ok(result)
+  return result
 }
 
 /**
@@ -53,7 +54,7 @@ export async function createLog(
     .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
     .limit(1)
 
-  if (!issue) return err(new Error('Issue not found'))
+  if (!issue) return err(new NotFoundError('Issue'))
 
   const [log] = await db
     .insert(logs)
@@ -106,7 +107,7 @@ export async function updateLog(
       updatedAt: logs.updatedAt,
     })
 
-  if (!log) return err(new Error('Log not found'))
+  if (!log) return err(new NotFoundError('Log'))
 
   // Get the most recent log for this issue
   const [lastLog] = await db
@@ -144,7 +145,7 @@ export async function deleteLog(
     .where(and(eq(logs.id, logId), eq(logs.userId, userId)))
     .returning({ id: logs.id })
 
-  if (!log) return err(new Error('Log not found'))
+  if (!log) return err(new NotFoundError('Log'))
 
   // Get the most recent log for this issue after deletion
   const [lastLog] = await db

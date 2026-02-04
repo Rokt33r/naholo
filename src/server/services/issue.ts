@@ -4,6 +4,7 @@ import { issues, tasks, projects } from '../db/schema'
 import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { NotFoundError } from './errors'
 
 export type Issue = {
   id: string
@@ -42,7 +43,7 @@ export type UpdateIssueInput = {
 export async function getIssue(
   userId: string,
   issueId: string,
-): Promise<ReturnResult<Issue | null>> {
+): Promise<Issue | null> {
   const [issue] = await db
     .select({
       id: issues.id,
@@ -57,7 +58,7 @@ export async function getIssue(
     .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
     .limit(1)
 
-  return ok(issue || null)
+  return issue || null
 }
 
 /**
@@ -67,7 +68,7 @@ export async function listIssues(
   userId: string,
   projectId: string,
   options: { closed?: boolean } = {},
-): Promise<ReturnResult<IssueWithStats[]>> {
+): Promise<IssueWithStats[]> {
   const closed = options.closed ?? false
 
   const rows = await db
@@ -97,12 +98,10 @@ export async function listIssues(
     .orderBy(desc(issues.updatedAt))
 
   // Convert sum result (string | null) to number
-  return ok(
-    rows.map((row) => ({
-      ...row,
-      completedTasks: Number(row.completedTasks ?? 0),
-    })),
-  )
+  return rows.map((row) => ({
+    ...row,
+    completedTasks: Number(row.completedTasks ?? 0),
+  }))
 }
 
 /**
@@ -119,7 +118,7 @@ export async function createIssue(
     .where(and(eq(projects.id, data.projectId), eq(projects.userId, userId)))
     .limit(1)
 
-  if (!project) return err(new Error('Project not found'))
+  if (!project) return err(new NotFoundError('Project'))
 
   const [issue] = await db
     .insert(issues)
@@ -150,7 +149,7 @@ export async function updateIssue(
     .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
     .returning({ id: issues.id })
 
-  if (!issue) return err(new Error('Issue not found'))
+  if (!issue) return err(new NotFoundError('Issue'))
 
   return ok()
 }
@@ -173,7 +172,7 @@ export async function closeIssue(
     .returning({ id: issues.id })
 
   if (!issue) {
-    return err(new Error('Issue not found'))
+    return err(new NotFoundError('Issue'))
   }
 
   return ok()
@@ -197,7 +196,7 @@ export async function reopenIssue(
     .returning({ id: issues.id })
 
   if (!issue) {
-    return err(new Error('Issue not found'))
+    return err(new NotFoundError('Issue'))
   }
 
   return ok()
@@ -215,7 +214,7 @@ export async function deleteIssue(
     .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
     .returning({ id: issues.id })
 
-  if (!issue) return err(new Error('Issue not found'))
+  if (!issue) return err(new NotFoundError('Issue'))
 
   return ok()
 }

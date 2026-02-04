@@ -21,36 +21,47 @@ const updateNoteSchema = z.object({
  * Update a note
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const user = await getAuthUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { issueId, noteId } = await context.params
-
-  let body
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+    const user = await getAuthUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-  const validation = updateNoteSchema.safeParse(body)
-  if (!validation.success) {
+    const { issueId, noteId } = await context.params
+
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    }
+
+    const validation = updateNoteSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.issues[0].message },
+        { status: 400 },
+      )
+    }
+
+    const { title, content } = validation.data
+
+    const result = await updateNote(user.id, noteId, issueId, {
+      title,
+      content,
+    })
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.message }, { status: 404 })
+    }
+
+    return NextResponse.json(result.data)
+  } catch (error) {
+    console.error(error)
     return NextResponse.json(
-      { error: validation.error.issues[0].message },
-      { status: 400 },
+      { error: 'Internal Server Error' },
+      { status: 500 },
     )
   }
-
-  const { title, content } = validation.data
-
-  const result = await updateNote(user.id, noteId, issueId, { title, content })
-  if (!result.success) {
-    return NextResponse.json({ error: result.error.message }, { status: 404 })
-  }
-
-  return NextResponse.json(result.data)
 }
 
 /**
@@ -58,17 +69,25 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  * Delete a note
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const user = await getAuthUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const user = await getAuthUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { issueId, noteId } = await context.params
+
+    const result = await deleteNote(user.id, noteId, issueId)
+    if (!result.success) {
+      return NextResponse.json({ error: result.error.message }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
+    )
   }
-
-  const { issueId, noteId } = await context.params
-
-  const result = await deleteNote(user.id, noteId, issueId)
-  if (!result.success) {
-    return NextResponse.json({ error: result.error.message }, { status: 404 })
-  }
-
-  return NextResponse.json({ success: true })
 }

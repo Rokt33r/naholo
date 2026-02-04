@@ -4,6 +4,7 @@ import { tasks, issues } from '../db/schema'
 import { eq, and, asc, isNull } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { NotFoundError } from './errors'
 
 export type Task = {
   id: string
@@ -28,7 +29,7 @@ export type CreateTaskInput = {
 export async function listTasks(
   userId: string,
   issueId: string,
-): Promise<ReturnResult<Task[]>> {
+): Promise<Task[]> {
   const result = await db
     .select({
       id: tasks.id,
@@ -43,7 +44,7 @@ export async function listTasks(
     .where(and(eq(tasks.issueId, issueId), eq(tasks.userId, userId)))
     .orderBy(asc(tasks.position))
 
-  return ok(result)
+  return result
 }
 
 /**
@@ -60,7 +61,7 @@ export async function createTask(
     .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
     .limit(1)
 
-  if (!issue) return err(new Error('Issue not found'))
+  if (!issue) return err(new NotFoundError('Issue'))
 
   // Get the maximum position for tasks at this level
   const existingTasks = await db
@@ -120,7 +121,7 @@ export async function updateTask(
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
     .returning({ id: tasks.id })
 
-  if (!task) return err(new Error('Task not found'))
+  if (!task) return err(new NotFoundError('Task'))
 
   await db
     .update(issues)
@@ -148,7 +149,7 @@ export async function setTaskDone(
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
     .returning({ id: tasks.id })
 
-  if (!task) return err(new Error('Task not found'))
+  if (!task) return err(new NotFoundError('Task'))
 
   await db
     .update(issues)
@@ -171,7 +172,7 @@ export async function deleteTask(
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
     .returning({ id: tasks.id })
 
-  if (!task) return err(new Error('Task not found'))
+  if (!task) return err(new NotFoundError('Task'))
 
   await db
     .update(issues)

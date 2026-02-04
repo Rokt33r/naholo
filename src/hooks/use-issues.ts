@@ -107,7 +107,7 @@ export function useUpdateIssueTitle() {
               throw new Error(errorData.error || 'Failed to update title')
             }
 
-            return response.json()
+            return { ...currentData, title: newTitle }
           },
           {
             optimisticData: (currentData) => {
@@ -176,7 +176,7 @@ export function useCloseIssue() {
             throw new Error(errorData.error || 'Failed to close issue')
           }
 
-          return response.json()
+          return { ...currentData, closed: true, closedAt: now }
         },
         {
           optimisticData: (currentData) => {
@@ -227,7 +227,7 @@ export function useReopenIssue() {
               throw new Error(errorData.error || 'Failed to reopen issue')
             }
 
-            return response.json()
+            return { ...currentData, closed: false, closedAt: null }
           },
           {
             optimisticData: (currentData) => {

@@ -14,17 +14,14 @@ export default async function ProjectLayout({ children, params }: Props) {
   const user = await requireAuthOrRedirect()
   const { projectId } = await params
 
-  const [projectsResult, projectResult] = await Promise.all([
+  const [projects, project] = await Promise.all([
     listProjects(user.id),
     getProject(user.id, projectId),
   ])
 
-  if (!projectResult.success || !projectResult.data) {
+  if (!project) {
     redirect('/app')
   }
-
-  const project = projectResult.data
-  const projects = projectsResult.success ? projectsResult.data : []
 
   return (
     <SidebarProvider

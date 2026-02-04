@@ -4,6 +4,7 @@ import { projects } from '../db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { NotFoundError } from './errors'
 
 export type Project = {
   id: string
@@ -28,7 +29,7 @@ export type UpdateProjectInput = {
 export async function getProject(
   userId: string,
   projectId: string,
-): Promise<ReturnResult<Project | null>> {
+): Promise<Project | null> {
   const [project] = await db
     .select({
       id: projects.id,
@@ -40,15 +41,13 @@ export async function getProject(
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
     .limit(1)
 
-  return ok(project || null)
+  return project || null
 }
 
 /**
  * List all projects for a user
  */
-export async function listProjects(
-  userId: string,
-): Promise<ReturnResult<Project[]>> {
+export async function listProjects(userId: string): Promise<Project[]> {
   const result = await db
     .select({
       id: projects.id,
@@ -60,7 +59,7 @@ export async function listProjects(
     .where(eq(projects.userId, userId))
     .orderBy(desc(projects.createdAt))
 
-  return ok(result)
+  return result
 }
 
 /**
@@ -100,7 +99,7 @@ export async function updateProject(
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
     .returning({ id: projects.id })
 
-  if (!project) return err(new Error('Project not found'))
+  if (!project) return err(new NotFoundError('Project'))
 
   return ok()
 }
@@ -117,7 +116,7 @@ export async function deleteProject(
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
     .returning({ id: projects.id })
 
-  if (!project) return err(new Error('Project not found'))
+  if (!project) return err(new NotFoundError('Project'))
 
   return ok()
 }

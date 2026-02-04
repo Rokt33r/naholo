@@ -13,22 +13,16 @@ export default async function IssuePage({ params }: Props) {
   const user = await requireAuthOrRedirect()
   const { projectId, issueId } = await params
 
-  const issueResult = await getIssue(user.id, issueId)
+  const issue = await getIssue(user.id, issueId)
 
-  if (!issueResult.success || !issueResult.data) {
+  if (!issue) {
     redirect(`/app/projects/${projectId}`)
   }
 
-  const [tasksResult, notesResult] = await Promise.all([
+  const [tasks, notes] = await Promise.all([
     listTasks(user.id, issueId),
     listNotes(user.id, issueId),
   ])
 
-  return (
-    <IssueClientPage
-      issue={issueResult.data}
-      tasks={tasksResult.success ? tasksResult.data : []}
-      notes={notesResult.success ? notesResult.data : []}
-    />
-  )
+  return <IssueClientPage issue={issue} tasks={tasks} notes={notes} />
 }

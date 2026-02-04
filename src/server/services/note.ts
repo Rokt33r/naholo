@@ -4,6 +4,7 @@ import { notes, issues } from '../db/schema'
 import { eq, and, asc } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { NotFoundError } from './errors'
 
 export type Note = {
   id: string
@@ -32,7 +33,7 @@ export type UpdateNoteInput = {
 export async function listNotes(
   userId: string,
   issueId: string,
-): Promise<ReturnResult<Note[]>> {
+): Promise<Note[]> {
   const result = await db
     .select({
       id: notes.id,
@@ -46,7 +47,7 @@ export async function listNotes(
     .where(and(eq(notes.issueId, issueId), eq(notes.userId, userId)))
     .orderBy(asc(notes.position))
 
-  return ok(result)
+  return result
 }
 
 /**
@@ -63,7 +64,7 @@ export async function createNote(
     .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
     .limit(1)
 
-  if (!issue) return err(new Error('Issue not found'))
+  if (!issue) return err(new NotFoundError('Issue'))
 
   // Get the maximum position for notes in this issue
   const existingNotes = await db
@@ -131,7 +132,7 @@ export async function updateNote(
       updatedAt: notes.updatedAt,
     })
 
-  if (!note) return err(new Error('Note not found'))
+  if (!note) return err(new NotFoundError('Note'))
 
   // Update issue's updatedAt timestamp
   await db
@@ -155,7 +156,7 @@ export async function deleteNote(
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning({ id: notes.id })
 
-  if (!note) return err(new Error('Note not found'))
+  if (!note) return err(new NotFoundError('Note'))
 
   // Update issue's updatedAt timestamp
   await db
