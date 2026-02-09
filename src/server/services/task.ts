@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { tasks, issues } from '../db/schema'
-import { eq, and, asc, isNull } from 'drizzle-orm'
+import { eq, and, asc, isNull, gt, gte, lt, lte, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -20,7 +20,8 @@ export type CreateTaskInput = {
   projectId: string
   issueId: string
   content: string
-  parentTaskId?: string
+  parentTaskId?: string | null
+  position?: number
 }
 
 /**
@@ -48,7 +49,8 @@ export async function listTasks(
 }
 
 /**
- * Create a new task
+ * Create a new task. If position is provided, shifts existing tasks at or after that position.
+ * Otherwise appends to the end.
  */
 export async function createTask(
   userId: string,
@@ -63,25 +65,49 @@ export async function createTask(
 
   if (!issue) return err(new NotFoundError('Issue'))
 
-  // Get the maximum position for tasks at this level
-  const existingTasks = await db
-    .select({ position: tasks.position })
-    .from(tasks)
-    .where(
-      and(
-        eq(tasks.issueId, data.issueId),
-        eq(tasks.userId, userId),
-        data.parentTaskId
-          ? eq(tasks.parentTaskId, data.parentTaskId)
-          : isNull(tasks.parentTaskId),
-      ),
-    )
-    .orderBy(tasks.position)
+  const parentTaskId = data.parentTaskId ?? null
 
-  const maxPosition =
-    existingTasks.length > 0
-      ? Math.max(...existingTasks.map((t) => t.position))
-      : -1
+  let position: number
+  if (data.position !== undefined) {
+    // Shift existing tasks at or after the target position
+    await db
+      .update(tasks)
+      .set({
+        position: sql`${tasks.position} + 1`,
+      })
+      .where(
+        and(
+          eq(tasks.issueId, data.issueId),
+          eq(tasks.userId, userId),
+          parentTaskId
+            ? eq(tasks.parentTaskId, parentTaskId)
+            : isNull(tasks.parentTaskId),
+          gte(tasks.position, data.position),
+        ),
+      )
+    position = data.position
+  } else {
+    // Get the maximum position for tasks at this level
+    const existingTasks = await db
+      .select({ position: tasks.position })
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.issueId, data.issueId),
+          eq(tasks.userId, userId),
+          parentTaskId
+            ? eq(tasks.parentTaskId, parentTaskId)
+            : isNull(tasks.parentTaskId),
+        ),
+      )
+      .orderBy(tasks.position)
+
+    const maxPosition =
+      existingTasks.length > 0
+        ? Math.max(...existingTasks.map((t) => t.position))
+        : -1
+    position = maxPosition + 1
+  }
 
   const [task] = await db
     .insert(tasks)
@@ -89,9 +115,9 @@ export async function createTask(
       projectId: data.projectId,
       issueId: data.issueId,
       userId,
-      parentTaskId: data.parentTaskId || null,
+      parentTaskId,
       content: data.content,
-      position: maxPosition + 1,
+      position,
     })
     .returning({ id: tasks.id })
 
@@ -173,6 +199,145 @@ export async function deleteTask(
     .returning({ id: tasks.id })
 
   if (!task) return err(new NotFoundError('Task'))
+
+  await db
+    .update(issues)
+    .set({ updatedAt: new Date() })
+    .where(eq(issues.id, issueId))
+
+  return ok()
+}
+
+export type MoveTaskInput = {
+  taskId: string
+  newParentTaskId: string | null
+  newPosition: number
+}
+
+/**
+ * Move a task to a new parent and/or position.
+ */
+export async function moveTask(
+  userId: string,
+  issueId: string,
+  data: MoveTaskInput,
+): Promise<ReturnResult<undefined>> {
+  // Get the current task
+  const [currentTask] = await db
+    .select({
+      id: tasks.id,
+      parentTaskId: tasks.parentTaskId,
+      position: tasks.position,
+    })
+    .from(tasks)
+    .where(
+      and(
+        eq(tasks.id, data.taskId),
+        eq(tasks.userId, userId),
+        eq(tasks.issueId, issueId),
+      ),
+    )
+    .limit(1)
+
+  if (!currentTask) return err(new NotFoundError('Task'))
+
+  const oldParentId = currentTask.parentTaskId
+  const oldPosition = currentTask.position
+  const newParentId = data.newParentTaskId
+  const newPosition = data.newPosition
+
+  // Check if we're moving to the same place
+  if (oldParentId === newParentId && oldPosition === newPosition) {
+    return ok()
+  }
+
+  const sameParent = oldParentId === newParentId
+
+  if (sameParent) {
+    // Moving within the same parent - just reorder
+    if (oldPosition < newPosition) {
+      // Moving down: shift tasks between old and new position up
+      await db
+        .update(tasks)
+        .set({
+          position: sql`${tasks.position} - 1`,
+        })
+        .where(
+          and(
+            eq(tasks.issueId, issueId),
+            eq(tasks.userId, userId),
+            oldParentId
+              ? eq(tasks.parentTaskId, oldParentId)
+              : isNull(tasks.parentTaskId),
+            gt(tasks.position, oldPosition),
+            lte(tasks.position, newPosition),
+          ),
+        )
+    } else {
+      // Moving up: shift tasks between new and old position down
+      await db
+        .update(tasks)
+        .set({
+          position: sql`${tasks.position} + 1`,
+        })
+        .where(
+          and(
+            eq(tasks.issueId, issueId),
+            eq(tasks.userId, userId),
+            oldParentId
+              ? eq(tasks.parentTaskId, oldParentId)
+              : isNull(tasks.parentTaskId),
+            gte(tasks.position, newPosition),
+            lt(tasks.position, oldPosition),
+          ),
+        )
+    }
+  } else {
+    // Moving to a different parent
+    // 1. Close the gap at the old location
+    await db
+      .update(tasks)
+      .set({
+        position: sql`${tasks.position} - 1`,
+      })
+      .where(
+        and(
+          eq(tasks.issueId, issueId),
+          eq(tasks.userId, userId),
+          oldParentId
+            ? eq(tasks.parentTaskId, oldParentId)
+            : isNull(tasks.parentTaskId),
+          gt(tasks.position, oldPosition),
+        ),
+      )
+
+    // 2. Make room at the new location
+    await db
+      .update(tasks)
+      .set({
+        position: sql`${tasks.position} + 1`,
+      })
+      .where(
+        and(
+          eq(tasks.issueId, issueId),
+          eq(tasks.userId, userId),
+          newParentId
+            ? eq(tasks.parentTaskId, newParentId)
+            : isNull(tasks.parentTaskId),
+          gte(tasks.position, newPosition),
+        ),
+      )
+  }
+
+  // Update the task's position and parent
+  await db
+    .update(tasks)
+    .set({
+      parentTaskId: newParentId,
+      position: newPosition,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(tasks.id, data.taskId), eq(tasks.userId, userId)))
 
   await db
     .update(issues)
