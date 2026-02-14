@@ -179,7 +179,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         onBlur={handleBlur}
         onKeyDown={handleRowKeyDown}
         className={cn(
-          'flex items-start gap-2 rounded py-1 outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
+          'flex items-center gap-2 rounded py-1 outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
           isFocused && 'ring-2 ring-blue-500 ring-offset-1',
         )}
       >
@@ -207,7 +207,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           checked={task.done}
           onCheckedChange={handleToggleDone}
           disabled={isLoading}
-          className='mt-0.5 shrink-0'
+          className='shrink-0'
           tabIndex={-1}
         />
 
