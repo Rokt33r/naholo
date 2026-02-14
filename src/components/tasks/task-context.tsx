@@ -18,7 +18,7 @@ import {
   type Task,
 } from '@/hooks/use-tasks'
 
-type InlineCreationState = {
+type CreationDialogState = {
   parentTaskId: string | null
   afterTaskId: string | null // The task after which to insert, null = beginning
 } | null
@@ -32,13 +32,13 @@ type TaskContextValue = {
   focusedTaskId: string | null
   setFocusedTaskId: (id: string | null) => void
 
-  // Inline creation
-  inlineCreation: InlineCreationState
-  startInlineCreation: (
+  // Dialog creation
+  creationDialogState: CreationDialogState
+  openCreateDialog: (
     parentTaskId: string | null,
     afterTaskId: string | null,
   ) => void
-  cancelInlineCreation: () => void
+  closeCreateDialog: () => void
 
   // Tree helpers
   getRootTasks: () => Task[]
@@ -94,8 +94,8 @@ export function TaskProvider({
   const moveTaskMutation = useMoveTask(projectId, issueId)
 
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null)
-  const [inlineCreation, setInlineCreation] =
-    useState<InlineCreationState>(null)
+  const [creationDialogState, setCreationDialogState] =
+    useState<CreationDialogState>(null)
 
   // Tree helpers
   const getRootTasks = useCallback(() => {
@@ -166,16 +166,16 @@ export function TaskProvider({
     [tasks],
   )
 
-  // Inline creation
-  const startInlineCreation = useCallback(
+  // Dialog creation
+  const openCreateDialog = useCallback(
     (parentTaskId: string | null, afterTaskId: string | null) => {
-      setInlineCreation({ parentTaskId, afterTaskId })
+      setCreationDialogState({ parentTaskId, afterTaskId })
     },
     [],
   )
 
-  const cancelInlineCreation = useCallback(() => {
-    setInlineCreation(null)
+  const closeCreateDialog = useCallback(() => {
+    setCreationDialogState(null)
   }, [])
 
   // Operations
@@ -220,9 +220,9 @@ export function TaskProvider({
     (taskId: string) => {
       const task = tasks.find((t) => t.id === taskId)
       if (!task) return
-      startInlineCreation(task.parentTaskId, taskId)
+      openCreateDialog(task.parentTaskId, taskId)
     },
-    [tasks, startInlineCreation],
+    [tasks, openCreateDialog],
   )
 
   const indentTask = useCallback(
@@ -327,9 +327,9 @@ export function TaskProvider({
       isLoading,
       focusedTaskId,
       setFocusedTaskId,
-      inlineCreation,
-      startInlineCreation,
-      cancelInlineCreation,
+      creationDialogState,
+      openCreateDialog,
+      closeCreateDialog,
       getRootTasks,
       getSubtasks,
       getSiblings,
@@ -351,9 +351,9 @@ export function TaskProvider({
       tasks,
       isLoading,
       focusedTaskId,
-      inlineCreation,
-      startInlineCreation,
-      cancelInlineCreation,
+      creationDialogState,
+      openCreateDialog,
+      closeCreateDialog,
       getRootTasks,
       getSubtasks,
       getSiblings,

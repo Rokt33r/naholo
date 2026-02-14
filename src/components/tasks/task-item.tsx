@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useMemo, type KeyboardEvent } from 'react'
 import { ChevronDown, ChevronRight, Plus, MoreVertical } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -8,86 +8,93 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { useAction } from '@/lib/use-action'
-import {
-  updateTaskAction,
-  setTaskDoneAction,
-  deleteTaskAction,
-} from '@/app/app/actions'
-import { CreateTaskDialog } from './create-task-dialog'
-
-type Task = {
-  id: string
-  content: string
-  done: boolean
-  parentTaskId: string | null
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
+import { useTaskContext } from './task-context'
+import type { Task } from '@/hooks/use-tasks'
 
 type TaskItemProps = {
   task: Task
   subtasks: Task[]
-  allTasks: Task[]
-  projectId: string
-  issueId: string
   depth?: number
 }
 
-export function TaskItem({
-  task,
-  subtasks,
-  allTasks,
-  projectId,
-  issueId,
-  depth = 0,
-}: TaskItemProps) {
+export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
+  const {
+    getSubtasks,
+    getPreviousSibling,
+    openCreateDialog,
+    updateTask,
+    setTaskDone,
+    deleteTask,
+    indentTask,
+    outdentTask,
+    moveUp,
+    moveDown,
+    focusedTaskId,
+    setFocusedTaskId,
+  } = useTaskContext()
+
   const [isExpanded, setIsExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(task.content)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const { execute: updateTask, loading: updateLoading } =
-    useAction(updateTaskAction)
-  const { execute: setTaskDone, loading: doneLoading } =
-    useAction(setTaskDoneAction)
-  const { execute: deleteTask, loading: deleteLoading } =
-    useAction(deleteTaskAction)
+  const rowRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const hasSubtasks = subtasks.length > 0
-  const isLoading = updateLoading || doneLoading || deleteLoading
+  const isFocused = focusedTaskId === task.id
+  const previousSibling = useMemo(
+    () => getPreviousSibling(task.id),
+    [getPreviousSibling, task.id],
+  )
+  const canIndent = !!previousSibling
+  const canOutdent = !!task.parentTaskId
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    }
+  }, [content, isEditing])
+
+  // Focus textarea when editing starts
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus()
+      textareaRef.current.setSelectionRange(content.length, content.length)
+    }
+  }, [isEditing, content.length])
 
   const handleToggleDone = async (checked: boolean) => {
-    const result = await setTaskDone(
-      projectId,
-      issueId,
-      task.id,
-      checked === true,
-    )
-    if (!result.success) {
-      alert('Failed to update task: ' + result.error.message)
+    setIsLoading(true)
+    try {
+      await setTaskDone(task.id, checked === true)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleEdit = () => {
+    setContent(task.content)
     setIsEditing(true)
   }
 
   const handleSave = async () => {
-    if (content.trim() && content !== task.content) {
-      const result = await updateTask(
-        projectId,
-        issueId,
-        task.id,
-        content.trim(),
-      )
-      if (!result.success) {
-        alert('Failed to update task: ' + result.error.message)
-        setContent(task.content)
+    const trimmed = content.trim()
+    if (trimmed && trimmed !== task.content) {
+      setIsLoading(true)
+      try {
+        await updateTask(task.id, trimmed)
+      } finally {
+        setIsLoading(false)
       }
+    } else {
+      setContent(task.content)
     }
     setIsEditing(false)
   }
@@ -96,20 +103,86 @@ export function TaskItem({
     if (!confirm('Are you sure you want to delete this task?')) {
       return
     }
-    const result = await deleteTask(projectId, issueId, task.id)
-    if (!result.success) {
-      alert('Failed to delete task: ' + result.error.message)
+    setIsLoading(true)
+    try {
+      await deleteTask(task.id)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const getSubtasksForTask = (taskId: string) =>
-    allTasks
-      .filter((t) => t.parentTaskId === taskId)
-      .sort((a, b) => a.position - b.position)
+  const handleAddSubtask = () => {
+    // Find last subtask to insert after
+    const lastSubtask = subtasks[subtasks.length - 1]
+    openCreateDialog(task.id, lastSubtask?.id ?? null)
+    setIsExpanded(true)
+  }
+
+  const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // Don't handle keys when editing
+    if (isEditing) return
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      // Create new task below
+      openCreateDialog(task.parentTaskId, task.id)
+    } else if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault()
+      if (canIndent) {
+        indentTask(task.id)
+      }
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault()
+      if (canOutdent) {
+        outdentTask(task.id)
+      }
+    } else if (e.altKey && e.key === 'ArrowUp') {
+      e.preventDefault()
+      moveUp(task.id)
+    } else if (e.altKey && e.key === 'ArrowDown') {
+      e.preventDefault()
+      moveDown(task.id)
+    } else if (e.key === 'e' || e.key === 'Enter') {
+      // 'e' to edit, or Enter when not creating
+      if (e.key === 'e') {
+        e.preventDefault()
+        handleEdit()
+      }
+    }
+  }
+
+  const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSave()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setContent(task.content)
+      setIsEditing(false)
+    }
+  }
+
+  const handleFocus = () => {
+    setFocusedTaskId(task.id)
+  }
+
+  const handleBlur = () => {
+    // Don't immediately clear focus to allow for keyboard navigation
+  }
 
   return (
-    <div className={cn('group', depth > 0 && 'ml-6')}>
-      <div className='flex items-center gap-2 rounded py-1 hover:bg-zinc-50 dark:hover:bg-zinc-900'>
+    <div className={cn('group/item', depth > 0 && 'ml-6')}>
+      <div
+        ref={rowRef}
+        tabIndex={0}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleRowKeyDown}
+        className={cn(
+          'flex items-start gap-2 rounded py-1 outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
+          isFocused && 'ring-2 ring-blue-500 ring-offset-1',
+        )}
+      >
         {/* Expand/collapse button */}
         {hasSubtasks ? (
           <Button
@@ -117,6 +190,7 @@ export function TaskItem({
             size='icon'
             className='h-5 w-5 shrink-0'
             onClick={() => setIsExpanded(!isExpanded)}
+            tabIndex={-1}
           >
             {isExpanded ? (
               <ChevronDown className='h-3 w-3' />
@@ -133,32 +207,26 @@ export function TaskItem({
           checked={task.done}
           onCheckedChange={handleToggleDone}
           disabled={isLoading}
-          className='shrink-0'
+          className='mt-0.5 shrink-0'
+          tabIndex={-1}
         />
 
         {/* Content */}
         <div className='flex-1 overflow-hidden'>
           {isEditing ? (
-            <input
-              type='text'
+            <textarea
+              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onBlur={handleSave}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSave()
-                } else if (e.key === 'Escape') {
-                  setContent(task.content)
-                  setIsEditing(false)
-                }
-              }}
-              className='w-full bg-transparent outline-none'
-              autoFocus
+              onKeyDown={handleTextareaKeyDown}
+              className='w-full resize-none bg-transparent outline-none'
+              rows={1}
             />
           ) : (
             <span
               className={cn(
-                'cursor-text',
+                'cursor-text whitespace-pre-wrap',
                 task.done && 'text-zinc-500 line-through',
               )}
               onClick={handleEdit}
@@ -169,21 +237,17 @@ export function TaskItem({
         </div>
 
         {/* Actions */}
-        <div className='flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100'>
-          <CreateTaskDialog
-            projectId={projectId}
-            issueId={issueId}
-            parentTaskId={task.id}
+        <div className='flex shrink-0 items-center gap-1 opacity-0 group-hover/item:opacity-100'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-6 w-6'
+            disabled={isLoading}
+            onClick={handleAddSubtask}
+            tabIndex={-1}
           >
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-6 w-6'
-              disabled={isLoading}
-            >
-              <Plus className='h-3 w-3' />
-            </Button>
-          </CreateTaskDialog>
+            <Plus className='h-3 w-3' />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -191,6 +255,7 @@ export function TaskItem({
                 size='icon'
                 className='h-6 w-6'
                 disabled={isLoading}
+                tabIndex={-1}
               >
                 <MoreVertical className='h-3 w-3' />
               </Button>
@@ -199,12 +264,39 @@ export function TaskItem({
               <DropdownMenuItem onClick={handleEdit} disabled={isLoading}>
                 Edit
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => moveUp(task.id)}
+                disabled={isLoading || !previousSibling}
+              >
+                Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => moveDown(task.id)}
+                disabled={isLoading}
+              >
+                Move down
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => indentTask(task.id)}
+                disabled={isLoading || !canIndent}
+              >
+                Indent
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => outdentTask(task.id)}
+                disabled={isLoading || !canOutdent}
+              >
+                Outdent
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleDelete}
-                disabled={deleteLoading}
+                disabled={isLoading}
                 className='text-red-600'
               >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -214,17 +306,17 @@ export function TaskItem({
       {/* Subtasks */}
       {hasSubtasks && isExpanded && (
         <div className='mt-1'>
-          {subtasks.map((subtask) => (
-            <TaskItem
-              key={subtask.id}
-              task={subtask}
-              subtasks={getSubtasksForTask(subtask.id)}
-              allTasks={allTasks}
-              projectId={projectId}
-              issueId={issueId}
-              depth={depth + 1}
-            />
-          ))}
+          {subtasks.map((subtask) => {
+            const subtaskChildren = getSubtasks(subtask.id)
+            return (
+              <TaskItem
+                key={subtask.id}
+                task={subtask}
+                subtasks={subtaskChildren}
+                depth={depth + 1}
+              />
+            )
+          })}
         </div>
       )}
     </div>

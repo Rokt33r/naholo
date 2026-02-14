@@ -43,16 +43,6 @@ type Issue = {
   updatedAt: Date
 }
 
-type Task = {
-  id: string
-  content: string
-  done: boolean
-  parentTaskId: string | null
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
-
 type Note = {
   id: string
   title: string
@@ -64,13 +54,11 @@ type Note = {
 
 type IssueClientPageProps = {
   issue: Issue
-  tasks: Task[]
   notes: Note[]
 }
 
 function IssueClientPageContent({
   issue,
-  tasks,
   notes: initialNotes,
 }: IssueClientPageProps) {
   const router = useRouter()
@@ -105,7 +93,6 @@ function IssueClientPageContent({
         <IssueDetail
           projectId={issue.projectId}
           issueId={issue.id}
-          tasks={tasks}
           logs={logs}
           notes={notes}
           activeTab={activeTab}
@@ -133,10 +120,10 @@ function IssueClientPageContent({
   )
 }
 
-export function IssueClientPage({ issue, tasks, notes }: IssueClientPageProps) {
+export function IssueClientPage({ issue, notes }: IssueClientPageProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <IssueClientPageContent issue={issue} tasks={tasks} notes={notes} />
+      <IssueClientPageContent issue={issue} notes={notes} />
     </QueryClientProvider>
   )
 }

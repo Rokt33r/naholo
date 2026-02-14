@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,97 +8,108 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAction } from '@/lib/use-action'
-import { createTaskAction } from '@/app/app/actions'
 
 type CreateTaskDialogProps = {
-  projectId: string
-  issueId: string
-  parentTaskId?: string
-  children: React.ReactNode
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  parentTaskId: string | null
+  onSubmit: (content: string) => Promise<void>
 }
 
 export function CreateTaskDialog({
-  projectId,
-  issueId,
+  open,
+  onOpenChange,
   parentTaskId,
-  children,
+  onSubmit,
 }: CreateTaskDialogProps) {
-  const [open, setOpen] = useState(false)
   const [content, setContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const { execute: createTask, loading } = useAction(createTaskAction)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!content.trim()) {
-      return
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.style.height = 'auto'
+      textarea.style.height = `${textarea.scrollHeight}px`
     }
+  }, [content])
 
-    const result = await createTask(
-      projectId,
-      issueId,
-      content.trim(),
-      parentTaskId,
-    )
-
-    if (result.success) {
-      setOpen(false)
+  // Reset content when dialog opens
+  useEffect(() => {
+    if (open) {
       setContent('')
-    } else {
-      alert('Failed to create task: ' + result.error.message)
+    }
+  }, [open])
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (!content.trim() || isSubmitting) return
+
+    setIsSubmitting(true)
+    try {
+      await onSubmit(content.trim())
+      onOpenChange(false)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Cmd/Ctrl+Enter to submit
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  const isSubtask = parentTaskId !== null
+  const title = isSubtask ? 'Add Subtask' : 'Add Task'
+  const description = isSubtask ? 'Create a new subtask.' : 'Create a new task.'
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>
-              {parentTaskId ? 'Create Subtask' : 'Create Task'}
-            </DialogTitle>
-            <DialogDescription>
-              {parentTaskId
-                ? 'Add a subtask to break down this task.'
-                : 'Add a new task to this issue.'}
-            </DialogDescription>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
+
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='content'>Task *</Label>
-              <Input
-                id='content'
+              <Label htmlFor='task-content'>Content</Label>
+              <textarea
+                ref={textareaRef}
+                id='task-content'
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder='Task description'
-                disabled={loading}
+                onKeyDown={handleKeyDown}
+                placeholder='Describe the task...'
+                disabled={isSubmitting}
                 autoFocus
+                className='min-h-[80px] w-full resize-none rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
               />
+              <p className='text-xs text-zinc-500'>
+                Press Cmd+Enter to create task
+              </p>
             </div>
           </div>
+
           <DialogFooter>
             <Button
               type='button'
               variant='outline'
-              onClick={() => setOpen(false)}
-              disabled={loading}
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={!content.trim() || loading}>
-              {loading
-                ? 'Creating...'
-                : parentTaskId
-                  ? 'Create Subtask'
-                  : 'Create Task'}
+            <Button type='submit' disabled={!content.trim() || isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>
           </DialogFooter>
         </form>

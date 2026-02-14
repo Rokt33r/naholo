@@ -30,16 +30,6 @@ type IssueDetail = {
   updatedAt: Date
 }
 
-type Task = {
-  id: string
-  content: string
-  done: boolean
-  parentTaskId: string | null
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
-
 type Log = {
   id: string
   content: string
@@ -64,7 +54,6 @@ type ActiveTab =
 type IssueDetailProps = {
   projectId: string
   issueId: string
-  tasks: Task[]
   logs: Log[]
   notes: Note[]
   activeTab: ActiveTab
@@ -74,7 +63,6 @@ type IssueDetailProps = {
 export function IssueDetail({
   projectId,
   issueId,
-  tasks,
   logs,
   notes,
   activeTab,
@@ -217,11 +205,7 @@ export function IssueDetail({
           />
         )}
         {activeTab.type === 'tasks' && (
-          <TasksList
-            projectId={issue.projectId}
-            issueId={issue.id}
-            tasks={tasks}
-          />
+          <TasksList projectId={issue.projectId} issueId={issue.id} />
         )}
         {activeTab.type === 'note' &&
           (() => {
