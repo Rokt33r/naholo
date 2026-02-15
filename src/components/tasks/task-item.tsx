@@ -212,7 +212,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         />
 
         {/* Content */}
-        <div className='flex-1 overflow-hidden'>
+        <div className='min-h-6 flex-1 overflow-hidden'>
           {isEditing ? (
             <textarea
               ref={textareaRef}
@@ -220,13 +220,13 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
               onChange={(e) => setContent(e.target.value)}
               onBlur={handleSave}
               onKeyDown={handleTextareaKeyDown}
-              className='w-full resize-none bg-transparent outline-none'
+              className='block w-full resize-none border-0 bg-transparent p-0 leading-6 outline-none'
               rows={1}
             />
           ) : (
             <span
               className={cn(
-                'cursor-text whitespace-pre-wrap',
+                'block cursor-text whitespace-pre-wrap leading-6',
                 task.done && 'text-zinc-500 line-through',
               )}
               onClick={handleEdit}
