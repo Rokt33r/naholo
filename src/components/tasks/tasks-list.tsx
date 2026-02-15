@@ -98,14 +98,7 @@ function TasksListContent() {
   }
 
   return (
-    <div className='flex h-full flex-col p-4'>
-      <div className='mb-3'>
-        <h2 className='text-sm font-semibold uppercase tracking-wide text-zinc-500'>
-          Tasks
-        </h2>
-      </div>
-
-      {/* Task list */}
+    <div className='flex h-full flex-col p-4 overflow-auto'>
       <div>
         {rootTasks.map((task) => (
           <TaskItem
