@@ -186,8 +186,8 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         onBlur={handleBlur}
         onKeyDown={handleRowKeyDown}
         className={cn(
-          'flex items-center gap-2 rounded py-1 outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
-          isFocused && 'ring-2 ring-blue-500 ring-offset-1',
+          'flex items-center rounded py-1 outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
+          isFocused && 'ring-2 ring-blue-500',
         )}
       >
         {/* Expand/collapse button */}
@@ -219,7 +219,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         />
 
         {/* Content */}
-        <div className='min-h-6 flex-1 overflow-hidden'>
+        <div className='min-h-6 flex-1 overflow-hidden px-2'>
           {isEditing ? (
             <textarea
               ref={textareaRef}
