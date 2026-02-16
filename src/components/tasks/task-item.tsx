@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useTaskContext } from './task-context'
+import { LinkifiedText } from './linkified-text'
 import type { Task } from '@/hooks/use-tasks'
 
 type TaskItemProps = {
@@ -45,7 +46,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
 
   const [isExpanded, setIsExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
-  const [content, setContent] = useState(task.content)
+  const [name, setName] = useState(task.name)
   const [isLoading, setIsLoading] = useState(false)
 
   const rowRef = useRef<HTMLDivElement>(null)
@@ -67,15 +68,15 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
       textareaRef.current.style.height = 'auto'
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
     }
-  }, [content, isEditing])
+  }, [name, isEditing])
 
   // Focus textarea when editing starts
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus()
-      textareaRef.current.setSelectionRange(content.length, content.length)
+      textareaRef.current.setSelectionRange(name.length, name.length)
     }
-  }, [isEditing, content.length])
+  }, [isEditing, name.length])
 
   const handleToggleDone = async (checked: boolean) => {
     setIsLoading(true)
@@ -87,13 +88,13 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   }
 
   const handleEdit = () => {
-    setContent(task.content)
+    setName(task.name)
     setIsEditing(true)
   }
 
   const handleSave = async () => {
-    const trimmed = content.trim()
-    if (trimmed && trimmed !== task.content) {
+    const trimmed = name.trim()
+    if (trimmed && trimmed !== task.name) {
       setIsLoading(true)
       try {
         await updateTask(task.id, trimmed)
@@ -101,7 +102,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         setIsLoading(false)
       }
     } else {
-      setContent(task.content)
+      setName(task.name)
     }
     setIsEditing(false)
   }
@@ -164,7 +165,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
       handleSave()
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      setContent(task.content)
+      setName(task.name)
       setIsEditing(false)
     }
   }
@@ -218,27 +219,27 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           tabIndex={-1}
         />
 
-        {/* Content */}
+        {/* Name */}
         <div className='min-h-6 flex-1 overflow-hidden px-2'>
           {isEditing ? (
             <textarea
               ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               onBlur={handleSave}
               onKeyDown={handleTextareaKeyDown}
               className='block w-full resize-none border-0 bg-transparent p-0 leading-6 outline-none'
               rows={1}
             />
           ) : (
-            <span
-              className={cn(
-                'block cursor-text whitespace-pre-wrap leading-6',
-                task.done && 'text-zinc-500 line-through',
-              )}
-              onClick={handleEdit}
-            >
-              {task.content}
+            <span onClick={handleEdit}>
+              <LinkifiedText
+                text={task.name}
+                className={cn(
+                  'block cursor-text whitespace-pre-wrap leading-6',
+                  task.done && 'text-zinc-500 line-through',
+                )}
+              />
             </span>
           )}
         </div>

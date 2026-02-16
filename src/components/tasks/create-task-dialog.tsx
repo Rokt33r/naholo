@@ -16,7 +16,7 @@ type CreateTaskDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   parentTaskId: string | null
-  onSubmit: (content: string) => Promise<void>
+  onSubmit: (name: string) => Promise<void>
 }
 
 export function CreateTaskDialog({
@@ -25,7 +25,7 @@ export function CreateTaskDialog({
   parentTaskId,
   onSubmit,
 }: CreateTaskDialogProps) {
-  const [content, setContent] = useState('')
+  const [name, setName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -36,22 +36,22 @@ export function CreateTaskDialog({
       textarea.style.height = 'auto'
       textarea.style.height = `${textarea.scrollHeight}px`
     }
-  }, [content])
+  }, [name])
 
-  // Reset content when dialog opens
+  // Reset name when dialog opens
   useEffect(() => {
     if (open) {
-      setContent('')
+      setName('')
     }
   }, [open])
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (!content.trim() || isSubmitting) return
+    if (!name.trim() || isSubmitting) return
 
     setIsSubmitting(true)
     try {
-      await onSubmit(content.trim())
+      await onSubmit(name.trim())
       onOpenChange(false)
     } finally {
       setIsSubmitting(false)
@@ -81,12 +81,12 @@ export function CreateTaskDialog({
 
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='task-content'>Content</Label>
+              <Label htmlFor='task-name'>Name</Label>
               <textarea
                 ref={textareaRef}
-                id='task-content'
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
+                id='task-name'
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder='Describe the task...'
                 disabled={isSubmitting}
@@ -108,7 +108,7 @@ export function CreateTaskDialog({
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={!content.trim() || isSubmitting}>
+            <Button type='submit' disabled={!name.trim() || isSubmitting}>
               {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>
           </DialogFooter>

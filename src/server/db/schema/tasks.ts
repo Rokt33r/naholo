@@ -25,7 +25,8 @@ export const tasks = pgTable('tasks', {
   parentTaskId: uuid('parent_task_id').references((): AnyPgColumn => tasks.id, {
     onDelete: 'cascade',
   }), // self-referencing for hierarchy
-  content: text('content').notNull(), // markdown content
+  name: text('name').notNull(), // task name (single line)
+  note: text('note'), // additional notes (markdown)
   done: boolean('done').notNull().default(false),
   position: integer('position').notNull().default(0), // for ordering
   createdAt: timestamp('created_at').notNull().defaultNow(),

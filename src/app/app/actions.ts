@@ -134,7 +134,7 @@ export async function createLogAction(
 export async function createTaskAction(
   projectId: string,
   issueId: string,
-  content: string,
+  name: string,
   parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
   const user = await getAuthUser()
@@ -145,7 +145,7 @@ export async function createTaskAction(
   const result = await createTask(user.id, {
     projectId,
     issueId,
-    content,
+    name,
     parentTaskId,
   })
   if (result.success) {
@@ -159,14 +159,14 @@ export async function updateTaskAction(
   projectId: string,
   issueId: string,
   id: string,
-  content: string,
+  name: string,
 ): Promise<ReturnResult<undefined>> {
   const user = await getAuthUser()
   if (!user) {
     return err(new Error('Unauthorized'))
   }
 
-  const result = await updateTask(user.id, issueId, id, content)
+  const result = await updateTask(user.id, issueId, id, name)
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)

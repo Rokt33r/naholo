@@ -5,7 +5,8 @@ import { fetcher, createResponseError } from '@/lib/fetcher'
 export type Task = {
   id: string
   parentTaskId: string | null
-  content: string
+  name: string
+  note: string | null
   done: boolean
   position: number
   createdAt: Date
@@ -32,11 +33,11 @@ export function useCreateTask(projectId: string, issueId: string) {
 
   return useMutation({
     mutationFn: async ({
-      content,
+      name,
       parentTaskId,
       position,
     }: {
-      content: string
+      name: string
       parentTaskId?: string | null
       position?: number
     }) => {
@@ -45,7 +46,7 @@ export function useCreateTask(projectId: string, issueId: string) {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, parentTaskId, position }),
+          body: JSON.stringify({ name, parentTaskId, position }),
         },
       )
       if (!response.ok) {
@@ -53,7 +54,7 @@ export function useCreateTask(projectId: string, issueId: string) {
       }
       return response.json() as Promise<{ id: string }>
     },
-    onMutate: async ({ content, parentTaskId, position }) => {
+    onMutate: async ({ name, parentTaskId, position }) => {
       await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
 
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
@@ -70,7 +71,8 @@ export function useCreateTask(projectId: string, issueId: string) {
 
       const optimisticTask: Task = {
         id: `temp-${Date.now()}`,
-        content,
+        name,
+        note: null,
         parentTaskId: parentTaskId ?? null,
         done: false,
         position: optimisticPosition,
@@ -116,19 +118,13 @@ export function useUpdateTask(projectId: string, issueId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({
-      taskId,
-      content,
-    }: {
-      taskId: string
-      content: string
-    }) => {
+    mutationFn: async ({ taskId, name }: { taskId: string; name: string }) => {
       const response = await fetch(
         `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ name }),
         },
       )
       if (!response.ok) {
@@ -136,16 +132,14 @@ export function useUpdateTask(projectId: string, issueId: string) {
       }
       return response.json()
     },
-    onMutate: async ({ taskId, content }) => {
+    onMutate: async ({ taskId, name }) => {
       await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
 
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
 
       queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
         old?.map((task) =>
-          task.id === taskId
-            ? { ...task, content, updatedAt: new Date() }
-            : task,
+          task.id === taskId ? { ...task, name, updatedAt: new Date() } : task,
         ),
       )
 

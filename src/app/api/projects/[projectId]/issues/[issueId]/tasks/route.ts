@@ -35,7 +35,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 const createTaskSchema = z.object({
-  content: z.string().min(1, 'Content is required').trim(),
+  name: z.string().min(1, 'Name is required').trim(),
+  note: z.string().trim().nullable().optional(),
   parentTaskId: z.string().nullable().optional(),
   position: z.number().int().min(0).optional(),
 })
@@ -68,12 +69,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { content, parentTaskId, position } = validation.data
+    const { name, note, parentTaskId, position } = validation.data
 
     const result = await createTask(user.id, {
       projectId,
       issueId,
-      content,
+      name,
+      note,
       parentTaskId,
       position,
     })

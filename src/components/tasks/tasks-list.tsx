@@ -23,7 +23,7 @@ function TasksListContent() {
   const rootTasks = getRootTasks()
 
   const [isCreating, setIsCreating] = useState(false)
-  const [newTaskContent, setNewTaskContent] = useState('')
+  const [newTaskName, setNewTaskName] = useState('')
   const newTaskInputRef = useRef<HTMLTextAreaElement>(null)
 
   // Auto-focus when input appears
@@ -40,18 +40,18 @@ function TasksListContent() {
       textarea.style.height = 'auto'
       textarea.style.height = `${textarea.scrollHeight}px`
     }
-  }, [newTaskContent])
+  }, [newTaskName])
 
   const handleCreateTask = async () => {
-    const content = newTaskContent.trim()
-    if (!content) return
+    const name = newTaskName.trim()
+    if (!name) return
 
     // Calculate position (after last root task)
     const lastRootTask = rootTasks[rootTasks.length - 1]
     const position = lastRootTask ? lastRootTask.position + 1 : 0
 
-    await createTask(content, null, position)
-    setNewTaskContent('') // Reset for next task
+    await createTask(name, null, position)
+    setNewTaskName('') // Reset for next task
     // Keep isCreating true for continuous entry
     newTaskInputRef.current?.focus()
   }
@@ -60,7 +60,7 @@ function TasksListContent() {
     if (!isCreating) {
       // Not creating → show input
       setIsCreating(true)
-    } else if (newTaskContent.trim() === '') {
+    } else if (newTaskName.trim() === '') {
       // Creating but empty → hide input
       setIsCreating(false)
     } else {
@@ -72,7 +72,7 @@ function TasksListContent() {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (newTaskContent.trim()) {
+      if (newTaskName.trim()) {
         handleCreateTask()
       } else {
         setIsCreating(false)
@@ -80,7 +80,7 @@ function TasksListContent() {
     }
     if (e.key === 'Escape') {
       setIsCreating(false)
-      setNewTaskContent('')
+      setNewTaskName('')
     }
   }
 
@@ -119,8 +119,8 @@ function TasksListContent() {
           <div className='h-4 w-4 shrink-0' />
           <textarea
             ref={newTaskInputRef}
-            value={newTaskContent}
-            onChange={(e) => setNewTaskContent(e.target.value)}
+            value={newTaskName}
+            onChange={(e) => setNewTaskName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder='New task...'
             className='flex-1 resize-none bg-transparent outline-none'

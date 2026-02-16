@@ -9,7 +9,8 @@ import { NotFoundError } from './errors'
 export type Task = {
   id: string
   parentTaskId: string | null
-  content: string
+  name: string
+  note: string | null
   done: boolean
   position: number
   createdAt: Date
@@ -19,7 +20,8 @@ export type Task = {
 export type CreateTaskInput = {
   projectId: string
   issueId: string
-  content: string
+  name: string
+  note?: string | null
   parentTaskId?: string | null
   position?: number
 }
@@ -35,7 +37,8 @@ export async function listTasks(
     .select({
       id: tasks.id,
       parentTaskId: tasks.parentTaskId,
-      content: tasks.content,
+      name: tasks.name,
+      note: tasks.note,
       done: tasks.done,
       position: tasks.position,
       createdAt: tasks.createdAt,
@@ -116,7 +119,8 @@ export async function createTask(
       issueId: data.issueId,
       userId,
       parentTaskId,
-      content: data.content,
+      name: data.name,
+      note: data.note ?? null,
       position,
     })
     .returning({ id: tasks.id })
@@ -136,12 +140,12 @@ export async function updateTask(
   userId: string,
   issueId: string,
   taskId: string,
-  content: string,
+  name: string,
 ): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .update(tasks)
     .set({
-      content,
+      name,
       updatedAt: new Date(),
     })
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))

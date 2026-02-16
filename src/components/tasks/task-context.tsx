@@ -51,11 +51,11 @@ type TaskContextValue = {
 
   // Operations
   createTask: (
-    content: string,
+    name: string,
     parentTaskId: string | null,
     position?: number,
   ) => Promise<string | null>
-  updateTask: (taskId: string, content: string) => Promise<void>
+  updateTask: (taskId: string, name: string) => Promise<void>
   setTaskDone: (taskId: string, done: boolean) => Promise<void>
   deleteTask: (taskId: string) => Promise<void>
   createTaskBelow: (taskId: string) => void
@@ -180,10 +180,10 @@ export function TaskProvider({
 
   // Operations
   const createTask = useCallback(
-    async (content: string, parentTaskId: string | null, position?: number) => {
+    async (name: string, parentTaskId: string | null, position?: number) => {
       try {
         const result = await createTaskMutation.mutateAsync({
-          content,
+          name,
           parentTaskId,
           position,
         })
@@ -196,8 +196,8 @@ export function TaskProvider({
   )
 
   const updateTask = useCallback(
-    async (taskId: string, content: string) => {
-      await updateTaskMutation.mutateAsync({ taskId, content })
+    async (taskId: string, name: string) => {
+      await updateTaskMutation.mutateAsync({ taskId, name })
     },
     [updateTaskMutation],
   )

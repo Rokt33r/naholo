@@ -15,6 +15,13 @@
       "when": 1769678045830,
       "tag": "0001_little_tenebrous",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771251941160,
+      "tag": "0002_wise_ink",
+      "breakpoints": true
     }
   ]
 }

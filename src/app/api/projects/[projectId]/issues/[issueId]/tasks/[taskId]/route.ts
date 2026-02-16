@@ -12,7 +12,8 @@ type RouteContext = {
 }
 
 const updateTaskSchema = z.object({
-  content: z.string().min(1, 'Content is required').trim().optional(),
+  name: z.string().min(1, 'Name is required').trim().optional(),
+  note: z.string().trim().nullable().optional(),
   done: z.boolean().optional(),
 })
 
@@ -44,11 +45,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { content, done } = validation.data
+    const { name, done } = validation.data
 
-    // Handle content update
-    if (content !== undefined) {
-      const result = await updateTask(user.id, issueId, taskId, content)
+    // Handle name update
+    if (name !== undefined) {
+      const result = await updateTask(user.id, issueId, taskId, name)
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },
