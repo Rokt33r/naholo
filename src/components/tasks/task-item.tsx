@@ -7,7 +7,6 @@ import {
   Plus,
   MoreVertical,
   Loader2,
-  FileText,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -51,7 +50,6 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState(task.name)
   const [isLoading, setIsLoading] = useState(false)
-  const [isNoteExpanded, setIsNoteExpanded] = useState(false)
   const [isEditingNote, setIsEditingNote] = useState(false)
   const [noteContent, setNoteContent] = useState(task.note ?? '')
 
@@ -68,6 +66,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   )
   const canIndent = !!previousSibling
   const canOutdent = !!task.parentTaskId
+  const noteFirstLine = task.note ? task.note.split('\n')[0] : null
 
   // Auto-resize textarea
   useEffect(() => {
@@ -102,6 +101,13 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
       setNoteContent(task.note ?? '')
     }
   }, [task.note, isEditingNote])
+
+  // Reset editing state when focus leaves
+  useEffect(() => {
+    if (!isFocused) {
+      setIsEditingNote(false)
+    }
+  }, [isFocused])
 
   // Focus textarea when editing starts
   useEffect(() => {
@@ -181,18 +187,6 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     }
   }
 
-  const handleToggleNote = () => {
-    if (!isNoteExpanded) {
-      setIsNoteExpanded(true)
-      if (!task.note) {
-        setIsEditingNote(true)
-      }
-    } else {
-      setIsNoteExpanded(false)
-      setIsEditingNote(false)
-    }
-  }
-
   const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // Don't handle keys when editing
     if (isEditing) return
@@ -222,7 +216,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
       handleEdit()
     } else if (e.key === 'n') {
       e.preventDefault()
-      handleToggleNote()
+      if (!isEditingNote) {
+        setIsEditingNote(true)
+      }
     }
   }
 
@@ -254,171 +250,176 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         onBlur={handleBlur}
         onKeyDown={handleRowKeyDown}
         className={cn(
-          'relative flex items-center rounded py-1 outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
+          'relative rounded outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
           isFocused && 'z-10 ring-2 ring-blue-500',
         )}
       >
-        {/* Expand/collapse button */}
-        {hasSubtasks ? (
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-5 w-5 shrink-0'
-            onClick={() => setIsExpanded(!isExpanded)}
-            tabIndex={-1}
-          >
-            {isExpanded ? (
-              <ChevronDown className='h-3 w-3' />
-            ) : (
-              <ChevronRight className='h-3 w-3' />
-            )}
-          </Button>
-        ) : (
-          <div className='h-5 w-5 shrink-0' />
-        )}
-
-        {/* Checkbox */}
-        <Checkbox
-          checked={task.done}
-          onCheckedChange={handleToggleDone}
-          disabled={isLoading}
-          className='shrink-0'
-          tabIndex={-1}
-        />
-
-        {/* Name */}
-        <div className='min-h-6 flex-1 overflow-hidden px-2'>
-          {isEditing ? (
-            <textarea
-              ref={textareaRef}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={handleSave}
-              onKeyDown={handleTextareaKeyDown}
-              className='block w-full resize-none border-0 bg-transparent p-0 leading-6 outline-none'
-              rows={1}
-            />
+        {/* Main row */}
+        <div className='flex items-center py-1'>
+          {/* Expand/collapse button */}
+          {hasSubtasks ? (
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-5 w-5 shrink-0'
+              onClick={() => setIsExpanded(!isExpanded)}
+              tabIndex={-1}
+            >
+              {isExpanded ? (
+                <ChevronDown className='h-3 w-3' />
+              ) : (
+                <ChevronRight className='h-3 w-3' />
+              )}
+            </Button>
           ) : (
-            <span onClick={handleEdit}>
-              <LinkifiedText
-                text={task.name}
-                className={cn(
-                  'block cursor-text whitespace-pre-wrap leading-6',
-                  task.done && 'text-zinc-500 line-through',
-                )}
-              />
-            </span>
+            <div className='h-5 w-5 shrink-0' />
           )}
+
+          {/* Checkbox */}
+          <Checkbox
+            checked={task.done}
+            onCheckedChange={handleToggleDone}
+            disabled={isLoading}
+            className='shrink-0'
+            tabIndex={-1}
+          />
+
+          {/* Name */}
+          <div className='min-h-6 flex-1 overflow-hidden px-2'>
+            {isEditing ? (
+              <textarea
+                ref={textareaRef}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleTextareaKeyDown}
+                className='block w-full resize-none border-0 bg-transparent p-0 leading-6 outline-none'
+                rows={1}
+              />
+            ) : (
+              <>
+                <span onClick={handleEdit}>
+                  <LinkifiedText
+                    text={task.name}
+                    className={cn(
+                      'block cursor-text whitespace-pre-wrap leading-6',
+                      task.done && 'text-zinc-500 line-through',
+                    )}
+                  />
+                </span>
+                {task.note && !isFocused && (
+                  <div className='truncate text-xs text-muted-foreground'>
+                    {noteFirstLine}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className='flex shrink-0 items-center gap-1'>
+            {isCreating || isLoading ? (
+              <Loader2 className='mx-1 h-4 w-4 animate-spin text-zinc-400' />
+            ) : (
+              <div className='flex items-center gap-1 opacity-0 group-hover/item:opacity-100'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-6 w-6'
+                  onClick={handleAddSubtask}
+                  tabIndex={-1}
+                >
+                  <Plus className='h-3 w-3' />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-6 w-6'
+                      tabIndex={-1}
+                    >
+                      <MoreVertical className='h-3 w-3' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem onClick={handleEdit}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => moveUp(task.id)}
+                      disabled={!previousSibling}
+                    >
+                      Move up
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => moveDown(task.id)}>
+                      Move down
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => indentTask(task.id)}
+                      disabled={!canIndent}
+                    >
+                      Indent
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => outdentTask(task.id)}
+                      disabled={!canOutdent}
+                    >
+                      Outdent
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      className='text-red-600'
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className='flex shrink-0 items-center gap-1'>
-          {isCreating || isLoading ? (
-            <Loader2 className='mx-1 h-4 w-4 animate-spin text-zinc-400' />
-          ) : (
-            <div className='flex items-center gap-1 opacity-0 group-hover/item:opacity-100'>
-              <Button
-                variant='ghost'
-                size='icon'
-                className={cn('h-6 w-6', task.note && 'opacity-100')}
-                onClick={handleToggleNote}
-                tabIndex={-1}
-              >
-                <FileText
-                  className={cn(
-                    'h-3 w-3',
-                    task.note ? 'text-blue-500' : 'text-zinc-400',
-                  )}
-                />
-              </Button>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-6 w-6'
-                onClick={handleAddSubtask}
-                tabIndex={-1}
-              >
-                <Plus className='h-3 w-3' />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-6 w-6'
-                    tabIndex={-1}
-                  >
-                    <MoreVertical className='h-3 w-3' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => moveUp(task.id)}
-                    disabled={!previousSibling}
-                  >
-                    Move up
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => moveDown(task.id)}>
-                    Move down
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => indentTask(task.id)}
-                    disabled={!canIndent}
-                  >
-                    Indent
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => outdentTask(task.id)}
-                    disabled={!canOutdent}
-                  >
-                    Outdent
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    className='text-red-600'
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+        {/* Note section - animated */}
+        <div
+          className={cn(
+            'grid transition-[grid-template-rows] duration-200 ease-out',
+            isFocused && (task.note || isEditingNote)
+              ? 'grid-rows-[1fr]'
+              : 'grid-rows-[0fr]',
           )}
+        >
+          <div className='overflow-hidden'>
+            {(task.note || isEditingNote) && (
+              <div className='px-2 pb-2 pt-1'>
+                {isEditingNote ? (
+                  <textarea
+                    ref={noteTextareaRef}
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    onBlur={handleSaveNote}
+                    onKeyDown={handleNoteKeyDown}
+                    placeholder='Add a note... (Markdown supported)'
+                    className='min-h-[60px] w-full resize-none rounded border bg-transparent px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
+                  />
+                ) : (
+                  <div
+                    onClick={() => setIsEditingNote(true)}
+                    className='cursor-text rounded px-2 py-1 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  >
+                    <MarkdownView className='text-sm'>
+                      {task.note!}
+                    </MarkdownView>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Note section */}
-      {isNoteExpanded && (
-        <div className='mb-2 ml-[52px] mt-1 pr-2'>
-          {isEditingNote ? (
-            <textarea
-              ref={noteTextareaRef}
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              onBlur={handleSaveNote}
-              onKeyDown={handleNoteKeyDown}
-              placeholder='Add a note... (Markdown supported)'
-              className='min-h-[60px] w-full resize-none rounded border bg-transparent px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
-            />
-          ) : (
-            <div
-              onClick={() => setIsEditingNote(true)}
-              className='cursor-text rounded px-2 py-1 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-            >
-              {task.note ? (
-                <MarkdownView className='text-sm'>{task.note}</MarkdownView>
-              ) : (
-                <span className='text-sm text-zinc-400'>
-                  Add a note... (Markdown supported)
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Subtasks */}
       {hasSubtasks && isExpanded && (
