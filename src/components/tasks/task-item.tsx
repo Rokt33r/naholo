@@ -7,6 +7,7 @@ import {
   Plus,
   MoreVertical,
   Loader2,
+  FileText,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useTaskContext } from './task-context'
 import { LinkifiedText } from './linkified-text'
+import { MarkdownView } from '@/components/ui/markdown-view'
 import type { Task } from '@/hooks/use-tasks'
 
 type TaskItemProps = {
@@ -34,6 +36,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     getPreviousSibling,
     openCreateDialog,
     updateTask,
+    updateTaskNote,
     setTaskDone,
     deleteTask,
     indentTask,
@@ -48,9 +51,13 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState(task.name)
   const [isLoading, setIsLoading] = useState(false)
+  const [isNoteExpanded, setIsNoteExpanded] = useState(false)
+  const [isEditingNote, setIsEditingNote] = useState(false)
+  const [noteContent, setNoteContent] = useState(task.note ?? '')
 
   const rowRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const noteTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const hasSubtasks = subtasks.length > 0
   const isCreating = task.id.startsWith('temp-')
@@ -69,6 +76,32 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
     }
   }, [name, isEditing])
+
+  // Auto-resize note textarea
+  useEffect(() => {
+    if (isEditingNote && noteTextareaRef.current) {
+      noteTextareaRef.current.style.height = 'auto'
+      noteTextareaRef.current.style.height = `${noteTextareaRef.current.scrollHeight}px`
+    }
+  }, [noteContent, isEditingNote])
+
+  // Focus note textarea when editing starts
+  useEffect(() => {
+    if (isEditingNote && noteTextareaRef.current) {
+      noteTextareaRef.current.focus()
+      noteTextareaRef.current.setSelectionRange(
+        noteContent.length,
+        noteContent.length,
+      )
+    }
+  }, [isEditingNote, noteContent.length])
+
+  // Sync noteContent when task.note changes
+  useEffect(() => {
+    if (!isEditingNote) {
+      setNoteContent(task.note ?? '')
+    }
+  }, [task.note, isEditingNote])
 
   // Focus textarea when editing starts
   useEffect(() => {
@@ -126,6 +159,40 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     setIsExpanded(true)
   }
 
+  const handleSaveNote = async () => {
+    const trimmed = noteContent.trim()
+    const newNote = trimmed || null
+    if (newNote !== task.note) {
+      setIsLoading(true)
+      try {
+        await updateTaskNote(task.id, newNote)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    setIsEditingNote(false)
+  }
+
+  const handleNoteKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setNoteContent(task.note ?? '')
+      setIsEditingNote(false)
+    }
+  }
+
+  const handleToggleNote = () => {
+    if (!isNoteExpanded) {
+      setIsNoteExpanded(true)
+      if (!task.note) {
+        setIsEditingNote(true)
+      }
+    } else {
+      setIsNoteExpanded(false)
+      setIsEditingNote(false)
+    }
+  }
+
   const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // Don't handle keys when editing
     if (isEditing) return
@@ -150,12 +217,12 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     } else if (e.altKey && e.key === 'ArrowDown') {
       e.preventDefault()
       moveDown(task.id)
-    } else if (e.key === 'e' || e.key === 'Enter') {
-      // 'e' to edit, or Enter when not creating
-      if (e.key === 'e') {
-        e.preventDefault()
-        handleEdit()
-      }
+    } else if (e.key === 'e') {
+      e.preventDefault()
+      handleEdit()
+    } else if (e.key === 'n') {
+      e.preventDefault()
+      handleToggleNote()
     }
   }
 
@@ -253,6 +320,20 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
               <Button
                 variant='ghost'
                 size='icon'
+                className={cn('h-6 w-6', task.note && 'opacity-100')}
+                onClick={handleToggleNote}
+                tabIndex={-1}
+              >
+                <FileText
+                  className={cn(
+                    'h-3 w-3',
+                    task.note ? 'text-blue-500' : 'text-zinc-400',
+                  )}
+                />
+              </Button>
+              <Button
+                variant='ghost'
+                size='icon'
                 className='h-6 w-6'
                 onClick={handleAddSubtask}
                 tabIndex={-1}
@@ -308,6 +389,36 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           )}
         </div>
       </div>
+
+      {/* Note section */}
+      {isNoteExpanded && (
+        <div className='mb-2 ml-[52px] mt-1 pr-2'>
+          {isEditingNote ? (
+            <textarea
+              ref={noteTextareaRef}
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              onBlur={handleSaveNote}
+              onKeyDown={handleNoteKeyDown}
+              placeholder='Add a note... (Markdown supported)'
+              className='min-h-[60px] w-full resize-none rounded border bg-transparent px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
+            />
+          ) : (
+            <div
+              onClick={() => setIsEditingNote(true)}
+              className='cursor-text rounded px-2 py-1 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+            >
+              {task.note ? (
+                <MarkdownView className='text-sm'>{task.note}</MarkdownView>
+              ) : (
+                <span className='text-sm text-zinc-400'>
+                  Add a note... (Markdown supported)
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Subtasks */}
       {hasSubtasks && isExpanded && (

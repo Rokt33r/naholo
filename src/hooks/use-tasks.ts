@@ -34,10 +34,12 @@ export function useCreateTask(projectId: string, issueId: string) {
   return useMutation({
     mutationFn: async ({
       name,
+      note,
       parentTaskId,
       position,
     }: {
       name: string
+      note?: string | null
       parentTaskId?: string | null
       position?: number
     }) => {
@@ -46,7 +48,7 @@ export function useCreateTask(projectId: string, issueId: string) {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, parentTaskId, position }),
+          body: JSON.stringify({ name, note, parentTaskId, position }),
         },
       )
       if (!response.ok) {
@@ -54,7 +56,7 @@ export function useCreateTask(projectId: string, issueId: string) {
       }
       return response.json() as Promise<{ id: string }>
     },
-    onMutate: async ({ name, parentTaskId, position }) => {
+    onMutate: async ({ name, note, parentTaskId, position }) => {
       await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
 
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
@@ -72,7 +74,7 @@ export function useCreateTask(projectId: string, issueId: string) {
       const optimisticTask: Task = {
         id: `temp-${Date.now()}`,
         name,
-        note: null,
+        note: note ?? null,
         parentTaskId: parentTaskId ?? null,
         done: false,
         position: optimisticPosition,
@@ -196,6 +198,60 @@ export function useSetTaskDone(projectId: string, issueId: string) {
         queryClient.setQueryData(['tasks', issueId], context.previousTasks)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update task')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+    },
+  })
+}
+
+/**
+ * Hook to update a task's note with optimistic updates
+ */
+export function useUpdateTaskNote(projectId: string, issueId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      note,
+    }: {
+      taskId: string
+      note: string | null
+    }) => {
+      const response = await fetch(
+        `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note }),
+        },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to update task note')
+      }
+      return response.json()
+    },
+    onMutate: async ({ taskId, note }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+
+      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
+        old?.map((task) =>
+          task.id === taskId ? { ...task, note, updatedAt: new Date() } : task,
+        ),
+      )
+
+      return { previousTasks }
+    },
+    onError: (err, _, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+      }
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to update task note',
+      )
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })

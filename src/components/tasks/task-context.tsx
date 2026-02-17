@@ -14,6 +14,7 @@ import {
   useMoveTask,
   useUpdateTask,
   useSetTaskDone,
+  useUpdateTaskNote,
   useDeleteTask,
   type Task,
 } from '@/hooks/use-tasks'
@@ -52,10 +53,12 @@ type TaskContextValue = {
   // Operations
   createTask: (
     name: string,
+    note: string | null,
     parentTaskId: string | null,
     position?: number,
   ) => Promise<string | null>
   updateTask: (taskId: string, name: string) => Promise<void>
+  updateTaskNote: (taskId: string, note: string | null) => Promise<void>
   setTaskDone: (taskId: string, done: boolean) => Promise<void>
   deleteTask: (taskId: string) => Promise<void>
   createTaskBelow: (taskId: string) => void
@@ -91,6 +94,7 @@ export function TaskProvider({
   const updateTaskMutation = useUpdateTask(projectId, issueId)
   const setTaskDoneMutation = useSetTaskDone(projectId, issueId)
   const deleteTaskMutation = useDeleteTask(projectId, issueId)
+  const updateTaskNoteMutation = useUpdateTaskNote(projectId, issueId)
   const moveTaskMutation = useMoveTask(projectId, issueId)
 
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null)
@@ -180,10 +184,16 @@ export function TaskProvider({
 
   // Operations
   const createTask = useCallback(
-    async (name: string, parentTaskId: string | null, position?: number) => {
+    async (
+      name: string,
+      note: string | null,
+      parentTaskId: string | null,
+      position?: number,
+    ) => {
       try {
         const result = await createTaskMutation.mutateAsync({
           name,
+          note,
           parentTaskId,
           position,
         })
@@ -200,6 +210,13 @@ export function TaskProvider({
       await updateTaskMutation.mutateAsync({ taskId, name })
     },
     [updateTaskMutation],
+  )
+
+  const updateTaskNote = useCallback(
+    async (taskId: string, note: string | null) => {
+      await updateTaskNoteMutation.mutateAsync({ taskId, note })
+    },
+    [updateTaskNoteMutation],
   )
 
   const setTaskDone = useCallback(
@@ -339,6 +356,7 @@ export function TaskProvider({
       getTask,
       createTask,
       updateTask,
+      updateTaskNote,
       setTaskDone,
       deleteTask,
       createTaskBelow,
@@ -363,6 +381,7 @@ export function TaskProvider({
       getTask,
       createTask,
       updateTask,
+      updateTaskNote,
       setTaskDone,
       deleteTask,
       createTaskBelow,

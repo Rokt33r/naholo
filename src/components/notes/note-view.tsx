@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { MoreVertical, Loader2 } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkBreaks from 'remark-breaks'
-import remarkGfm from 'remark-gfm'
 import { Button } from '@/components/ui/button'
+import { MarkdownView } from '@/components/ui/markdown-view'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -208,13 +206,11 @@ export function NoteView({
           </div>
         ) : (
           <div
-            className='prose prose-sm dark:prose-invert max-w-none cursor-text'
+            className='cursor-text'
             onClick={() => setIsEditingContent(true)}
           >
             {note.content ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                {note.content}
-              </ReactMarkdown>
+              <MarkdownView>{note.content}</MarkdownView>
             ) : (
               <p className='text-muted-foreground'>Click to add content...</p>
             )}

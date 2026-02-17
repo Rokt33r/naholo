@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthUser } from '@/server/auth/utils'
-import { updateTask, setTaskDone, deleteTask } from '@/server/services/task'
+import {
+  updateTask,
+  updateTaskNote,
+  setTaskDone,
+  deleteTask,
+} from '@/server/services/task'
 
 type RouteContext = {
   params: Promise<{
@@ -45,11 +50,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { name, done } = validation.data
+    const { name, note, done } = validation.data
 
     // Handle name update
     if (name !== undefined) {
       const result = await updateTask(user.id, issueId, taskId, name)
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error.message },
+          { status: 404 },
+        )
+      }
+    }
+
+    // Handle note update
+    if (note !== undefined) {
+      const result = await updateTaskNote(user.id, issueId, taskId, note)
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },

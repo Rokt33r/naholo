@@ -190,6 +190,34 @@ export async function setTaskDone(
 }
 
 /**
+ * Update a task's note.
+ */
+export async function updateTaskNote(
+  userId: string,
+  issueId: string,
+  taskId: string,
+  note: string | null,
+): Promise<ReturnResult<undefined>> {
+  const [task] = await db
+    .update(tasks)
+    .set({
+      note,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .returning({ id: tasks.id })
+
+  if (!task) return err(new NotFoundError('Task'))
+
+  await db
+    .update(issues)
+    .set({ updatedAt: new Date() })
+    .where(eq(issues.id, issueId))
+
+  return ok()
+}
+
+/**
  * Delete a task.
  */
 export async function deleteTask(

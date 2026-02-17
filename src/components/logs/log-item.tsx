@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { MoreVertical } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkBreaks from 'remark-breaks'
-import remarkGfm from 'remark-gfm'
 import { Button } from '@/components/ui/button'
+import { MarkdownView } from '@/components/ui/markdown-view'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -110,11 +108,9 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
       ) : (
         <div>
           <div
-            className={`prose prose-sm dark:prose-invert max-w-160 inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? 'opacity-70' : ''}`}
+            className={`inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? 'opacity-70' : ''}`}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-              {log.content}
-            </ReactMarkdown>
+            <MarkdownView className='max-w-160'>{log.content}</MarkdownView>
           </div>
           {isCreating && (
             <div className='mt-1 text-xs text-muted-foreground'>Sending...</div>

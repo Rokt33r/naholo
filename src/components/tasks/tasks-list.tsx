@@ -24,6 +24,8 @@ function TasksListContent() {
 
   const [isCreating, setIsCreating] = useState(false)
   const [newTaskName, setNewTaskName] = useState('')
+  const [newTaskNote, setNewTaskNote] = useState('')
+  const [showNoteInput, setShowNoteInput] = useState(false)
   const newTaskInputRef = useRef<HTMLTextAreaElement>(null)
 
   // Auto-focus when input appears
@@ -50,8 +52,11 @@ function TasksListContent() {
     const lastRootTask = rootTasks[rootTasks.length - 1]
     const position = lastRootTask ? lastRootTask.position + 1 : 0
 
-    await createTask(name, null, position)
+    const note = newTaskNote.trim() || null
+    await createTask(name, note, null, position)
     setNewTaskName('') // Reset for next task
+    setNewTaskNote('')
+    setShowNoteInput(false)
     // Keep isCreating true for continuous entry
     newTaskInputRef.current?.focus()
   }
@@ -112,20 +117,40 @@ function TasksListContent() {
 
       {/* Inline input (when creating) */}
       {isCreating && (
-        <div className='flex items-start gap-2 rounded py-1'>
-          {/* Expand/collapse placeholder */}
-          <div className='h-5 w-5 shrink-0' />
-          {/* Checkbox placeholder */}
-          <div className='h-4 w-4 shrink-0' />
-          <textarea
-            ref={newTaskInputRef}
-            value={newTaskName}
-            onChange={(e) => setNewTaskName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder='New task...'
-            className='flex-1 resize-none bg-transparent outline-none'
-            rows={1}
-          />
+        <div>
+          <div className='flex items-start gap-2 rounded py-1'>
+            {/* Expand/collapse placeholder */}
+            <div className='h-5 w-5 shrink-0' />
+            {/* Checkbox placeholder */}
+            <div className='h-4 w-4 shrink-0' />
+            <div className='flex-1'>
+              <textarea
+                ref={newTaskInputRef}
+                value={newTaskName}
+                onChange={(e) => setNewTaskName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder='New task...'
+                className='w-full resize-none bg-transparent outline-none'
+                rows={1}
+              />
+              {showNoteInput && (
+                <textarea
+                  value={newTaskNote}
+                  onChange={(e) => setNewTaskNote(e.target.value)}
+                  placeholder='Note (Markdown supported)'
+                  className='mt-1 min-h-[40px] w-full resize-none rounded border bg-transparent px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
+                  rows={2}
+                />
+              )}
+              <button
+                type='button'
+                onClick={() => setShowNoteInput(!showNoteInput)}
+                className='mt-1 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+              >
+                {showNoteInput ? 'Hide note' : 'Add note'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
