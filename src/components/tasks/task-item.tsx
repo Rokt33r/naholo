@@ -42,6 +42,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     outdentTask,
     moveUp,
     moveDown,
+    isListFocused,
     focusedTaskId,
     setFocusedTaskId,
   } = useTaskContext()
@@ -245,13 +246,14 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     <div className={cn('group/item', depth > 0 && 'ml-6')}>
       <div
         ref={rowRef}
+        data-task-id={task.id}
         tabIndex={0}
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleRowKeyDown}
         className={cn(
           'relative rounded outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
-          isFocused && 'z-10 ring-2 ring-blue-500',
+          isFocused && isListFocused && 'z-10 ring-2 ring-blue-500',
         )}
       >
         {/* Main row */}

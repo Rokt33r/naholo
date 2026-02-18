@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   useMemo,
   type ReactNode,
 } from 'react'
@@ -30,6 +31,8 @@ type TaskContextValue = {
   isLoading: boolean
 
   // Focus management
+  isListFocused: boolean
+  setIsListFocused: (focused: boolean) => void
   focusedTaskId: string | null
   setFocusedTaskId: (id: string | null) => void
 
@@ -97,7 +100,22 @@ export function TaskProvider({
   const updateTaskNoteMutation = useUpdateTaskNote(projectId, issueId)
   const moveTaskMutation = useMoveTask(projectId, issueId)
 
+  const [isListFocused, setIsListFocused] = useState(false)
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null)
+
+  // Clear focusedTaskId when the list loses focus
+  useEffect(() => {
+    if (!isListFocused) {
+      setFocusedTaskId(null)
+    }
+  }, [isListFocused])
+
+  // Clear stale focusedTaskId if the task was deleted
+  useEffect(() => {
+    if (focusedTaskId && !tasks.find((t) => t.id === focusedTaskId)) {
+      setFocusedTaskId(null)
+    }
+  }, [tasks, focusedTaskId])
   const [creationDialogState, setCreationDialogState] =
     useState<CreationDialogState>(null)
 
@@ -342,6 +360,8 @@ export function TaskProvider({
     () => ({
       tasks,
       isLoading,
+      isListFocused,
+      setIsListFocused,
       focusedTaskId,
       setFocusedTaskId,
       creationDialogState,
@@ -368,6 +388,7 @@ export function TaskProvider({
     [
       tasks,
       isLoading,
+      isListFocused,
       focusedTaskId,
       creationDialogState,
       openCreateDialog,

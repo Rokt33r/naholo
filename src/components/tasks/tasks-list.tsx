@@ -1,6 +1,12 @@
 'use client'
 
-import { KeyboardEvent, useRef, useState, useEffect } from 'react'
+import {
+  KeyboardEvent,
+  useRef,
+  useState,
+  useEffect,
+  type FocusEvent,
+} from 'react'
 import { TaskProvider, useTaskContext } from './task-context'
 import { TaskItem } from './task-item'
 
@@ -18,7 +24,25 @@ export function TasksList({ projectId, issueId }: TasksListProps) {
 }
 
 function TasksListContent() {
-  const { isLoading, getRootTasks, getSubtasks, createTask } = useTaskContext()
+  const { isLoading, getRootTasks, getSubtasks, createTask, setIsListFocused } =
+    useTaskContext()
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleContainerFocus = () => {
+    setIsListFocused(true)
+  }
+
+  const handleContainerBlur = (e: FocusEvent<HTMLDivElement>) => {
+    if (
+      containerRef.current &&
+      e.relatedTarget instanceof Node &&
+      containerRef.current.contains(e.relatedTarget)
+    ) {
+      return
+    }
+    setIsListFocused(false)
+  }
 
   const rootTasks = getRootTasks()
 
@@ -103,7 +127,12 @@ function TasksListContent() {
   }
 
   return (
-    <div className='flex h-full flex-col p-4 overflow-auto'>
+    <div
+      ref={containerRef}
+      className='flex h-full flex-col p-4 overflow-auto'
+      onFocus={handleContainerFocus}
+      onBlur={handleContainerBlur}
+    >
       <div>
         {rootTasks.map((task) => (
           <TaskItem
