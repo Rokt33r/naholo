@@ -43,15 +43,15 @@ The task list has two problems: (1) the focus ring stays visible even when click
 
 **`task-context.tsx`**:
 
-- [ ] Add `getNextVisibleTask(taskId)` — depth-first pre-order (first child -> next sibling -> ancestor's next sibling)
-- [ ] Add `getPreviousVisibleTask(taskId)` — (previous sibling's deepest last descendant -> parent)
-- [ ] Helper: `getDeepestLastDescendant(taskId)` for walking down to the last leaf
+- [x] Add `getNextVisibleTask(taskId)` — depth-first pre-order (first child -> next sibling -> ancestor's next sibling)
+- [x] Add `getPreviousVisibleTask(taskId)` — (previous sibling's deepest last descendant -> parent)
+- [x] Helper: `getDeepestLastDescendant(taskId)` for walking down to the last leaf
 - Note: assumes all subtrees expanded (isExpanded is local state). Arrow handler skips non-rendered tasks by checking DOM element existence.
 
 **`task-item.tsx`** — `handleRowKeyDown`:
 
-- [ ] Fix guard: `if (isEditing || isEditingNote) return` (currently only checks `isEditing`)
-- [ ] Change key bindings:
+- [x] Fix guard: `if (isEditing || isEditingNote) return` (currently only checks `isEditing`)
+- [x] Change key bindings:
 
 | Key                    | New Behavior                    | Old Behavior              |
 | ---------------------- | ------------------------------- | ------------------------- |
@@ -66,8 +66,8 @@ The task list has two problems: (1) the focus ring stays visible even when click
 | n                      | Edit task note                  | (same)                    |
 | Cmd+Backspace / Delete | Delete task (with confirmation) | (none)                    |
 
-- [ ] Arrow navigation: `requestAnimationFrame` + `document.querySelector('[data-task-id="..."]')` to focus target row. Skip collapsed (non-rendered) tasks in a loop.
-- [ ] Delete: after deletion, focus next sibling; if none, focus parent.
+- [x] Arrow navigation: `requestAnimationFrame` + `document.querySelector('[data-task-id="..."]')` to focus target row. Skip collapsed (non-rendered) tasks in a loop.
+- [x] Delete: after deletion, focus next sibling; if none, focus parent.
 
 **Verify**: Enter starts editing. Up/Down navigates tasks. Cmd+Backspace deletes. Tab/ShiftTab still indents/outdents.
 

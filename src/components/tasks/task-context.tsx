@@ -53,6 +53,10 @@ type TaskContextValue = {
   getParent: (taskId: string) => Task | null
   getTask: (taskId: string) => Task | null
 
+  // Tree navigation (depth-first pre-order)
+  getNextVisibleTask: (taskId: string) => Task | null
+  getPreviousVisibleTask: (taskId: string) => Task | null
+
   // Operations
   createTask: (
     name: string,
@@ -186,6 +190,65 @@ export function TaskProvider({
       return tasks.find((t) => t.id === taskId) ?? null
     },
     [tasks],
+  )
+
+  // Tree navigation helpers (depth-first pre-order)
+  const getDeepestLastDescendant = useCallback(
+    (taskId: string): Task => {
+      const children = tasks
+        .filter((t) => t.parentTaskId === taskId)
+        .sort((a, b) => a.position - b.position)
+      if (children.length === 0) {
+        return tasks.find((t) => t.id === taskId)!
+      }
+      return getDeepestLastDescendant(children[children.length - 1].id)
+    },
+    [tasks],
+  )
+
+  const getNextVisibleTask = useCallback(
+    (taskId: string): Task | null => {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return null
+
+      // First child
+      const children = tasks
+        .filter((t) => t.parentTaskId === taskId)
+        .sort((a, b) => a.position - b.position)
+      if (children.length > 0) return children[0]
+
+      // Next sibling, or walk up to find ancestor's next sibling
+      let current: Task | null = task
+      while (current) {
+        const nextSib = getNextSibling(current.id)
+        if (nextSib) return nextSib
+        current = current.parentTaskId
+          ? (tasks.find((t) => t.id === current!.parentTaskId) ?? null)
+          : null
+      }
+
+      return null
+    },
+    [tasks, getNextSibling],
+  )
+
+  const getPreviousVisibleTask = useCallback(
+    (taskId: string): Task | null => {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return null
+
+      // Previous sibling's deepest last descendant
+      const prevSib = getPreviousSibling(taskId)
+      if (prevSib) return getDeepestLastDescendant(prevSib.id)
+
+      // Parent
+      if (task.parentTaskId) {
+        return tasks.find((t) => t.id === task.parentTaskId) ?? null
+      }
+
+      return null
+    },
+    [tasks, getPreviousSibling, getDeepestLastDescendant],
   )
 
   // Dialog creation
@@ -374,6 +437,8 @@ export function TaskProvider({
       getNextSibling,
       getParent,
       getTask,
+      getNextVisibleTask,
+      getPreviousVisibleTask,
       createTask,
       updateTask,
       updateTaskNote,
@@ -400,6 +465,8 @@ export function TaskProvider({
       getNextSibling,
       getParent,
       getTask,
+      getNextVisibleTask,
+      getPreviousVisibleTask,
       createTask,
       updateTask,
       updateTaskNote,

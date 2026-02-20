@@ -33,6 +33,10 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const {
     getSubtasks,
     getPreviousSibling,
+    getNextSibling,
+    getParent,
+    getNextVisibleTask,
+    getPreviousVisibleTask,
     openCreateDialog,
     updateTask,
     updateTaskNote,
@@ -188,38 +192,112 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     }
   }
 
+  const handleDeleteWithFocus = async () => {
+    if (!confirm('Are you sure you want to delete this task?')) {
+      return
+    }
+    // Determine focus target before deleting
+    const nextSibling = getNextSibling(task.id)
+    const parent = getParent(task.id)
+    const focusTargetId = nextSibling?.id ?? parent?.id ?? null
+
+    setIsLoading(true)
+    try {
+      await deleteTask(task.id)
+      if (focusTargetId) {
+        setFocusedTaskId(focusTargetId)
+        requestAnimationFrame(() => {
+          const el = document.querySelector(
+            `[data-task-id="${focusTargetId}"]`,
+          ) as HTMLElement | null
+          el?.focus()
+        })
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const navigateToTask = (direction: 'up' | 'down') => {
+    const getTarget =
+      direction === 'up' ? getPreviousVisibleTask : getNextVisibleTask
+    let target = getTarget(task.id)
+    // Skip collapsed (non-rendered) tasks
+    while (target) {
+      const el = document.querySelector(
+        `[data-task-id="${target.id}"]`,
+      ) as HTMLElement | null
+      if (el) {
+        setFocusedTaskId(target.id)
+        el.focus()
+        return
+      }
+      target = getTarget(target.id)
+    }
+  }
+
   const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // Don't handle keys when editing
-    if (isEditing) return
+    if (isEditing || isEditingNote) return
 
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      // Create new task below
-      openCreateDialog(task.parentTaskId, task.id)
-    } else if (e.key === 'Tab' && !e.shiftKey) {
-      e.preventDefault()
-      if (canIndent) {
-        indentTask(task.id)
-      }
-    } else if (e.key === 'Tab' && e.shiftKey) {
-      e.preventDefault()
-      if (canOutdent) {
-        outdentTask(task.id)
-      }
-    } else if (e.altKey && e.key === 'ArrowUp') {
-      e.preventDefault()
-      moveUp(task.id)
-    } else if (e.altKey && e.key === 'ArrowDown') {
-      e.preventDefault()
-      moveDown(task.id)
-    } else if (e.key === 'e') {
-      e.preventDefault()
-      handleEdit()
-    } else if (e.key === 'n') {
-      e.preventDefault()
-      if (!isEditingNote) {
-        setIsEditingNote(true)
-      }
+    switch (e.key) {
+      case 'Enter':
+        e.preventDefault()
+        handleEdit()
+        break
+
+      case 'ArrowUp':
+        if (e.altKey) {
+          e.preventDefault()
+          moveUp(task.id)
+        } else {
+          e.preventDefault()
+          navigateToTask('up')
+        }
+        break
+
+      case 'ArrowDown':
+        if (e.altKey) {
+          e.preventDefault()
+          moveDown(task.id)
+        } else {
+          e.preventDefault()
+          navigateToTask('down')
+        }
+        break
+
+      case 'Tab':
+        e.preventDefault()
+        if (e.shiftKey) {
+          if (canOutdent) outdentTask(task.id)
+        } else {
+          if (canIndent) indentTask(task.id)
+        }
+        break
+
+      case 'e':
+        e.preventDefault()
+        handleEdit()
+        break
+
+      case 'n':
+        e.preventDefault()
+        if (!isEditingNote) {
+          setIsEditingNote(true)
+        }
+        break
+
+      case 'Backspace':
+        if (e.metaKey) {
+          e.preventDefault()
+          handleDeleteWithFocus()
+        }
+        break
+
+      case 'Delete':
+        e.preventDefault()
+        handleDeleteWithFocus()
+        break
     }
   }
 
