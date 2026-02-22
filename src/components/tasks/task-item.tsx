@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
+
 import { useTaskContext } from './task-context'
 import { TaskActions } from './task-actions'
 import { TaskNote } from './task-note'
@@ -46,7 +46,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const [isEditingNote, setIsEditingNote] = useState(false)
 
   const rowRef = useRef<HTMLDivElement>(null)
-  const nameTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const skipBlurSaveRef = useRef(false)
 
   const hasSubtasks = subtasks.length > 0
@@ -69,9 +69,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
 
   // Focus textarea when editing starts
   useEffect(() => {
-    if (isEditing && nameTextareaRef.current) {
-      nameTextareaRef.current.focus()
-      nameTextareaRef.current.setSelectionRange(name.length, name.length)
+    if (isEditing && nameInputRef.current) {
+      nameInputRef.current.focus()
+      nameInputRef.current.setSelectionRange(name.length, name.length)
     }
   }, [isEditing, name.length])
 
@@ -232,10 +232,8 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     }
   }
 
-  const handleTaskNameTextareaKeyDown = (
-    e: KeyboardEvent<HTMLTextAreaElement>,
-  ) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleTaskNameInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
       e.preventDefault()
       e.stopPropagation()
       skipBlurSaveRef.current = true
@@ -329,8 +327,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           {/* Name */}
           <div className='min-h-6 flex-1 overflow-hidden px-2'>
             {isEditing ? (
-              <AutoResizeTextarea
-                ref={nameTextareaRef}
+              <input
+                ref={nameInputRef}
+                type='text'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => {
@@ -340,9 +339,8 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
                   }
                   handleSave()
                 }}
-                onKeyDown={handleTaskNameTextareaKeyDown}
-                className='block w-full resize-none border-0 bg-transparent p-0 leading-6 outline-none'
-                rows={1}
+                onKeyDown={handleTaskNameInputKeyDown}
+                className='block w-full border-0 bg-transparent p-0 leading-6 outline-none'
               />
             ) : (
               <>
