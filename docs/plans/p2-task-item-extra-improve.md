@@ -18,9 +18,9 @@ name should be a single sentence. Other info should go note.
 
 # 2. Display placeholder for note even note content is not available.
 
-- [ ] Change grid visibility condition from `isFocused && (task.note || isEditingNote)` to `isFocused` in `task-note.tsx`
-- [ ] Add third render state: when `!task.note && !isEditingNote`, show dimmed "Note" placeholder
-- [ ] Placeholder opens note editor on click, styled with `text-sm text-muted-foreground cursor-text`
+- [x] Change grid visibility condition from `isFocused && (task.note || isEditingNote)` to `isFocused` in `task-note.tsx`
+- [x] Add third render state: when `!task.note && !isEditingNote`, show dimmed "Note" placeholder
+- [x] Placeholder opens note editor on click, styled with `text-sm text-muted-foreground cursor-text`
 
 We should just say "Note" with dimmed color so people can notice it.
 
