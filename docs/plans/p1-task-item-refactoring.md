@@ -53,9 +53,9 @@ The note section has its own state cycle (view → edit → save → view), its 
 
 ## Step 4: Clean Up
 
-- [ ] Remove unused imports from `task-item.tsx` (`MarkdownView`, `noteTextareaRef`, etc.)
-- [ ] Verify `skipBlurSaveRef` in task-item.tsx only serves the name textarea
-- [ ] Confirm final line count is ~350-370 (down from 585)
+- [x] Remove unused imports from `task-item.tsx` (`MarkdownView`, `noteTextareaRef`, etc.)
+- [x] Verify `skipBlurSaveRef` in task-item.tsx only serves the name textarea
+- [x] Confirm final line count: 416 lines (down from 585, -29%)
 
 ---
 
@@ -79,15 +79,3 @@ src/
 
 - **`skipBlurSaveRef` split**: Currently shared between name and note blurs. After extraction each component has its own — this is actually cleaner. Key scenario: Tab from name sets parent's ref, name blur fires and skips correctly, note mounts with its own independent ref.
 - **Controlled `isEditingNote`**: Bidirectional control (parent sets true, child sets false via prop). Standard React pattern but all paths must be verified: row 'n' key, Tab from name, Escape from note, Tab from note, blur from note, focus-leaves-task effect.
-
-## Verification
-
-After all steps, run through these scenarios end-to-end:
-
-- [ ] Create, edit, complete, delete tasks
-- [ ] Keyboard navigation (arrows, Tab indent/outdent, Enter to edit, Escape to exit)
-- [ ] Note editing (n key, Tab cycling between name/note, Escape, blur save)
-- [ ] Action menu (all 7 items: edit, move up/down, indent/outdent, delete)
-- [ ] Subtask expand/collapse
-- [ ] Loading spinner during async operations
-- [ ] Focus ring appears/disappears correctly
