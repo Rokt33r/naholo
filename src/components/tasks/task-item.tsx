@@ -59,8 +59,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const [noteContent, setNoteContent] = useState(task.note ?? '')
 
   const rowRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const nameTextareaRef = useRef<HTMLTextAreaElement>(null)
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const skipBlurSaveRef = useRef(false)
 
   const hasSubtasks = subtasks.length > 0
   const isCreating = task.id.startsWith('temp-')
@@ -75,9 +76,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
 
   // Auto-resize textarea
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+    if (isEditing && nameTextareaRef.current) {
+      nameTextareaRef.current.style.height = 'auto'
+      nameTextareaRef.current.style.height = `${nameTextareaRef.current.scrollHeight}px`
     }
   }, [name, isEditing])
 
@@ -116,9 +117,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
 
   // Focus textarea when editing starts
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus()
-      textareaRef.current.setSelectionRange(name.length, name.length)
+    if (isEditing && nameTextareaRef.current) {
+      nameTextareaRef.current.focus()
+      nameTextareaRef.current.setSelectionRange(name.length, name.length)
     }
   }, [isEditing, name.length])
 
@@ -131,7 +132,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     }
   }
 
-  const handleEdit = () => {
+  const handleTaskNameClick = () => {
     setName(task.name)
     setIsEditing(true)
   }
@@ -187,8 +188,27 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const handleNoteKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault()
-      setNoteContent(task.note ?? '')
+      e.stopPropagation()
+      skipBlurSaveRef.current = true
+      const trimmed = noteContent.trim()
+      const newNote = trimmed || null
+      if (newNote !== task.note) {
+        updateTaskNote(task.id, newNote)
+      }
       setIsEditingNote(false)
+      rowRef.current?.focus()
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      skipBlurSaveRef.current = true
+      const trimmed = noteContent.trim()
+      const newNote = trimmed || null
+      if (newNote !== task.note) {
+        updateTaskNote(task.id, newNote)
+      }
+      setIsEditingNote(false)
+      setName(task.name)
+      setIsEditing(true)
     }
   }
 
@@ -243,7 +263,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     switch (e.key) {
       case 'Enter':
         e.preventDefault()
-        handleEdit()
+        handleTaskNameClick()
         break
 
       case 'ArrowUp':
@@ -277,7 +297,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
 
       case 'e':
         e.preventDefault()
-        handleEdit()
+        handleTaskNameClick()
         break
 
       case 'n':
@@ -301,23 +321,55 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     }
   }
 
-  const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleTaskNameTextareaKeyDown = (
+    e: KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSave()
+      e.stopPropagation()
+      skipBlurSaveRef.current = true
+      const trimmed = name.trim()
+      if (trimmed && trimmed !== task.name) {
+        updateTask(task.id, trimmed)
+      }
+      setIsEditing(false)
+      if (trimmed) {
+        // Create new task at same level, after current task
+        openCreateDialog(task.parentTaskId, task.id)
+      } else {
+        // Empty name — just exit editing, refocus row
+        setName(task.name)
+        rowRef.current?.focus()
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      setName(task.name)
+      e.stopPropagation()
+      skipBlurSaveRef.current = true
+      const trimmed = name.trim()
+      if (trimmed && trimmed !== task.name) {
+        updateTask(task.id, trimmed)
+      } else {
+        setName(task.name)
+      }
       setIsEditing(false)
+      rowRef.current?.focus()
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      skipBlurSaveRef.current = true
+      const trimmed = name.trim()
+      if (trimmed && trimmed !== task.name) {
+        updateTask(task.id, trimmed)
+      } else {
+        setName(task.name)
+      }
+      setIsEditing(false)
+      setIsEditingNote(true)
     }
   }
 
   const handleFocus = () => {
     setFocusedTaskId(task.id)
-  }
-
-  const handleBlur = () => {
-    // Don't immediately clear focus to allow for keyboard navigation
   }
 
   return (
@@ -327,7 +379,6 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         data-task-id={task.id}
         tabIndex={0}
         onFocus={handleFocus}
-        onBlur={handleBlur}
         onKeyDown={handleRowKeyDown}
         className={cn(
           'relative rounded outline-none hover:bg-zinc-50 dark:hover:bg-zinc-900',
@@ -368,17 +419,23 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           <div className='min-h-6 flex-1 overflow-hidden px-2'>
             {isEditing ? (
               <textarea
-                ref={textareaRef}
+                ref={nameTextareaRef}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onBlur={handleSave}
-                onKeyDown={handleTextareaKeyDown}
+                onBlur={() => {
+                  if (skipBlurSaveRef.current) {
+                    skipBlurSaveRef.current = false
+                    return
+                  }
+                  handleSave()
+                }}
+                onKeyDown={handleTaskNameTextareaKeyDown}
                 className='block w-full resize-none border-0 bg-transparent p-0 leading-6 outline-none'
                 rows={1}
               />
             ) : (
               <>
-                <span onClick={handleEdit}>
+                <span onClick={handleTaskNameClick}>
                   <LinkifiedText
                     text={task.name}
                     className={cn(
@@ -423,7 +480,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
-                    <DropdownMenuItem onClick={handleEdit}>
+                    <DropdownMenuItem onClick={handleTaskNameClick}>
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -480,7 +537,13 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
                     ref={noteTextareaRef}
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
-                    onBlur={handleSaveNote}
+                    onBlur={() => {
+                      if (skipBlurSaveRef.current) {
+                        skipBlurSaveRef.current = false
+                        return
+                      }
+                      handleSaveNote()
+                    }}
                     onKeyDown={handleNoteKeyDown}
                     placeholder='Add a note... (Markdown supported)'
                     className='min-h-[60px] w-full resize-none rounded border bg-transparent px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-zinc-400'

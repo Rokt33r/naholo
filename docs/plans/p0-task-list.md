@@ -86,10 +86,10 @@ The task list has two problems: (1) the focus ring stays visible even when click
 | Tab       | Save name, switch to note editing                                                          | (none)              |
 | Shift+Tab | Save name, switch to note editing                                                          | (none)              |
 
-- [ ] All handlers call `e.stopPropagation()` to prevent bubbling to row handler
-- [ ] Tab: save name synchronously (`setIsEditing(false)`), fire-and-forget API call, then `setIsEditingNote(true)`. Existing `useEffect` auto-focuses note textarea.
-- [ ] Enter with empty name: just exit editing, don't create a new task
-- [ ] Enter creates new task: auto-focus and start editing the new task
+- [x] All handlers call `e.stopPropagation()` to prevent bubbling to row handler
+- [x] Tab: save name synchronously (`setIsEditing(false)`), fire-and-forget API call, then `setIsEditingNote(true)`. Existing `useEffect` auto-focuses note textarea.
+- [x] Enter with empty name: just exit editing, don't create a new task
+- [x] Enter creates new task: auto-focus and start editing the new task
 
 **`task-item.tsx`** — `handleNoteKeyDown` (note textarea):
 
@@ -99,12 +99,12 @@ The task list has two problems: (1) the focus ring stays visible even when click
 | Tab       | Save note, switch to name editing    | (none)              |
 | Shift+Tab | Save note, switch to name editing    | (none)              |
 
-- [ ] Both Tab and Shift+Tab go to name field (only 2 fields, both directions wrap around)
+- [x] Both Tab and Shift+Tab go to name field (only 2 fields, both directions wrap around)
 
 **`task-item.tsx`** — Blur handler guards:
 
-- [ ] Name textarea `onBlur`: only call `handleSave` if `isEditing` is still true (prevents double-save when Tab handler already handled the transition)
-- [ ] Note textarea `onBlur`: only call `handleSaveNote` if `isEditingNote` is still true
+- [x] Name textarea `onBlur`: only call `handleSave` if `isEditing` is still true (prevents double-save when Tab handler already handled the transition)
+- [x] Note textarea `onBlur`: only call `handleSaveNote` if `isEditingNote` is still true
 
 **Verify**: Tab cycles name <-> note. Escape saves and refocuses row. Enter saves and creates new task at same level.
 
