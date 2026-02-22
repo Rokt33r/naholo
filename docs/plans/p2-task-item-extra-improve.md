@@ -40,26 +40,11 @@ Unindent task should go below its parent task, not over.
 
 - `src/components/tasks/task-context.tsx`
 
-# 4. Broken subtask button
-
-- [ ] Consume `creationDialogState` and `closeCreateDialog` from context in task rendering
-- [ ] Add inline creation input in `task-item.tsx` subtask area when `creationDialogState.parentTaskId === task.id`
-- [ ] Handle root-level creation (from Enter in name editing) in `tasks-list.tsx` when `creationDialogState.parentTaskId === null`
-- [ ] Input behavior: auto-focus, Enter → create task & close, Escape → close
-
-Not responding. **Root cause: no component consumes `creationDialogState` to render an inline creation UI.** The Plus button calls `openCreateDialog` which sets state, but nothing reads it. `tasks-list.tsx` has its own local creation state, ignoring context.
-
-## Files
-
-- `src/components/tasks/task-item.tsx` — render inline input in subtask area
-- `src/components/tasks/tasks-list.tsx` — render inline input for root-level
-- `src/components/tasks/task-context.tsx` — context already has the state, no changes needed
-
 # 5. Task item checkbox layout
 
-- [ ] Change main row from `items-center` to `items-start` in `task-item.tsx`
-- [ ] Add `mt-1` to checkbox (16px in 24px line → 4px offset)
-- [ ] Add `mt-0.5` to expand button (20px in 24px line → 2px offset)
+- [x] Change main row from `items-center` to `items-start` in `task-item.tsx`
+- [x] Add `mt-1` to checkbox (16px in 24px line → 4px offset)
+- [x] Add `mt-0.5` to expand button (20px in 24px line → 2px offset)
 
 Currently the checkbox is aligned to center (vertically) with flex layout. When note preview appears, checkbox shifts. Fix by pinning to top and adding margin to center within the name line height (`leading-6` = 24px).
 
@@ -69,7 +54,7 @@ Currently the checkbox is aligned to center (vertically) with flex layout. When 
 
 # 6. Task item checkbox border
 
-- [ ] Add `border-zinc-300 dark:border-zinc-600` className override on `<Checkbox>` in `task-item.tsx`
+- [x] Add `border-zinc-300 dark:border-zinc-600` className override on `<Checkbox>` in `task-item.tsx`
 
 The border color is too dimmed. `--input` resolves to `oklch(0.922 0 0)` (light) / `oklch(0.269 0 0)` (dark) — nearly invisible. Targeted override avoids affecting other checkboxes app-wide.
 

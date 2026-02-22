@@ -295,13 +295,13 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
         )}
       >
         {/* Main row */}
-        <div className='flex items-center py-1'>
+        <div className='flex items-start py-1'>
           {/* Expand/collapse button */}
           {hasSubtasks ? (
             <Button
               variant='ghost'
               size='icon'
-              className='h-5 w-5 shrink-0'
+              className='mt-0.5 h-5 w-5 shrink-0'
               onClick={() => setIsExpanded(!isExpanded)}
               tabIndex={-1}
             >
@@ -312,7 +312,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
               )}
             </Button>
           ) : (
-            <div className='h-5 w-5 shrink-0' />
+            <div className='mt-0.5 h-5 w-5 shrink-0' />
           )}
 
           {/* Checkbox */}
@@ -320,7 +320,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
             checked={task.done}
             onCheckedChange={handleToggleDone}
             disabled={isLoading}
-            className='shrink-0'
+            className='mt-1 shrink-0 border-zinc-300 dark:border-zinc-600'
             tabIndex={-1}
           />
 
