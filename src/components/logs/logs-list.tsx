@@ -2,6 +2,7 @@
 
 import { CornerDownLeft } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { Button } from '@/components/ui/button'
 import { LogItem } from './log-item'
 import { ButtonGroup } from '../ui/button-group'
@@ -49,14 +50,6 @@ export function LogsList({
   useEffect(() => {
     scrollToBottom()
   }, [logs])
-
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (textarea) {
-      textarea.style.height = 'auto'
-      textarea.style.height = `${textarea.scrollHeight}px`
-    }
-  }, [message])
 
   const handleSendMessage = async () => {
     let newMessage = message.trim()
@@ -135,7 +128,7 @@ export function LogsList({
       {/* Input */}
       <div className='border-t p-2'>
         <div className='flex'>
-          <textarea
+          <AutoResizeTextarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}

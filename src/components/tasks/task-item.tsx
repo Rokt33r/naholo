@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { useTaskContext } from './task-context'
 import { LinkifiedText } from './linkified-text'
 import { MarkdownView } from '@/components/ui/markdown-view'
@@ -73,22 +74,6 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const canIndent = !!previousSibling
   const canOutdent = !!task.parentTaskId
   const noteFirstLine = task.note ? task.note.split('\n')[0] : null
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (isEditing && nameTextareaRef.current) {
-      nameTextareaRef.current.style.height = 'auto'
-      nameTextareaRef.current.style.height = `${nameTextareaRef.current.scrollHeight}px`
-    }
-  }, [name, isEditing])
-
-  // Auto-resize note textarea
-  useEffect(() => {
-    if (isEditingNote && noteTextareaRef.current) {
-      noteTextareaRef.current.style.height = 'auto'
-      noteTextareaRef.current.style.height = `${noteTextareaRef.current.scrollHeight}px`
-    }
-  }, [noteContent, isEditingNote])
 
   // Focus note textarea when editing starts
   useEffect(() => {
@@ -418,7 +403,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           {/* Name */}
           <div className='min-h-6 flex-1 overflow-hidden px-2'>
             {isEditing ? (
-              <textarea
+              <AutoResizeTextarea
                 ref={nameTextareaRef}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -533,7 +518,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
             {(task.note || isEditingNote) && (
               <div className='px-2 pb-2 pt-1'>
                 {isEditingNote ? (
-                  <textarea
+                  <AutoResizeTextarea
                     ref={noteTextareaRef}
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}

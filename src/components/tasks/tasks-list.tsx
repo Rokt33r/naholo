@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { TaskProvider, useTaskContext } from './task-context'
 import { TaskItem } from './task-item'
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 
 type TasksListProps = {
   projectId: string
@@ -58,15 +59,6 @@ function TasksListContent() {
       newTaskInputRef.current.focus()
     }
   }, [isCreating])
-
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = newTaskInputRef.current
-    if (textarea) {
-      textarea.style.height = 'auto'
-      textarea.style.height = `${textarea.scrollHeight}px`
-    }
-  }, [newTaskName])
 
   const handleCreateTask = async () => {
     const name = newTaskName.trim()
@@ -153,7 +145,7 @@ function TasksListContent() {
             {/* Checkbox placeholder */}
             <div className='h-4 w-4 shrink-0' />
             <div className='flex-1'>
-              <textarea
+              <AutoResizeTextarea
                 ref={newTaskInputRef}
                 value={newTaskName}
                 onChange={(e) => setNewTaskName(e.target.value)}
