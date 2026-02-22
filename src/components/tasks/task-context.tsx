@@ -355,11 +355,7 @@ export function TaskProvider({
       if (!parent) return false
 
       // Move task to become sibling of parent, positioned after parent
-      const parentSiblings = tasks
-        .filter((t) => t.parentTaskId === parent.parentTaskId)
-        .sort((a, b) => a.position - b.position)
-      const parentIndex = parentSiblings.findIndex((t) => t.id === parent.id)
-      const newPosition = parentIndex + 1
+      const newPosition = parent.position + 1
 
       try {
         await moveTaskMutation.mutateAsync({

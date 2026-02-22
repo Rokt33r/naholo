@@ -30,7 +30,7 @@ We should just say "Note" with dimmed color so people can notice it.
 
 # 3. Unindent task
 
-- [ ] In `outdentTask` (`task-context.tsx`), change `newPosition = parentIndex + 1` to `newPosition = parent.position + 1`
+- [x] In `outdentTask` (`task-context.tsx`), change `newPosition = parentIndex + 1` to `newPosition = parent.position + 1`
 
 Unindent task should go below its parent task, not over.
 
