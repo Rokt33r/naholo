@@ -37,9 +37,8 @@ The same 4-line auto-resize pattern appears in `task-item.tsx` (×2) and `tasks-
 
 The action buttons area (lines 457-520) is 63 lines of purely presentational JSX with no local state.
 
-- [ ] Create `src/components/tasks/task-actions.tsx` — pure presentational component with callback props
-- [ ] Modify `task-item.tsx` — replace action buttons JSX with `<TaskActions ... />`
-- [ ] Verify hover reveals buttons, dropdown works, all 7 menu items function, loading spinner shows
+- [x] Create `src/components/tasks/task-actions.tsx` — pure presentational component with callback props
+- [x] Modify `task-item.tsx` — replace action buttons JSX with `<TaskActions ... />`
 
 ---
 

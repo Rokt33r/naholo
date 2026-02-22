@@ -1,25 +1,13 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo, type KeyboardEvent } from 'react'
-import {
-  ChevronDown,
-  ChevronRight,
-  Plus,
-  MoreVertical,
-  Loader2,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { useTaskContext } from './task-context'
+import { TaskActions } from './task-actions'
 import { LinkifiedText } from './linkified-text'
 import { MarkdownView } from '@/components/ui/markdown-view'
 import type { Task } from '@/hooks/use-tasks'
@@ -439,70 +427,20 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           </div>
 
           {/* Actions */}
-          <div className='flex shrink-0 items-center gap-1'>
-            {isCreating || isLoading ? (
-              <Loader2 className='mx-1 h-4 w-4 animate-spin text-zinc-400' />
-            ) : (
-              <div className='flex items-center gap-1 opacity-0 group-hover/item:opacity-100'>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-6 w-6'
-                  onClick={handleAddSubtask}
-                  tabIndex={-1}
-                >
-                  <Plus className='h-3 w-3' />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='h-6 w-6'
-                      tabIndex={-1}
-                    >
-                      <MoreVertical className='h-3 w-3' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end'>
-                    <DropdownMenuItem onClick={handleTaskNameClick}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => moveUp(task.id)}
-                      disabled={!previousSibling}
-                    >
-                      Move up
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => moveDown(task.id)}>
-                      Move down
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => indentTask(task.id)}
-                      disabled={!canIndent}
-                    >
-                      Indent
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => outdentTask(task.id)}
-                      disabled={!canOutdent}
-                    >
-                      Outdent
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleDelete}
-                      className='text-red-600'
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
-          </div>
+          <TaskActions
+            isCreating={isCreating}
+            isLoading={isLoading}
+            canIndent={canIndent}
+            canOutdent={canOutdent}
+            hasPreviousSibling={!!previousSibling}
+            onEdit={handleTaskNameClick}
+            onAddSubtask={handleAddSubtask}
+            onDelete={handleDelete}
+            onMoveUp={() => moveUp(task.id)}
+            onMoveDown={() => moveDown(task.id)}
+            onIndent={() => indentTask(task.id)}
+            onOutdent={() => outdentTask(task.id)}
+          />
         </div>
 
         {/* Note section - animated */}
