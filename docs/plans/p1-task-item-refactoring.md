@@ -46,9 +46,8 @@ The action buttons area (lines 457-520) is 63 lines of purely presentational JSX
 
 The note section has its own state cycle (view → edit → save → view), its own textarea, keyboard handler, blur handler, and animated container. It accounts for ~100 lines of logic + ~40 lines of JSX.
 
-- [ ] Create `src/components/tasks/task-note.tsx` — note editing widget with own state, keyboard handler, animated container
-- [ ] Modify `task-item.tsx` — replace note JSX with `<TaskNote>`, remove note state/effects/handlers (keep `isEditingNote` state + reset effect + `noteFirstLine`)
-- [ ] Verify note editing: focus expands, `n` key edits, Escape saves/refocuses, Tab cycles name/note, click edits, blur saves
+- [x] Create `src/components/tasks/task-note.tsx` — note editing widget with own state, keyboard handler, animated container
+- [x] Modify `task-item.tsx` — replace note JSX with `<TaskNote>`, remove note state/effects/handlers (keep `isEditingNote` state + reset effect + `noteFirstLine`)
 
 ---
 
