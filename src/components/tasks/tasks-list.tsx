@@ -1,15 +1,9 @@
 'use client'
 
-import {
-  KeyboardEvent,
-  useRef,
-  useState,
-  useEffect,
-  type FocusEvent,
-} from 'react'
+import { useRef, type FocusEvent } from 'react'
 import { TaskProvider, useTaskContext } from './task-context'
 import { TaskItem } from './task-item'
-import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
+import { NewTaskItem } from './new-task-item'
 
 type TasksListProps = {
   projectId: string
@@ -25,8 +19,14 @@ export function TasksList({ projectId, issueId }: TasksListProps) {
 }
 
 function TasksListContent() {
-  const { isLoading, getRootTasks, getSubtasks, createTask, setIsListFocused } =
-    useTaskContext()
+  const {
+    isLoading,
+    getFlattenedTasks,
+    getRootTasks,
+    setIsListFocused,
+    creationDialogState,
+    openCreateDialog,
+  } = useTaskContext()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -45,63 +45,100 @@ function TasksListContent() {
     setIsListFocused(false)
   }
 
+  const flattenedTasks = getFlattenedTasks()
   const rootTasks = getRootTasks()
 
-  const [isCreating, setIsCreating] = useState(false)
-  const [newTaskName, setNewTaskName] = useState('')
-  const [newTaskNote, setNewTaskNote] = useState('')
-  const [showNoteInput, setShowNoteInput] = useState(false)
-  const newTaskInputRef = useRef<HTMLTextAreaElement>(null)
-
-  // Auto-focus when input appears
-  useEffect(() => {
-    if (isCreating && newTaskInputRef.current) {
-      newTaskInputRef.current.focus()
-    }
-  }, [isCreating])
-
-  const handleCreateTask = async () => {
-    const name = newTaskName.trim()
-    if (!name) return
-
-    // Calculate position (after last root task)
-    const lastRootTask = rootTasks[rootTasks.length - 1]
-    const position = lastRootTask ? lastRootTask.position + 1 : 0
-
-    const note = newTaskNote.trim() || null
-    await createTask(name, note, null, position)
-    setNewTaskName('') // Reset for next task
-    setNewTaskNote('')
-    setShowNoteInput(false)
-    // Keep isCreating true for continuous entry
-    newTaskInputRef.current?.focus()
-  }
-
   const handleBottomClick = () => {
-    if (!isCreating) {
-      // Not creating → show input
-      setIsCreating(true)
-    } else if (newTaskName.trim() === '') {
-      // Creating but empty → hide input
-      setIsCreating(false)
-    } else {
-      // Creating with content → create task, show fresh input
-      handleCreateTask()
+    if (!creationDialogState) {
+      const lastRootTask = rootTasks[rootTasks.length - 1]
+      openCreateDialog(null, lastRootTask?.id ?? null)
     }
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (newTaskName.trim()) {
-        handleCreateTask()
-      } else {
-        setIsCreating(false)
+  // Build the flat render list: tasks + optional creation input
+  const renderItems: Array<
+    | {
+        type: 'task'
+        task: (typeof flattenedTasks)[0]['task']
+        depth: number
+        key: string
       }
-    }
-    if (e.key === 'Escape') {
-      setIsCreating(false)
-      setNewTaskName('')
+    | {
+        type: 'creation'
+        depth: number
+        parentTaskId: string | null
+        afterTaskId: string | null
+        key: string
+      }
+  > = []
+
+  for (const { task, depth } of flattenedTasks) {
+    renderItems.push({ type: 'task', task, depth, key: task.id })
+  }
+
+  // Insert creation input at the right position
+  if (creationDialogState) {
+    const { parentTaskId, afterTaskId } = creationDialogState
+    const creationDepth = parentTaskId
+      ? (flattenedTasks.find((ft) => ft.task.id === parentTaskId)?.depth ?? 0) +
+        1
+      : 0
+
+    if (afterTaskId) {
+      // Find the index after the afterTask and all its descendants
+      const afterIndex = renderItems.findIndex(
+        (item) => item.type === 'task' && item.key === afterTaskId,
+      )
+      if (afterIndex !== -1) {
+        // Skip past all descendants (items with greater depth immediately after)
+        let insertIndex = afterIndex + 1
+        const afterDepth = renderItems[afterIndex].depth
+        while (
+          insertIndex < renderItems.length &&
+          renderItems[insertIndex].depth > afterDepth
+        ) {
+          insertIndex++
+        }
+        renderItems.splice(insertIndex, 0, {
+          type: 'creation',
+          depth: creationDepth,
+          parentTaskId,
+          afterTaskId,
+          key: 'creation-input',
+        })
+      } else {
+        // afterTask not visible (collapsed), append at end
+        renderItems.push({
+          type: 'creation',
+          depth: creationDepth,
+          parentTaskId,
+          afterTaskId,
+          key: 'creation-input',
+        })
+      }
+    } else {
+      // No afterTaskId — insert at beginning of parent's children
+      if (parentTaskId) {
+        const parentIndex = renderItems.findIndex(
+          (item) => item.type === 'task' && item.key === parentTaskId,
+        )
+        renderItems.splice(parentIndex + 1, 0, {
+          type: 'creation',
+          depth: creationDepth,
+          parentTaskId,
+          afterTaskId,
+          key: 'creation-input',
+        })
+      } else {
+        // Root level, beginning
+        renderItems.splice(0, 0, {
+          type: 'creation',
+          depth: 0,
+          parentTaskId: null,
+          afterTaskId: null,
+          key: 'creation-input',
+        })
+      }
     }
   }
 
@@ -126,54 +163,22 @@ function TasksListContent() {
       onBlur={handleContainerBlur}
     >
       <div>
-        {rootTasks.map((task) => (
-          <TaskItem
-            key={task.id}
-            task={task}
-            subtasks={getSubtasks(task.id)}
-            depth={0}
-          />
-        ))}
+        {renderItems.map((item) => {
+          if (item.type === 'task') {
+            return (
+              <TaskItem key={item.key} task={item.task} depth={item.depth} />
+            )
+          }
+          return (
+            <NewTaskItem
+              key={item.key}
+              depth={item.depth}
+              parentTaskId={item.parentTaskId}
+              afterTaskId={item.afterTaskId}
+            />
+          )
+        })}
       </div>
-
-      {/* Inline input (when creating) */}
-      {isCreating && (
-        <div>
-          <div className='flex items-start gap-2 rounded py-1'>
-            {/* Expand/collapse placeholder */}
-            <div className='h-5 w-5 shrink-0' />
-            {/* Checkbox placeholder */}
-            <div className='h-4 w-4 shrink-0' />
-            <div className='flex-1'>
-              <AutoResizeTextarea
-                ref={newTaskInputRef}
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder='New task...'
-                className='w-full resize-none bg-transparent outline-none'
-                rows={1}
-              />
-              {showNoteInput && (
-                <textarea
-                  value={newTaskNote}
-                  onChange={(e) => setNewTaskNote(e.target.value)}
-                  placeholder='Note (Markdown supported)'
-                  className='mt-1 min-h-[40px] w-full resize-none rounded border bg-transparent px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
-                  rows={2}
-                />
-              )}
-              <button
-                type='button'
-                onClick={() => setShowNoteInput(!showNoteInput)}
-                className='mt-1 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
-              >
-                {showNoteInput ? 'Hide note' : 'Add note'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Clickable bottom area */}
       <div

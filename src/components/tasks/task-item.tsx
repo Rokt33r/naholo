@@ -14,11 +14,10 @@ import type { Task } from '@/hooks/use-tasks'
 
 type TaskItemProps = {
   task: Task
-  subtasks: Task[]
   depth?: number
 }
 
-export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
+export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   const {
     getSubtasks,
     getPreviousSibling,
@@ -27,6 +26,8 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     getNextVisibleTask,
     getPreviousVisibleTask,
     openCreateDialog,
+    isTaskExpanded,
+    toggleExpanded,
     updateTask,
     setTaskDone,
     deleteTask,
@@ -39,7 +40,6 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     setFocusedTaskId,
   } = useTaskContext()
 
-  const [isExpanded, setIsExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState(task.name)
   const [isLoading, setIsLoading] = useState(false)
@@ -49,7 +49,9 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
   const nameInputRef = useRef<HTMLInputElement>(null)
   const skipBlurSaveRef = useRef(false)
 
+  const subtasks = getSubtasks(task.id)
   const hasSubtasks = subtasks.length > 0
+  const isExpanded = isTaskExpanded(task.id)
   const isCreating = task.id.startsWith('temp-')
   const isFocused = focusedTaskId === task.id
   const previousSibling = useMemo(
@@ -120,7 +122,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     // Find last subtask to insert after
     const lastSubtask = subtasks[subtasks.length - 1]
     openCreateDialog(task.id, lastSubtask?.id ?? null)
-    setIsExpanded(true)
+    if (!isExpanded) toggleExpanded(task.id)
   }
 
   const handleDeleteWithFocus = async () => {
@@ -318,7 +320,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
               variant='ghost'
               size='icon'
               className='mt-0.5 h-5 w-5 shrink-0'
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={() => toggleExpanded(task.id)}
               tabIndex={-1}
             >
               {isExpanded ? (
@@ -408,23 +410,6 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
           rowRef={rowRef}
         />
       </div>
-
-      {/* Subtasks */}
-      {hasSubtasks && isExpanded && (
-        <div className='mt-1'>
-          {subtasks.map((subtask) => {
-            const subtaskChildren = getSubtasks(subtask.id)
-            return (
-              <TaskItem
-                key={subtask.id}
-                task={subtask}
-                subtasks={subtaskChildren}
-                depth={depth + 1}
-              />
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }
