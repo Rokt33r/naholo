@@ -300,7 +300,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   }
 
   return (
-    <div className={cn('group/item', depth > 0 && 'ml-6')}>
+    <div className='group/item' style={{ paddingLeft: depth * 24 }}>
       <div
         ref={rowRef}
         data-task-id={task.id}
