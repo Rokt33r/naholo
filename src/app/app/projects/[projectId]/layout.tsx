@@ -4,6 +4,7 @@ import { getProject, listProjects } from '@/server/services/project'
 import { ProjectSidebar } from '@/components/projects/project-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 import { SidebarProvider } from '@/components/ui/sidebar'
+import { QueryProvider } from '@/components/query-provider'
 
 type Props = {
   children: React.ReactNode
@@ -31,17 +32,19 @@ export default async function ProjectLayout({ children, params }: Props) {
         } as React.CSSProperties
       }
     >
-      <div className='flex h-screen w-full'>
-        <ProjectSidebar projects={projects} currentProjectId={projectId} />
-        <div className='flex w-80 flex-col border-r'>
-          <div className='flex-1 overflow-hidden'>
-            <IssuesList projectId={projectId} projectName={project.name} />
+      <QueryProvider>
+        <div className='flex h-screen w-full'>
+          <ProjectSidebar projects={projects} currentProjectId={projectId} />
+          <div className='flex w-80 flex-col border-r'>
+            <div className='flex-1 overflow-hidden'>
+              <IssuesList projectId={projectId} projectName={project.name} />
+            </div>
           </div>
-        </div>
 
-        {/* Right panel: Issue detail */}
-        <div className='flex-1 overflow-hidden'>{children}</div>
-      </div>
+          {/* Right panel: Issue detail */}
+          <div className='flex-1 overflow-hidden'>{children}</div>
+        </div>
+      </QueryProvider>
     </SidebarProvider>
   )
 }

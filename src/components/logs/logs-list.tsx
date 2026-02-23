@@ -40,8 +40,8 @@ export function LogsList({
     projectId,
     issueId,
   )
-  const { closeIssue } = useCloseIssue()
-  const { reopenIssue } = useReopenIssue()
+  const { mutateAsync: closeIssue } = useCloseIssue(projectId, issueId)
+  const { mutateAsync: reopenIssue } = useReopenIssue(projectId, issueId)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -87,7 +87,7 @@ export function LogsList({
     // Then close the issue
     setIsClosing(true)
     try {
-      await closeIssue(projectId, issueId)
+      await closeIssue()
     } finally {
       setIsClosing(false)
     }
@@ -96,7 +96,7 @@ export function LogsList({
   const handleReopen = async () => {
     setIsReopening(true)
     try {
-      await reopenIssue(projectId, issueId)
+      await reopenIssue()
     } finally {
       setIsReopening(false)
     }

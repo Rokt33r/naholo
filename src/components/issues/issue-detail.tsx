@@ -76,8 +76,8 @@ export function IssueDetail({
   const [isDeleting, setIsDeleting] = useState(false)
 
   const { issue, isLoading } = useIssue(projectId, issueId)
-  const { updateTitle } = useUpdateIssueTitle()
-  const { deleteIssue } = useDeleteIssue()
+  const { mutateAsync: updateTitle } = useUpdateIssueTitle(projectId, issueId)
+  const { mutateAsync: deleteIssue } = useDeleteIssue(projectId, issueId)
 
   // Sync title with fetched issue
   if (issue && title !== issue.title && !isEditingTitle) {
@@ -91,7 +91,7 @@ export function IssueDetail({
     }
     setIsDeleting(true)
     try {
-      await deleteIssue(projectId, issue.id)
+      await deleteIssue()
       const query = searchParams.toString()
       router.push(`/app/projects/${projectId}${query ? `?${query}` : ''}`)
     } finally {
@@ -107,7 +107,7 @@ export function IssueDetail({
 
     setIsSaving(true)
     try {
-      await updateTitle(projectId, issue.id, title.trim())
+      await updateTitle(title.trim())
     } catch (error) {
       // Error is already toasted by the hook
       setTitle(issue.title)

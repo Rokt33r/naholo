@@ -30,7 +30,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
-  const { issues, isLoading, mutate } = useIssues(projectId, filter)
+  const { issues, isLoading, refetch } = useIssues(projectId, filter)
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch = issue.title
@@ -67,7 +67,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
               Closed
             </Button>
           </ButtonGroup>
-          <CreateIssueDialog projectId={projectId} onIssueCreated={mutate}>
+          <CreateIssueDialog projectId={projectId} onIssueCreated={refetch}>
             <Button size='icon' variant='outline' className='size-8'>
               <SquarePen className='h-4 w-4' />
             </Button>

@@ -4,7 +4,6 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { IssueDetail } from './issue-detail'
 import { LogsList } from '@/components/logs/logs-list'
 import { useLogs } from '@/hooks/use-logs'
@@ -23,15 +22,6 @@ function parseActiveTab(tabParam: string | null): ActiveTab {
   }
   return { type: 'logs' }
 }
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60,
-      refetchOnWindowFocus: false,
-    },
-  },
-})
 
 type Issue = {
   id: string
@@ -57,7 +47,7 @@ type IssueClientPageProps = {
   notes: Note[]
 }
 
-function IssueClientPageContent({
+export function IssueClientPage({
   issue,
   notes: initialNotes,
 }: IssueClientPageProps) {
@@ -117,13 +107,5 @@ function IssueClientPageContent({
         </ResizablePanel>
       )}
     </div>
-  )
-}
-
-export function IssueClientPage({ issue, notes }: IssueClientPageProps) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <IssueClientPageContent issue={issue} notes={notes} />
-    </QueryClientProvider>
   )
 }

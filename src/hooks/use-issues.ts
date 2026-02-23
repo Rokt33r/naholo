@@ -1,7 +1,6 @@
-import useSWR, { mutate as globalMutate } from 'swr'
-import { useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetcher } from '@/lib/fetcher'
+import { fetcher, createResponseError } from '@/lib/fetcher'
 
 type Issue = {
   id: string
@@ -45,21 +44,19 @@ type IssueDetail = Pick<
  * Hook to fetch issues list for a project
  */
 export function useIssues(projectId: string, filter: 'open' | 'closed') {
-  const url = `/api/projects/${projectId}/issues?closed=${filter === 'closed'}`
-
-  const { data, error, isLoading, mutate } = useSWR<IssueListItem[]>(
-    url,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-    },
-  )
+  const query = useQuery({
+    queryKey: ['issues', projectId, filter],
+    queryFn: () =>
+      fetcher<IssueListItem[]>(
+        `/api/projects/${projectId}/issues?closed=${filter === 'closed'}`,
+      ),
+  })
 
   return {
-    issues: data ?? [],
-    isLoading,
-    error,
-    mutate,
+    issues: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
   }
 }
 
@@ -67,224 +64,208 @@ export function useIssues(projectId: string, filter: 'open' | 'closed') {
  * Hook to fetch a single issue
  */
 export function useIssue(projectId: string, issueId: string) {
-  const url = `/api/projects/${projectId}/issues/${issueId}`
-
-  const { data, error, isLoading, mutate } = useSWR<IssueDetail>(url, fetcher, {
-    revalidateOnFocus: false,
+  const query = useQuery({
+    queryKey: ['issue', projectId, issueId],
+    queryFn: () =>
+      fetcher<IssueDetail>(`/api/projects/${projectId}/issues/${issueId}`),
   })
 
   return {
-    issue: data,
-    isLoading,
-    error,
-    mutate,
+    issue: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
   }
 }
 
 /**
  * Hook to update an issue's title with optimistic updates
  */
-export function useUpdateIssueTitle() {
-  const updateTitle = useCallback(
-    async (projectId: string, issueId: string, newTitle: string) => {
-      const url = `/api/projects/${projectId}/issues/${issueId}`
+export function useUpdateIssueTitle(projectId: string, issueId: string) {
+  const queryClient = useQueryClient()
 
-      try {
-        // Optimistically update the issue detail cache
-        await globalMutate<IssueDetail>(
-          url,
-          async (currentData) => {
-            if (!currentData) return currentData
-
-            const response = await fetch(url, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ title: newTitle }),
-            })
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}))
-              throw new Error(errorData.error || 'Failed to update title')
-            }
-
-            return { ...currentData, title: newTitle }
-          },
-          {
-            optimisticData: (currentData) => {
-              if (!currentData) throw new Error('No data to update')
-              return { ...currentData, title: newTitle }
-            },
-            rollbackOnError: true,
-            revalidate: false,
-          },
-        )
-
-        // Update all issues list caches that might contain this issue
-        const issueListKeys = [
-          `/api/projects/${projectId}/issues?closed=true`,
-          `/api/projects/${projectId}/issues?closed=false`,
-        ]
-
-        for (const key of issueListKeys) {
-          await globalMutate<IssueListItem[]>(
-            key,
-            (currentList) => {
-              if (!currentList) return currentList
-              return currentList.map((issue) =>
-                issue.id === issueId ? { ...issue, title: newTitle } : issue,
-              )
-            },
-            { revalidate: false },
-          )
-        }
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to update title'
-        toast.error(message)
-        throw error
+  return useMutation({
+    mutationFn: async (newTitle: string) => {
+      const response = await fetch(
+        `/api/projects/${projectId}/issues/${issueId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: newTitle }),
+        },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to update title')
       }
+      return response.json()
     },
-    [],
-  )
+    onMutate: async (newTitle) => {
+      await queryClient.cancelQueries({
+        queryKey: ['issue', projectId, issueId],
+      })
 
-  return { updateTitle }
+      const previousIssue = queryClient.getQueryData<IssueDetail>([
+        'issue',
+        projectId,
+        issueId,
+      ])
+
+      queryClient.setQueryData<IssueDetail>(
+        ['issue', projectId, issueId],
+        (old) => (old ? { ...old, title: newTitle } : old),
+      )
+
+      // Update both issue list caches
+      for (const filter of ['open', 'closed'] as const) {
+        queryClient.setQueryData<IssueListItem[]>(
+          ['issues', projectId, filter],
+          (old) =>
+            old?.map((issue) =>
+              issue.id === issueId ? { ...issue, title: newTitle } : issue,
+            ),
+        )
+      }
+
+      return { previousIssue }
+    },
+    onError: (err, _, context) => {
+      if (context?.previousIssue) {
+        queryClient.setQueryData(
+          ['issue', projectId, issueId],
+          context.previousIssue,
+        )
+      }
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      toast.error(err instanceof Error ? err.message : 'Failed to update title')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', projectId, issueId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+    },
+  })
 }
 
 /**
  * Hook to close an issue with optimistic updates
  */
-export function useCloseIssue() {
-  const closeIssue = useCallback(async (projectId: string, issueId: string) => {
-    const url = `/api/projects/${projectId}/issues/${issueId}/close`
-    const issueDetailUrl = `/api/projects/${projectId}/issues/${issueId}`
+export function useCloseIssue(projectId: string, issueId: string) {
+  const queryClient = useQueryClient()
 
-    try {
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `/api/projects/${projectId}/issues/${issueId}/close`,
+        { method: 'POST' },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to close issue')
+      }
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: ['issue', projectId, issueId],
+      })
+
+      const previousIssue = queryClient.getQueryData<IssueDetail>([
+        'issue',
+        projectId,
+        issueId,
+      ])
+
       const now = new Date()
-
-      // Optimistically update the issue detail cache
-      await globalMutate<IssueDetail>(
-        issueDetailUrl,
-        async (currentData) => {
-          if (!currentData) return currentData
-
-          const response = await fetch(url, {
-            method: 'POST',
-          })
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(errorData.error || 'Failed to close issue')
-          }
-
-          return { ...currentData, closed: true, closedAt: now }
-        },
-        {
-          optimisticData: (currentData) => {
-            if (!currentData) throw new Error('No data to update')
-            return { ...currentData, closed: true, closedAt: now }
-          },
-          rollbackOnError: true,
-          revalidate: false,
-        },
+      queryClient.setQueryData<IssueDetail>(
+        ['issue', projectId, issueId],
+        (old) => (old ? { ...old, closed: true, closedAt: now } : old),
       )
 
-      // Revalidate both open and closed issue lists
-      await globalMutate(`/api/projects/${projectId}/issues?closed=false`)
-      await globalMutate(`/api/projects/${projectId}/issues?closed=true`)
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to close issue'
-      toast.error(message)
-      throw error
-    }
-  }, [])
-
-  return { closeIssue }
+      return { previousIssue }
+    },
+    onError: (err, _, context) => {
+      if (context?.previousIssue) {
+        queryClient.setQueryData(
+          ['issue', projectId, issueId],
+          context.previousIssue,
+        )
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to close issue')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', projectId, issueId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+    },
+  })
 }
 
 /**
  * Hook to reopen an issue with optimistic updates
  */
-export function useReopenIssue() {
-  const reopenIssue = useCallback(
-    async (projectId: string, issueId: string) => {
-      const url = `/api/projects/${projectId}/issues/${issueId}/close`
-      const issueDetailUrl = `/api/projects/${projectId}/issues/${issueId}`
+export function useReopenIssue(projectId: string, issueId: string) {
+  const queryClient = useQueryClient()
 
-      try {
-        // Optimistically update the issue detail cache
-        await globalMutate<IssueDetail>(
-          issueDetailUrl,
-          async (currentData) => {
-            if (!currentData) return currentData
-
-            const response = await fetch(url, {
-              method: 'DELETE',
-            })
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}))
-              throw new Error(errorData.error || 'Failed to reopen issue')
-            }
-
-            return { ...currentData, closed: false, closedAt: null }
-          },
-          {
-            optimisticData: (currentData) => {
-              if (!currentData) throw new Error('No data to update')
-              return { ...currentData, closed: false, closedAt: null }
-            },
-            rollbackOnError: true,
-            revalidate: false,
-          },
-        )
-
-        // Revalidate both open and closed issue lists
-        await globalMutate(`/api/projects/${projectId}/issues?closed=false`)
-        await globalMutate(`/api/projects/${projectId}/issues?closed=true`)
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to reopen issue'
-        toast.error(message)
-        throw error
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `/api/projects/${projectId}/issues/${issueId}/close`,
+        { method: 'DELETE' },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to reopen issue')
       }
     },
-    [],
-  )
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: ['issue', projectId, issueId],
+      })
 
-  return { reopenIssue }
+      const previousIssue = queryClient.getQueryData<IssueDetail>([
+        'issue',
+        projectId,
+        issueId,
+      ])
+
+      queryClient.setQueryData<IssueDetail>(
+        ['issue', projectId, issueId],
+        (old) => (old ? { ...old, closed: false, closedAt: null } : old),
+      )
+
+      return { previousIssue }
+    },
+    onError: (err, _, context) => {
+      if (context?.previousIssue) {
+        queryClient.setQueryData(
+          ['issue', projectId, issueId],
+          context.previousIssue,
+        )
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to reopen issue')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', projectId, issueId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+    },
+  })
 }
 
 /**
  * Hook to delete an issue
  */
-export function useDeleteIssue() {
-  const deleteIssue = useCallback(
-    async (projectId: string, issueId: string) => {
-      const url = `/api/projects/${projectId}/issues/${issueId}`
+export function useDeleteIssue(projectId: string, issueId: string) {
+  const queryClient = useQueryClient()
 
-      try {
-        const response = await fetch(url, {
-          method: 'DELETE',
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Failed to delete issue')
-        }
-
-        // Revalidate both open and closed issue lists
-        await globalMutate(`/api/projects/${projectId}/issues?closed=false`)
-        await globalMutate(`/api/projects/${projectId}/issues?closed=true`)
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to delete issue'
-        toast.error(message)
-        throw error
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `/api/projects/${projectId}/issues/${issueId}`,
+        { method: 'DELETE' },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to delete issue')
       }
     },
-    [],
-  )
-
-  return { deleteIssue }
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete issue')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+    },
+  })
 }
