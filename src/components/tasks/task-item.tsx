@@ -25,7 +25,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
     getParent,
     getNextVisibleTask,
     getPreviousVisibleTask,
-    openCreateDialog,
+    openNewTaskItem,
     isTaskExpanded,
     toggleExpanded,
     updateTask,
@@ -121,7 +121,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   const handleAddSubtask = () => {
     // Find last subtask to insert after
     const lastSubtask = subtasks[subtasks.length - 1]
-    openCreateDialog(task.id, lastSubtask?.id ?? null)
+    openNewTaskItem(task.id, lastSubtask?.id ?? null)
     if (!isExpanded) toggleExpanded(task.id)
   }
 
@@ -262,7 +262,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
       setIsEditing(false)
       if (trimmed) {
         // Create new task at same level, after current task
-        openCreateDialog(task.parentTaskId, task.id)
+        openNewTaskItem(task.parentTaskId, task.id)
       } else {
         // Empty name — just exit editing, refocus row
         setName(task.name)

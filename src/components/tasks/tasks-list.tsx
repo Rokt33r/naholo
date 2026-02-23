@@ -24,8 +24,8 @@ function TasksListContent() {
     getFlattenedTasks,
     getRootTasks,
     setIsListFocused,
-    creationDialogState,
-    openCreateDialog,
+    newTaskItemState,
+    openNewTaskItem,
   } = useTaskContext()
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -49,9 +49,9 @@ function TasksListContent() {
   const rootTasks = getRootTasks()
 
   const handleBottomClick = () => {
-    if (!creationDialogState) {
+    if (!newTaskItemState) {
       const lastRootTask = rootTasks[rootTasks.length - 1]
-      openCreateDialog(null, lastRootTask?.id ?? null)
+      openNewTaskItem(null, lastRootTask?.id ?? null)
     }
   }
 
@@ -77,8 +77,8 @@ function TasksListContent() {
   }
 
   // Insert creation input at the right position
-  if (creationDialogState) {
-    const { parentTaskId, afterTaskId } = creationDialogState
+  if (newTaskItemState) {
+    const { parentTaskId, afterTaskId } = newTaskItemState
     const creationDepth = parentTaskId
       ? (flattenedTasks.find((ft) => ft.task.id === parentTaskId)?.depth ?? 0) +
         1

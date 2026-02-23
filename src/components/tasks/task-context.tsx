@@ -20,7 +20,7 @@ import {
   type Task,
 } from '@/hooks/use-tasks'
 
-type CreationDialogState = {
+type NewTaskItemState = {
   parentTaskId: string | null
   afterTaskId: string | null // The task after which to insert, null = beginning
 } | null
@@ -46,12 +46,12 @@ type TaskContextValue = {
   toggleExpanded: (taskId: string) => void
 
   // Dialog creation
-  creationDialogState: CreationDialogState
-  openCreateDialog: (
+  newTaskItemState: NewTaskItemState
+  openNewTaskItem: (
     parentTaskId: string | null,
     afterTaskId: string | null,
   ) => void
-  closeCreateDialog: () => void
+  closeNewTaskItem: () => void
 
   // Tree helpers
   getFlattenedTasks: () => FlatTask[]
@@ -130,8 +130,8 @@ export function TaskProvider({
       setFocusedTaskId(null)
     }
   }, [tasks, focusedTaskId])
-  const [creationDialogState, setCreationDialogState] =
-    useState<CreationDialogState>(null)
+  const [newTaskItemState, setNewTaskItemState] =
+    useState<NewTaskItemState>(null)
 
   // Expand/collapse state (default: all expanded)
   const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<string>>(
@@ -305,15 +305,15 @@ export function TaskProvider({
   )
 
   // Dialog creation
-  const openCreateDialog = useCallback(
+  const openNewTaskItem = useCallback(
     (parentTaskId: string | null, afterTaskId: string | null) => {
-      setCreationDialogState({ parentTaskId, afterTaskId })
+      setNewTaskItemState({ parentTaskId, afterTaskId })
     },
     [],
   )
 
-  const closeCreateDialog = useCallback(() => {
-    setCreationDialogState(null)
+  const closeNewTaskItem = useCallback(() => {
+    setNewTaskItemState(null)
   }, [])
 
   // Operations
@@ -371,9 +371,9 @@ export function TaskProvider({
     (taskId: string) => {
       const task = tasks.find((t) => t.id === taskId)
       if (!task) return
-      openCreateDialog(task.parentTaskId, taskId)
+      openNewTaskItem(task.parentTaskId, taskId)
     },
-    [tasks, openCreateDialog],
+    [tasks, openNewTaskItem],
   )
 
   const indentTask = useCallback(
@@ -478,9 +478,9 @@ export function TaskProvider({
       setFocusedTaskId,
       isTaskExpanded,
       toggleExpanded,
-      creationDialogState,
-      openCreateDialog,
-      closeCreateDialog,
+      newTaskItemState,
+      openNewTaskItem,
+      closeNewTaskItem,
       getFlattenedTasks,
       getRootTasks,
       getSubtasks,
@@ -509,9 +509,9 @@ export function TaskProvider({
       focusedTaskId,
       isTaskExpanded,
       toggleExpanded,
-      creationDialogState,
-      openCreateDialog,
-      closeCreateDialog,
+      newTaskItemState,
+      openNewTaskItem,
+      closeNewTaskItem,
       getFlattenedTasks,
       getRootTasks,
       getSubtasks,

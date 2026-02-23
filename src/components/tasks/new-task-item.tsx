@@ -18,8 +18,8 @@ export function NewTaskItem({
     createTask,
     getSubtasks,
     getRootTasks,
-    closeCreateDialog,
-    openCreateDialog,
+    closeNewTaskItem,
+    openNewTaskItem,
   } = useTaskContext()
 
   const [name, setName] = useState('')
@@ -47,7 +47,7 @@ export function NewTaskItem({
     setName('')
     if (newTaskId) {
       // Continue creating at same level, after the new task
-      openCreateDialog(parentTaskId, newTaskId)
+      openNewTaskItem(parentTaskId, newTaskId)
     }
     inputRef.current?.focus()
   }
@@ -58,11 +58,11 @@ export function NewTaskItem({
       if (name.trim()) {
         handleCreate()
       } else {
-        closeCreateDialog()
+        closeNewTaskItem()
       }
     }
     if (e.key === 'Escape') {
-      closeCreateDialog()
+      closeNewTaskItem()
     }
   }
 
@@ -82,7 +82,7 @@ export function NewTaskItem({
             onKeyDown={handleKeyDown}
             onBlur={() => {
               if (!name.trim()) {
-                closeCreateDialog()
+                closeNewTaskItem()
               }
             }}
             placeholder='New task...'
