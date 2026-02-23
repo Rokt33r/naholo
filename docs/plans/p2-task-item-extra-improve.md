@@ -64,9 +64,9 @@ The border color is too dimmed. `--input` resolves to `oklch(0.922 0 0)` (light)
 
 # 7. Focus control after unindent
 
-- [ ] Make `handleRowKeyDown` Tab case async
-- [ ] After `await outdentTask(task.id)`, use `requestAnimationFrame` to query `[data-task-id="${task.id}"]` and `.focus()`
-- [ ] Apply same fix to `indentTask` for consistency
+- [x] Make `handleRowKeyDown` Tab case async
+- [x] After `await outdentTask(task.id)`, use `requestAnimationFrame` to query `[data-task-id="${task.id}"]` and `.focus()`
+- [x] Apply same fix to `indentTask` for consistency
 
 After unindent, focusing is missing so users cannot indent again. When indent/outdent completes, React re-renders the component at a new DOM position, so the old focused element is unmounted and browser focus is lost. Same re-focus pattern as `handleDeleteWithFocus`.
 

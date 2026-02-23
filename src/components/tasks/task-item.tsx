@@ -167,7 +167,7 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
     }
   }
 
-  const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  const handleRowKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
     // Don't handle keys when editing
     if (isEditing || isEditingNote) return
 
@@ -200,9 +200,25 @@ export function TaskItem({ task, subtasks, depth = 0 }: TaskItemProps) {
       case 'Tab':
         e.preventDefault()
         if (e.shiftKey) {
-          if (canOutdent) outdentTask(task.id)
+          if (canOutdent) {
+            await outdentTask(task.id)
+            requestAnimationFrame(() => {
+              const el = document.querySelector(
+                `[data-task-id="${task.id}"]`,
+              ) as HTMLElement | null
+              el?.focus()
+            })
+          }
         } else {
-          if (canIndent) indentTask(task.id)
+          if (canIndent) {
+            await indentTask(task.id)
+            requestAnimationFrame(() => {
+              const el = document.querySelector(
+                `[data-task-id="${task.id}"]`,
+              ) as HTMLElement | null
+              el?.focus()
+            })
+          }
         }
         break
 
