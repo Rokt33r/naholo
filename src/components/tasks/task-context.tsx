@@ -41,10 +41,6 @@ type TaskContextValue = {
   focusedTaskId: string | null
   setFocusedTaskId: (id: string | null) => void
 
-  // Expand/collapse
-  isTaskExpanded: (taskId: string) => boolean
-  toggleExpanded: (taskId: string) => void
-
   // Dialog creation
   newTaskItemState: NewTaskItemState
   openNewTaskItem: (
@@ -133,28 +129,6 @@ export function TaskProvider({
   const [newTaskItemState, setNewTaskItemState] =
     useState<NewTaskItemState>(null)
 
-  // Expand/collapse state (default: all expanded)
-  const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<string>>(
-    new Set(),
-  )
-
-  const isTaskExpanded = useCallback(
-    (taskId: string) => !collapsedTaskIds.has(taskId),
-    [collapsedTaskIds],
-  )
-
-  const toggleExpanded = useCallback((taskId: string) => {
-    setCollapsedTaskIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(taskId)) {
-        next.delete(taskId)
-      } else {
-        next.add(taskId)
-      }
-      return next
-    })
-  }, [])
-
   // Tree helpers
   const getRootTasks = useCallback(() => {
     return tasks
@@ -236,14 +210,12 @@ export function TaskProvider({
         .sort((a, b) => a.position - b.position)
       for (const child of children) {
         result.push({ task: child, depth })
-        if (!collapsedTaskIds.has(child.id)) {
-          walk(child.id, depth + 1)
-        }
+        walk(child.id, depth + 1)
       }
     }
     walk(null, 0)
     return result
-  }, [tasks, collapsedTaskIds])
+  }, [tasks])
 
   // Tree navigation helpers (depth-first pre-order)
   const getDeepestLastDescendant = useCallback(
@@ -476,8 +448,6 @@ export function TaskProvider({
       setIsListFocused,
       focusedTaskId,
       setFocusedTaskId,
-      isTaskExpanded,
-      toggleExpanded,
       newTaskItemState,
       openNewTaskItem,
       closeNewTaskItem,
@@ -507,8 +477,6 @@ export function TaskProvider({
       isLoading,
       isListFocused,
       focusedTaskId,
-      isTaskExpanded,
-      toggleExpanded,
       newTaskItemState,
       openNewTaskItem,
       closeNewTaskItem,

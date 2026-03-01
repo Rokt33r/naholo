@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo, type KeyboardEvent } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 import { useTaskContext } from './task-context'
@@ -26,8 +24,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
     getNextVisibleTask,
     getPreviousVisibleTask,
     openNewTaskItem,
-    isTaskExpanded,
-    toggleExpanded,
     updateTask,
     setTaskDone,
     deleteTask,
@@ -50,8 +46,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   const skipBlurSaveRef = useRef(false)
 
   const subtasks = getSubtasks(task.id)
-  const hasSubtasks = subtasks.length > 0
-  const isExpanded = isTaskExpanded(task.id)
   const isCreating = task.id.startsWith('temp-')
   const isFocused = focusedTaskId === task.id
   const previousSibling = useMemo(
@@ -122,7 +116,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
     // Find last subtask to insert after
     const lastSubtask = subtasks[subtasks.length - 1]
     openNewTaskItem(task.id, lastSubtask?.id ?? null)
-    if (!isExpanded) toggleExpanded(task.id)
   }
 
   const handleDeleteWithFocus = async () => {
@@ -314,25 +307,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
       >
         {/* Main row */}
         <div className='flex items-start py-1'>
-          {/* Expand/collapse button */}
-          {hasSubtasks ? (
-            <Button
-              variant='ghost'
-              size='icon'
-              className='mt-0.5 h-5 w-5 shrink-0'
-              onClick={() => toggleExpanded(task.id)}
-              tabIndex={-1}
-            >
-              {isExpanded ? (
-                <ChevronDown className='h-3 w-3' />
-              ) : (
-                <ChevronRight className='h-3 w-3' />
-              )}
-            </Button>
-          ) : (
-            <div className='mt-0.5 h-5 w-5 shrink-0' />
-          )}
-
           {/* Checkbox */}
           <Checkbox
             checked={task.done}
