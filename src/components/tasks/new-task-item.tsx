@@ -68,11 +68,9 @@ export function NewTaskItem({
 
   return (
     <div style={{ paddingLeft: depth * 24 }}>
-      <div className='flex items-start gap-2 rounded py-1'>
-        {/* Expand/collapse placeholder */}
-        <div className='h-5 w-5 shrink-0' />
+      <div className='flex items-start rounded py-1 px-2'>
         {/* Checkbox placeholder */}
-        <div className='h-4 w-4 shrink-0' />
+        <div className='mt-1 h-4 w-4 shrink-0' />
         <div className='min-h-6 flex-1 overflow-hidden px-2'>
           <input
             ref={inputRef}
