@@ -306,7 +306,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
         )}
       >
         {/* Main row */}
-        <div className='flex items-start py-1'>
+        <div className='flex items-start py-1 px-2'>
           {/* Checkbox */}
           <Checkbox
             checked={task.done}

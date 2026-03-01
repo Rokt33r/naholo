@@ -140,7 +140,7 @@
 .prose h4,
 .prose h5,
 .prose h6 {
-  @apply font-semibold mt-6 mb-4;
+  @apply font-semibold mt-0 mb-4;
 }
 
 .prose ul,

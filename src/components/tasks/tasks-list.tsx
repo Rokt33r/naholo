@@ -158,7 +158,7 @@ function TasksListContent() {
   return (
     <div
       ref={containerRef}
-      className='flex h-full flex-col p-4 overflow-auto'
+      className='flex h-full flex-col py-4 px-2 overflow-auto'
       onFocus={handleContainerFocus}
       onBlur={handleContainerBlur}
     >
