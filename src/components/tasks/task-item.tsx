@@ -69,7 +69,8 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
       nameInputRef.current.focus()
       nameInputRef.current.setSelectionRange(name.length, name.length)
     }
-  }, [isEditing, name.length])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing])
 
   const handleToggleDone = async (checked: boolean) => {
     setIsLoading(true)

@@ -53,7 +53,8 @@ export function TaskNote({
         noteContent.length,
       )
     }
-  }, [isEditingNote, noteContent.length])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditingNote])
 
   const handleSaveNote = async () => {
     const trimmed = noteContent.trim()
