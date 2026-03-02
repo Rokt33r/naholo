@@ -82,6 +82,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   }
 
   const handleTaskNameClick = () => {
+    setFocusedTaskId(task.id)
     setName(task.name)
     setIsEditing(true)
   }
@@ -289,8 +290,10 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
     }
   }
 
-  const handleFocus = () => {
-    setFocusedTaskId(task.id)
+  const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (e.target === rowRef.current) {
+      setFocusedTaskId(task.id)
+    }
   }
 
   return (
@@ -362,7 +365,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
             canIndent={canIndent}
             canOutdent={canOutdent}
             hasPreviousSibling={!!previousSibling}
-            onEdit={handleTaskNameClick}
             onAddSubtask={handleAddSubtask}
             onDelete={handleDelete}
             onMoveUp={() => moveUp(task.id)}

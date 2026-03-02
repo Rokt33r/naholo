@@ -16,7 +16,6 @@ type TaskActionsProps = {
   canIndent: boolean
   canOutdent: boolean
   hasPreviousSibling: boolean
-  onEdit: () => void
   onAddSubtask: () => void
   onDelete: () => void
   onMoveUp: () => void
@@ -31,7 +30,6 @@ export function TaskActions({
   canIndent,
   canOutdent,
   hasPreviousSibling,
-  onEdit,
   onAddSubtask,
   onDelete,
   onMoveUp,
@@ -66,8 +64,6 @@ export function TaskActions({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={onMoveUp}
                 disabled={!hasPreviousSibling}
