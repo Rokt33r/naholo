@@ -54,7 +54,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   )
   const canIndent = !!previousSibling
   const canOutdent = !!task.parentTaskId
-  const noteFirstLine = task.note ? task.note.split('\n')[0] : null
 
   // Reset editing state when focus leaves
   useEffect(() => {
@@ -349,11 +348,6 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
                     )}
                   />
                 </span>
-                {task.note && !isFocused && (
-                  <div className='truncate text-xs text-muted-foreground'>
-                    {noteFirstLine}
-                  </div>
-                )}
               </>
             )}
           </div>

@@ -96,16 +96,40 @@ export function TaskNote({
     }
   }
 
+  const showTextarea = isEditingNote || (isFocused && !task.note)
+
   return (
-    <div
-      className={cn(
-        'grid transition-[grid-template-rows] duration-200 ease-out',
-        isFocused ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
-      )}
-    >
-      <div className='overflow-hidden'>
-        <div className='px-2 pb-2 pt-1'>
-          {isEditingNote ? (
+    <>
+      {/* Markdown section — animated */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-200 ease-out',
+          task.note && !isEditingNote ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+        )}
+      >
+        <div className='overflow-hidden'>
+          <div
+            onDoubleClick={() => {
+              if (isFocused) {
+                setIsEditingNote(true)
+              }
+            }}
+            className='px-2 pb-2 pt-1 text-muted-foreground'
+          >
+            <MarkdownView className='text-sm'>{task.note ?? ''}</MarkdownView>
+          </div>
+        </div>
+      </div>
+
+      {/* Textarea section — animated */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-200 ease-out',
+          showTextarea ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+        )}
+      >
+        <div className='overflow-hidden'>
+          <div className='px-2 pb-2 pt-1'>
             <AutoResizeTextarea
               ref={noteTextareaRef}
               value={noteContent}
@@ -119,25 +143,11 @@ export function TaskNote({
               }}
               onKeyDown={handleNoteKeyDown}
               placeholder='Task note... (Markdown supported)'
-              className='min-h-[60px] w-full resize-none rounded text-sm outline-none placeholder:text-muted-foreground/50'
+              className='min-h-[60px] w-full resize-none rounded text-sm text-muted-foreground outline-none placeholder:text-muted-foreground/50'
             />
-          ) : task.note ? (
-            <div
-              onClick={() => setIsEditingNote(true)}
-              className='cursor-text rounded hover:bg-zinc-50 dark:hover:bg-zinc-900'
-            >
-              <MarkdownView className='text-sm'>{task.note}</MarkdownView>
-            </div>
-          ) : (
-            <div
-              onClick={() => setIsEditingNote(true)}
-              className='cursor-text text-sm text-muted-foreground/50'
-            >
-              Task note...
-            </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
