@@ -114,9 +114,9 @@ export function TaskNote({
                 setIsEditingNote(true)
               }
             }}
-            className='px-2 pb-2 pt-1 text-muted-foreground'
+            className='px-2 py-1 text-muted-foreground'
           >
-            <MarkdownView className='text-sm prose-muted'>
+            <MarkdownView className='text-sm py-[3px] prose-muted'>
               {task.note ?? ''}
             </MarkdownView>
           </div>
@@ -131,8 +131,9 @@ export function TaskNote({
         )}
       >
         <div className='overflow-hidden'>
-          <div className='px-2 pb-2 pt-1'>
+          <div className='px-2 py-1'>
             <AutoResizeTextarea
+              rows={1}
               ref={noteTextareaRef}
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
@@ -145,7 +146,7 @@ export function TaskNote({
               }}
               onKeyDown={handleNoteKeyDown}
               placeholder='Task note... (Markdown supported)'
-              className='min-h-[60px] w-full resize-none rounded text-sm text-muted-foreground outline-none placeholder:text-muted-foreground'
+              className='w-full resize-none rounded text-sm text-muted-foreground outline-none placeholder:text-muted-foreground'
             />
           </div>
         </div>
