@@ -23,6 +23,7 @@ import {
 type NewTaskItemState = {
   parentTaskId: string | null
   afterTaskId: string | null // The task after which to insert, null = beginning
+  previousFocusedTaskId: string | null
 } | null
 
 export type FlatTask = {
@@ -279,9 +280,14 @@ export function TaskProvider({
   // Dialog creation
   const openNewTaskItem = useCallback(
     (parentTaskId: string | null, afterTaskId: string | null) => {
-      setNewTaskItemState({ parentTaskId, afterTaskId })
+      setNewTaskItemState({
+        parentTaskId,
+        afterTaskId,
+        previousFocusedTaskId: focusedTaskId,
+      })
+      setFocusedTaskId(null)
     },
-    [],
+    [focusedTaskId],
   )
 
   const closeNewTaskItem = useCallback(() => {
