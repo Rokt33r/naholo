@@ -54,7 +54,7 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted-foreground: oklch(0.6 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
@@ -125,11 +125,16 @@
   }
 }
 
-/* Prose styles for markdown */
-.prose {
-  @apply text-foreground;
+@utility prose-muted {
+  --tw-prose-body: var(--muted-foreground);
+  --tw-prose-headings: var(--muted-foreground);
+  --tw-prose-links: var(--color-blue-600);
+  --tw-prose-invert-body: var(--muted-foreground);
+  --tw-prose-invert-headings: var(--muted-foreground);
+  --tw-prose-invert-links: var(--color-blue-400);
 }
 
+/* Prose styles for markdown */
 .prose p {
   @apply mb-4;
 }
@@ -140,7 +145,7 @@
 .prose h4,
 .prose h5,
 .prose h6 {
-  @apply font-semibold mt-0 mb-4;
+  @apply font-semibold mt-2 mb-4;
 }
 
 .prose ul,
@@ -169,7 +174,7 @@
 }
 
 .prose a {
-  @apply text-primary underline;
+  @apply underline;
 }
 
 .prose blockquote {
@@ -190,4 +195,7 @@
 
 .prose *:last-child {
   margin-bottom: 0;
+}
+.prose *:first-child {
+  margin-top: 0;
 }

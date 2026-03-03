@@ -116,7 +116,9 @@ export function TaskNote({
             }}
             className='px-2 pb-2 pt-1 text-muted-foreground'
           >
-            <MarkdownView className='text-sm'>{task.note ?? ''}</MarkdownView>
+            <MarkdownView className='text-sm prose-muted'>
+              {task.note ?? ''}
+            </MarkdownView>
           </div>
         </div>
       </div>
@@ -143,7 +145,7 @@ export function TaskNote({
               }}
               onKeyDown={handleNoteKeyDown}
               placeholder='Task note... (Markdown supported)'
-              className='min-h-[60px] w-full resize-none rounded text-sm text-muted-foreground outline-none placeholder:text-muted-foreground/50'
+              className='min-h-[60px] w-full resize-none rounded text-sm text-muted-foreground outline-none placeholder:text-muted-foreground'
             />
           </div>
         </div>
