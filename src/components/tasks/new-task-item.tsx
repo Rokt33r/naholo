@@ -1,6 +1,7 @@
 'use client'
 
 import { KeyboardEvent, useRef, useState, useEffect } from 'react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useTaskContext } from './task-context'
 
 type NewTaskItemProps = {
@@ -69,8 +70,11 @@ export function NewTaskItem({
   return (
     <div style={{ paddingLeft: depth * 24 }}>
       <div className='flex items-start rounded py-1 px-2'>
-        {/* Checkbox placeholder */}
-        <div className='mt-1 h-4 w-4 shrink-0' />
+        <Checkbox
+          disabled
+          className='mt-1 shrink-0 border-zinc-300 dark:border-zinc-600'
+          tabIndex={-1}
+        />
         <div className='min-h-6 flex-1 overflow-hidden px-2'>
           <input
             ref={inputRef}
