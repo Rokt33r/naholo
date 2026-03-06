@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MarkdownView } from '@/components/ui/markdown-view'
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,8 @@ type LogItemProps = {
 export function LogItem({ log, projectId, issueId }: LogItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(log.content)
+  const skipBlurSave = useRef(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { mutateAsync: updateLog, isPending: updateLoading } = useUpdateLog(
     projectId,
@@ -42,20 +45,25 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
   const isLoading = updateLoading || deleteLoading
 
   const handleEdit = () => {
+    setContent(log.content)
     setIsEditing(true)
   }
 
-  const handleSave = async () => {
-    if (content.trim() && content !== log.content) {
-      try {
-        await updateLog({ logId: log.id, content: content.trim() })
-      } catch (error) {
-        console.error('Failed to update log:', error)
-        setContent(log.content)
-      }
+  const handleSave = useCallback(async () => {
+    const trimmed = content.trim()
+    if (!trimmed || trimmed === log.content) {
+      setContent(log.content)
+      setIsEditing(false)
+      return
+    }
+    try {
+      await updateLog({ logId: log.id, content: trimmed })
+    } catch (error) {
+      console.error('Failed to update log:', error)
+      setContent(log.content)
     }
     setIsEditing(false)
-  }
+  }, [content, log.content, log.id, updateLog])
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this log?')) {
@@ -68,47 +76,57 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
     }
   }
 
+  const handleCancel = useCallback(() => {
+    if (content.trim() !== log.content) {
+      skipBlurSave.current = true
+      const discard = confirm('Discard changes? Your edits will be lost.')
+      if (!discard) {
+        skipBlurSave.current = false
+        textareaRef.current?.focus()
+        return
+      }
+    }
+    setContent(log.content)
+    setIsEditing(false)
+  }, [content, log.content])
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && e.metaKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault()
       handleSave()
     } else if (e.key === 'Escape') {
-      setContent(log.content)
-      setIsEditing(false)
+      e.preventDefault()
+      handleCancel()
     }
   }
+
+  const handleBlur = useCallback(() => {
+    if (skipBlurSave.current) {
+      skipBlurSave.current = false
+      return
+    }
+    handleSave()
+  }, [handleSave])
 
   return (
     <div className='group flex flex-row-reverse items-baseline-last'>
       {isEditing ? (
-        <div>
-          <textarea
+        <div className='w-full'>
+          <AutoResizeTextarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            className='min-h-[100px] w-full resize-none rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
+            onBlur={handleBlur}
+            className='w-full resize-none rounded-lg border bg-card p-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
             autoFocus
           />
-          <div className='mt-2 flex gap-2'>
-            <Button size='sm' onClick={handleSave} disabled={updateLoading}>
-              {updateLoading ? 'Saving...' : 'Save (Cmd+Enter)'}
-            </Button>
-            <Button
-              size='sm'
-              variant='outline'
-              onClick={() => {
-                setContent(log.content)
-                setIsEditing(false)
-              }}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          </div>
         </div>
       ) : (
         <div>
           <div
-            className={`inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? 'opacity-70' : ''}`}
+            onDoubleClick={isCreating ? undefined : handleEdit}
+            className={`inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? '' : 'cursor-text'} ${isCreating ? 'opacity-70' : ''}`}
           >
             <MarkdownView className='max-w-160'>{log.content}</MarkdownView>
           </div>
