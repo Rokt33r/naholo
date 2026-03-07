@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MoreVertical, Loader2, CircleDot, CircleCheck } from 'lucide-react'
+import {
+  MoreVertical,
+  Loader2,
+  CircleDot,
+  CircleCheck,
+  MessageSquare,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -46,10 +52,7 @@ type Note = {
   updatedAt: Date
 }
 
-type ActiveTab =
-  | { type: 'logs' }
-  | { type: 'tasks' }
-  | { type: 'note'; noteId: string }
+type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 type IssueDetailProps = {
   projectId: string
@@ -58,6 +61,9 @@ type IssueDetailProps = {
   notes: Note[]
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
+  showLogs: boolean
+  onToggleLogs: () => void
+  isWideScreen: boolean
 }
 
 export function IssueDetail({
@@ -67,6 +73,9 @@ export function IssueDetail({
   notes,
   activeTab,
   onTabChange,
+  showLogs,
+  onToggleLogs,
+  isWideScreen,
 }: IssueDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -167,6 +176,16 @@ export function IssueDetail({
           )}
         </div>
         <div className='flex items-center gap-2'>
+          {!isWideScreen && (
+            <Button
+              size='sm'
+              variant={showLogs ? 'secondary' : 'ghost'}
+              onClick={onToggleLogs}
+            >
+              <MessageSquare className='mr-1 h-4 w-4' />
+              Logs
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size='icon' variant='ghost' disabled={isDeleting}>
@@ -185,48 +204,53 @@ export function IssueDetail({
         </div>
       </div>
 
-      {/* Tabs */}
-      <IssueTabs
-        projectId={issue.projectId}
-        issueId={issue.id}
-        notes={notes}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-      />
-
-      {/* Content */}
-      <div className='flex-1 overflow-hidden'>
-        {activeTab.type === 'logs' && (
+      {showLogs && !isWideScreen ? (
+        <div className='flex-1 overflow-hidden'>
           <LogsList
             projectId={issue.projectId}
             issueId={issue.id}
             logs={logs}
             isClosed={issue.closed}
           />
-        )}
-        {activeTab.type === 'tasks' && (
-          <TasksList projectId={issue.projectId} issueId={issue.id} />
-        )}
-        {activeTab.type === 'note' &&
-          (() => {
-            const note = notes.find((n) => n.id === activeTab.noteId)
-            if (!note) {
-              return (
-                <div className='flex h-full items-center justify-center text-muted-foreground'>
-                  Note not found
-                </div>
-              )
-            }
-            return (
-              <NoteView
-                note={note}
-                projectId={issue.projectId}
-                issueId={issue.id}
-                onDeleted={() => onTabChange({ type: 'logs' })}
-              />
-            )
-          })()}
-      </div>
+        </div>
+      ) : (
+        <>
+          {/* Tabs */}
+          <IssueTabs
+            projectId={issue.projectId}
+            issueId={issue.id}
+            notes={notes}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+          />
+
+          {/* Content */}
+          <div className='flex-1 overflow-hidden'>
+            {activeTab.type === 'tasks' && (
+              <TasksList projectId={issue.projectId} issueId={issue.id} />
+            )}
+            {activeTab.type === 'note' &&
+              (() => {
+                const note = notes.find((n) => n.id === activeTab.noteId)
+                if (!note) {
+                  return (
+                    <div className='flex h-full items-center justify-center text-muted-foreground'>
+                      Note not found
+                    </div>
+                  )
+                }
+                return (
+                  <NoteView
+                    note={note}
+                    projectId={issue.projectId}
+                    issueId={issue.id}
+                    onDeleted={() => onTabChange({ type: 'tasks' })}
+                  />
+                )
+              })()}
+          </div>
+        </>
+      )}
     </div>
   )
 }

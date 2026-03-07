@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { useLocalStorage } from '@/hooks/use-local-storage'
@@ -9,18 +10,13 @@ import { LogsList } from '@/components/logs/logs-list'
 import { useLogs } from '@/hooks/use-logs'
 import { useNotes } from '@/hooks/use-notes'
 
-type ActiveTab =
-  | { type: 'logs' }
-  | { type: 'tasks' }
-  | { type: 'note'; noteId: string }
+type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 function parseActiveTab(tabParam: string | null): ActiveTab {
-  if (!tabParam || tabParam === 'logs') return { type: 'logs' }
-  if (tabParam === 'tasks') return { type: 'tasks' }
-  if (tabParam.startsWith('note:')) {
+  if (tabParam?.startsWith('note:')) {
     return { type: 'note', noteId: tabParam.slice(5) }
   }
-  return { type: 'logs' }
+  return { type: 'tasks' }
 }
 
 type Issue = {
@@ -55,6 +51,7 @@ export function IssueClientPage({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isWideScreen = useMediaQuery('(min-width: 1024px)')
+  const [showLogs, setShowLogs] = useState(false)
   const [logsPanelWidth, setLogsPanelWidth] = useLocalStorage(
     'logs-panel-width',
     320,
@@ -66,10 +63,8 @@ export function IssueClientPage({
 
   const handleTabChange = (newTab: ActiveTab) => {
     const params = new URLSearchParams(searchParams)
-    if (newTab.type === 'logs') {
+    if (newTab.type === 'tasks') {
       params.delete('tab')
-    } else if (newTab.type === 'tasks') {
-      params.set('tab', 'tasks')
     } else if (newTab.type === 'note') {
       params.set('tab', `note:${newTab.noteId}`)
     }
@@ -87,9 +82,12 @@ export function IssueClientPage({
           notes={notes}
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          showLogs={showLogs}
+          onToggleLogs={() => setShowLogs((v) => !v)}
+          isWideScreen={isWideScreen}
         />
       </div>
-      {isWideScreen && activeTab.type !== 'logs' && (
+      {isWideScreen && (
         <ResizablePanel
           width={logsPanelWidth}
           onWidthChange={setLogsPanelWidth}

@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, MessageSquare, ListTodo, StickyNote } from 'lucide-react'
+import { Plus, ListTodo, StickyNote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateNote } from '@/hooks/use-notes'
 
@@ -13,10 +13,7 @@ type Note = {
   updatedAt: Date
 }
 
-type ActiveTab =
-  | { type: 'logs' }
-  | { type: 'tasks' }
-  | { type: 'note'; noteId: string }
+type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 type IssueTabsProps = {
   projectId: string
@@ -50,19 +47,10 @@ export function IssueTabs({
     }
   }
 
-  const isLogsActive = activeTab.type === 'logs'
   const isTasksActive = activeTab.type === 'tasks'
 
   return (
     <div className='flex items-center gap-1 border-b px-2 py-1'>
-      <Button
-        variant={isLogsActive ? 'secondary' : 'ghost'}
-        size='sm'
-        onClick={() => onTabChange({ type: 'logs' })}
-      >
-        <MessageSquare className='mr-1 h-4 w-4' />
-        Logs
-      </Button>
       <Button
         variant={isTasksActive ? 'secondary' : 'ghost'}
         size='sm'
