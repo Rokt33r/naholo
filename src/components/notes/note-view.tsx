@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { MoreVertical, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { MoreVertical, Loader2, PenLine, Columns2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import { MarkdownView } from '@/components/ui/markdown-view'
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
+import { useDebounce } from '@/hooks/use-debounce'
 
 type Note = {
   id: string
@@ -20,6 +22,8 @@ type Note = {
   createdAt: Date
   updatedAt: Date
 }
+
+type ViewMode = 'editor' | 'split' | 'preview'
 
 type NoteViewProps = {
   note: Note
@@ -35,9 +39,12 @@ export function NoteView({
   onDeleted,
 }: NoteViewProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [isEditingContent, setIsEditingContent] = useState(false)
   const [title, setTitle] = useState(note.title)
   const [content, setContent] = useState(note.content)
+  const [viewMode, setViewMode] = useState<ViewMode>('editor')
+  const lastSavedContentRef = useRef(note.content)
+
+  const debouncedContent = useDebounce(content, 800)
 
   const { mutateAsync: updateNote, isPending: updateLoading } = useUpdateNote(
     projectId,
@@ -50,6 +57,32 @@ export function NoteView({
 
   const isCreating = note.id.startsWith('temp-')
   const isLoading = updateLoading || deleteLoading
+
+  // Reset local state when switching notes
+  useEffect(() => {
+    setTitle(note.title)
+    setContent(note.content)
+    lastSavedContentRef.current = note.content
+  }, [note.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save debounced content
+  useEffect(() => {
+    if (isCreating) {
+      return
+    }
+    if (debouncedContent === lastSavedContentRef.current) {
+      return
+    }
+
+    lastSavedContentRef.current = debouncedContent
+    updateNote({
+      noteId: note.id,
+      title: note.title,
+      content: debouncedContent,
+    }).catch((error) => {
+      console.error('Failed to auto-save note content:', error)
+    })
+  }, [debouncedContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== note.title) {
@@ -67,22 +100,6 @@ export function NoteView({
       setTitle(note.title)
     }
     setIsEditingTitle(false)
-  }
-
-  const handleSaveContent = async () => {
-    if (content !== note.content) {
-      try {
-        await updateNote({
-          noteId: note.id,
-          title: note.title,
-          content: content.trim(),
-        })
-      } catch (error) {
-        console.error('Failed to update note content:', error)
-        setContent(note.content)
-      }
-    }
-    setIsEditingContent(false)
   }
 
   const handleDelete = async () => {
@@ -106,16 +123,36 @@ export function NoteView({
     }
   }
 
-  const handleContentKeyDown = (
-    e: React.KeyboardEvent<HTMLTextAreaElement>,
-  ) => {
-    if (e.key === 'Enter' && e.metaKey) {
-      handleSaveContent()
-    } else if (e.key === 'Escape') {
-      setContent(note.content)
-      setIsEditingContent(false)
-    }
+  const handleEditorDoubleClick = () => {
+    setViewMode('preview')
   }
+
+  const handlePreviewDoubleClick = () => {
+    setViewMode('editor')
+  }
+
+  const renderEditor = (onDoubleClick?: () => void) => (
+    <textarea
+      value={content}
+      onChange={(e) => setContent(e.target.value)}
+      onDoubleClick={onDoubleClick}
+      className='h-full w-full flex-1 resize-none bg-transparent px-4 py-3 font-mono text-sm outline-none'
+      placeholder='Write your note content here... (Markdown supported)'
+    />
+  )
+
+  const renderPreview = (onDoubleClick?: () => void) => (
+    <div
+      className='h-full flex-1 cursor-text overflow-y-auto px-4 py-3'
+      onDoubleClick={onDoubleClick}
+    >
+      {content ? (
+        <MarkdownView>{content}</MarkdownView>
+      ) : (
+        <p className='text-muted-foreground'>No content yet...</p>
+      )}
+    </div>
+  )
 
   return (
     <div className='flex h-full flex-col'>
@@ -146,75 +183,81 @@ export function NoteView({
             </div>
           )}
         </div>
-        {!isCreating && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size='icon' variant='ghost' disabled={isLoading}>
-                <MoreVertical className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem
-                onClick={handleDelete}
-                disabled={deleteLoading}
-                className='text-red-600'
+
+        <div className='flex items-center gap-1'>
+          {/* View mode toggle */}
+          {!isCreating && (
+            <ButtonGroup>
+              <Button
+                size='icon-sm'
+                variant={viewMode === 'editor' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('editor')}
+                title='Editor'
               >
-                {deleteLoading ? 'Deleting...' : 'Delete note'}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+                <PenLine />
+              </Button>
+              <Button
+                size='icon-sm'
+                variant={viewMode === 'split' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('split')}
+                title='Split'
+              >
+                <Columns2 />
+              </Button>
+              <Button
+                size='icon-sm'
+                variant={viewMode === 'preview' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('preview')}
+                title='Preview'
+              >
+                <Eye />
+              </Button>
+            </ButtonGroup>
+          )}
+
+          {/* Actions menu */}
+          {!isCreating && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size='icon-sm' variant='ghost' disabled={isLoading}>
+                  <MoreVertical className='h-4 w-4' />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                  className='text-red-600'
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete note'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className='flex-1 overflow-y-auto p-4'>
+      <div className='flex min-h-0 flex-1 overflow-hidden'>
         {isCreating ? (
-          <div className='flex items-center gap-2 text-muted-foreground'>
+          <div className='flex items-center gap-2 p-4 text-muted-foreground'>
             <Loader2 className='h-4 w-4 animate-spin' />
             Creating note...
           </div>
-        ) : isEditingContent ? (
-          <div className='h-full'>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onKeyDown={handleContentKeyDown}
-              className='min-h-[200px] w-full resize-none rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
-              placeholder='Write your note content here... (Markdown supported)'
-              autoFocus
-            />
-            <div className='mt-2 flex gap-2'>
-              <Button
-                size='sm'
-                onClick={handleSaveContent}
-                disabled={updateLoading}
-              >
-                {updateLoading ? 'Saving...' : 'Save (Cmd+Enter)'}
-              </Button>
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => {
-                  setContent(note.content)
-                  setIsEditingContent(false)
-                }}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
+        ) : viewMode === 'editor' ? (
+          renderEditor(handleEditorDoubleClick)
+        ) : viewMode === 'split' ? (
+          <>
+            <div className='flex w-1/2 flex-col overflow-hidden'>
+              {renderEditor(handleEditorDoubleClick)}
             </div>
-          </div>
+            <div className='w-px bg-border' />
+            <div className='flex w-1/2 flex-col overflow-hidden'>
+              {renderPreview(handlePreviewDoubleClick)}
+            </div>
+          </>
         ) : (
-          <div
-            className='cursor-text'
-            onClick={() => setIsEditingContent(true)}
-          >
-            {note.content ? (
-              <MarkdownView>{note.content}</MarkdownView>
-            ) : (
-              <p className='text-muted-foreground'>Click to add content...</p>
-            )}
-          </div>
+          renderPreview(handlePreviewDoubleClick)
         )}
       </div>
     </div>
