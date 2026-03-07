@@ -142,6 +142,19 @@ function TasksListContent() {
     }
   }
 
+  if (!isLoading && flattenedTasks.length === 0 && !newTaskItemState) {
+    return (
+      <div
+        className='flex h-full flex-col items-center justify-center px-2 py-4 text-center cursor-text'
+        onClick={() => openNewTaskItem(null, null)}
+      >
+        <p className='text-sm text-zinc-500'>
+          Click here to break this issue into tasks
+        </p>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className='p-4'>
