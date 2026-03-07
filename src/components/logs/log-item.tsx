@@ -118,7 +118,7 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
-            className='w-full resize-none rounded-lg border bg-card p-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
+            className='w-full resize-none rounded-lg border bg-card p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
             autoFocus
           />
         </div>

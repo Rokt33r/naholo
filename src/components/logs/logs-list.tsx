@@ -134,7 +134,7 @@ export function LogsList({
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder='Type a message... (Shift+Enter for new line)'
-            className='min-h-[80px] flex-1 resize-none rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400'
+            className='min-h-[80px] flex-1 resize-none rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
           />
         </div>
 
