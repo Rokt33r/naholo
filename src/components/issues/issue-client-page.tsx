@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useMediaQuery } from '@/hooks/use-media-query'
+import { useContainerWidth } from '@/hooks/use-container-width'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { IssueDetail } from './issue-detail'
@@ -50,7 +50,9 @@ export function IssueClientPage({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const isWideScreen = useMediaQuery('(min-width: 1024px)')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const containerWidth = useContainerWidth(containerRef)
+  const isWideScreen = containerWidth >= 768
   const [showLogs, setShowLogs] = useState(false)
   const [logsPanelWidth, setLogsPanelWidth] = useLocalStorage(
     'logs-panel-width',
@@ -73,7 +75,7 @@ export function IssueClientPage({
   }
 
   return (
-    <div className='flex h-full'>
+    <div ref={containerRef} className='flex h-full'>
       <div className='flex-1 overflow-hidden'>
         <IssueDetail
           projectId={issue.projectId}
