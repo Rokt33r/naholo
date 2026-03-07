@@ -8,6 +8,7 @@ import {
   CircleDot,
   CircleCheck,
   MessageSquare,
+  PanelLeftOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,6 +20,7 @@ import {
 import { LogsList } from '@/components/logs/logs-list'
 import { TasksList } from '@/components/tasks/tasks-list'
 import { NoteView } from '@/components/notes/note-view'
+import { useIssuesList } from './issues-list-context'
 import { IssueTabs } from './issue-tabs'
 import {
   useIssue,
@@ -79,6 +81,7 @@ export function IssueDetail({
 }: IssueDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { collapsed, toggle: toggleIssuesList } = useIssuesList()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -138,6 +141,11 @@ export function IssueDetail({
     <div className='flex h-full flex-col'>
       {/* Header */}
       <div className='flex items-center justify-between border-b p-2'>
+        {collapsed && (
+          <Button size='icon' variant='ghost' onClick={toggleIssuesList}>
+            <PanelLeftOpen className='h-4 w-4' />
+          </Button>
+        )}
         <div className='flex-1 px-1'>
           {isEditingTitle ? (
             <input

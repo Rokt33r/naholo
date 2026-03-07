@@ -3,6 +3,10 @@ import { requireAuthOrRedirect } from '@/server/auth/utils'
 import { getProject, listProjects } from '@/server/services/project'
 import { ProjectSidebar } from '@/components/projects/project-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
+import {
+  IssuesListProvider,
+  IssuesListPanel,
+} from '@/components/issues/issues-list-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { QueryProvider } from '@/components/query-provider'
 
@@ -33,17 +37,17 @@ export default async function ProjectLayout({ children, params }: Props) {
       }
     >
       <QueryProvider>
-        <div className='flex h-screen w-full'>
-          <ProjectSidebar projects={projects} currentProjectId={projectId} />
-          <div className='flex w-80 flex-col border-r'>
-            <div className='flex-1 overflow-hidden'>
+        <IssuesListProvider>
+          <div className='flex h-screen w-full'>
+            <ProjectSidebar projects={projects} currentProjectId={projectId} />
+            <IssuesListPanel>
               <IssuesList projectId={projectId} projectName={project.name} />
-            </div>
-          </div>
+            </IssuesListPanel>
 
-          {/* Right panel: Issue detail */}
-          <div className='flex-1 overflow-hidden'>{children}</div>
-        </div>
+            {/* Right panel: Issue detail */}
+            <div className='flex-1 overflow-hidden'>{children}</div>
+          </div>
+        </IssuesListProvider>
       </QueryProvider>
     </SidebarProvider>
   )

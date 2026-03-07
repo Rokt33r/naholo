@@ -7,10 +7,11 @@ import {
   useRouter,
   useSearchParams,
 } from 'next/navigation'
-import { Search, SquarePen } from 'lucide-react'
+import { PanelLeftClose, Search, SquarePen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
+import { useIssuesList } from './issues-list-context'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
 import { useIssues } from '@/hooks/use-issues'
@@ -26,6 +27,7 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
   const searchParams = useSearchParams()
   const params = useParams()
   const currentIssueId = params.issueId as string | undefined
+  const { toggle } = useIssuesList()
   const [searchQuery, setSearchQuery] = useState('')
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
@@ -67,6 +69,14 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
               Closed
             </Button>
           </ButtonGroup>
+          <Button
+            size='icon'
+            variant='ghost'
+            className='size-8'
+            onClick={toggle}
+          >
+            <PanelLeftClose className='h-4 w-4' />
+          </Button>
           <CreateIssueDialog projectId={projectId} onIssueCreated={refetch}>
             <Button size='icon' variant='outline' className='size-8'>
               <SquarePen className='h-4 w-4' />
