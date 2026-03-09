@@ -3,7 +3,7 @@
 import { Plus, ListTodo, StickyNote, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateNote } from '@/hooks/use-notes'
-import type { DebouncedSaveState } from '@/hooks/use-debounced-save'
+import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
 
 type Note = {
   id: string
@@ -66,20 +66,23 @@ export function IssueTabs({
         const isActive =
           activeTab.type === 'note' && activeTab.noteId === note.id
         const savingState = notesSaveState?.[note.id]
+        const hasUnsavedChanges = savingState && savingState !== 'idle'
         return (
           <Button
             key={note.id}
             variant={isActive ? 'secondary' : 'ghost'}
             size='sm'
             onClick={() => onTabChange({ type: 'note', noteId: note.id })}
-            className='max-w-[140px] truncate'
+            className={`max-w-[140px] truncate ${
+              !isActive && hasUnsavedChanges ? 'ring-2 ring-blue-500' : ''
+            }`}
           >
             <StickyNote className='mr-1 h-4 w-4 shrink-0' />
             {note.title}
-            {savingState === 'debouncing' && (
+            {isActive && savingState === 'debouncing' && (
               <Loader2 className='ml-1 h-3 w-3 shrink-0 animate-spin text-muted-foreground' />
             )}
-            {savingState === 'saving' && (
+            {isActive && savingState === 'saving' && (
               <Loader2 className='ml-1 h-3 w-3 shrink-0 animate-spin text-blue-500' />
             )}
           </Button>

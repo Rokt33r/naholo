@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState } from 'react'
 import { MoreVertical, Loader2, PenLine, Columns2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
@@ -12,10 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
-import {
-  useDebouncedSave,
-  type DebouncedSaveState,
-} from '@/hooks/use-debounced-save'
+import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
 
 type Note = {
   id: string
@@ -32,20 +29,25 @@ type NoteViewProps = {
   note: Note
   projectId: string
   issueId: string
+  initialContent: string
+  saveState: DebouncedSaveState
+  onContentChange: (value: string) => void
   onDeleted?: () => void
-  onSaveStateChange?: (noteId: string, state: DebouncedSaveState) => void
 }
 
 export function NoteView({
   note,
   projectId,
   issueId,
+  initialContent,
+  saveState,
+  onContentChange,
   onDeleted,
-  onSaveStateChange,
 }: NoteViewProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState(note.title)
   const [viewMode, setViewMode] = useState<ViewMode>('editor')
+  const [content, setContentState] = useState(initialContent)
 
   const { mutateAsync: updateNote, isPending: updateLoading } = useUpdateNote(
     projectId,
@@ -57,48 +59,13 @@ export function NoteView({
   )
 
   const isCreating = note.id.startsWith('temp-')
-
-  const handleContentSave = useCallback(
-    async (contentToSave: string) => {
-      if (isCreating) return
-      await updateNote({
-        noteId: note.id,
-        title: note.title,
-        content: contentToSave,
-      }).catch((error: unknown) => {
-        console.error('Failed to auto-save note content:', error)
-      })
-    },
-    [isCreating, note.id, note.title, updateNote],
-  )
-
-  const { content, setContent, saveState } = useDebouncedSave({
-    noteId: note.id,
-    initialContent: note.content,
-    onSave: handleContentSave,
-  })
-
-  // Report save state changes to parent
-  useEffect(() => {
-    onSaveStateChange?.(note.id, saveState)
-  }, [note.id, saveState, onSaveStateChange])
-
-  // Clear old tab's spinner when switching notes
-  const prevNoteIdRef = useRef(note.id)
-  useEffect(() => {
-    if (prevNoteIdRef.current !== note.id) {
-      onSaveStateChange?.(prevNoteIdRef.current, 'idle')
-      prevNoteIdRef.current = note.id
-    }
-  }, [note.id, onSaveStateChange])
-
-  // Reset title when switching notes
-  useEffect(() => {
-    setTitle(note.title)
-  }, [note.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
   const isSavingContent = saveState !== 'idle'
   const isLoading = updateLoading || deleteLoading || isSavingContent
+
+  const setContent = (value: string) => {
+    setContentState(value)
+    onContentChange(value)
+  }
 
   const handleSaveTitle = async () => {
     if (title.trim() && title !== note.title) {

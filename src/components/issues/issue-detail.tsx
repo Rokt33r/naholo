@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   MoreVertical,
@@ -27,7 +27,8 @@ import {
   useUpdateIssueTitle,
   useDeleteIssue,
 } from '@/hooks/use-issues'
-import type { DebouncedSaveState } from '@/hooks/use-debounced-save'
+import { useUpdateNote } from '@/hooks/use-notes'
+import { useIssueNoteStore } from '@/hooks/use-issue-note-store'
 
 type IssueDetail = {
   id: string
@@ -87,23 +88,46 @@ export function IssueDetail({
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [notesSaveState, setNotesSaveState] = useState<
-    Record<string, DebouncedSaveState>
-  >({})
-
-  const handleNoteSaveStateChange = useCallback(
-    (noteId: string, state: DebouncedSaveState) => {
-      setNotesSaveState((prev) => {
-        if (prev[noteId] === state) return prev
-        return { ...prev, [noteId]: state }
-      })
-    },
-    [],
-  )
 
   const { issue, isLoading } = useIssue(projectId, issueId)
   const { mutateAsync: updateTitle } = useUpdateIssueTitle(projectId, issueId)
   const { mutateAsync: deleteIssue } = useDeleteIssue(projectId, issueId)
+  const { mutateAsync: updateNote } = useUpdateNote(projectId, issueId)
+
+  const handleNoteSave = useCallback(
+    async (noteId: string, content: string) => {
+      const note = notes.find((n) => n.id === noteId)
+      if (!note || note.id.startsWith('temp-')) {
+        return
+      }
+      await updateNote({ noteId, title: note.title, content }).catch(
+        (error: unknown) => {
+          console.error('Failed to auto-save note content:', error)
+        },
+      )
+    },
+    [notes, updateNote],
+  )
+
+  const store = useIssueNoteStore({
+    issueId,
+    onSave: handleNoteSave,
+  })
+
+  // Initialize store entries when notes load
+  useEffect(() => {
+    notes.forEach((n) => store.initNote(n.id, n.content))
+  }, [notes, store.initNote])
+
+  const handleTabChange = useCallback(
+    (newTab: ActiveTab) => {
+      if (activeTab.type === 'note') {
+        store.flush(activeTab.noteId)
+      }
+      onTabChange(newTab)
+    },
+    [activeTab, store.flush, onTabChange],
+  )
 
   // Sync title with fetched issue
   if (issue && title !== issue.title && !isEditingTitle) {
@@ -243,8 +267,8 @@ export function IssueDetail({
             issueId={issue.id}
             notes={notes}
             activeTab={activeTab}
-            onTabChange={onTabChange}
-            notesSaveState={notesSaveState}
+            onTabChange={handleTabChange}
+            notesSaveState={store.saveStates}
           />
 
           {/* Content */}
@@ -264,11 +288,16 @@ export function IssueDetail({
                 }
                 return (
                   <NoteView
+                    key={note.id}
                     note={note}
                     projectId={issue.projectId}
                     issueId={issue.id}
-                    onDeleted={() => onTabChange({ type: 'tasks' })}
-                    onSaveStateChange={handleNoteSaveStateChange}
+                    initialContent={store.getContent(note.id) ?? note.content}
+                    saveState={store.saveStates[note.id] ?? 'idle'}
+                    onContentChange={(value) =>
+                      store.setContent(note.id, value)
+                    }
+                    onDeleted={() => handleTabChange({ type: 'tasks' })}
                   />
                 )
               })()}
