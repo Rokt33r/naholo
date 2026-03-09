@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   MoreVertical,
@@ -27,6 +27,7 @@ import {
   useUpdateIssueTitle,
   useDeleteIssue,
 } from '@/hooks/use-issues'
+import type { DebouncedSaveState } from '@/hooks/use-debounced-save'
 
 type IssueDetail = {
   id: string
@@ -86,6 +87,19 @@ export function IssueDetail({
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [notesSaveState, setNotesSaveState] = useState<
+    Record<string, DebouncedSaveState>
+  >({})
+
+  const handleNoteSaveStateChange = useCallback(
+    (noteId: string, state: DebouncedSaveState) => {
+      setNotesSaveState((prev) => {
+        if (prev[noteId] === state) return prev
+        return { ...prev, [noteId]: state }
+      })
+    },
+    [],
+  )
 
   const { issue, isLoading } = useIssue(projectId, issueId)
   const { mutateAsync: updateTitle } = useUpdateIssueTitle(projectId, issueId)
@@ -230,6 +244,7 @@ export function IssueDetail({
             notes={notes}
             activeTab={activeTab}
             onTabChange={onTabChange}
+            notesSaveState={notesSaveState}
           />
 
           {/* Content */}
@@ -253,6 +268,7 @@ export function IssueDetail({
                     projectId={issue.projectId}
                     issueId={issue.id}
                     onDeleted={() => onTabChange({ type: 'tasks' })}
+                    onSaveStateChange={handleNoteSaveStateChange}
                   />
                 )
               })()}
