@@ -22,6 +22,13 @@
       "when": 1771251941160,
       "tag": "0002_wise_ink",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773179689659,
+      "tag": "0003_known_sinister_six",
+      "breakpoints": true
     }
   ]
 }
