@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { auth } from './auth'
+import { db } from '../db'
 import { cache } from 'react'
 
 export async function getRequestMetadata(): Promise<{
@@ -65,6 +66,27 @@ export async function requireAuthOrRedirect(): Promise<{
   const user = await getAuthUser()
   if (!user) {
     redirect('/sign-in')
+  }
+  return user
+}
+
+/**
+ * Requires admin role, returns 404 if not authenticated or not admin.
+ * Use in admin pages/API routes to make them invisible to non-admins.
+ */
+export async function requireAdminOrNotFound(): Promise<{
+  id: string
+  name: string
+}> {
+  const user = await getAuthUser()
+  if (!user) {
+    notFound()
+  }
+  const admin = await db.query.adminUsers.findFirst({
+    where: (t, { eq }) => eq(t.userId, user.id),
+  })
+  if (!admin) {
+    notFound()
   }
   return user
 }
