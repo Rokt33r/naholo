@@ -45,6 +45,7 @@ src/
 - `npm run build` — production build (do NOT run for verification)
 - `npx tsc` — type check (use this for verification)
 - Pre-commit: `npx pretty-quick --staged`
+- **Do NOT run `db:generate` or `db:migrate`** — leave DB migrations to the user
 
 ## Domain Model
 
