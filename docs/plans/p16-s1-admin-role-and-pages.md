@@ -2,17 +2,17 @@
 
 ## Goal
 
-Introduce an admin role system and create admin pages under `/app/admin` that are invisible (404) to non-admin users.
+Introduce an admin role system and create admin pages under `/admin` that are invisible (404) to non-admin users.
 
 ## Progress
 
-- [ ] 1.1 Create `admin_users` table
-- [ ] 1.2 Admin promotion script
-- [ ] 1.3 Auth utilities for admin
-- [ ] 1.4 Admin layout & route guard
-- [ ] 1.5 Admin users page
-- [ ] 1.6 Admin service
-- [ ] 1.7 Admin API routes
+- [x] 1.1 Create `admin_users` table
+- [x] 1.2 Admin promotion script
+- [x] 1.3 Auth utilities for admin
+- [x] 1.4 Admin layout & route guard
+- [x] 1.5 Admin users page
+- [x] 1.6 Admin service
+- [x] 1.7 Admin API routes
 
 ---
 
@@ -81,7 +81,7 @@ export async function requireAdminOrNotFound(): Promise<{
 
 ### 1.4 Admin layout & route guard
 
-**File:** `src/app/app/admin/layout.tsx`
+**File:** `src/admin/layout.tsx`
 
 ```typescript
 export default async function AdminLayout({ children }) {
@@ -90,15 +90,15 @@ export default async function AdminLayout({ children }) {
 }
 ```
 
-All pages under `/app/admin/` automatically 404 for non-admins.
+All pages under `/admin/` automatically 404 for non-admins.
 
 ### 1.5 Admin users page
 
-**Route:** `/app/admin` (redirects to `/app/admin/users`)
-**Route:** `/app/admin/users`
+**Route:** `/admin` (redirects to `/admin/users`)
+**Route:** `/admin/users`
 
-**File:** `src/app/app/admin/page.tsx` — redirect to `/app/admin/users`
-**File:** `src/app/app/admin/users/page.tsx`
+**File:** `src/admin/page.tsx` — redirect to `/admin/users`
+**File:** `src/admin/users/page.tsx`
 
 Displays a table of all users:
 
@@ -160,9 +160,9 @@ All admin API routes check `requireAdminOrNotFound()` before processing.
 | `src/server/db/schema/admin-users.ts`                    | **Create** — `admin_users` table                                    |
 | `scripts/promote-admin.ts`                               | **Create** — CLI admin promotion                                    |
 | `src/server/auth/utils.ts`                               | **Edit** — add `isAdmin` to auth user, add `requireAdminOrNotFound` |
-| `src/app/app/admin/layout.tsx`                           | **Create** — admin layout guard                                     |
-| `src/app/app/admin/page.tsx`                             | **Create** — redirect to users                                      |
-| `src/app/app/admin/users/page.tsx`                       | **Create** — admin users table                                      |
+| `src/admin/layout.tsx`                                   | **Create** — admin layout guard                                     |
+| `src/admin/page.tsx`                                     | **Create** — redirect to users                                      |
+| `src/admin/users/page.tsx`                               | **Create** — admin users table                                      |
 | `src/server/services/admin.ts`                           | **Create** — admin service                                          |
 | `src/app/api/admin/users/route.ts`                       | **Create** — admin users API                                        |
 | `src/app/api/admin/users/[userId]/naholo-email/route.ts` | **Create** — assign/remove naholo email API                         |
