@@ -21,6 +21,7 @@ export function NewTaskItem({
     getSubtasks,
     getRootTasks,
     closeNewTaskItem,
+    updateNewTaskItemAfterTaskId,
     setFocusedTaskId,
     newTaskItemState,
   } = useTaskContext()
@@ -44,7 +45,9 @@ export function NewTaskItem({
     return 0
   }
 
-  const handleSaveAndFocus = async () => {
+  const lastCreatedTaskIdRef = useRef<string | null>(null)
+
+  const handleContinuousCreate = async () => {
     const trimmed = name.trim()
     if (!trimmed) return
     const newTaskId = await createTask(
@@ -53,15 +56,10 @@ export function NewTaskItem({
       parentTaskId,
       getPosition(),
     )
-    closeNewTaskItem()
     if (newTaskId) {
-      setFocusedTaskId(newTaskId)
-      requestAnimationFrame(() => {
-        const el = document.querySelector(
-          `[data-task-id="${newTaskId}"]`,
-        ) as HTMLElement | null
-        el?.focus()
-      })
+      setName('')
+      lastCreatedTaskIdRef.current = newTaskId
+      updateNewTaskItemAfterTaskId(newTaskId)
     }
   }
 
@@ -74,11 +72,12 @@ export function NewTaskItem({
 
   const handleCancelAndRestore = () => {
     closeNewTaskItem()
-    if (previousFocusedTaskId) {
-      setFocusedTaskId(previousFocusedTaskId)
+    const restoreId = lastCreatedTaskIdRef.current ?? previousFocusedTaskId
+    if (restoreId) {
+      setFocusedTaskId(restoreId)
       requestAnimationFrame(() => {
         const el = document.querySelector(
-          `[data-task-id="${previousFocusedTaskId}"]`,
+          `[data-task-id="${restoreId}"]`,
         ) as HTMLElement | null
         el?.focus()
       })
@@ -89,7 +88,7 @@ export function NewTaskItem({
     if (e.key === 'Enter') {
       e.preventDefault()
       if (name.trim()) {
-        handleSaveAndFocus()
+        handleContinuousCreate()
       } else {
         handleCancelAndRestore()
       }

@@ -49,6 +49,7 @@ type TaskContextValue = {
     afterTaskId: string | null,
   ) => void
   closeNewTaskItem: () => void
+  updateNewTaskItemAfterTaskId: (afterTaskId: string) => void
 
   // Tree helpers
   getFlattenedTasks: () => FlatTask[]
@@ -294,6 +295,10 @@ export function TaskProvider({
     setNewTaskItemState(null)
   }, [])
 
+  const updateNewTaskItemAfterTaskId = useCallback((afterTaskId: string) => {
+    setNewTaskItemState((prev) => (prev ? { ...prev, afterTaskId } : prev))
+  }, [])
+
   // Operations
   const createTask = useCallback(
     async (
@@ -457,6 +462,7 @@ export function TaskProvider({
       newTaskItemState,
       openNewTaskItem,
       closeNewTaskItem,
+      updateNewTaskItemAfterTaskId,
       getFlattenedTasks,
       getRootTasks,
       getSubtasks,
@@ -486,6 +492,7 @@ export function TaskProvider({
       newTaskItemState,
       openNewTaskItem,
       closeNewTaskItem,
+      updateNewTaskItemAfterTaskId,
       getFlattenedTasks,
       getRootTasks,
       getSubtasks,
