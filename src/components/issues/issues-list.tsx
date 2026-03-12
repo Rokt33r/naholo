@@ -11,17 +11,30 @@ import { PanelLeftClose, Search, SquarePen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
+import { ProjectSwitcher } from '@/components/projects/project-switcher'
 import { useIssuesList } from './issues-list-context'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
 import { useIssues } from '@/hooks/use-issues'
 
+type Project = {
+  id: string
+  name: string
+  description: string | null
+  createdAt: Date
+}
+
 type IssuesListProps = {
   projectId: string
   projectName: string
+  projects: Project[]
 }
 
-export function IssuesList({ projectId, projectName }: IssuesListProps) {
+export function IssuesList({
+  projectId,
+  projectName,
+  projects,
+}: IssuesListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -51,7 +64,11 @@ export function IssuesList({ projectId, projectName }: IssuesListProps) {
     <div className='flex h-full flex-col'>
       {/* Header - Row 1: Project name and action buttons */}
       <div className='flex items-center justify-between px-2 py-3'>
-        <h2 className='font-semibold px-2'>{projectName}</h2>
+        <ProjectSwitcher
+          projects={projects}
+          currentProjectId={projectId}
+          currentProjectName={projectName}
+        />
         <div className='flex items-center gap-2'>
           <ButtonGroup>
             <Button

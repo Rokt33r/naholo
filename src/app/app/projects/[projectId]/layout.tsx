@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireAuthOrRedirect } from '@/server/auth/utils'
 import { getProject, listProjects } from '@/server/services/project'
-import { ProjectSidebar } from '@/components/projects/project-sidebar'
+import { AppModeSidebar } from '@/components/app/app-mode-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 import {
   IssuesListProvider,
@@ -39,9 +39,13 @@ export default async function ProjectLayout({ children, params }: Props) {
       <QueryProvider>
         <IssuesListProvider>
           <div className='flex h-screen w-full'>
-            <ProjectSidebar projects={projects} currentProjectId={projectId} />
+            <AppModeSidebar currentProjectId={projectId} currentMode='issues' />
             <IssuesListPanel>
-              <IssuesList projectId={projectId} projectName={project.name} />
+              <IssuesList
+                projectId={projectId}
+                projectName={project.name}
+                projects={projects}
+              />
             </IssuesListPanel>
 
             {/* Right panel: Issue detail */}
