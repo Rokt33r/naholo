@@ -62,57 +62,49 @@ export function IssuesList({
 
   return (
     <div className='flex h-full flex-col'>
-      {/* Header - Row 1: Project name and action buttons */}
-      <div className='flex items-center justify-between px-2 py-3'>
+      <div className='flex items-center justify-between px-2 pt-1'>
         <ProjectSwitcher
           projects={projects}
           currentProjectId={projectId}
           currentProjectName={projectName}
         />
-        <div className='flex items-center gap-2'>
-          <ButtonGroup>
-            <Button
-              size='sm'
-              variant={filter === 'open' ? 'secondary' : 'ghost'}
-              onClick={() => handleFilterChange('open')}
-            >
-              Open
-            </Button>
-            <Button
-              size='sm'
-              variant={filter === 'closed' ? 'secondary' : 'ghost'}
-              onClick={() => handleFilterChange('closed')}
-            >
-              Closed
-            </Button>
-          </ButtonGroup>
-          <Button
-            size='icon'
-            variant='ghost'
-            className='size-8'
-            onClick={toggle}
-          >
-            <PanelLeftClose className='h-4 w-4' />
-          </Button>
-          <CreateIssueDialog projectId={projectId} onIssueCreated={refetch}>
-            <Button size='icon' variant='outline' className='size-8'>
-              <SquarePen className='h-4 w-4' />
-            </Button>
-          </CreateIssueDialog>
-        </div>
+        <Button size='icon' variant='ghost' onClick={toggle}>
+          <PanelLeftClose className='h-4 w-4' />
+        </Button>
       </div>
 
-      {/* Header - Row 2: Search */}
-      <div className='px-2 mb-2'>
+      <div className='px-2 py-1'>
         <div className='relative'>
           <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
           <Input
             placeholder='Search issues...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-9'
+            className='pl-9 h-8'
           />
         </div>
+      </div>
+
+      <div className='flex items-center justify-between px-2 pt-1 pb-2'>
+        <ButtonGroup>
+          <Button
+            variant={filter === 'open' ? 'secondary' : 'ghost'}
+            onClick={() => handleFilterChange('open')}
+          >
+            Open
+          </Button>
+          <Button
+            variant={filter === 'closed' ? 'secondary' : 'ghost'}
+            onClick={() => handleFilterChange('closed')}
+          >
+            Closed
+          </Button>
+        </ButtonGroup>
+        <CreateIssueDialog projectId={projectId} onIssueCreated={refetch}>
+          <Button size='icon' variant='ghost'>
+            <SquarePen className='h-4 w-4' />
+          </Button>
+        </CreateIssueDialog>
       </div>
 
       {/* Issues list */}
