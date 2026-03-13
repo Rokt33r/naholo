@@ -1,11 +1,10 @@
 'use client'
 
-import { CornerDownLeft } from 'lucide-react'
+import { CornerDownLeft, CircleCheck, CircleDot } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { Button } from '@/components/ui/button'
 import { LogItem } from './log-item'
-import { ButtonGroup } from '../ui/button-group'
 import { useCloseIssue, useReopenIssue } from '@/hooks/use-issues'
 import { useCreateLog } from '@/hooks/use-logs'
 
@@ -127,46 +126,43 @@ export function LogsList({
 
       {/* Input */}
       <div className='border-t p-2'>
-        <div className='flex'>
+        <div className='relative rounded-md border focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]'>
           <AutoResizeTextarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder='Type a message... (Shift+Enter for new line)'
-            className='min-h-[80px] flex-1 resize-none rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+            className='min-h-[80px] w-full resize-none bg-transparent px-3 py-2 pb-10 text-sm outline-none'
           />
-        </div>
-
-        <div className='flex place-content-between mt-2'>
-          <div className='flex'></div>
-          <div className='flex gap-1'>
+          <div className='absolute right-2 bottom-2 flex gap-1'>
             {isClosed ? (
               <Button
-                variant='secondary'
+                variant='ghost'
+                size='icon-sm'
                 onClick={handleReopen}
                 disabled={isReopening}
+                title='Reopen issue'
               >
-                {isReopening ? 'Reopening...' : 'Reopen issue'}
+                <CircleDot className='h-4 w-4 text-green-600' />
               </Button>
             ) : (
               <Button
-                variant='secondary'
+                variant='ghost'
+                size='icon-sm'
                 onClick={handleClose}
                 disabled={isClosing}
+                title={message.trim() ? 'Close with log' : 'Close issue'}
               >
-                {isClosing
-                  ? 'Closing...'
-                  : message.trim()
-                    ? 'Close with log'
-                    : 'Close issue'}
+                <CircleCheck className='h-4 w-4 text-purple-600' />
               </Button>
             )}
             <Button
+              size='icon-sm'
               onClick={handleSendMessage}
               disabled={!message.trim() || createLoading}
+              title='Send (Enter)'
             >
-              Send
               <CornerDownLeft className='h-4 w-4' />
             </Button>
           </div>
