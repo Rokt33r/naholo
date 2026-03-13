@@ -11,7 +11,10 @@ import {
 function ToolSidebar({ className, ...props }: React.ComponentProps<'nav'>) {
   return (
     <nav
-      className={cn('flex h-full flex-col items-center py-2 px-2', className)}
+      className={cn(
+        'flex h-full flex-col items-center py-2 px-2 bg-tool-sidebar text-tool-sidebar-foreground',
+        className,
+      )}
       {...props}
     />
   )
@@ -28,7 +31,7 @@ function ToolSidebarButton({
   tooltip: string
 }) {
   return (
-    <Tooltip>
+    <Tooltip delayDuration={600}>
       <TooltipTrigger asChild>
         <button
           className={cn(
