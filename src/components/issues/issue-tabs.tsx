@@ -53,10 +53,9 @@ export function IssueTabs({
   const isTasksActive = activeTab.type === 'tasks'
 
   return (
-    <div className='flex items-center gap-1 border-b px-2 py-1'>
+    <div className='flex items-center gap-1 border-b px-2 py-2'>
       <Button
         variant={isTasksActive ? 'secondary' : 'ghost'}
-        size='sm'
         onClick={() => onTabChange({ type: 'tasks' })}
       >
         <ListTodo className='mr-1 h-4 w-4' />
@@ -71,7 +70,6 @@ export function IssueTabs({
           <Button
             key={note.id}
             variant={isActive ? 'secondary' : 'ghost'}
-            size='sm'
             onClick={() => onTabChange({ type: 'note', noteId: note.id })}
             className={`max-w-[140px] truncate ${
               !isActive && hasUnsavedChanges ? 'ring-2 ring-blue-500' : ''

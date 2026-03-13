@@ -178,7 +178,7 @@ export function IssueDetail({
   return (
     <div className='flex h-full flex-col'>
       {/* Header */}
-      <div className='flex items-center justify-between pt-1 px-2'>
+      <div className='flex items-center justify-between pt-2 px-2'>
         {collapsed && (
           <Button size='icon' variant='ghost' onClick={toggleIssuesList}>
             <PanelLeftOpen className='h-4 w-4' />

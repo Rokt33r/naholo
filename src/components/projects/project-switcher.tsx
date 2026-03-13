@@ -38,8 +38,8 @@ export function ProjectSwitcher({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className='flex items-center gap-1 px-2 font-semibold hover:bg-accent rounded-md py-1 cursor-pointer'>
-          {currentProjectName}
+        <button className='flex-1 flex items-center gap-1 px-2 font-semibold hover:bg-accent rounded-md py-1 cursor-pointer'>
+          <div className='flex-1 text-left'>{currentProjectName}</div>
           <ChevronDown className='h-4 w-4 text-muted-foreground' />
         </button>
       </DropdownMenuTrigger>

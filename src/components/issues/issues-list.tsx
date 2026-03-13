@@ -62,7 +62,7 @@ export function IssuesList({
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between px-2 pt-1'>
+      <div className='flex items-center justify-between px-2 pt-2 gap-2'>
         <ProjectSwitcher
           projects={projects}
           currentProjectId={projectId}
@@ -73,19 +73,19 @@ export function IssuesList({
         </Button>
       </div>
 
-      <div className='px-2 py-1'>
-        <div className='relative'>
+      <div className='flex items-center gap-2 px-2 py-2'>
+        <div className='relative flex-1'>
           <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
           <Input
             placeholder='Search issues...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-9 h-8'
+            className='pl-9'
           />
         </div>
       </div>
 
-      <div className='flex items-center justify-between px-2 pt-1 pb-2'>
+      <div className='flex items-center justify-between px-2 pb-2'>
         <ButtonGroup>
           <Button
             variant={filter === 'open' ? 'secondary' : 'ghost'}

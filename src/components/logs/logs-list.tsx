@@ -139,7 +139,7 @@ export function LogsList({
             {isClosed ? (
               <Button
                 variant='ghost'
-                size='icon-sm'
+                size='icon'
                 onClick={handleReopen}
                 disabled={isReopening}
                 title='Reopen issue'
@@ -149,7 +149,7 @@ export function LogsList({
             ) : (
               <Button
                 variant='ghost'
-                size='icon-sm'
+                size='icon'
                 onClick={handleClose}
                 disabled={isClosing}
                 title={message.trim() ? 'Close with log' : 'Close issue'}
@@ -158,7 +158,7 @@ export function LogsList({
               </Button>
             )}
             <Button
-              size='icon-sm'
+              size='icon'
               onClick={handleSendMessage}
               disabled={!message.trim() || createLoading}
               title='Send (Enter)'
