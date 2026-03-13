@@ -92,13 +92,13 @@ Create a shared hook that all responsive components consume.
 
 The layout (`src/app/app/projects/[projectId]/layout.tsx`) is a server component, so it can't call `useIsMobile()` directly. It needs to become a hybrid: the server component fetches data and the client component handles responsive rendering.
 
-- [ ] Create `src/components/app/project-layout-client.tsx`
+- [x] Create `src/components/app/project-layout-client.tsx`
   - Client component that wraps the three-panel layout
   - Calls `useIsMobile()` to decide what to render
   - Props: `projectId`, `projectName`, `projects` (same data the server layout currently passes to children), and `children`
   - **Desktop**: Renders `AppModeSidebar` + `IssuesListPanel` (with `IssuesList`) + `children` (current behavior)
   - **Mobile**: Renders only `children` full-screen (no sidebar, no list panel — the active route fills the screen)
-- [ ] Modify `src/app/app/projects/[projectId]/layout.tsx`
+- [x] Modify `src/app/app/projects/[projectId]/layout.tsx`
   - Keep the server-side data fetching (`listProjects`, `getProject`, auth check)
   - Replace the inline JSX with `<ProjectLayoutClient>` and pass the fetched data as props
   - Move `QueryProvider` and `IssuesListProvider` into `ProjectLayoutClient`
@@ -158,12 +158,12 @@ No additional changes needed — just verify this behavior works correctly.
 
 - [x] `src/hooks/use-is-mobile.ts` — `useIsMobile()` hook using media query
 - [x] `src/components/app/app-mode-menu.tsx` — dropdown menu for mobile (replaces vertical sidebar)
-- [ ] `src/components/app/project-layout-client.tsx` — client wrapper for the project layout
+- [x] `src/components/app/project-layout-client.tsx` — client wrapper for the project layout
 - [ ] `src/components/issues/project-page-client.tsx` — client wrapper for the project page with conditional redirect
 
 **Modified files:**
 
-- [ ] `src/app/app/projects/[projectId]/layout.tsx` — delegate to `ProjectLayoutClient`
+- [x] `src/app/app/projects/[projectId]/layout.tsx` — delegate to `ProjectLayoutClient`
 - [ ] `src/app/app/projects/[projectId]/page.tsx` — remove server redirect, use `ProjectPageClient`
 - [ ] `src/components/issues/issues-list.tsx` — hide collapse button on mobile, show `AppModeMenu`
 - [ ] `src/components/issues/issue-detail.tsx` — back button on mobile (replaces collapse toggle)
