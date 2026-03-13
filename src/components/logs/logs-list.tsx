@@ -139,28 +139,7 @@ export function LogsList({
         </div>
 
         <div className='flex place-content-between mt-2'>
-          <div className='flex'>
-            <ButtonGroup>
-              <Button
-                variant={mode === 'log' ? 'secondary' : 'ghost'}
-                onClick={() => setMode('log')}
-              >
-                Log Mode
-              </Button>
-              <Button
-                variant={mode === 'task' ? 'secondary' : 'ghost'}
-                onClick={() => setMode('task')}
-              >
-                Task Mode
-              </Button>
-              {/* <Button
-                variant={mode === 'ai' ? 'secondary' : 'ghost'}
-                onClick={() => setMode('ai')}
-              >
-                AI Mode
-              </Button> */}
-            </ButtonGroup>
-          </div>
+          <div className='flex'></div>
           <div className='flex gap-1'>
             {isClosed ? (
               <Button

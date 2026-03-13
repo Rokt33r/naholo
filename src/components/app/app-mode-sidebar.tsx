@@ -3,13 +3,10 @@
 import { ListTodo, Settings, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from '@/components/ui/sidebar'
+  ToolSidebar,
+  ToolSidebarButton,
+  ToolSidebarSpacing,
+} from '@/components/ui/tool-sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,41 +33,30 @@ export function AppModeSidebar({
   }
 
   return (
-    <Sidebar collapsible='none' className='items-center'>
-      <SidebarContent className='items-center py-2'>
-        <SidebarMenu className='items-center'>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size='xl'
-              isActive={currentMode === 'issues'}
-              onClick={() => router.push(`/app/projects/${currentProjectId}`)}
-              tooltip='Issues'
-            >
-              <ListTodo className='h-5 w-5' />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarContent>
+    <ToolSidebar>
+      <ToolSidebarButton
+        isActive={currentMode === 'issues'}
+        tooltip='Issues'
+        onClick={() => router.push(`/app/projects/${currentProjectId}`)}
+      >
+        <ListTodo className='size-5' />
+      </ToolSidebarButton>
 
-      <SidebarFooter className='items-center'>
-        <SidebarMenu className='items-center'>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size='xl' tooltip='Settings'>
-                  <Settings className='h-5 w-5' />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' side='right'>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className='mr-2 h-4 w-4' />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+      <ToolSidebarSpacing />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolSidebarButton tooltip='Settings'>
+            <Settings className='size-5' />
+          </ToolSidebarButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='end' side='right'>
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className='mr-2 h-4 w-4' />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </ToolSidebar>
   )
 }

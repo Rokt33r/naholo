@@ -7,7 +7,6 @@ import {
   IssuesListProvider,
   IssuesListPanel,
 } from '@/components/issues/issues-list-context'
-import { SidebarProvider } from '@/components/ui/sidebar'
 import { QueryProvider } from '@/components/query-provider'
 
 type Props = {
@@ -29,30 +28,22 @@ export default async function ProjectLayout({ children, params }: Props) {
   }
 
   return (
-    <SidebarProvider
-      style={
-        {
-          '--sidebar-width': '60px',
-        } as React.CSSProperties
-      }
-    >
-      <QueryProvider>
-        <IssuesListProvider>
-          <div className='flex h-screen w-full'>
-            <AppModeSidebar currentProjectId={projectId} currentMode='issues' />
-            <IssuesListPanel>
-              <IssuesList
-                projectId={projectId}
-                projectName={project.name}
-                projects={projects}
-              />
-            </IssuesListPanel>
+    <QueryProvider>
+      <IssuesListProvider>
+        <div className='flex h-screen w-full'>
+          <AppModeSidebar currentProjectId={projectId} currentMode='issues' />
+          <IssuesListPanel>
+            <IssuesList
+              projectId={projectId}
+              projectName={project.name}
+              projects={projects}
+            />
+          </IssuesListPanel>
 
-            {/* Right panel: Issue detail */}
-            <div className='flex-1 overflow-hidden'>{children}</div>
-          </div>
-        </IssuesListProvider>
-      </QueryProvider>
-    </SidebarProvider>
+          {/* Right panel: Issue detail */}
+          <div className='flex-1 overflow-hidden'>{children}</div>
+        </div>
+      </IssuesListProvider>
+    </QueryProvider>
   )
 }
