@@ -1,13 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireAuthOrRedirect } from '@/server/auth/utils'
 import { getProject, listProjects } from '@/server/services/project'
-import { AppModeSidebar } from '@/components/app/app-mode-sidebar'
-import { IssuesList } from '@/components/issues/issues-list'
-import {
-  IssuesListProvider,
-  IssuesListPanel,
-} from '@/components/issues/issues-list-context'
-import { QueryProvider } from '@/components/query-provider'
+import { ProjectLayoutClient } from '@/components/app/project-layout-client'
 
 type Props = {
   children: React.ReactNode
@@ -28,22 +22,12 @@ export default async function ProjectLayout({ children, params }: Props) {
   }
 
   return (
-    <QueryProvider>
-      <IssuesListProvider>
-        <div className='flex h-screen w-full'>
-          <AppModeSidebar currentProjectId={projectId} currentMode='issues' />
-          <IssuesListPanel>
-            <IssuesList
-              projectId={projectId}
-              projectName={project.name}
-              projects={projects}
-            />
-          </IssuesListPanel>
-
-          {/* Right panel: Issue detail */}
-          <div className='flex-1 overflow-hidden'>{children}</div>
-        </div>
-      </IssuesListProvider>
-    </QueryProvider>
+    <ProjectLayoutClient
+      projectId={projectId}
+      projectName={project.name}
+      projects={projects}
+    >
+      {children}
+    </ProjectLayoutClient>
   )
 }
