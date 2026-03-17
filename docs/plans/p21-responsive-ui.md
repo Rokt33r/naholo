@@ -107,11 +107,11 @@ The layout (`src/app/app/projects/[projectId]/layout.tsx`) is a server component
 
 Currently `src/app/app/projects/[projectId]/page.tsx` does a server-side `redirect()` to the first issue. This runs before we can check screen size — mobile users never see the issue list.
 
-- [ ] Modify `src/app/app/projects/[projectId]/page.tsx`
+- [x] Modify `src/app/app/projects/[projectId]/page.tsx`
   - Remove the `listIssues` call and the `redirect()` logic
   - Remove the empty state UI (it moves to the client component)
   - Render `<ProjectPageClient projectId={projectId} />` instead
-- [ ] Create `src/components/issues/project-page-client.tsx`
+- [x] Create `src/components/issues/project-page-client.tsx`
   - Client component with `useIsMobile()` and `useIssues(projectId, filter)`
   - **Desktop + has issues**: On mount, `router.replace()` to the first issue. Use a `hasRedirected` ref so it only fires once (not on resize or re-render)
   - **Desktop + no issues**: Show the empty state ("No issues yet")
@@ -121,7 +121,7 @@ Currently `src/app/app/projects/[projectId]/page.tsx` does a server-side `redire
 
 `IssuesList` currently has a `PanelLeftClose` button in the header that toggles the `IssuesListPanel` collapse. On mobile, the list panel doesn't exist, so this button should be hidden.
 
-- [ ] Modify `src/components/issues/issues-list.tsx`
+- [x] Modify `src/components/issues/issues-list.tsx`
   - Accept an optional `isMobile` prop (or use `useIsMobile()` directly)
   - When mobile: hide the `PanelLeftClose` button, show `AppModeMenu` in its place
   - When desktop: keep current behavior (show `PanelLeftClose` collapse toggle)
@@ -130,11 +130,11 @@ Currently `src/app/app/projects/[projectId]/page.tsx` does a server-side `redire
 
 In `issue-detail.tsx`, the header currently shows a `PanelLeftOpen` button (to expand the collapsed issues list) when `collapsed` is true. On mobile, replace this with a back arrow button.
 
-- [ ] Modify `src/components/issues/issue-detail.tsx`
+- [x] Modify `src/components/issues/issue-detail.tsx`
   - Accept `isMobile` prop (passed down from `IssueClientPage`)
   - When mobile: always show a back button (`ArrowLeft` icon) before the title that navigates to `/app/projects/${projectId}` (preserving search params like `?filter=`)
   - When desktop: keep current behavior (show `PanelLeftOpen` only when `collapsed`)
-- [ ] Modify `src/components/issues/issue-client-page.tsx`
+- [x] Modify `src/components/issues/issue-client-page.tsx`
   - Use `useIsMobile()` and pass `isMobile` to `IssueDetail`
 
 #### Step 6: No forced redirect on resize
@@ -159,15 +159,15 @@ No additional changes needed — just verify this behavior works correctly.
 - [x] `src/hooks/use-is-mobile.ts` — `useIsMobile()` hook using media query
 - [x] `src/components/app/app-mode-menu.tsx` — dropdown menu for mobile (replaces vertical sidebar)
 - [x] `src/components/app/project-layout-client.tsx` — client wrapper for the project layout
-- [ ] `src/components/issues/project-page-client.tsx` — client wrapper for the project page with conditional redirect
+- [x] `src/components/issues/project-page-client.tsx` — client wrapper for the project page with conditional redirect
 
 **Modified files:**
 
 - [x] `src/app/app/projects/[projectId]/layout.tsx` — delegate to `ProjectLayoutClient`
-- [ ] `src/app/app/projects/[projectId]/page.tsx` — remove server redirect, use `ProjectPageClient`
-- [ ] `src/components/issues/issues-list.tsx` — hide collapse button on mobile, show `AppModeMenu`
-- [ ] `src/components/issues/issue-detail.tsx` — back button on mobile (replaces collapse toggle)
-- [ ] `src/components/issues/issue-client-page.tsx` — pass `isMobile` to `IssueDetail`
+- [x] `src/app/app/projects/[projectId]/page.tsx` — remove server redirect, use `ProjectPageClient`
+- [x] `src/components/issues/issues-list.tsx` — hide collapse button on mobile, show `AppModeMenu`
+- [x] `src/components/issues/issue-detail.tsx` — back button on mobile (replaces collapse toggle)
+- [x] `src/components/issues/issue-client-page.tsx` — pass `isMobile` to `IssueDetail`
 
 ---
 
