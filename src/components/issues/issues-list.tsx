@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { ProjectSwitcher } from '@/components/projects/project-switcher'
+import { AppModeMenu } from '@/components/app/app-mode-menu'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useIssuesList } from './issues-list-context'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
@@ -40,6 +42,7 @@ export function IssuesList({
   const searchParams = useSearchParams()
   const params = useParams()
   const currentIssueId = params.issueId as string | undefined
+  const isMobile = useIsMobile()
   const { toggle } = useIssuesList()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -68,9 +71,13 @@ export function IssuesList({
           currentProjectId={projectId}
           currentProjectName={projectName}
         />
-        <Button size='icon' variant='ghost' onClick={toggle}>
-          <PanelLeftClose className='h-4 w-4' />
-        </Button>
+        {isMobile ? (
+          <AppModeMenu currentProjectId={projectId} />
+        ) : (
+          <Button size='icon' variant='ghost' onClick={toggle}>
+            <PanelLeftClose className='h-4 w-4' />
+          </Button>
+        )}
       </div>
 
       <div className='flex items-center gap-2 px-2 py-2'>

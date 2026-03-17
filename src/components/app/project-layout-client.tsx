@@ -1,5 +1,7 @@
 'use client'
 
+import { createContext, useContext } from 'react'
+import { useSelectedLayoutSegment } from 'next/navigation'
 import { AppModeSidebar } from '@/components/app/app-mode-sidebar'
 import { IssuesList } from '@/components/issues/issues-list'
 import {
@@ -9,11 +11,27 @@ import {
 import { QueryProvider } from '@/components/query-provider'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 
-type Project = {
+export type Project = {
   id: string
   name: string
   description: string | null
   createdAt: Date
+}
+
+type ProjectContextValue = {
+  projectId: string
+  projectName: string
+  projects: Project[]
+}
+
+const ProjectContext = createContext<ProjectContextValue | null>(null)
+
+export function useProjectContext() {
+  const ctx = useContext(ProjectContext)
+  if (!ctx) {
+    throw new Error('useProjectContext must be used within ProjectLayoutClient')
+  }
+  return ctx
 }
 
 type ProjectLayoutClientProps = {
@@ -30,17 +48,21 @@ export function ProjectLayoutClient({
   children,
 }: ProjectLayoutClientProps) {
   const isMobile = useIsMobile()
+  const segment = useSelectedLayoutSegment()
+  const showList = !isMobile || segment === null
 
   return (
     <QueryProvider>
-      <IssuesListProvider>
-        <div className='flex h-screen w-full'>
-          {!isMobile && (
-            <>
+      <ProjectContext value={{ projectId, projectName, projects }}>
+        <IssuesListProvider>
+          <div className='flex h-screen w-full'>
+            {!isMobile && (
               <AppModeSidebar
                 currentProjectId={projectId}
                 currentMode='issues'
               />
+            )}
+            {!isMobile && (
               <IssuesListPanel>
                 <IssuesList
                   projectId={projectId}
@@ -48,11 +70,21 @@ export function ProjectLayoutClient({
                   projects={projects}
                 />
               </IssuesListPanel>
-            </>
-          )}
-          <div className='flex-1 overflow-hidden'>{children}</div>
-        </div>
-      </IssuesListProvider>
+            )}
+            {showList && isMobile ? (
+              <div className='flex-1 overflow-hidden'>
+                <IssuesList
+                  projectId={projectId}
+                  projectName={projectName}
+                  projects={projects}
+                />
+              </div>
+            ) : (
+              <div className='flex-1 overflow-hidden'>{children}</div>
+            )}
+          </div>
+        </IssuesListProvider>
+      </ProjectContext>
     </QueryProvider>
   )
 }

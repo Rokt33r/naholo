@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useContainerWidth } from '@/hooks/use-container-width'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { IssueDetail } from './issue-detail'
@@ -52,6 +53,7 @@ export function IssueClientPage({
   const searchParams = useSearchParams()
   const containerRef = useRef<HTMLDivElement>(null)
   const containerWidth = useContainerWidth(containerRef)
+  const isMobile = useIsMobile()
   const isWideScreen = containerWidth >= 768
   const [showLogs, setShowLogs] = useState(false)
   const [logsPanelWidth, setLogsPanelWidth] = useLocalStorage(
@@ -87,6 +89,7 @@ export function IssueClientPage({
           showLogs={showLogs}
           onToggleLogs={() => setShowLogs((v) => !v)}
           isWideScreen={isWideScreen}
+          isMobile={isMobile}
         />
       </div>
       {isWideScreen && (

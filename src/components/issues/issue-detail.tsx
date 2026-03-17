@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
+  ArrowLeft,
   MoreVertical,
   Loader2,
   CircleDot,
@@ -68,6 +69,7 @@ type IssueDetailProps = {
   showLogs: boolean
   onToggleLogs: () => void
   isWideScreen: boolean
+  isMobile: boolean
 }
 
 export function IssueDetail({
@@ -80,6 +82,7 @@ export function IssueDetail({
   showLogs,
   onToggleLogs,
   isWideScreen,
+  isMobile,
 }: IssueDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -179,10 +182,25 @@ export function IssueDetail({
     <div className='flex h-full flex-col'>
       {/* Header */}
       <div className='flex items-center justify-between pt-2 px-2'>
-        {collapsed && (
-          <Button size='icon' variant='ghost' onClick={toggleIssuesList}>
-            <PanelLeftOpen className='h-4 w-4' />
+        {isMobile ? (
+          <Button
+            size='icon'
+            variant='ghost'
+            onClick={() => {
+              const query = searchParams.toString()
+              router.push(
+                `/app/projects/${projectId}${query ? `?${query}` : ''}`,
+              )
+            }}
+          >
+            <ArrowLeft className='h-4 w-4' />
           </Button>
+        ) : (
+          collapsed && (
+            <Button size='icon' variant='ghost' onClick={toggleIssuesList}>
+              <PanelLeftOpen className='h-4 w-4' />
+            </Button>
+          )
         )}
         <div className='flex-1 px-1'>
           {isEditingTitle ? (
