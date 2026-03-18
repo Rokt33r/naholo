@@ -1,33 +1,42 @@
-import { redirect } from 'next/navigation'
-import { requireAuthOrRedirect } from '@/server/auth/utils'
-import { getProject, listProjects } from '@/server/services/project'
-import { ProjectLayoutClient } from '@/components/app/project-layout-client'
+'use client'
 
-type Props = {
-  children: React.ReactNode
-  params: Promise<{ projectId: string }>
-}
+import { useParams } from 'next/navigation'
+import { AppModeSidebar } from '@/components/app/app-mode-sidebar'
+import { ProjectContext } from '@/components/app/project-context'
+import { QueryProvider } from '@/components/query-provider'
+import { useIsMobile } from '@/hooks/use-is-mobile'
+import { useProjects } from '@/hooks/use-projects'
 
-export default async function ProjectLayout({ children, params }: Props) {
-  const user = await requireAuthOrRedirect()
-  const { projectId } = await params
-
-  const [projects, project] = await Promise.all([
-    listProjects(user.id),
-    getProject(user.id, projectId),
-  ])
+function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
+  const { projectId } = useParams<{ projectId: string }>()
+  const isMobile = useIsMobile()
+  const { data: projects = [] } = useProjects()
+  const project = projects.find((p) => p.id === projectId)
 
   if (!project) {
-    redirect('/app')
+    return null
   }
 
   return (
-    <ProjectLayoutClient
-      projectId={projectId}
-      projectName={project.name}
-      projects={projects}
-    >
-      {children}
-    </ProjectLayoutClient>
+    <ProjectContext value={{ projectId, projectName: project.name, projects }}>
+      <div className='flex h-screen w-full'>
+        {!isMobile && (
+          <AppModeSidebar currentProjectId={projectId} currentMode='issues' />
+        )}
+        <div className='flex-1 overflow-hidden'>{children}</div>
+      </div>
+    </ProjectContext>
+  )
+}
+
+export default function ProjectLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <QueryProvider>
+      <ProjectLayoutInner>{children}</ProjectLayoutInner>
+    </QueryProvider>
   )
 }

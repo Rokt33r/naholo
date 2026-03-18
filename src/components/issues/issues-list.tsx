@@ -66,14 +66,13 @@ export function IssuesList({
   return (
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between px-2 pt-2 gap-2'>
+        {isMobile && <AppModeMenu currentProjectId={projectId} />}
         <ProjectSwitcher
           projects={projects}
           currentProjectId={projectId}
           currentProjectName={projectName}
         />
-        {isMobile ? (
-          <AppModeMenu currentProjectId={projectId} />
-        ) : (
+        {!isMobile && (
           <Button size='icon' variant='ghost' onClick={toggle}>
             <PanelLeftClose className='h-4 w-4' />
           </Button>
