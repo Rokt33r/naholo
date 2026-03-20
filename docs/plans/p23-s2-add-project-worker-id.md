@@ -40,18 +40,11 @@ UPDATE logs l
 SET project_worker_id = pw.id
 FROM project_workers pw
 WHERE pw.project_id = l.project_id AND pw.user_id = l.user_id;
-
--- Make columns not null after backfill
-ALTER TABLE issues ALTER COLUMN project_worker_id SET NOT NULL;
-ALTER TABLE tasks ALTER COLUMN project_worker_id SET NOT NULL;
-ALTER TABLE notes ALTER COLUMN project_worker_id SET NOT NULL;
-ALTER TABLE logs ALTER COLUMN project_worker_id SET NOT NULL;
 ```
 
 ## Tasks
 
-- [ ] Add `projectWorkerId` (nullable) to issues, tasks, notes, logs schemas
-- [ ] User runs `db:generate`
-- [ ] Append backfill + `SET NOT NULL` SQL to migration
-- [ ] User runs `db:migrate`
-- [ ] Update schemas to mark `projectWorkerId` as `notNull` (matches DB state)
+- [x] Add `projectWorkerId` (nullable) to issues, tasks, notes, logs schemas
+- [x] User runs `db:generate`
+- [x] Append backfill SQL to migration
+- [x] User runs `db:migrate`

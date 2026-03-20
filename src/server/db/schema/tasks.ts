@@ -10,6 +10,7 @@ import {
 import { users } from './users'
 import { issues } from './issues'
 import { projects } from './projects'
+import { projectWorkers } from './project-workers'
 
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -22,6 +23,10 @@ export const tasks = pgTable('tasks', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  projectWorkerId: uuid('project_worker_id').references(
+    () => projectWorkers.id,
+    { onDelete: 'set null' },
+  ),
   parentTaskId: uuid('parent_task_id').references((): AnyPgColumn => tasks.id, {
     onDelete: 'cascade',
   }), // self-referencing for hierarchy

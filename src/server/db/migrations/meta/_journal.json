@@ -50,6 +50,13 @@
       "when": 1773971475320,
       "tag": "0006_flawless_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773993645055,
+      "tag": "0007_sad_the_stranger",
+      "breakpoints": true
     }
   ]
 }
