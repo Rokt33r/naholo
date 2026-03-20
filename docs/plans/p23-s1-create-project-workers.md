@@ -42,8 +42,8 @@ This ensures every existing project has at least one admin worker.
 
 ## Tasks
 
-- [ ] Create `project_workers` schema file
-- [ ] Export from schema index
-- [ ] User runs `db:generate`
-- [ ] Append backfill SQL to migration
-- [ ] User runs `db:migrate`
+- [x] Create `project_workers` schema file
+- [x] Export from schema index
+- [x] User runs `db:generate`
+- [x] Append backfill SQL to migration
+- [x] User runs `db:migrate`

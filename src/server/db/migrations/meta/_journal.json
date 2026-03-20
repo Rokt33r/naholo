@@ -43,6 +43,13 @@
       "when": 1773267127093,
       "tag": "0005_colossal_retro_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773971475320,
+      "tag": "0006_flawless_mandarin",
+      "breakpoints": true
     }
   ]
 }
