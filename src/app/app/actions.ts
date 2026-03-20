@@ -93,9 +93,9 @@ export async function createIssueAction(
 ): Promise<ReturnResult<{ id: string }>> {
   const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await createIssue(userId, {
+  const result = await createIssue(projectWorkerId, {
+    userId,
     projectId,
-    projectWorkerId,
     title,
   })
   if (result.success) {
@@ -116,9 +116,9 @@ export async function createLogAction(
 ): Promise<ReturnResult<{ id: string }>> {
   const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await createLog(userId, {
+  const result = await createLog(projectWorkerId, {
+    userId,
     projectId,
-    projectWorkerId,
     issueId,
     content,
   })
@@ -142,9 +142,9 @@ export async function createTaskAction(
 ): Promise<ReturnResult<{ id: string }>> {
   const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await createTask(userId, {
+  const result = await createTask(projectWorkerId, {
+    userId,
     projectId,
-    projectWorkerId,
     issueId,
     name,
     parentTaskId,
@@ -162,12 +162,9 @@ export async function updateTaskAction(
   id: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  const { projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await updateTask(user.id, issueId, id, name)
+  const result = await updateTask(projectWorkerId, issueId, id, name)
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
@@ -182,12 +179,9 @@ export async function setTaskDoneAction(
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  const { projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await setTaskDone(user.id, issueId, id, done)
+  const result = await setTaskDone(projectWorkerId, issueId, id, done)
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
@@ -201,12 +195,9 @@ export async function deleteTaskAction(
   issueId: string,
   id: string,
 ): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  const { projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await deleteTask(user.id, issueId, id)
+  const result = await deleteTask(projectWorkerId, issueId, id)
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)

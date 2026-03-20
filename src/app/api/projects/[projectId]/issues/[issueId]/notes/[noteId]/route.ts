@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import { updateNote, deleteNote } from '@/server/services/note'
 
 type RouteContext = {
@@ -22,12 +22,8 @@ const updateNoteSchema = z.object({
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { issueId, noteId } = await context.params
+    const { projectId, issueId, noteId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -46,7 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title, content } = validation.data
 
-    const result = await updateNote(user.id, noteId, issueId, {
+    const result = await updateNote(projectWorkerId, noteId, issueId, {
       title,
       content,
     })
@@ -70,14 +66,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId, noteId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId, noteId } = await context.params
-
-    const result = await deleteNote(user.id, noteId, issueId)
+    const result = await deleteNote(projectWorkerId, noteId, issueId)
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }

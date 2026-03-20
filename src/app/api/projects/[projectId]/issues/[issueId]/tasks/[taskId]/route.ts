@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import {
   updateTask,
   updateTaskNote,
@@ -28,12 +28,8 @@ const updateTaskSchema = z.object({
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { issueId, taskId } = await context.params
+    const { projectId, issueId, taskId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -54,7 +50,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // Handle name update
     if (name !== undefined) {
-      const result = await updateTask(user.id, issueId, taskId, name)
+      const result = await updateTask(projectWorkerId, issueId, taskId, name)
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },
@@ -65,7 +61,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // Handle note update
     if (note !== undefined) {
-      const result = await updateTaskNote(user.id, issueId, taskId, note)
+      const result = await updateTaskNote(
+        projectWorkerId,
+        issueId,
+        taskId,
+        note,
+      )
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },
@@ -76,7 +77,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // Handle done status update
     if (done !== undefined) {
-      const result = await setTaskDone(user.id, issueId, taskId, done)
+      const result = await setTaskDone(projectWorkerId, issueId, taskId, done)
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },
@@ -101,14 +102,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId, taskId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId, taskId } = await context.params
-
-    const result = await deleteTask(user.id, issueId, taskId)
+    const result = await deleteTask(projectWorkerId, issueId, taskId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

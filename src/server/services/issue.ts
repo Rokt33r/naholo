@@ -1,6 +1,6 @@
 import 'server-only'
 import { db } from '../db'
-import { issues, tasks, projects } from '../db/schema'
+import { issues, tasks } from '../db/schema'
 import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -29,8 +29,8 @@ export type IssueWithStats = {
 }
 
 export type CreateIssueInput = {
+  userId: string
   projectId: string
-  projectWorkerId: string
   title: string
 }
 
@@ -42,7 +42,7 @@ export type UpdateIssueInput = {
  * Get a single issue by ID
  */
 export async function getIssue(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<Issue | null> {
   const [issue] = await db
@@ -56,7 +56,9 @@ export async function getIssue(
       updatedAt: issues.updatedAt,
     })
     .from(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
+    .where(
+      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+    )
     .limit(1)
 
   return issue || null
@@ -66,7 +68,7 @@ export async function getIssue(
  * List issues for a project with task statistics
  */
 export async function listIssues(
-  userId: string,
+  projectWorkerId: string,
   projectId: string,
   options: { closed?: boolean } = {},
 ): Promise<IssueWithStats[]> {
@@ -91,7 +93,7 @@ export async function listIssues(
     .where(
       and(
         eq(issues.projectId, projectId),
-        eq(issues.userId, userId),
+        eq(issues.projectWorkerId, projectWorkerId),
         eq(issues.closed, closed),
       ),
     )
@@ -109,24 +111,15 @@ export async function listIssues(
  * Create a new issue
  */
 export async function createIssue(
-  userId: string,
+  projectWorkerId: string,
   data: CreateIssueInput,
 ): Promise<ReturnResult<{ id: string }>> {
-  // Validate project exists for user
-  const [project] = await db
-    .select({ id: projects.id })
-    .from(projects)
-    .where(and(eq(projects.id, data.projectId), eq(projects.userId, userId)))
-    .limit(1)
-
-  if (!project) return err(new NotFoundError('Project'))
-
   const [issue] = await db
     .insert(issues)
     .values({
       projectId: data.projectId,
-      userId,
-      projectWorkerId: data.projectWorkerId,
+      userId: data.userId,
+      projectWorkerId,
       title: data.title,
     })
     .returning({ id: issues.id })
@@ -138,7 +131,7 @@ export async function createIssue(
  * Update an issue.
  */
 export async function updateIssue(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   data: UpdateIssueInput,
 ): Promise<ReturnResult<undefined>> {
@@ -148,7 +141,9 @@ export async function updateIssue(
       title: data.title,
       updatedAt: new Date(),
     })
-    .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
+    .where(
+      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: issues.id })
 
   if (!issue) return err(new NotFoundError('Issue'))
@@ -160,7 +155,7 @@ export async function updateIssue(
  * Close an issue.
  */
 export async function closeIssue(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<ReturnResult<undefined>> {
   const [issue] = await db
@@ -170,7 +165,9 @@ export async function closeIssue(
       closedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
+    .where(
+      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -184,7 +181,7 @@ export async function closeIssue(
  * Reopen an issue.
  */
 export async function reopenIssue(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<ReturnResult<undefined>> {
   const [issue] = await db
@@ -194,7 +191,9 @@ export async function reopenIssue(
       closedAt: null,
       updatedAt: new Date(),
     })
-    .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
+    .where(
+      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -208,12 +207,14 @@ export async function reopenIssue(
  * Delete an issue.
  */
 export async function deleteIssue(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .delete(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.userId, userId)))
+    .where(
+      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: issues.id })
 
   if (!issue) return err(new NotFoundError('Issue'))

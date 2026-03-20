@@ -16,8 +16,8 @@ export type Note = {
 }
 
 export type CreateNoteInput = {
+  userId: string
   projectId: string
-  projectWorkerId: string
   issueId: string
   title: string
   content: string
@@ -32,7 +32,7 @@ export type UpdateNoteInput = {
  * List notes for an issue (ordered by position)
  */
 export async function listNotes(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<Note[]> {
   const result = await db
@@ -45,7 +45,12 @@ export async function listNotes(
       updatedAt: notes.updatedAt,
     })
     .from(notes)
-    .where(and(eq(notes.issueId, issueId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.issueId, issueId),
+        eq(notes.projectWorkerId, projectWorkerId),
+      ),
+    )
     .orderBy(asc(notes.position))
 
   return result
@@ -55,14 +60,19 @@ export async function listNotes(
  * Create a new note
  */
 export async function createNote(
-  userId: string,
+  projectWorkerId: string,
   data: CreateNoteInput,
 ): Promise<ReturnResult<Note>> {
-  // Validate issue exists for user
+  // Validate issue exists for worker
   const [issue] = await db
     .select({ id: issues.id })
     .from(issues)
-    .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
+    .where(
+      and(
+        eq(issues.id, data.issueId),
+        eq(issues.projectWorkerId, projectWorkerId),
+      ),
+    )
     .limit(1)
 
   if (!issue) return err(new NotFoundError('Issue'))
@@ -71,7 +81,12 @@ export async function createNote(
   const existingNotes = await db
     .select({ position: notes.position })
     .from(notes)
-    .where(and(eq(notes.issueId, data.issueId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.issueId, data.issueId),
+        eq(notes.projectWorkerId, projectWorkerId),
+      ),
+    )
     .orderBy(notes.position)
 
   const maxPosition =
@@ -84,8 +99,8 @@ export async function createNote(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      userId,
-      projectWorkerId: data.projectWorkerId,
+      userId: data.userId,
+      projectWorkerId,
       title: data.title,
       content: data.content,
       position: maxPosition + 1,
@@ -112,7 +127,7 @@ export async function createNote(
  * Update a note.
  */
 export async function updateNote(
-  userId: string,
+  projectWorkerId: string,
   noteId: string,
   issueId: string,
   data: UpdateNoteInput,
@@ -124,7 +139,9 @@ export async function updateNote(
       content: data.content,
       updatedAt: new Date(),
     })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(eq(notes.id, noteId), eq(notes.projectWorkerId, projectWorkerId)),
+    )
     .returning({
       id: notes.id,
       title: notes.title,
@@ -149,13 +166,15 @@ export async function updateNote(
  * Delete a note.
  */
 export async function deleteNote(
-  userId: string,
+  projectWorkerId: string,
   noteId: string,
   issueId: string,
 ): Promise<ReturnResult<undefined>> {
   const [note] = await db
     .delete(notes)
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(eq(notes.id, noteId), eq(notes.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: notes.id })
 
   if (!note) return err(new NotFoundError('Note'))

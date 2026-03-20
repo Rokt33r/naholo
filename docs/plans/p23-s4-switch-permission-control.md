@@ -13,57 +13,40 @@ API route → getAuthUser() → userId → service(userId, ...)
 New:
 
 ```
-API route → getAuthUser() → userId → resolve projectWorkerId for this project → service(projectWorkerId, ...)
+API route → requireProjectWorker(projectId) → { userId, projectWorkerId } → service(projectWorkerId, ...)
 ```
 
-Need a helper to resolve the current user's worker for a given project:
-
-```ts
-async function getProjectWorker(
-  userId: string,
-  projectId: string,
-): Promise<ProjectWorker | null>
-```
-
-This lookup can live in a `project-worker` service.
+`requireProjectWorker` in `src/server/auth/utils.ts` handles auth + worker lookup in one step, throwing on unauthorized or non-member access.
 
 ## Service Changes
 
-All services currently accept `userId` as first param. Replace with `projectWorkerId`:
+All services currently accept `userId` as first param. Replace with `projectWorkerId`.
 
-- `src/server/services/issue.ts` — list/create/update/delete scoped by worker
-- `src/server/services/task.ts` — same
-- `src/server/services/note.ts` — same
-- `src/server/services/log.ts` — same
-- `src/server/services/project.ts` — project-level operations check worker role
+Two types of changes inside each function:
 
-## Permission Rules
+1. **Where clauses** (permission scoping): `eq(table.userId, userId)` → `eq(table.projectWorkerId, projectWorkerId)`. Also applies to cross-table lookups (e.g. `createTask` validates parent issue via `eq(issues.projectWorkerId, projectWorkerId)`).
+2. **Insert values** (authorship): `userId` in insert data → `projectWorkerId`.
 
-| Action                                       | Required Role                        |
-| -------------------------------------------- | ------------------------------------ |
-| Create issue, task, note, log                | `member` or `admin`                  |
-| Edit/delete own entities                     | `member` or `admin` (must be author) |
-| Edit/delete others' entities                 | `admin` only                         |
-| Manage workers (invite, remove, role change) | `admin` only                         |
-| View project content                         | `member` or `admin`                  |
+Services to update:
+
+- `src/server/services/issue.ts` — `getIssue`, `listIssues`, `createIssue`, `updateIssue`, `closeIssue`, `reopenIssue`, `deleteIssue`
+- `src/server/services/task.ts` — `listTasks`, `createTask`, `updateTask`, `setTaskDone`, `updateTaskNote`, `deleteTask`, `moveTask`
+- `src/server/services/note.ts` — `listNotes`, `createNote`, `updateNote`, `deleteNote`
+- `src/server/services/log.ts` — `listLogs`, `createLog`, `updateLog`, `deleteLog`
 
 ## API Route Changes
 
 All API routes under `/api/projects/[projectId]/...` need to:
 
-1. Get `userId` from `getAuthUser()`
-2. Resolve `projectWorkerId` via the project-worker service
-3. Return 403 if no worker found for this project
-4. Pass `projectWorkerId` to services
+1. Call `requireProjectWorker(projectId)` to get `{ userId, projectWorkerId }`
+2. Pass `projectWorkerId` to services instead of `userId`
 
 ## Tasks
 
-- [ ] Create `project-worker` service (getWorkerForUser, listWorkers, inviteWorker, removeWorker)
-- [ ] Update issue service to use `projectWorkerId`
-- [ ] Update task service to use `projectWorkerId`
-- [ ] Update note service to use `projectWorkerId`
-- [ ] Update log service to use `projectWorkerId`
-- [ ] Update project service for role-based access
-- [ ] Update all API routes to resolve worker before calling services
-- [ ] Update React Query hooks if response shapes change
-- [ ] Test all CRUD operations still work
+- [x] Create `requireProjectWorker` in `src/server/auth/utils.ts`
+- [x] Update issue service to use `projectWorkerId`
+- [x] Update task service to use `projectWorkerId`
+- [x] Update note service to use `projectWorkerId`
+- [x] Update log service to use `projectWorkerId`
+- [x] Update all API routes to use `requireProjectWorker`
+- [x] Type-check with `npx tsc`

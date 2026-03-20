@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import { getIssue, updateIssue, deleteIssue } from '@/server/services/issue'
 
 type RouteContext = {
@@ -16,14 +16,10 @@ type RouteContext = {
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-
-    const issue = await getIssue(user.id, issueId)
+    const issue = await getIssue(projectWorkerId, issueId)
 
     if (!issue) {
       return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
@@ -49,12 +45,8 @@ const updateIssueSchema = z.object({
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { issueId } = await context.params
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -73,7 +65,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title } = validation.data
 
-    const result = await updateIssue(user.id, issueId, { title })
+    const result = await updateIssue(projectWorkerId, issueId, { title })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -95,14 +87,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-
-    const result = await deleteIssue(user.id, issueId)
+    const result = await deleteIssue(projectWorkerId, issueId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

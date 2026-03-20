@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import { closeIssue, reopenIssue } from '@/server/services/issue'
 
 type RouteContext = {
@@ -15,14 +15,10 @@ type RouteContext = {
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-
-    const result = await closeIssue(user.id, issueId)
+    const result = await closeIssue(projectWorkerId, issueId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -44,14 +40,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-
-    const result = await reopenIssue(user.id, issueId)
+    const result = await reopenIssue(projectWorkerId, issueId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

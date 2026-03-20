@@ -18,8 +18,8 @@ export type Task = {
 }
 
 export type CreateTaskInput = {
+  userId: string
   projectId: string
-  projectWorkerId: string
   issueId: string
   name: string
   note?: string | null
@@ -31,7 +31,7 @@ export type CreateTaskInput = {
  * List tasks for an issue (hierarchical)
  */
 export async function listTasks(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<Task[]> {
   const result = await db
@@ -46,7 +46,12 @@ export async function listTasks(
       updatedAt: tasks.updatedAt,
     })
     .from(tasks)
-    .where(and(eq(tasks.issueId, issueId), eq(tasks.userId, userId)))
+    .where(
+      and(
+        eq(tasks.issueId, issueId),
+        eq(tasks.projectWorkerId, projectWorkerId),
+      ),
+    )
     .orderBy(asc(tasks.position))
 
   return result
@@ -57,14 +62,19 @@ export async function listTasks(
  * Otherwise appends to the end.
  */
 export async function createTask(
-  userId: string,
+  projectWorkerId: string,
   data: CreateTaskInput,
 ): Promise<ReturnResult<{ id: string }>> {
-  // Validate issue exists for user
+  // Validate issue exists for worker
   const [issue] = await db
     .select({ id: issues.id })
     .from(issues)
-    .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
+    .where(
+      and(
+        eq(issues.id, data.issueId),
+        eq(issues.projectWorkerId, projectWorkerId),
+      ),
+    )
     .limit(1)
 
   if (!issue) return err(new NotFoundError('Issue'))
@@ -82,7 +92,7 @@ export async function createTask(
       .where(
         and(
           eq(tasks.issueId, data.issueId),
-          eq(tasks.userId, userId),
+          eq(tasks.projectWorkerId, projectWorkerId),
           parentTaskId
             ? eq(tasks.parentTaskId, parentTaskId)
             : isNull(tasks.parentTaskId),
@@ -98,7 +108,7 @@ export async function createTask(
       .where(
         and(
           eq(tasks.issueId, data.issueId),
-          eq(tasks.userId, userId),
+          eq(tasks.projectWorkerId, projectWorkerId),
           parentTaskId
             ? eq(tasks.parentTaskId, parentTaskId)
             : isNull(tasks.parentTaskId),
@@ -118,8 +128,8 @@ export async function createTask(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      userId,
-      projectWorkerId: data.projectWorkerId,
+      userId: data.userId,
+      projectWorkerId,
       parentTaskId,
       name: data.name,
       note: data.note ?? null,
@@ -139,7 +149,7 @@ export async function createTask(
  * Update a task.
  */
 export async function updateTask(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   taskId: string,
   name: string,
@@ -150,7 +160,9 @@ export async function updateTask(
       name,
       updatedAt: new Date(),
     })
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .where(
+      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: tasks.id })
 
   if (!task) return err(new NotFoundError('Task'))
@@ -167,7 +179,7 @@ export async function updateTask(
  * Set a task's done status.
  */
 export async function setTaskDone(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   taskId: string,
   done: boolean,
@@ -178,7 +190,9 @@ export async function setTaskDone(
       done,
       updatedAt: new Date(),
     })
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .where(
+      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: tasks.id })
 
   if (!task) return err(new NotFoundError('Task'))
@@ -195,7 +209,7 @@ export async function setTaskDone(
  * Update a task's note.
  */
 export async function updateTaskNote(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   taskId: string,
   note: string | null,
@@ -206,7 +220,9 @@ export async function updateTaskNote(
       note,
       updatedAt: new Date(),
     })
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .where(
+      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: tasks.id })
 
   if (!task) return err(new NotFoundError('Task'))
@@ -223,13 +239,15 @@ export async function updateTaskNote(
  * Delete a task.
  */
 export async function deleteTask(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   taskId: string,
 ): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .delete(tasks)
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .where(
+      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+    )
     .returning({ id: tasks.id })
 
   if (!task) return err(new NotFoundError('Task'))
@@ -252,7 +270,7 @@ export type MoveTaskInput = {
  * Move a task to a new parent and/or position.
  */
 export async function moveTask(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   data: MoveTaskInput,
 ): Promise<ReturnResult<undefined>> {
@@ -267,7 +285,7 @@ export async function moveTask(
     .where(
       and(
         eq(tasks.id, data.taskId),
-        eq(tasks.userId, userId),
+        eq(tasks.projectWorkerId, projectWorkerId),
         eq(tasks.issueId, issueId),
       ),
     )
@@ -299,7 +317,7 @@ export async function moveTask(
         .where(
           and(
             eq(tasks.issueId, issueId),
-            eq(tasks.userId, userId),
+            eq(tasks.projectWorkerId, projectWorkerId),
             oldParentId
               ? eq(tasks.parentTaskId, oldParentId)
               : isNull(tasks.parentTaskId),
@@ -317,7 +335,7 @@ export async function moveTask(
         .where(
           and(
             eq(tasks.issueId, issueId),
-            eq(tasks.userId, userId),
+            eq(tasks.projectWorkerId, projectWorkerId),
             oldParentId
               ? eq(tasks.parentTaskId, oldParentId)
               : isNull(tasks.parentTaskId),
@@ -337,7 +355,7 @@ export async function moveTask(
       .where(
         and(
           eq(tasks.issueId, issueId),
-          eq(tasks.userId, userId),
+          eq(tasks.projectWorkerId, projectWorkerId),
           oldParentId
             ? eq(tasks.parentTaskId, oldParentId)
             : isNull(tasks.parentTaskId),
@@ -354,7 +372,7 @@ export async function moveTask(
       .where(
         and(
           eq(tasks.issueId, issueId),
-          eq(tasks.userId, userId),
+          eq(tasks.projectWorkerId, projectWorkerId),
           newParentId
             ? eq(tasks.parentTaskId, newParentId)
             : isNull(tasks.parentTaskId),
@@ -371,7 +389,12 @@ export async function moveTask(
       position: newPosition,
       updatedAt: new Date(),
     })
-    .where(and(eq(tasks.id, data.taskId), eq(tasks.userId, userId)))
+    .where(
+      and(
+        eq(tasks.id, data.taskId),
+        eq(tasks.projectWorkerId, projectWorkerId),
+      ),
+    )
 
   await db
     .update(issues)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import { listLogs, createLog } from '@/server/services/log'
 
 type RouteContext = {
@@ -16,13 +16,10 @@ type RouteContext = {
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-    const logs = await listLogs(user.id, issueId)
+    const logs = await listLogs(projectWorkerId, issueId)
 
     return NextResponse.json(logs)
   } catch (error) {
@@ -44,11 +41,6 @@ const createLogSchema = z.object({
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { projectId, issueId } = await context.params
 
     let body
@@ -70,9 +62,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-    const result = await createLog(userId, {
+    const result = await createLog(projectWorkerId, {
+      userId,
       projectId,
-      projectWorkerId,
       issueId,
       content,
     })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import { listNotes, createNote } from '@/server/services/note'
 
 type RouteContext = {
@@ -16,13 +16,10 @@ type RouteContext = {
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-    const notes = await listNotes(user.id, issueId)
+    const notes = await listNotes(projectWorkerId, issueId)
 
     return NextResponse.json(notes)
   } catch (error) {
@@ -45,11 +42,6 @@ const createNoteSchema = z.object({
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { projectId, issueId } = await context.params
 
     let body
@@ -71,9 +63,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-    const result = await createNote(userId, {
+    const result = await createNote(projectWorkerId, {
+      userId,
       projectId,
-      projectWorkerId,
       issueId,
       title,
       content,

@@ -14,8 +14,8 @@ export type Log = {
 }
 
 export type CreateLogInput = {
+  userId: string
   projectId: string
-  projectWorkerId: string
   issueId: string
   content: string
 }
@@ -24,7 +24,7 @@ export type CreateLogInput = {
  * List logs for an issue
  */
 export async function listLogs(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
 ): Promise<Log[]> {
   const result = await db
@@ -35,7 +35,9 @@ export async function listLogs(
       updatedAt: logs.updatedAt,
     })
     .from(logs)
-    .where(and(eq(logs.issueId, issueId), eq(logs.userId, userId)))
+    .where(
+      and(eq(logs.issueId, issueId), eq(logs.projectWorkerId, projectWorkerId)),
+    )
     .orderBy(asc(logs.createdAt))
 
   return result
@@ -45,14 +47,19 @@ export async function listLogs(
  * Create a new log
  */
 export async function createLog(
-  userId: string,
+  projectWorkerId: string,
   data: CreateLogInput,
 ): Promise<ReturnResult<Log>> {
-  // Validate issue exists for user
+  // Validate issue exists for worker
   const [issue] = await db
     .select({ id: issues.id })
     .from(issues)
-    .where(and(eq(issues.id, data.issueId), eq(issues.userId, userId)))
+    .where(
+      and(
+        eq(issues.id, data.issueId),
+        eq(issues.projectWorkerId, projectWorkerId),
+      ),
+    )
     .limit(1)
 
   if (!issue) return err(new NotFoundError('Issue'))
@@ -62,8 +69,8 @@ export async function createLog(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      userId,
-      projectWorkerId: data.projectWorkerId,
+      userId: data.userId,
+      projectWorkerId,
       content: data.content,
     })
     .returning({
@@ -90,7 +97,7 @@ export async function createLog(
  * Update a log.
  */
 export async function updateLog(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   logId: string,
   content: string,
@@ -101,7 +108,7 @@ export async function updateLog(
       content,
       updatedAt: new Date(),
     })
-    .where(and(eq(logs.id, logId), eq(logs.userId, userId)))
+    .where(and(eq(logs.id, logId), eq(logs.projectWorkerId, projectWorkerId)))
     .returning({
       id: logs.id,
       content: logs.content,
@@ -138,13 +145,13 @@ export async function updateLog(
  * Delete a log.
  */
 export async function deleteLog(
-  userId: string,
+  projectWorkerId: string,
   issueId: string,
   logId: string,
 ): Promise<ReturnResult<undefined>> {
   const [log] = await db
     .delete(logs)
-    .where(and(eq(logs.id, logId), eq(logs.userId, userId)))
+    .where(and(eq(logs.id, logId), eq(logs.projectWorkerId, projectWorkerId)))
     .returning({ id: logs.id })
 
   if (!log) return err(new NotFoundError('Log'))

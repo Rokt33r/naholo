@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/utils'
 import { listTasks, createTask } from '@/server/services/task'
 
 type RouteContext = {
@@ -16,13 +16,10 @@ type RouteContext = {
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { projectId, issueId } = await context.params
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
-    const { issueId } = await context.params
-    const tasks = await listTasks(user.id, issueId)
+    const tasks = await listTasks(projectWorkerId, issueId)
 
     return NextResponse.json(tasks)
   } catch (error) {
@@ -47,11 +44,6 @@ const createTaskSchema = z.object({
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const user = await getAuthUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { projectId, issueId } = await context.params
 
     let body
@@ -73,9 +65,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-    const result = await createTask(userId, {
+    const result = await createTask(projectWorkerId, {
+      userId,
       projectId,
-      projectWorkerId,
       issueId,
       name,
       note,
