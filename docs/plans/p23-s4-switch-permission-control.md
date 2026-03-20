@@ -1,4 +1,4 @@
-# P23-S3: Switch Permission Control
+# P23-S4: Switch Permission Control
 
 Update all services and API routes to use `projectWorkerId` instead of `userId` for permission scoping.
 

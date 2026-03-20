@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { auth } from '../../server/auth/auth'
@@ -91,12 +91,13 @@ export async function createIssueAction(
   projectId: string,
   title: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await createIssue(user.id, { projectId, title })
+  const result = await createIssue(userId, {
+    projectId,
+    projectWorkerId,
+    title,
+  })
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}`)
   }
@@ -113,12 +114,14 @@ export async function createLogAction(
   issueId: string,
   content: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await createLog(user.id, { projectId, issueId, content })
+  const result = await createLog(userId, {
+    projectId,
+    projectWorkerId,
+    issueId,
+    content,
+  })
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
     return ok({ id: result.data.id })
@@ -137,13 +140,11 @@ export async function createTaskAction(
   name: string,
   parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  const { userId, projectWorkerId } = await requireProjectWorker(projectId)
 
-  const result = await createTask(user.id, {
+  const result = await createTask(userId, {
     projectId,
+    projectWorkerId,
     issueId,
     name,
     parentTaskId,

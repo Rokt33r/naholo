@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
 import { listLogs, createLog } from '@/server/services/log'
 
 type RouteContext = {
@@ -68,7 +68,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { content } = validation.data
 
-    const result = await createLog(user.id, { projectId, issueId, content })
+    const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+
+    const result = await createLog(userId, {
+      projectId,
+      projectWorkerId,
+      issueId,
+      content,
+    })
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }

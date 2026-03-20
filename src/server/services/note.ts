@@ -17,6 +17,7 @@ export type Note = {
 
 export type CreateNoteInput = {
   projectId: string
+  projectWorkerId: string
   issueId: string
   title: string
   content: string
@@ -84,6 +85,7 @@ export async function createNote(
       projectId: data.projectId,
       issueId: data.issueId,
       userId,
+      projectWorkerId: data.projectWorkerId,
       title: data.title,
       content: data.content,
       position: maxPosition + 1,

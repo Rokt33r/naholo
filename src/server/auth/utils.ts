@@ -2,6 +2,8 @@ import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from './auth'
 import { db } from '../db'
+import { projectWorkers } from '../db/schema'
+import { eq, and } from 'drizzle-orm'
 import { cache } from 'react'
 
 export async function getRequestMetadata(): Promise<{
@@ -89,4 +91,29 @@ export async function requireAdminOrNotFound(): Promise<{
     notFound()
   }
   return user
+}
+
+/**
+ * Requires authentication and project worker membership.
+ * Throws if not authenticated or not a worker in the project.
+ */
+export async function requireProjectWorker(
+  projectId: string,
+): Promise<{ userId: string; projectWorkerId: string }> {
+  const user = await getAuthUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [worker] = await db
+    .select({ id: projectWorkers.id })
+    .from(projectWorkers)
+    .where(
+      and(
+        eq(projectWorkers.projectId, projectId),
+        eq(projectWorkers.userId, user.id),
+      ),
+    )
+    .limit(1)
+  if (!worker) throw new Error('Forbidden')
+
+  return { userId: user.id, projectWorkerId: worker.id }
 }

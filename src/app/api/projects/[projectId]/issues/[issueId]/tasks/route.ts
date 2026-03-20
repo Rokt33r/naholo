@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
 import { listTasks, createTask } from '@/server/services/task'
 
 type RouteContext = {
@@ -71,8 +71,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { name, note, parentTaskId, position } = validation.data
 
-    const result = await createTask(user.id, {
+    const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+
+    const result = await createTask(userId, {
       projectId,
+      projectWorkerId,
       issueId,
       name,
       note,
