@@ -18,7 +18,6 @@ export type Task = {
 }
 
 export type CreateTaskInput = {
-  userId: string
   projectId: string
   issueId: string
   name: string
@@ -128,7 +127,6 @@ export async function createTask(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      userId: data.userId,
       projectWorkerId,
       parentTaskId,
       name: data.name,

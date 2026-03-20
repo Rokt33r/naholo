@@ -60,10 +60,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { content } = validation.data
 
-    const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
     const result = await createLog(projectWorkerId, {
-      userId,
       projectId,
       issueId,
       content,

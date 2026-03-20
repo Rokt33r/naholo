@@ -29,7 +29,6 @@ export type IssueWithStats = {
 }
 
 export type CreateIssueInput = {
-  userId: string
   projectId: string
   title: string
 }
@@ -118,7 +117,6 @@ export async function createIssue(
     .insert(issues)
     .values({
       projectId: data.projectId,
-      userId: data.userId,
       projectWorkerId,
       title: data.title,
     })

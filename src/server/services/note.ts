@@ -16,7 +16,6 @@ export type Note = {
 }
 
 export type CreateNoteInput = {
-  userId: string
   projectId: string
   issueId: string
   title: string
@@ -99,7 +98,6 @@ export async function createNote(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      userId: data.userId,
       projectWorkerId,
       title: data.title,
       content: data.content,

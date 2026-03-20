@@ -63,10 +63,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { name, note, parentTaskId, position } = validation.data
 
-    const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
     const result = await createTask(projectWorkerId, {
-      userId,
       projectId,
       issueId,
       name,

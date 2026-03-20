@@ -1,5 +1,4 @@
 import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core'
-import { users } from './users'
 import { projects } from './projects'
 import { projectWorkers } from './project-workers'
 
@@ -8,9 +7,6 @@ export const issues = pgTable('issues', {
   projectId: uuid('project_id')
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
   projectWorkerId: uuid('project_worker_id').references(
     () => projectWorkers.id,
     { onDelete: 'set null' },

@@ -23,8 +23,8 @@ Before this step, verify:
 
 ## Tasks
 
-- [ ] Remove `userId` from issues, tasks, notes, logs schemas
-- [ ] User runs `db:generate`
-- [ ] User runs `db:migrate`
-- [ ] Verify `npx tsc` passes
-- [ ] Smoke test the app
+- [x] Remove `userId` from issues, tasks, notes, logs schemas
+- [x] User runs `db:generate`
+- [x] User runs `db:migrate`
+- [x] Verify `npx tsc` passes
+- [x] Smoke test the app

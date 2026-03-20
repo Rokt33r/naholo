@@ -98,10 +98,9 @@ export async function createIssueAction(
   projectId: string,
   title: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+  const { projectWorkerId } = await requireProjectWorker(projectId)
 
   const result = await createIssue(projectWorkerId, {
-    userId,
     projectId,
     title,
   })
@@ -121,10 +120,9 @@ export async function createLogAction(
   issueId: string,
   content: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+  const { projectWorkerId } = await requireProjectWorker(projectId)
 
   const result = await createLog(projectWorkerId, {
-    userId,
     projectId,
     issueId,
     content,
@@ -147,10 +145,9 @@ export async function createTaskAction(
   name: string,
   parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+  const { projectWorkerId } = await requireProjectWorker(projectId)
 
   const result = await createTask(projectWorkerId, {
-    userId,
     projectId,
     issueId,
     name,

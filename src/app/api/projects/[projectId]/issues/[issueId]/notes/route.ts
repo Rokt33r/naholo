@@ -61,10 +61,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { title, content } = validation.data
 
-    const { userId, projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorkerId } = await requireProjectWorker(projectId)
 
     const result = await createNote(projectWorkerId, {
-      userId,
       projectId,
       issueId,
       title,

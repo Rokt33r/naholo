@@ -14,7 +14,6 @@ export type Log = {
 }
 
 export type CreateLogInput = {
-  userId: string
   projectId: string
   issueId: string
   content: string
@@ -69,7 +68,6 @@ export async function createLog(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      userId: data.userId,
       projectWorkerId,
       content: data.content,
     })
