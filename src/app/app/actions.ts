@@ -10,6 +10,7 @@ import {
   updateProject,
   deleteProject,
 } from '@/server/services/project'
+import { createProjectWorker } from '@/server/services/project-worker'
 import { createIssue } from '@/server/services/issue'
 import { createLog } from '@/server/services/log'
 import {
@@ -43,6 +44,12 @@ export async function createProjectAction(
 
   const result = await createProject(user.id, { name, description })
   if (result.success) {
+    await createProjectWorker({
+      projectId: result.data.id,
+      userId: user.id,
+      name: user.name,
+      role: 'admin',
+    })
     revalidatePath('/app')
   }
 

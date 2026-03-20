@@ -1,4 +1,4 @@
-# P23-S5: Remove userId from Entities
+# P23-S6: Remove userId from Entities
 
 Drop the now-unused `userId` column from project-scoped entities.
 

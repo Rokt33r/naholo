@@ -35,7 +35,7 @@ Introduce project workers as the identity layer for project-scoped actions. Repl
 
 ## Migration Strategy
 
-The migration replaces `userId` on project entities with `projectWorkerId` in 5 phases. Each phase is a separate step with its own schema edits and migration script.
+The migration replaces `userId` on project entities with `projectWorkerId` in 6 phases. Each phase is a separate step with its own schema edits and migration script.
 
 **Important workflow for Phase 1 and Phase 2:**
 
@@ -49,4 +49,5 @@ The migration replaces `userId` on project entities with `projectWorkerId` in 5 
 2. **[Add projectWorkerId to Entities](p23-s2-add-project-worker-id.md)** — Add column to issues/tasks/notes/logs + backfill
 3. **[Set Worker on Create](p23-s3-set-worker-on-create.md)** — Update insert queries to populate projectWorkerId
 4. **[Switch Permission Control](p23-s4-switch-permission-control.md)** — Update services to use projectWorkerId
-5. **[Remove userId from Entities](p23-s5-remove-user-id.md)** — Drop old userId columns
+5. **[Create Worker on Project Create](p23-s5-create-worker-on-project-create.md)** — Auto-create admin worker for project creator
+6. **[Remove userId from Entities](p23-s6-remove-user-id.md)** — Drop old userId columns
