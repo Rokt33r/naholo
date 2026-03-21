@@ -1,7 +1,16 @@
 import 'server-only'
 import { db } from '../db'
 import { projectWorkers } from '../db/schema'
-import { eq, and } from 'drizzle-orm'
+
+export type ProjectWorker = {
+  id: string
+  projectId: string
+  userId: string | null
+  type: string
+  name: string
+  role: string
+  createdAt: Date
+}
 
 export type CreateProjectWorkerInput = {
   projectId: string
@@ -38,16 +47,27 @@ export async function getProjectWorkerByUserId(
   userId: string,
   projectId: string,
 ): Promise<{ id: string; role: string } | null> {
-  const [worker] = await db
-    .select({ id: projectWorkers.id, role: projectWorkers.role })
-    .from(projectWorkers)
-    .where(
-      and(
-        eq(projectWorkers.projectId, projectId),
-        eq(projectWorkers.userId, userId),
-      ),
-    )
-    .limit(1)
+  const worker = await db.query.projectWorkers.findFirst({
+    columns: { id: true, role: true },
+    where: (t, { eq, and }) =>
+      and(eq(t.projectId, projectId), eq(t.userId, userId)),
+  })
+
+  return worker ?? null
+}
+
+/**
+ * Resolve a project worker by user ID and project ID.
+ * Returns the full worker or null if not found.
+ */
+export async function resolveProjectWorkerByUserIdAndProjectId(
+  userId: string,
+  projectId: string,
+): Promise<ProjectWorker | null> {
+  const worker = await db.query.projectWorkers.findFirst({
+    where: (t, { eq, and }) =>
+      and(eq(t.projectId, projectId), eq(t.userId, userId)),
+  })
 
   return worker ?? null
 }

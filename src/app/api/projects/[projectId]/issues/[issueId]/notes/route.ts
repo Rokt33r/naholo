@@ -17,9 +17,9 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const notes = await listNotes(projectWorkerId, issueId)
+    const notes = await listNotes(projectWorker.id, issueId)
 
     return NextResponse.json(notes)
   } catch (error) {
@@ -61,9 +61,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { title, content } = validation.data
 
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await createNote(projectWorkerId, {
+    const result = await createNote(projectWorker.id, {
       projectId,
       issueId,
       title,

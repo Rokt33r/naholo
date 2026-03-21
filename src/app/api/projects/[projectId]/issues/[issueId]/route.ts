@@ -17,9 +17,9 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const issue = await getIssue(projectWorkerId, issueId)
+    const issue = await getIssue(projectWorker.id, issueId)
 
     if (!issue) {
       return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
@@ -46,7 +46,7 @@ const updateIssueSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -65,7 +65,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title } = validation.data
 
-    const result = await updateIssue(projectWorkerId, issueId, { title })
+    const result = await updateIssue(projectWorker.id, issueId, { title })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -88,9 +88,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await deleteIssue(projectWorkerId, issueId)
+    const result = await deleteIssue(projectWorker.id, issueId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

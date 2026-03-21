@@ -1,6 +1,8 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { users } from './users'
+import { projectWorkerApiTokens } from './project-worker-api-tokens'
 
 export const projectWorkers = pgTable('project_workers', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -13,3 +15,10 @@ export const projectWorkers = pgTable('project_workers', {
   role: text('role').notNull().default('member'), // 'admin' | 'member'
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
+
+export const projectWorkersRelations = relations(
+  projectWorkers,
+  ({ many }) => ({
+    apiTokens: many(projectWorkerApiTokens),
+  }),
+)

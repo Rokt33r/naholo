@@ -2,9 +2,15 @@ import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from './auth'
 import { db } from '../db'
-import { projectWorkers } from '../db/schema'
-import { eq, and } from 'drizzle-orm'
 import { cache } from 'react'
+import {
+  resolveProjectWorkerByApiToken,
+  touchProjectWorkerApiToken,
+} from '../services/project-worker-api-token'
+import {
+  resolveProjectWorkerByUserIdAndProjectId,
+  type ProjectWorker,
+} from '../services/project-worker'
 
 export async function getRequestMetadata(): Promise<{
   ipAddress?: string
@@ -95,25 +101,58 @@ export async function requireAdminOrNotFound(): Promise<{
 
 /**
  * Requires authentication and project worker membership.
+ * Checks Bearer token first, then falls back to session auth.
  * Throws if not authenticated or not a worker in the project.
  */
 export async function requireProjectWorker(
   projectId: string,
-): Promise<{ userId: string; projectWorkerId: string }> {
+): Promise<{ projectWorker: ProjectWorker }> {
+  // Try Bearer token auth first
+  const headersList = await headers()
+  const authorization = headersList.get('authorization')
+  if (authorization?.startsWith('Bearer naholo_')) {
+    const token = authorization.slice('Bearer '.length)
+    return requireProjectWorkerByApiToken(projectId, token)
+  }
+
+  // Fall back to session-based auth
+  return requireProjectWorkerBySession(projectId)
+}
+
+async function requireProjectWorkerByApiToken(
+  projectId: string,
+  token: string,
+): Promise<{ projectWorker: ProjectWorker }> {
+  const result = await resolveProjectWorkerByApiToken(token)
+
+  if (!result) {
+    throw new Error('Unauthorized')
+  }
+  if (result.projectWorker.projectId !== projectId) {
+    throw new Error('Forbidden')
+  }
+
+  // Update lastUsedAt in the background
+  touchProjectWorkerApiToken(result.tokenId)
+
+  return { projectWorker: result.projectWorker }
+}
+
+async function requireProjectWorkerBySession(
+  projectId: string,
+): Promise<{ projectWorker: ProjectWorker }> {
   const user = await getAuthUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
 
-  const [worker] = await db
-    .select({ id: projectWorkers.id })
-    .from(projectWorkers)
-    .where(
-      and(
-        eq(projectWorkers.projectId, projectId),
-        eq(projectWorkers.userId, user.id),
-      ),
-    )
-    .limit(1)
-  if (!worker) throw new Error('Forbidden')
+  const worker = await resolveProjectWorkerByUserIdAndProjectId(
+    user.id,
+    projectId,
+  )
+  if (!worker) {
+    throw new Error('Forbidden')
+  }
 
-  return { userId: user.id, projectWorkerId: worker.id }
+  return { projectWorker: worker }
 }

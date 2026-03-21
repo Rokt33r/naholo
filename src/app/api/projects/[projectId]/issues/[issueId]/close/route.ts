@@ -16,9 +16,9 @@ type RouteContext = {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await closeIssue(projectWorkerId, issueId)
+    const result = await closeIssue(projectWorker.id, issueId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -41,9 +41,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await reopenIssue(projectWorkerId, issueId)
+    const result = await reopenIssue(projectWorker.id, issueId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

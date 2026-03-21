@@ -23,7 +23,7 @@ const moveTaskSchema = z.object({
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, taskId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { newParentTaskId, newPosition } = validation.data
 
-    const result = await moveTask(projectWorkerId, issueId, {
+    const result = await moveTask(projectWorker.id, issueId, {
       taskId,
       newParentTaskId,
       newPosition,

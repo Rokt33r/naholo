@@ -29,7 +29,7 @@ const updateTaskSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, taskId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // Handle name update
     if (name !== undefined) {
-      const result = await updateTask(projectWorkerId, issueId, taskId, name)
+      const result = await updateTask(projectWorker.id, issueId, taskId, name)
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },
@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     // Handle note update
     if (note !== undefined) {
       const result = await updateTaskNote(
-        projectWorkerId,
+        projectWorker.id,
         issueId,
         taskId,
         note,
@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // Handle done status update
     if (done !== undefined) {
-      const result = await setTaskDone(projectWorkerId, issueId, taskId, done)
+      const result = await setTaskDone(projectWorker.id, issueId, taskId, done)
       if (!result.success) {
         return NextResponse.json(
           { error: result.error.message },
@@ -103,9 +103,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, taskId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await deleteTask(projectWorkerId, issueId, taskId)
+    const result = await deleteTask(projectWorker.id, issueId, taskId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

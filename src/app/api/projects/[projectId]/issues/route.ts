@@ -8,12 +8,12 @@ export async function GET(
 ) {
   try {
     const { projectId } = await params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
     const searchParams = request.nextUrl.searchParams
     const closed = searchParams.get('closed') === 'true'
 
-    const issues = await listIssues(projectWorkerId, projectId, { closed })
+    const issues = await listIssues(projectWorker.id, projectId, { closed })
 
     return NextResponse.json(issues)
   } catch (error) {

@@ -23,7 +23,7 @@ const updateNoteSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, noteId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
     let body
     try {
@@ -42,7 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title, content } = validation.data
 
-    const result = await updateNote(projectWorkerId, noteId, issueId, {
+    const result = await updateNote(projectWorker.id, noteId, issueId, {
       title,
       content,
     })
@@ -67,9 +67,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, noteId } = await context.params
-    const { projectWorkerId } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await deleteNote(projectWorkerId, noteId, issueId)
+    const result = await deleteNote(projectWorker.id, noteId, issueId)
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }
