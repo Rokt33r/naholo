@@ -41,6 +41,33 @@ export async function createProjectWorker(
 }
 
 /**
+ * List all workers in a project
+ */
+export async function listProjectWorkers(
+  projectId: string,
+): Promise<ProjectWorker[]> {
+  return db.query.projectWorkers.findMany({
+    where: (t, { eq }) => eq(t.projectId, projectId),
+    orderBy: (t, { asc }) => asc(t.createdAt),
+  })
+}
+
+/**
+ * Get a single project worker by ID
+ */
+export async function getProjectWorker(
+  workerId: string,
+  projectId: string,
+): Promise<ProjectWorker | null> {
+  const worker = await db.query.projectWorkers.findFirst({
+    where: (t, { eq, and }) =>
+      and(eq(t.id, workerId), eq(t.projectId, projectId)),
+  })
+
+  return worker ?? null
+}
+
+/**
  * Get a project worker by user ID and project ID
  */
 export async function getProjectWorkerByUserId(

@@ -64,6 +64,13 @@
       "when": 1774042308451,
       "tag": "0008_nappy_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1774142625043,
+      "tag": "0009_far_arclight",
+      "breakpoints": true
     }
   ]
 }

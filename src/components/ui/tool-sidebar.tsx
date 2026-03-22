@@ -12,7 +12,7 @@ function ToolSidebar({ className, ...props }: React.ComponentProps<'nav'>) {
   return (
     <nav
       className={cn(
-        'flex h-full flex-col items-center py-2 px-2 bg-tool-sidebar text-tool-sidebar-foreground',
+        'flex h-full flex-col items-center py-2 px-2 bg-tool-sidebar text-tool-sidebar-foreground gap-2',
         className,
       )}
       {...props}

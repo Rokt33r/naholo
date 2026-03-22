@@ -1,6 +1,6 @@
 'use client'
 
-import { ListTodo, Settings, LogOut } from 'lucide-react'
+import { ListTodo, HardHat, Settings, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
@@ -37,9 +37,16 @@ export function AppModeSidebar({
       <ToolSidebarButton
         isActive={currentMode === 'issues'}
         tooltip='Issues'
-        onClick={() => router.push(`/app/projects/${currentProjectId}`)}
+        onClick={() => router.push(`/app/projects/${currentProjectId}/issues`)}
       >
         <ListTodo className='size-5' />
+      </ToolSidebarButton>
+      <ToolSidebarButton
+        isActive={currentMode === 'workers'}
+        tooltip='Workers'
+        onClick={() => router.push(`/app/projects/${currentProjectId}/workers`)}
+      >
+        <HardHat className='size-5' />
       </ToolSidebarButton>
 
       <ToolSidebarSpacing />

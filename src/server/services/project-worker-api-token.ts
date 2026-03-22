@@ -3,7 +3,7 @@ import { randomBytes, createHash } from 'crypto'
 import { db } from '../db'
 import { projectWorkerApiTokens } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
-import type { ReturnResult } from '@/lib/return-result'
+import type { SuccessResult, ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
 import type { ProjectWorker } from './project-worker'
@@ -37,7 +37,7 @@ function hashToken(token: string): string {
 export async function createProjectWorkerApiToken(
   projectWorkerId: string,
   data: CreateApiTokenInput,
-): Promise<ReturnResult<{ id: string; token: string }>> {
+): Promise<SuccessResult<{ id: string; token: string }>> {
   const token = generateToken()
   const tokenHash = hashToken(token)
   const tokenHint = token.slice(0, 8 + TOKEN_PREFIX.length) + '...'

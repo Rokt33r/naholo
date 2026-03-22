@@ -29,6 +29,7 @@ Tokens are scoped to a **project worker**, not a user. This means:
 `requireProjectWorker(projectId)` in `src/server/auth/utils.ts` is the single entry point. It checks Bearer token first, then falls back to session auth, and returns `{ projectWorker: ProjectWorker }`. All project-scoped routes use this function.
 
 Internally it delegates to two private helpers:
+
 - `requireProjectWorkerByApiToken(projectId, token)` — calls service to resolve token → worker, validates projectId match, touches lastUsedAt
 - `requireProjectWorkerBySession(projectId)` — calls `getAuthUser()` then service to resolve user+project → worker
 
@@ -92,9 +93,11 @@ Add "Workers" as a new mode in the app mode selector (alongside existing modes l
 ## Tasks
 
 - [x] Create `project_worker_api_tokens` schema in `src/server/db/schema/`
-- [x] Update auth to resolve project worker API tokens
-- [x] Create `project-worker-api-token` service (create, list, revoke)
-- [ ] Add Workers mode to app mode selector
-- [ ] Build workers list page
-- [ ] Build worker detail page with token management
-- [ ] Migration (user runs `db:generate` + `db:migrate`)
+- [x] Update auth to resolve project worker API tokens (delegated to services)
+- [x] Create `project-worker-api-token` service (create, list, revoke, resolve, touch)
+- [x] Add Drizzle relations for `projectWorkers` ↔ `projectWorkerApiTokens`
+- [x] Extract DB queries from auth utils into service layer
+- [x] Add Workers mode to app mode selector
+- [x] Build workers list page
+- [x] Build worker detail page with token management
+- [x] Migration (user runs `db:generate` + `db:migrate`)
