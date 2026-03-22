@@ -61,54 +61,50 @@ export default function IssuePage() {
     router.push(`${pathname}${query ? `?${query}` : ''}`)
   }
 
-  if (isLoading) {
-    return (
-      <div className='flex h-full items-center justify-center text-muted-foreground'>
-        Loading...
-      </div>
-    )
-  }
-
-  if (!issue) {
-    return (
-      <div className='flex h-full items-center justify-center text-muted-foreground'>
-        Issue not found
-      </div>
-    )
-  }
-
   return (
     <div ref={containerRef} className='flex h-full'>
-      <div className='flex-1 overflow-hidden'>
-        <IssueDetail
-          projectId={projectId}
-          issueId={issueId}
-          logs={logs}
-          notes={notes}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          showLogs={showLogs}
-          onToggleLogs={() => setShowLogs((v) => !v)}
-          isWideScreen={isWideScreen}
-          isMobile={isMobile}
-        />
-      </div>
-      {isWideScreen && (
-        <ResizablePanel
-          width={logsPanelWidth}
-          onWidthChange={setLogsPanelWidth}
-          minWidth={240}
-          maxWidth={600}
-          side='right'
-          className='border-l'
-        >
-          <LogsList
-            projectId={projectId}
-            issueId={issueId}
-            logs={logs}
-            isClosed={issue.closed}
-          />
-        </ResizablePanel>
+      {isLoading ? (
+        <div className='flex flex-1 items-center justify-center text-muted-foreground'>
+          Loading...
+        </div>
+      ) : !issue ? (
+        <div className='flex flex-1 items-center justify-center text-muted-foreground'>
+          Issue not found
+        </div>
+      ) : (
+        <>
+          <div className='flex-1 overflow-hidden'>
+            <IssueDetail
+              projectId={projectId}
+              issueId={issueId}
+              logs={logs}
+              notes={notes}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              showLogs={showLogs}
+              onToggleLogs={() => setShowLogs((v) => !v)}
+              isWideScreen={isWideScreen}
+              isMobile={isMobile}
+            />
+          </div>
+          {isWideScreen && (
+            <ResizablePanel
+              width={logsPanelWidth}
+              onWidthChange={setLogsPanelWidth}
+              minWidth={240}
+              maxWidth={600}
+              side='right'
+              className='border-l'
+            >
+              <LogsList
+                projectId={projectId}
+                issueId={issueId}
+                logs={logs}
+                isClosed={issue.closed}
+              />
+            </ResizablePanel>
+          )}
+        </>
       )}
     </div>
   )

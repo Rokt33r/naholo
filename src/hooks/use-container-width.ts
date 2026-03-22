@@ -5,7 +5,9 @@ export function useContainerWidth(ref: RefObject<HTMLElement | null>): number {
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el) {
+      return
+    }
 
     setWidth(el.clientWidth)
 
