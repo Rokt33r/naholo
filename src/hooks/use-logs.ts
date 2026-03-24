@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-type Log = {
+export type Log = {
   id: string
   content: string
+  projectWorker: { id: string; name: string; type: string } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -24,7 +25,11 @@ export function useLogs(projectId: string, issueId: string) {
 /**
  * Hook to create a log with optimistic updates
  */
-export function useCreateLog(projectId: string, issueId: string) {
+export function useCreateLog(
+  projectId: string,
+  issueId: string,
+  currentWorker: { id: string; name: string; type: string },
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -50,6 +55,11 @@ export function useCreateLog(projectId: string, issueId: string) {
       const optimisticLog: Log = {
         id: `temp-${Date.now()}`,
         content,
+        projectWorker: {
+          id: currentWorker.id,
+          name: currentWorker.name,
+          type: currentWorker.type,
+        },
         createdAt: new Date(),
         updatedAt: new Date(),
       }

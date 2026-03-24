@@ -1,5 +1,7 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { users } from './users'
+import { projectWorkers } from './project-workers'
 
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -11,3 +13,7 @@ export const projects = pgTable('projects', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
+
+export const projectsRelations = relations(projects, ({ many }) => ({
+  projectWorkers: many(projectWorkers),
+}))

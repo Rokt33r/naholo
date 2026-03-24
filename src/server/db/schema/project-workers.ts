@@ -18,7 +18,11 @@ export const projectWorkers = pgTable('project_workers', {
 
 export const projectWorkersRelations = relations(
   projectWorkers,
-  ({ many }) => ({
+  ({ one, many }) => ({
+    project: one(projects, {
+      fields: [projectWorkers.projectId],
+      references: [projects.id],
+    }),
     apiTokens: many(projectWorkerApiTokens),
   }),
 )

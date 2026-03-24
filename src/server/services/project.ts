@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { projects } from '../db/schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -11,6 +11,17 @@ export type Project = {
   name: string
   description: string | null
   createdAt: Date
+}
+
+export type ProjectWorkerInfo = {
+  id: string
+  type: string
+  name: string
+  role: string
+}
+
+export type ProjectWithWorker = Project & {
+  projectWorkerOfCurrentUser: ProjectWorkerInfo
 }
 
 export type CreateProjectInput = {
@@ -30,36 +41,49 @@ export async function getProject(
   userId: string,
   projectId: string,
 ): Promise<Project | null> {
-  const [project] = await db
-    .select({
-      id: projects.id,
-      name: projects.name,
-      description: projects.description,
-      createdAt: projects.createdAt,
-    })
-    .from(projects)
-    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
-    .limit(1)
+  const project = await db.query.projects.findFirst({
+    columns: { id: true, name: true, description: true, createdAt: true },
+    where: (t, { eq, and }) => and(eq(t.id, projectId), eq(t.userId, userId)),
+  })
 
-  return project || null
+  return project ?? null
 }
 
 /**
  * List all projects for a user
  */
-export async function listProjects(userId: string): Promise<Project[]> {
-  const result = await db
-    .select({
-      id: projects.id,
-      name: projects.name,
-      description: projects.description,
-      createdAt: projects.createdAt,
+export async function listProjects(
+  userId: string,
+  options?: { with?: 'projectWorkerOfCurrentUser' },
+): Promise<Project[] | ProjectWithWorker[]> {
+  if (options?.with === 'projectWorkerOfCurrentUser') {
+    const result = await db.query.projects.findMany({
+      columns: { id: true, name: true, description: true, createdAt: true },
+      with: {
+        projectWorkers: {
+          columns: { id: true, type: true, name: true, role: true },
+          where: (t, { eq }) => eq(t.userId, userId),
+          limit: 1,
+        },
+      },
+      where: (t, { eq }) => eq(t.userId, userId),
+      orderBy: (t, { desc }) => desc(t.createdAt),
     })
-    .from(projects)
-    .where(eq(projects.userId, userId))
-    .orderBy(desc(projects.createdAt))
 
-  return result
+    return result.map((row) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.createdAt,
+      projectWorkerOfCurrentUser: row.projectWorkers[0],
+    }))
+  }
+
+  return db.query.projects.findMany({
+    columns: { id: true, name: true, description: true, createdAt: true },
+    where: (t, { eq }) => eq(t.userId, userId),
+    orderBy: (t, { desc }) => desc(t.createdAt),
+  })
 }
 
 /**

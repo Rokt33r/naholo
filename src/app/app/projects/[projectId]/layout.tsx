@@ -20,7 +20,14 @@ function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ProjectContext value={{ projectId, projectName: project.name, projects }}>
+    <ProjectContext
+      value={{
+        projectId,
+        projectName: project.name,
+        projects,
+        currentWorker: project.projectWorkerOfCurrentUser,
+      }}
+    >
       <div className='flex h-screen w-full'>
         {!isMobile && (
           <AppModeSidebar

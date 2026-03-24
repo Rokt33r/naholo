@@ -11,22 +11,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useUpdateLog, useDeleteLog } from '@/hooks/use-logs'
-
-type Log = {
-  id: string
-  content: string
-  createdAt: Date
-  updatedAt: Date
-}
+import { useUpdateLog, useDeleteLog, type Log } from '@/hooks/use-logs'
+import { cn } from '@/lib/utils'
 
 type LogItemProps = {
   log: Log
   projectId: string
   issueId: string
+  isOwn: boolean
 }
 
-export function LogItem({ log, projectId, issueId }: LogItemProps) {
+export function LogItem({ log, projectId, issueId, isOwn }: LogItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(log.content)
   const skipBlurSave = useRef(false)
@@ -43,6 +38,8 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
 
   const isCreating = log.id.startsWith('temp-')
   const isLoading = updateLoading || deleteLoading
+  const isBot = log.projectWorker?.type === 'bot'
+  const isReadOnly = !isOwn || isBot
 
   const handleEdit = () => {
     setContent(log.content)
@@ -109,7 +106,12 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
   }, [handleSave])
 
   return (
-    <div className='group flex flex-row-reverse items-baseline-last'>
+    <div
+      className={cn(
+        'group flex items-baseline-last',
+        isOwn ? 'flex-row-reverse' : 'flex-row',
+      )}
+    >
       {isEditing ? (
         <div className='w-full'>
           <AutoResizeTextarea
@@ -124,9 +126,19 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
         </div>
       ) : (
         <div>
+          {!isOwn && log.projectWorker?.name && (
+            <div className='mb-0.5 text-xs text-muted-foreground'>
+              {log.projectWorker.name}
+            </div>
+          )}
           <div
-            onDoubleClick={isCreating ? undefined : handleEdit}
-            className={`inline-block rounded-lg border bg-card p-2 hover:bg-accent/50 ${isCreating ? '' : 'cursor-text'} ${isCreating ? 'opacity-70' : ''}`}
+            onDoubleClick={isCreating || isReadOnly ? undefined : handleEdit}
+            className={cn(
+              'inline-block rounded-lg border p-2',
+              isOwn ? 'bg-card' : 'bg-muted/50',
+              !isCreating && !isReadOnly && 'cursor-text hover:bg-accent/50',
+              isCreating && 'opacity-70',
+            )}
           >
             <MarkdownView className='max-w-160'>{log.content}</MarkdownView>
           </div>
@@ -135,7 +147,7 @@ export function LogItem({ log, projectId, issueId }: LogItemProps) {
           )}
         </div>
       )}
-      {!isCreating && (
+      {!isCreating && !isReadOnly && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

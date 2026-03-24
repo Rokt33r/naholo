@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { logs, issues } from '../db/schema'
-import { eq, and, asc, desc } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -9,6 +9,7 @@ import { NotFoundError } from './errors'
 export type Log = {
   id: string
   content: string
+  projectWorker: { id: string; name: string; type: string } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -20,26 +21,36 @@ export type CreateLogInput = {
 }
 
 /**
- * List logs for an issue
+ * List all logs for an issue, including worker info
  */
 export async function listLogs(
-  projectWorkerId: string,
+  projectId: string,
   issueId: string,
 ): Promise<Log[]> {
-  const result = await db
-    .select({
-      id: logs.id,
-      content: logs.content,
-      createdAt: logs.createdAt,
-      updatedAt: logs.updatedAt,
-    })
-    .from(logs)
-    .where(
-      and(eq(logs.issueId, issueId), eq(logs.projectWorkerId, projectWorkerId)),
-    )
-    .orderBy(asc(logs.createdAt))
+  const result = await db.query.logs.findMany({
+    columns: {
+      id: true,
+      content: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    with: {
+      projectWorker: {
+        columns: { id: true, name: true, type: true },
+      },
+    },
+    where: (t, { eq, and }) =>
+      and(eq(t.projectId, projectId), eq(t.issueId, issueId)),
+    orderBy: (t, { asc }) => asc(t.createdAt),
+  })
 
-  return result
+  return result.map((row) => ({
+    id: row.id,
+    content: row.content,
+    projectWorker: row.projectWorker ?? null,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }))
 }
 
 /**
@@ -48,7 +59,14 @@ export async function listLogs(
 export async function createLog(
   projectWorkerId: string,
   data: CreateLogInput,
-): Promise<ReturnResult<Log>> {
+): Promise<
+  ReturnResult<{
+    id: string
+    content: string
+    createdAt: Date
+    updatedAt: Date
+  }>
+> {
   // Validate issue exists for worker
   const [issue] = await db
     .select({ id: issues.id })
@@ -99,7 +117,14 @@ export async function updateLog(
   issueId: string,
   logId: string,
   content: string,
-): Promise<ReturnResult<Log>> {
+): Promise<
+  ReturnResult<{
+    id: string
+    content: string
+    createdAt: Date
+    updatedAt: Date
+  }>
+> {
   const [log] = await db
     .update(logs)
     .set({

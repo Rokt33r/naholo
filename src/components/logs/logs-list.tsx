@@ -6,14 +6,8 @@ import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { Button } from '@/components/ui/button'
 import { LogItem } from './log-item'
 import { useCloseIssue, useReopenIssue } from '@/hooks/use-issues'
-import { useCreateLog } from '@/hooks/use-logs'
-
-type Log = {
-  id: string
-  content: string
-  createdAt: Date
-  updatedAt: Date
-}
+import { useCreateLog, type Log } from '@/hooks/use-logs'
+import { useProjectContext } from '@/components/app/project-context'
 
 type LogsListProps = {
   projectId: string
@@ -34,10 +28,12 @@ export function LogsList({
   const [isReopening, setIsReopening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { currentWorker } = useProjectContext()
 
   const { mutateAsync: createLog, isPending: createLoading } = useCreateLog(
     projectId,
     issueId,
+    currentWorker,
   )
   const { mutateAsync: closeIssue } = useCloseIssue(projectId, issueId)
   const { mutateAsync: reopenIssue } = useReopenIssue(projectId, issueId)
@@ -117,6 +113,7 @@ export function LogsList({
                 log={log}
                 projectId={projectId}
                 issueId={issueId}
+                isOwn={log.projectWorker?.id === currentWorker.id}
               />
             ))}
             <div ref={messagesEndRef} />

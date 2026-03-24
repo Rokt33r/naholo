@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogsList } from '@/components/logs/logs-list'
+import type { Log } from '@/hooks/use-logs'
 import { TasksList } from '@/components/tasks/tasks-list'
 import { NoteView } from '@/components/notes/note-view'
 import { useIssuesList } from './issues-list-context'
@@ -37,13 +38,6 @@ type IssueDetail = {
   title: string
   closed: boolean
   closedAt: Date | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-type Log = {
-  id: string
-  content: string
   createdAt: Date
   updatedAt: Date
 }
