@@ -14,12 +14,6 @@ export type Log = {
   updatedAt: Date
 }
 
-export type CreateLogInput = {
-  projectId: string
-  issueId: string
-  content: string
-}
-
 /**
  * List all logs for an issue, including worker info
  */
@@ -53,6 +47,12 @@ export async function listLogs(
   }))
 }
 
+export type CreateLogInput = {
+  projectId: string
+  issueId: string
+  content: string
+}
+
 /**
  * Create a new log
  */
@@ -67,15 +67,12 @@ export async function createLog(
     updatedAt: Date
   }>
 > {
-  // Validate issue exists for worker
+  // Validate issue exists in the project
   const [issue] = await db
     .select({ id: issues.id })
     .from(issues)
     .where(
-      and(
-        eq(issues.id, data.issueId),
-        eq(issues.projectWorkerId, projectWorkerId),
-      ),
+      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
     )
     .limit(1)
 
@@ -114,6 +111,7 @@ export async function createLog(
  */
 export async function updateLog(
   projectWorkerId: string,
+  projectId: string,
   issueId: string,
   logId: string,
   content: string,
@@ -125,6 +123,17 @@ export async function updateLog(
     updatedAt: Date
   }>
 > {
+  // Validate issue belongs to the project
+  const [issue] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .where(and(eq(issues.id, issueId), eq(issues.projectId, projectId)))
+    .limit(1)
+
+  if (!issue) {
+    return err(new NotFoundError('Issue'))
+  }
+
   const [log] = await db
     .update(logs)
     .set({
@@ -169,9 +178,21 @@ export async function updateLog(
  */
 export async function deleteLog(
   projectWorkerId: string,
+  projectId: string,
   issueId: string,
   logId: string,
 ): Promise<ReturnResult<undefined>> {
+  // Validate issue belongs to the project
+  const [issue] = await db
+    .select({ id: issues.id })
+    .from(issues)
+    .where(and(eq(issues.id, issueId), eq(issues.projectId, projectId)))
+    .limit(1)
+
+  if (!issue) {
+    return err(new NotFoundError('Issue'))
+  }
+
   const [log] = await db
     .delete(logs)
     .where(and(eq(logs.id, logId), eq(logs.projectWorkerId, projectWorkerId)))

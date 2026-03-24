@@ -32,5 +32,6 @@ The MCP server is a thin wrapper that translates MCP tool calls into Naholo API 
 
 1. [P24-S1: API Tokens](p24-s1-api-tokens.md) — schema, auth flow, workers UI & token management
 2. [P24-S2: Bot Worker Logs](p24-s2-bot-worker-logs.md) — chat-style log rendering, current worker context hook
-3. [P24-S3: API Completeness](p24-s3-api-completeness.md) — new endpoints, pagination, bundled responses
-4. [P24-S4: MCP Server](p24-s4-mcp-server.md) — MCP tools, resources, npm package
+3. [P24-S3: Fix Auth & Permissions](p24-s3-fix-auth-and-permissions.md) — admin role check for project actions, fix log creation ownership
+4. [P24-S4: API Completeness](p24-s4-api-completeness.md) — new endpoints, pagination, bundled responses
+5. [P24-S5: MCP Server](p24-s5-mcp-server.md) — MCP tools, resources, npm package

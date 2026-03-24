@@ -1,7 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { getAuthUser, requireProjectWorker } from '@/server/auth/utils'
+import {
+  getAuthUser,
+  requireAdminProjectWorker,
+  requireProjectWorker,
+} from '@/server/auth/utils'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { auth } from '../../server/auth/auth'
@@ -61,12 +65,9 @@ export async function updateProjectAction(
   name: string,
   description?: string,
 ): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  await requireAdminProjectWorker(id)
 
-  const result = await updateProject(user.id, id, { name, description })
+  const result = await updateProject(id, { name, description })
   if (result.success) {
     revalidatePath('/app')
   }
@@ -77,12 +78,9 @@ export async function updateProjectAction(
 export async function deleteProjectAction(
   id: string,
 ): Promise<ReturnResult<undefined>> {
-  const user = await getAuthUser()
-  if (!user) {
-    return err(new Error('Unauthorized'))
-  }
+  await requireAdminProjectWorker(id)
 
-  const result = await deleteProject(user.id, id)
+  const result = await deleteProject(id)
   if (result.success) {
     revalidatePath('/app')
   }

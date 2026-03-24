@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { projects } from '../db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -109,7 +109,6 @@ export async function createProject(
  * Update a project
  */
 export async function updateProject(
-  userId: string,
   projectId: string,
   data: UpdateProjectInput,
 ): Promise<ReturnResult<undefined>> {
@@ -120,7 +119,7 @@ export async function updateProject(
       description: data.description,
       updatedAt: new Date(),
     })
-    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .where(eq(projects.id, projectId))
     .returning({ id: projects.id })
 
   if (!project) return err(new NotFoundError('Project'))
@@ -132,12 +131,11 @@ export async function updateProject(
  * Delete a project
  */
 export async function deleteProject(
-  userId: string,
   projectId: string,
 ): Promise<ReturnResult<undefined>> {
   const [project] = await db
     .delete(projects)
-    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .where(eq(projects.id, projectId))
     .returning({ id: projects.id })
 
   if (!project) return err(new NotFoundError('Project'))

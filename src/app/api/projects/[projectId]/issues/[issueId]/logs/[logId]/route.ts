@@ -41,7 +41,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { content } = validation.data
 
-    const result = await updateLog(projectWorker.id, issueId, logId, content)
+    const result = await updateLog(
+      projectWorker.id,
+      projectId,
+      issueId,
+      logId,
+      content,
+    )
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -72,7 +78,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const { projectId, issueId, logId } = await context.params
     const { projectWorker } = await requireProjectWorker(projectId)
 
-    const result = await deleteLog(projectWorker.id, issueId, logId)
+    const result = await deleteLog(projectWorker.id, projectId, issueId, logId)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

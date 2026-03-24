@@ -100,6 +100,20 @@ export async function requireAdminOrNotFound(): Promise<{
 }
 
 /**
+ * Requires authentication and project worker membership with admin role.
+ * Throws if not authenticated, not a worker, or not admin.
+ */
+export async function requireAdminProjectWorker(
+  projectId: string,
+): Promise<{ projectWorker: ProjectWorker }> {
+  const { projectWorker } = await requireProjectWorker(projectId)
+  if (projectWorker.role !== 'admin') {
+    throw new Error('Forbidden')
+  }
+  return { projectWorker }
+}
+
+/**
  * Requires authentication and project worker membership.
  * Checks Bearer token first, then falls back to session auth.
  * Throws if not authenticated or not a worker in the project.
