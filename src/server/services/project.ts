@@ -50,6 +50,20 @@ export async function getProject(
 }
 
 /**
+ * Get a single project by ID (no user filter — caller must verify access)
+ */
+export async function getProjectById(
+  projectId: string,
+): Promise<Project | null> {
+  const project = await db.query.projects.findFirst({
+    columns: { id: true, name: true, description: true, createdAt: true },
+    where: (t, { eq }) => eq(t.id, projectId),
+  })
+
+  return project ?? null
+}
+
+/**
  * List all projects for a user
  */
 export async function listProjects(

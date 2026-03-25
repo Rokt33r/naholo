@@ -30,10 +30,7 @@ export type UpdateNoteInput = {
 /**
  * List notes for an issue (ordered by position)
  */
-export async function listNotes(
-  projectWorkerId: string,
-  issueId: string,
-): Promise<Note[]> {
+export async function listNotes(issueId: string): Promise<Note[]> {
   const result = await db
     .select({
       id: notes.id,
@@ -44,12 +41,7 @@ export async function listNotes(
       updatedAt: notes.updatedAt,
     })
     .from(notes)
-    .where(
-      and(
-        eq(notes.issueId, issueId),
-        eq(notes.projectWorkerId, projectWorkerId),
-      ),
-    )
+    .where(eq(notes.issueId, issueId))
     .orderBy(asc(notes.position))
 
   return result

@@ -17,9 +17,9 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    await requireProjectWorker(projectId)
 
-    const notes = await listNotes(projectWorker.id, issueId)
+    const notes = await listNotes(issueId)
 
     return NextResponse.json(notes)
   } catch (error) {
