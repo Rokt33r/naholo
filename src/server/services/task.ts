@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { tasks, issues } from '../db/schema'
-import { eq, and, asc, isNull, gt, gte, lt, lte, sql } from 'drizzle-orm'
+import { eq, and, isNull, gt, gte, lt, lte, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -17,67 +17,39 @@ export type Task = {
   updatedAt: Date
 }
 
-export type CreateTaskInput = {
-  projectId: string
-  issueId: string
-  name: string
-  note?: string | null
-  parentTaskId?: string | null
-  position?: number
-}
-
 /**
  * List tasks for an issue (hierarchical)
  */
-export async function listTasks(
-  projectWorkerId: string,
-  issueId: string,
-): Promise<Task[]> {
-  const result = await db
-    .select({
-      id: tasks.id,
-      parentTaskId: tasks.parentTaskId,
-      name: tasks.name,
-      note: tasks.note,
-      done: tasks.done,
-      position: tasks.position,
-      createdAt: tasks.createdAt,
-      updatedAt: tasks.updatedAt,
-    })
-    .from(tasks)
-    .where(
-      and(
-        eq(tasks.issueId, issueId),
-        eq(tasks.projectWorkerId, projectWorkerId),
-      ),
-    )
-    .orderBy(asc(tasks.position))
-
-  return result
+export async function listTasks(data: { issueId: string }): Promise<Task[]> {
+  return db.query.tasks.findMany({
+    columns: {
+      id: true,
+      parentTaskId: true,
+      name: true,
+      note: true,
+      done: true,
+      position: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    where: (t, { eq }) => eq(t.issueId, data.issueId),
+    orderBy: (t, { asc }) => asc(t.position),
+  })
 }
 
 /**
  * Create a new task. If position is provided, shifts existing tasks at or after that position.
  * Otherwise appends to the end.
  */
-export async function createTask(
-  projectWorkerId: string,
-  data: CreateTaskInput,
-): Promise<ReturnResult<{ id: string }>> {
-  // Validate issue exists for worker
-  const [issue] = await db
-    .select({ id: issues.id })
-    .from(issues)
-    .where(
-      and(
-        eq(issues.id, data.issueId),
-        eq(issues.projectWorkerId, projectWorkerId),
-      ),
-    )
-    .limit(1)
-
-  if (!issue) return err(new NotFoundError('Issue'))
-
+export async function createTask(data: {
+  projectWorkerId: string
+  projectId: string
+  issueId: string
+  name: string
+  note?: string | null
+  parentTaskId?: string | null
+  position?: number
+}): Promise<ReturnResult<{ id: string }>> {
   const parentTaskId = data.parentTaskId ?? null
 
   let position: number
@@ -91,7 +63,6 @@ export async function createTask(
       .where(
         and(
           eq(tasks.issueId, data.issueId),
-          eq(tasks.projectWorkerId, projectWorkerId),
           parentTaskId
             ? eq(tasks.parentTaskId, parentTaskId)
             : isNull(tasks.parentTaskId),
@@ -101,19 +72,17 @@ export async function createTask(
     position = data.position
   } else {
     // Get the maximum position for tasks at this level
-    const existingTasks = await db
-      .select({ position: tasks.position })
-      .from(tasks)
-      .where(
+    const existingTasks = await db.query.tasks.findMany({
+      columns: { position: true },
+      where: (t, { eq, and, isNull }) =>
         and(
-          eq(tasks.issueId, data.issueId),
-          eq(tasks.projectWorkerId, projectWorkerId),
+          eq(t.issueId, data.issueId),
           parentTaskId
-            ? eq(tasks.parentTaskId, parentTaskId)
-            : isNull(tasks.parentTaskId),
+            ? eq(t.parentTaskId, parentTaskId)
+            : isNull(t.parentTaskId),
         ),
-      )
-      .orderBy(tasks.position)
+      orderBy: (t, { asc }) => asc(t.position),
+    })
 
     const maxPosition =
       existingTasks.length > 0
@@ -127,7 +96,7 @@ export async function createTask(
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      projectWorkerId,
+      projectWorkerId: data.projectWorkerId,
       parentTaskId,
       name: data.name,
       note: data.note ?? null,
@@ -146,29 +115,34 @@ export async function createTask(
 /**
  * Update a task.
  */
-export async function updateTask(
-  projectWorkerId: string,
-  issueId: string,
-  taskId: string,
-  name: string,
-): Promise<ReturnResult<undefined>> {
+export async function updateTask(data: {
+  projectWorkerId: string
+  issueId: string
+  taskId: string
+  name: string
+}): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .update(tasks)
     .set({
-      name,
+      name: data.name,
       updatedAt: new Date(),
     })
     .where(
-      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+      and(
+        eq(tasks.id, data.taskId),
+        eq(tasks.projectWorkerId, data.projectWorkerId),
+      ),
     )
     .returning({ id: tasks.id })
 
-  if (!task) return err(new NotFoundError('Task'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
+  }
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+    .where(eq(issues.id, data.issueId))
 
   return ok()
 }
@@ -176,29 +150,34 @@ export async function updateTask(
 /**
  * Set a task's done status.
  */
-export async function setTaskDone(
-  projectWorkerId: string,
-  issueId: string,
-  taskId: string,
-  done: boolean,
-): Promise<ReturnResult<undefined>> {
+export async function setTaskDone(data: {
+  projectWorkerId: string
+  issueId: string
+  taskId: string
+  done: boolean
+}): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .update(tasks)
     .set({
-      done,
+      done: data.done,
       updatedAt: new Date(),
     })
     .where(
-      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+      and(
+        eq(tasks.id, data.taskId),
+        eq(tasks.projectWorkerId, data.projectWorkerId),
+      ),
     )
     .returning({ id: tasks.id })
 
-  if (!task) return err(new NotFoundError('Task'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
+  }
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+    .where(eq(issues.id, data.issueId))
 
   return ok()
 }
@@ -206,29 +185,34 @@ export async function setTaskDone(
 /**
  * Update a task's note.
  */
-export async function updateTaskNote(
-  projectWorkerId: string,
-  issueId: string,
-  taskId: string,
-  note: string | null,
-): Promise<ReturnResult<undefined>> {
+export async function updateTaskNote(data: {
+  projectWorkerId: string
+  issueId: string
+  taskId: string
+  note: string | null
+}): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .update(tasks)
     .set({
-      note,
+      note: data.note,
       updatedAt: new Date(),
     })
     .where(
-      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+      and(
+        eq(tasks.id, data.taskId),
+        eq(tasks.projectWorkerId, data.projectWorkerId),
+      ),
     )
     .returning({ id: tasks.id })
 
-  if (!task) return err(new NotFoundError('Task'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
+  }
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+    .where(eq(issues.id, data.issueId))
 
   return ok()
 }
@@ -236,60 +220,61 @@ export async function updateTaskNote(
 /**
  * Delete a task.
  */
-export async function deleteTask(
-  projectWorkerId: string,
-  issueId: string,
-  taskId: string,
-): Promise<ReturnResult<undefined>> {
+export async function deleteTask(data: {
+  projectWorkerId: string
+  issueId: string
+  taskId: string
+}): Promise<ReturnResult<undefined>> {
   const [task] = await db
     .delete(tasks)
     .where(
-      and(eq(tasks.id, taskId), eq(tasks.projectWorkerId, projectWorkerId)),
+      and(
+        eq(tasks.id, data.taskId),
+        eq(tasks.projectWorkerId, data.projectWorkerId),
+      ),
     )
     .returning({ id: tasks.id })
 
-  if (!task) return err(new NotFoundError('Task'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
+  }
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+    .where(eq(issues.id, data.issueId))
 
   return ok()
-}
-
-export type MoveTaskInput = {
-  taskId: string
-  newParentTaskId: string | null
-  newPosition: number
 }
 
 /**
  * Move a task to a new parent and/or position.
  */
-export async function moveTask(
-  projectWorkerId: string,
-  issueId: string,
-  data: MoveTaskInput,
-): Promise<ReturnResult<undefined>> {
+export async function moveTask(data: {
+  projectWorkerId: string
+  issueId: string
+  taskId: string
+  newParentTaskId: string | null
+  newPosition: number
+}): Promise<ReturnResult<undefined>> {
   // Get the current task
-  const [currentTask] = await db
-    .select({
-      id: tasks.id,
-      parentTaskId: tasks.parentTaskId,
-      position: tasks.position,
-    })
-    .from(tasks)
-    .where(
+  const currentTask = await db.query.tasks.findFirst({
+    columns: {
+      id: true,
+      parentTaskId: true,
+      position: true,
+    },
+    where: (t, { eq, and }) =>
       and(
-        eq(tasks.id, data.taskId),
-        eq(tasks.projectWorkerId, projectWorkerId),
-        eq(tasks.issueId, issueId),
+        eq(t.id, data.taskId),
+        eq(t.projectWorkerId, data.projectWorkerId),
+        eq(t.issueId, data.issueId),
       ),
-    )
-    .limit(1)
+  })
 
-  if (!currentTask) return err(new NotFoundError('Task'))
+  if (!currentTask) {
+    return err(new NotFoundError('Task'))
+  }
 
   const oldParentId = currentTask.parentTaskId
   const oldPosition = currentTask.position
@@ -314,8 +299,8 @@ export async function moveTask(
         })
         .where(
           and(
-            eq(tasks.issueId, issueId),
-            eq(tasks.projectWorkerId, projectWorkerId),
+            eq(tasks.issueId, data.issueId),
+            eq(tasks.projectWorkerId, data.projectWorkerId),
             oldParentId
               ? eq(tasks.parentTaskId, oldParentId)
               : isNull(tasks.parentTaskId),
@@ -332,8 +317,8 @@ export async function moveTask(
         })
         .where(
           and(
-            eq(tasks.issueId, issueId),
-            eq(tasks.projectWorkerId, projectWorkerId),
+            eq(tasks.issueId, data.issueId),
+            eq(tasks.projectWorkerId, data.projectWorkerId),
             oldParentId
               ? eq(tasks.parentTaskId, oldParentId)
               : isNull(tasks.parentTaskId),
@@ -352,8 +337,8 @@ export async function moveTask(
       })
       .where(
         and(
-          eq(tasks.issueId, issueId),
-          eq(tasks.projectWorkerId, projectWorkerId),
+          eq(tasks.issueId, data.issueId),
+          eq(tasks.projectWorkerId, data.projectWorkerId),
           oldParentId
             ? eq(tasks.parentTaskId, oldParentId)
             : isNull(tasks.parentTaskId),
@@ -369,8 +354,8 @@ export async function moveTask(
       })
       .where(
         and(
-          eq(tasks.issueId, issueId),
-          eq(tasks.projectWorkerId, projectWorkerId),
+          eq(tasks.issueId, data.issueId),
+          eq(tasks.projectWorkerId, data.projectWorkerId),
           newParentId
             ? eq(tasks.parentTaskId, newParentId)
             : isNull(tasks.parentTaskId),
@@ -390,14 +375,14 @@ export async function moveTask(
     .where(
       and(
         eq(tasks.id, data.taskId),
-        eq(tasks.projectWorkerId, projectWorkerId),
+        eq(tasks.projectWorkerId, data.projectWorkerId),
       ),
     )
 
   await db
     .update(issues)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, issueId))
+    .where(eq(issues.id, data.issueId))
 
   return ok()
 }

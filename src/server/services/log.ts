@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { logs, issues } from '../db/schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -17,10 +17,7 @@ export type Log = {
 /**
  * List all logs for an issue, including worker info
  */
-export async function listLogs(
-  projectId: string,
-  issueId: string,
-): Promise<Log[]> {
+export async function listLogs(data: { issueId: string }): Promise<Log[]> {
   const result = await db.query.logs.findMany({
     columns: {
       id: true,
@@ -33,8 +30,7 @@ export async function listLogs(
         columns: { id: true, name: true, type: true },
       },
     },
-    where: (t, { eq, and }) =>
-      and(eq(t.projectId, projectId), eq(t.issueId, issueId)),
+    where: (t, { eq }) => eq(t.issueId, data.issueId),
     orderBy: (t, { asc }) => asc(t.createdAt),
   })
 
@@ -47,19 +43,15 @@ export async function listLogs(
   }))
 }
 
-export type CreateLogInput = {
-  projectId: string
-  issueId: string
-  content: string
-}
-
 /**
  * Create a new log
  */
-export async function createLog(
-  projectWorkerId: string,
-  data: CreateLogInput,
-): Promise<
+export async function createLog(data: {
+  projectWorkerId: string
+  projectId: string
+  issueId: string
+  content: string
+}): Promise<
   ReturnResult<{
     id: string
     content: string
@@ -67,23 +59,12 @@ export async function createLog(
     updatedAt: Date
   }>
 > {
-  // Validate issue exists in the project
-  const [issue] = await db
-    .select({ id: issues.id })
-    .from(issues)
-    .where(
-      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
-    )
-    .limit(1)
-
-  if (!issue) return err(new NotFoundError('Issue'))
-
   const [log] = await db
     .insert(logs)
     .values({
       projectId: data.projectId,
       issueId: data.issueId,
-      projectWorkerId,
+      projectWorkerId: data.projectWorkerId,
       content: data.content,
     })
     .returning({
@@ -109,13 +90,12 @@ export async function createLog(
 /**
  * Update a log.
  */
-export async function updateLog(
-  projectWorkerId: string,
-  projectId: string,
-  issueId: string,
-  logId: string,
-  content: string,
-): Promise<
+export async function updateLog(data: {
+  projectWorkerId: string
+  issueId: string
+  logId: string
+  content: string
+}): Promise<
   ReturnResult<{
     id: string
     content: string
@@ -123,24 +103,18 @@ export async function updateLog(
     updatedAt: Date
   }>
 > {
-  // Validate issue belongs to the project
-  const [issue] = await db
-    .select({ id: issues.id })
-    .from(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.projectId, projectId)))
-    .limit(1)
-
-  if (!issue) {
-    return err(new NotFoundError('Issue'))
-  }
-
   const [log] = await db
     .update(logs)
     .set({
-      content,
+      content: data.content,
       updatedAt: new Date(),
     })
-    .where(and(eq(logs.id, logId), eq(logs.projectWorkerId, projectWorkerId)))
+    .where(
+      and(
+        eq(logs.id, data.logId),
+        eq(logs.projectWorkerId, data.projectWorkerId),
+      ),
+    )
     .returning({
       id: logs.id,
       content: logs.content,
@@ -148,27 +122,28 @@ export async function updateLog(
       updatedAt: logs.updatedAt,
     })
 
-  if (!log) return err(new NotFoundError('Log'))
+  if (!log) {
+    return err(new NotFoundError('Log'))
+  }
 
   // Get the most recent log for this issue
-  const [lastLog] = await db
-    .select({ id: logs.id })
-    .from(logs)
-    .where(eq(logs.issueId, issueId))
-    .orderBy(desc(logs.createdAt))
-    .limit(1)
+  const lastLog = await db.query.logs.findFirst({
+    columns: { id: true },
+    where: (t, { eq }) => eq(t.issueId, data.issueId),
+    orderBy: (t, { desc }) => desc(t.createdAt),
+  })
 
   const newValues: { updatedAt: Date; lastLogPreview?: string | null } = {
     updatedAt: new Date(),
   }
 
   // Only update preview if this is the most recent log
-  if (lastLog && lastLog.id === logId) {
-    const preview = content.trim().slice(0, 100)
+  if (lastLog && lastLog.id === data.logId) {
+    const preview = data.content.trim().slice(0, 100)
     newValues.lastLogPreview = preview || null
   }
 
-  await db.update(issues).set(newValues).where(eq(issues.id, issueId))
+  await db.update(issues).set(newValues).where(eq(issues.id, data.issueId))
 
   return ok(log)
 }
@@ -176,37 +151,31 @@ export async function updateLog(
 /**
  * Delete a log.
  */
-export async function deleteLog(
-  projectWorkerId: string,
-  projectId: string,
-  issueId: string,
-  logId: string,
-): Promise<ReturnResult<undefined>> {
-  // Validate issue belongs to the project
-  const [issue] = await db
-    .select({ id: issues.id })
-    .from(issues)
-    .where(and(eq(issues.id, issueId), eq(issues.projectId, projectId)))
-    .limit(1)
-
-  if (!issue) {
-    return err(new NotFoundError('Issue'))
-  }
-
+export async function deleteLog(data: {
+  projectWorkerId: string
+  issueId: string
+  logId: string
+}): Promise<ReturnResult<undefined>> {
   const [log] = await db
     .delete(logs)
-    .where(and(eq(logs.id, logId), eq(logs.projectWorkerId, projectWorkerId)))
+    .where(
+      and(
+        eq(logs.id, data.logId),
+        eq(logs.projectWorkerId, data.projectWorkerId),
+      ),
+    )
     .returning({ id: logs.id })
 
-  if (!log) return err(new NotFoundError('Log'))
+  if (!log) {
+    return err(new NotFoundError('Log'))
+  }
 
   // Get the most recent log for this issue after deletion
-  const [lastLog] = await db
-    .select({ content: logs.content })
-    .from(logs)
-    .where(eq(logs.issueId, issueId))
-    .orderBy(desc(logs.createdAt))
-    .limit(1)
+  const lastLog = await db.query.logs.findFirst({
+    columns: { content: true },
+    where: (t, { eq }) => eq(t.issueId, data.issueId),
+    orderBy: (t, { desc }) => desc(t.createdAt),
+  })
 
   const newValues: { updatedAt: Date; lastLogPreview?: string | null } = {
     updatedAt: new Date(),
@@ -220,7 +189,7 @@ export async function deleteLog(
     newValues.lastLogPreview = null
   }
 
-  await db.update(issues).set(newValues).where(eq(issues.id, issueId))
+  await db.update(issues).set(newValues).where(eq(issues.id, data.issueId))
 
   return ok()
 }

@@ -5,6 +5,7 @@ import {
   getAuthUser,
   requireAdminProjectWorker,
   requireProjectWorker,
+  requireIssueAccess,
 } from '@/server/auth/utils'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -98,7 +99,8 @@ export async function createIssueAction(
 ): Promise<ReturnResult<{ id: string }>> {
   const { projectWorker } = await requireProjectWorker(projectId)
 
-  const result = await createIssue(projectWorker.id, {
+  const result = await createIssue({
+    projectWorkerId: projectWorker.id,
     projectId,
     title,
   })
@@ -118,9 +120,10 @@ export async function createLogAction(
   issueId: string,
   content: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker } = await requireProjectWorker(projectId)
+  const { projectWorker } = await requireIssueAccess(projectId, issueId)
 
-  const result = await createLog(projectWorker.id, {
+  const result = await createLog({
+    projectWorkerId: projectWorker.id,
     projectId,
     issueId,
     content,
@@ -143,9 +146,10 @@ export async function createTaskAction(
   name: string,
   parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker } = await requireProjectWorker(projectId)
+  const { projectWorker } = await requireIssueAccess(projectId, issueId)
 
-  const result = await createTask(projectWorker.id, {
+  const result = await createTask({
+    projectWorkerId: projectWorker.id,
     projectId,
     issueId,
     name,
@@ -164,9 +168,14 @@ export async function updateTaskAction(
   id: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker } = await requireProjectWorker(projectId)
+  const { projectWorker } = await requireIssueAccess(projectId, issueId)
 
-  const result = await updateTask(projectWorker.id, issueId, id, name)
+  const result = await updateTask({
+    projectWorkerId: projectWorker.id,
+    issueId,
+    taskId: id,
+    name,
+  })
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
@@ -181,9 +190,14 @@ export async function setTaskDoneAction(
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker } = await requireProjectWorker(projectId)
+  const { projectWorker } = await requireIssueAccess(projectId, issueId)
 
-  const result = await setTaskDone(projectWorker.id, issueId, id, done)
+  const result = await setTaskDone({
+    projectWorkerId: projectWorker.id,
+    issueId,
+    taskId: id,
+    done,
+  })
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
@@ -197,9 +211,13 @@ export async function deleteTaskAction(
   issueId: string,
   id: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker } = await requireProjectWorker(projectId)
+  const { projectWorker } = await requireIssueAccess(projectId, issueId)
 
-  const result = await deleteTask(projectWorker.id, issueId, id)
+  const result = await deleteTask({
+    projectWorkerId: projectWorker.id,
+    issueId,
+    taskId: id,
+  })
 
   if (result.success) {
     revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)

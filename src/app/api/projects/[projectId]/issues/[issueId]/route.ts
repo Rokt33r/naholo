@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireIssueAccess } from '@/server/auth/utils'
 import { getIssue, updateIssue, deleteIssue } from '@/server/services/issue'
 
 type RouteContext = {
@@ -17,9 +17,9 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    await requireIssueAccess(projectId, issueId)
 
-    const issue = await getIssue(projectWorker.id, issueId)
+    const issue = await getIssue({ projectId, issueId })
 
     if (!issue) {
       return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
@@ -46,7 +46,7 @@ const updateIssueSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    await requireIssueAccess(projectId, issueId)
 
     let body
     try {
@@ -65,7 +65,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title } = validation.data
 
-    const result = await updateIssue(projectWorker.id, issueId, { title })
+    const result = await updateIssue({ projectId, issueId, title })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -88,9 +88,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    await requireIssueAccess(projectId, issueId)
 
-    const result = await deleteIssue(projectWorker.id, issueId)
+    const result = await deleteIssue({ projectId, issueId })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

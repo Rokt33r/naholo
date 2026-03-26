@@ -11,6 +11,7 @@ import {
   resolveProjectWorkerByUserIdAndProjectId,
   type ProjectWorker,
 } from '../services/project-worker'
+import { NotFoundError } from '../services/errors'
 
 export async function getRequestMetadata(): Promise<{
   ipAddress?: string
@@ -169,4 +170,105 @@ async function requireProjectWorkerBySession(
   }
 
   return { projectWorker: worker }
+}
+
+/**
+ * Requires project worker access AND verifies issue belongs to project.
+ * Use for routes that operate on issue-level resources (logs, notes, tasks).
+ */
+export async function requireIssueAccess(
+  projectId: string,
+  issueId: string,
+): Promise<{ projectWorker: ProjectWorker; issue: { id: string } }> {
+  const { projectWorker } = await requireProjectWorker(projectId)
+
+  const issue = await db.query.issues.findFirst({
+    columns: { id: true },
+    where: (t, { eq, and }) =>
+      and(eq(t.id, issueId), eq(t.projectId, projectId)),
+  })
+
+  if (!issue) {
+    throw new NotFoundError('Issue')
+  }
+
+  return { projectWorker, issue }
+}
+
+/**
+ * Requires issue access AND verifies log belongs to issue.
+ */
+export async function requireIssueLogAccess(
+  projectId: string,
+  issueId: string,
+  logId: string,
+): Promise<{
+  projectWorker: ProjectWorker
+  issue: { id: string }
+  log: { id: string }
+}> {
+  const { projectWorker, issue } = await requireIssueAccess(projectId, issueId)
+
+  const log = await db.query.logs.findFirst({
+    columns: { id: true },
+    where: (t, { eq, and }) => and(eq(t.id, logId), eq(t.issueId, issueId)),
+  })
+
+  if (!log) {
+    throw new NotFoundError('Log')
+  }
+
+  return { projectWorker, issue, log }
+}
+
+/**
+ * Requires issue access AND verifies note belongs to issue.
+ */
+export async function requireIssueNoteAccess(
+  projectId: string,
+  issueId: string,
+  noteId: string,
+): Promise<{
+  projectWorker: ProjectWorker
+  issue: { id: string }
+  note: { id: string }
+}> {
+  const { projectWorker, issue } = await requireIssueAccess(projectId, issueId)
+
+  const note = await db.query.notes.findFirst({
+    columns: { id: true },
+    where: (t, { eq, and }) => and(eq(t.id, noteId), eq(t.issueId, issueId)),
+  })
+
+  if (!note) {
+    throw new NotFoundError('Note')
+  }
+
+  return { projectWorker, issue, note }
+}
+
+/**
+ * Requires issue access AND verifies task belongs to issue.
+ */
+export async function requireIssueTaskAccess(
+  projectId: string,
+  issueId: string,
+  taskId: string,
+): Promise<{
+  projectWorker: ProjectWorker
+  issue: { id: string }
+  task: { id: string }
+}> {
+  const { projectWorker, issue } = await requireIssueAccess(projectId, issueId)
+
+  const task = await db.query.tasks.findFirst({
+    columns: { id: true },
+    where: (t, { eq, and }) => and(eq(t.id, taskId), eq(t.issueId, issueId)),
+  })
+
+  if (!task) {
+    throw new NotFoundError('Task')
+  }
+
+  return { projectWorker, issue, task }
 }

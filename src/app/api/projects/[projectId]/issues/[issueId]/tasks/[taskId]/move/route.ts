@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireIssueTaskAccess } from '@/server/auth/utils'
 import { moveTask } from '@/server/services/task'
 
 type RouteContext = {
@@ -23,7 +23,11 @@ const moveTaskSchema = z.object({
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, taskId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireIssueTaskAccess(
+      projectId,
+      issueId,
+      taskId,
+    )
 
     let body
     try {
@@ -42,7 +46,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { newParentTaskId, newPosition } = validation.data
 
-    const result = await moveTask(projectWorker.id, issueId, {
+    const result = await moveTask({
+      projectWorkerId: projectWorker.id,
+      issueId,
       taskId,
       newParentTaskId,
       newPosition,

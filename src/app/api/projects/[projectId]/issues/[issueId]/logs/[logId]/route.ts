@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireIssueLogAccess } from '@/server/auth/utils'
 import { updateLog, deleteLog } from '@/server/services/log'
 
 type RouteContext = {
@@ -22,7 +22,11 @@ const updateLogSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, logId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireIssueLogAccess(
+      projectId,
+      issueId,
+      logId,
+    )
 
     let body
     try {
@@ -41,13 +45,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { content } = validation.data
 
-    const result = await updateLog(
-      projectWorker.id,
-      projectId,
+    const result = await updateLog({
+      projectWorkerId: projectWorker.id,
       issueId,
       logId,
       content,
-    )
+    })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -76,9 +79,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, logId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireIssueLogAccess(
+      projectId,
+      issueId,
+      logId,
+    )
 
-    const result = await deleteLog(projectWorker.id, projectId, issueId, logId)
+    const result = await deleteLog({
+      projectWorkerId: projectWorker.id,
+      issueId,
+      logId,
+    })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireIssueAccess } from '@/server/auth/utils'
 import { listNotes, createNote } from '@/server/services/note'
 
 type RouteContext = {
@@ -17,9 +17,9 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId } = await context.params
-    await requireProjectWorker(projectId)
+    await requireIssueAccess(projectId, issueId)
 
-    const notes = await listNotes(issueId)
+    const notes = await listNotes({ issueId })
 
     return NextResponse.json(notes)
   } catch (error) {
@@ -61,9 +61,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { title, content } = validation.data
 
-    const { projectWorker } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireIssueAccess(projectId, issueId)
 
-    const result = await createNote(projectWorker.id, {
+    const result = await createNote({
+      projectWorkerId: projectWorker.id,
       projectId,
       issueId,
       title,

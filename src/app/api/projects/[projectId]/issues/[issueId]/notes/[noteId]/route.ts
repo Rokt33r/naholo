@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireIssueNoteAccess } from '@/server/auth/utils'
 import { updateNote, deleteNote } from '@/server/services/note'
 
 type RouteContext = {
@@ -23,7 +23,11 @@ const updateNoteSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, noteId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireIssueNoteAccess(
+      projectId,
+      issueId,
+      noteId,
+    )
 
     let body
     try {
@@ -42,7 +46,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title, content } = validation.data
 
-    const result = await updateNote(projectWorker.id, noteId, issueId, {
+    const result = await updateNote({
+      projectWorkerId: projectWorker.id,
+      noteId,
+      issueId,
       title,
       content,
     })
@@ -67,9 +74,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectId, issueId, noteId } = await context.params
-    const { projectWorker } = await requireProjectWorker(projectId)
+    const { projectWorker } = await requireIssueNoteAccess(
+      projectId,
+      issueId,
+      noteId,
+    )
 
-    const result = await deleteNote(projectWorker.id, noteId, issueId)
+    const result = await deleteNote({
+      projectWorkerId: projectWorker.id,
+      noteId,
+      issueId,
+    })
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }

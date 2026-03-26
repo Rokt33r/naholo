@@ -28,22 +28,13 @@ export type IssueWithStats = {
   completedTasks: number
 }
 
-export type CreateIssueInput = {
-  projectId: string
-  title: string
-}
-
-export type UpdateIssueInput = {
-  title: string
-}
-
 /**
- * Get a single issue by ID
+ * Get a single issue by ID, scoped to a project
  */
-export async function getIssue(
-  projectWorkerId: string,
-  issueId: string,
-): Promise<Issue | null> {
+export async function getIssue(data: {
+  projectId: string
+  issueId: string
+}): Promise<Issue | null> {
   const [issue] = await db
     .select({
       id: issues.id,
@@ -56,7 +47,7 @@ export async function getIssue(
     })
     .from(issues)
     .where(
-      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
     )
     .limit(1)
 
@@ -66,12 +57,11 @@ export async function getIssue(
 /**
  * List issues for a project with task statistics
  */
-export async function listIssues(
-  projectWorkerId: string,
-  projectId: string,
-  options: { closed?: boolean } = {},
-): Promise<IssueWithStats[]> {
-  const closed = options.closed ?? false
+export async function listIssues(data: {
+  projectId: string
+  closed?: boolean
+}): Promise<IssueWithStats[]> {
+  const closed = data.closed ?? false
 
   const rows = await db
     .select({
@@ -89,13 +79,7 @@ export async function listIssues(
     })
     .from(issues)
     .leftJoin(tasks, eq(tasks.issueId, issues.id))
-    .where(
-      and(
-        eq(issues.projectId, projectId),
-        eq(issues.projectWorkerId, projectWorkerId),
-        eq(issues.closed, closed),
-      ),
-    )
+    .where(and(eq(issues.projectId, data.projectId), eq(issues.closed, closed)))
     .groupBy(issues.id)
     .orderBy(desc(issues.updatedAt))
 
@@ -109,15 +93,16 @@ export async function listIssues(
 /**
  * Create a new issue
  */
-export async function createIssue(
-  projectWorkerId: string,
-  data: CreateIssueInput,
-): Promise<ReturnResult<{ id: string }>> {
+export async function createIssue(data: {
+  projectWorkerId: string
+  projectId: string
+  title: string
+}): Promise<ReturnResult<{ id: string }>> {
   const [issue] = await db
     .insert(issues)
     .values({
       projectId: data.projectId,
-      projectWorkerId,
+      projectWorkerId: data.projectWorkerId,
       title: data.title,
     })
     .returning({ id: issues.id })
@@ -128,11 +113,11 @@ export async function createIssue(
 /**
  * Update an issue.
  */
-export async function updateIssue(
-  projectWorkerId: string,
-  issueId: string,
-  data: UpdateIssueInput,
-): Promise<ReturnResult<undefined>> {
+export async function updateIssue(data: {
+  projectId: string
+  issueId: string
+  title: string
+}): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .update(issues)
     .set({
@@ -140,11 +125,13 @@ export async function updateIssue(
       updatedAt: new Date(),
     })
     .where(
-      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
     )
     .returning({ id: issues.id })
 
-  if (!issue) return err(new NotFoundError('Issue'))
+  if (!issue) {
+    return err(new NotFoundError('Issue'))
+  }
 
   return ok()
 }
@@ -152,10 +139,10 @@ export async function updateIssue(
 /**
  * Close an issue.
  */
-export async function closeIssue(
-  projectWorkerId: string,
-  issueId: string,
-): Promise<ReturnResult<undefined>> {
+export async function closeIssue(data: {
+  projectId: string
+  issueId: string
+}): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .update(issues)
     .set({
@@ -164,7 +151,7 @@ export async function closeIssue(
       updatedAt: new Date(),
     })
     .where(
-      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
     )
     .returning({ id: issues.id })
 
@@ -178,10 +165,10 @@ export async function closeIssue(
 /**
  * Reopen an issue.
  */
-export async function reopenIssue(
-  projectWorkerId: string,
-  issueId: string,
-): Promise<ReturnResult<undefined>> {
+export async function reopenIssue(data: {
+  projectId: string
+  issueId: string
+}): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .update(issues)
     .set({
@@ -190,7 +177,7 @@ export async function reopenIssue(
       updatedAt: new Date(),
     })
     .where(
-      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
     )
     .returning({ id: issues.id })
 
@@ -204,18 +191,20 @@ export async function reopenIssue(
 /**
  * Delete an issue.
  */
-export async function deleteIssue(
-  projectWorkerId: string,
-  issueId: string,
-): Promise<ReturnResult<undefined>> {
+export async function deleteIssue(data: {
+  projectId: string
+  issueId: string
+}): Promise<ReturnResult<undefined>> {
   const [issue] = await db
     .delete(issues)
     .where(
-      and(eq(issues.id, issueId), eq(issues.projectWorkerId, projectWorkerId)),
+      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
     )
     .returning({ id: issues.id })
 
-  if (!issue) return err(new NotFoundError('Issue'))
+  if (!issue) {
+    return err(new NotFoundError('Issue'))
+  }
 
   return ok()
 }
