@@ -4,7 +4,7 @@ Build an MCP (Model Context Protocol) server so Claude Code can interact with Na
 
 ## Setup
 
-- Separate package or directory: `packages/mcp-server/` (or `mcp/`)
+- Separate package or directory: `packages/naholo-mcp-server/` (or `mcp/`)
 - TypeScript, uses `@modelcontextprotocol/sdk`
 - Configured with Naholo base URL + API token (from Step 1)
 

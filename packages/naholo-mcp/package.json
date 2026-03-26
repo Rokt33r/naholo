@@ -1,0 +1,23 @@
+{
+  "name": "naholo-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Naholo — task/issue management",
+  "type": "module",
+  "bin": {
+    "naholo-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
