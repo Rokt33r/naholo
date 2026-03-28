@@ -71,6 +71,13 @@
       "when": 1774142625043,
       "tag": "0009_far_arclight",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1774696235654,
+      "tag": "0010_organic_maggott",
+      "breakpoints": true
     }
   ]
 }
