@@ -22,7 +22,6 @@ export async function getRequestMetadata(): Promise<{
 
     // Extract IP address - customize based on hosting provider
     // Vercel/Netlify: x-real-ip
-    // Cloudflare: cf-connecting-ip
     const ipAddress = headersList.get('x-real-ip') || undefined
 
     // Extract user agent
