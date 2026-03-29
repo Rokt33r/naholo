@@ -1,6 +1,6 @@
 'use client'
 
-import { ListTodo, HardHat, LogOut, Menu } from 'lucide-react'
+import { ListTodo, HardHat, Puzzle, LogOut, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -48,6 +48,14 @@ export function AppModeMenu({ currentProjectId }: AppModeMenuProps) {
         >
           <HardHat className='mr-2 h-4 w-4' />
           Workers
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() =>
+            router.push(`/app/projects/${currentProjectId}/skills`)
+          }
+        >
+          <Puzzle className='mr-2 h-4 w-4' />
+          Skills
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>

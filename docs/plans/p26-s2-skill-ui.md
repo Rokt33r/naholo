@@ -107,7 +107,7 @@ Used by SkillItem to show the description line. If parsing fails or no descripti
 
 ### Task 1: Add skill React Query hooks
 
-- [ ] `src/hooks/use-skills.ts` — create file with:
+- [x] `src/hooks/use-skills.ts` — create file with:
   - `Skill` type: `{ id: string, name: string, content: string, position: number, createdAt: string, updatedAt: string }`
   - `useSkills(projectId)` — `useQuery` with key `['skills', projectId]`, endpoint `GET /api/projects/${projectId}/skills`, staleTime 60s, return `{ skills: data ?? [], isLoading, error }`
   - `useCreateSkill(projectId)` — `useMutation` calling `POST /api/projects/${projectId}/skills` with `{ name, content }`. Optimistic update: cancel query, snapshot previous, append `{ id: 'temp-' + Date.now(), name, content, position: skills.length, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }` to cache. On error: rollback + toast. On settled: invalidate `['skills', projectId]`.
@@ -116,7 +116,7 @@ Used by SkillItem to show the description line. If parsing fails or no descripti
 
 ### Task 2: Add frontmatter description parser utility
 
-- [ ] `src/lib/parse-frontmatter-description.ts` — export `parseFrontmatterDescription(content: string): string | null`. Logic:
+- [x] `src/lib/parse-frontmatter-description.ts` — export `parseFrontmatterDescription(content: string): string | null`. Logic:
   - Check if content starts with `---\n`
   - Find the closing `---\n`
   - Extract the YAML block between them
@@ -125,7 +125,7 @@ Used by SkillItem to show the description line. If parsing fails or no descripti
 
 ### Task 3: Add skill editor dialog component
 
-- [ ] `src/components/skills/skill-editor-dialog.tsx` — export `SkillEditorDialog`:
+- [x] `src/components/skills/skill-editor-dialog.tsx` — export `SkillEditorDialog`:
   - Props: `{ projectId: string, skill?: Skill | null, open: boolean, onOpenChange: (open: boolean) => void }`
   - When `skill` is provided → edit mode. When `null`/`undefined` → create mode.
   - State: `name` (string), `content` (string) — initialized from `skill` prop when provided (reset on open via `useEffect` on `open` + `skill`)
@@ -138,7 +138,7 @@ Used by SkillItem to show the description line. If parsing fails or no descripti
 
 ### Task 4: Add skills list page
 
-- [ ] `src/app/app/projects/[projectId]/skills/page.tsx` — export default `SkillsPage`:
+- [x] `src/app/app/projects/[projectId]/skills/page.tsx` — export default `SkillsPage`:
   - Same structure as workers page:
     1. Header bar: `AppModeMenu` (mobile) + `ProjectSwitcher` + create button (`Plus` icon, `icon-sm`, opens `SkillEditorDialog` in create mode)
     2. Section title: "Skills" (text-sm, font-semibold, muted-foreground)
@@ -156,11 +156,11 @@ Used by SkillItem to show the description line. If parsing fails or no descripti
 
 ### Task 5: Add Skills to sidebar and mobile menu
 
-- [ ] `src/components/app/app-mode-sidebar.tsx`:
+- [x] `src/components/app/app-mode-sidebar.tsx`:
   - Add `import { Puzzle } from 'lucide-react'`
   - Add a new `ToolSidebarButton` between Workers and the spacing, with `isActive={currentMode === 'skills'}`, tooltip `'Skills'`, onClick navigates to `/app/projects/${currentProjectId}/skills`
   - Icon: `<Puzzle className='size-5' />`
-- [ ] `src/components/app/app-mode-menu.tsx`:
+- [x] `src/components/app/app-mode-menu.tsx`:
   - Add `import { Puzzle } from 'lucide-react'`
   - Add a new `DropdownMenuItem` between Workers and the separator
   - Icon: `<Puzzle className='mr-2 h-4 w-4' />`

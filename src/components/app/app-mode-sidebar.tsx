@@ -1,6 +1,6 @@
 'use client'
 
-import { ListTodo, HardHat, Settings, LogOut } from 'lucide-react'
+import { ListTodo, HardHat, Puzzle, Settings, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
@@ -47,6 +47,13 @@ export function AppModeSidebar({
         onClick={() => router.push(`/app/projects/${currentProjectId}/workers`)}
       >
         <HardHat className='size-5' />
+      </ToolSidebarButton>
+      <ToolSidebarButton
+        isActive={currentMode === 'skills'}
+        tooltip='Skills'
+        onClick={() => router.push(`/app/projects/${currentProjectId}/skills`)}
+      >
+        <Puzzle className='size-5' />
       </ToolSidebarButton>
 
       <ToolSidebarSpacing />
