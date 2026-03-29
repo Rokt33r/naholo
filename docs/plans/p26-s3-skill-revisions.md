@@ -55,19 +55,19 @@ created_at    timestamp   NOT NULL, default now()
 
 ### Task 1: Add skill revisions schema
 
-- [ ] `src/server/db/schema/skill-revisions.ts` — create table + relations
-- [ ] `src/server/db/schema/skills.ts` — add `currentRevisionId` column
-- [ ] `src/server/db/schema/index.ts` — export skill-revisions
+- [x] `src/server/db/schema/skill-revisions.ts` — create table + relations
+- [x] `src/server/db/schema/skills.ts` — add `currentRevisionId` column
+- [x] `src/server/db/schema/index.ts` — export skill-revisions
 
 ### Task 2: Update skill service for revisions
 
-- [ ] `src/server/services/skill.ts` — update `createSkill` to create initial revision, `updateSkill` to create new revision when content changes, add `getSkill` returning `revisionId`
-- [ ] Update `listSkills` to exclude `content`, include `revisionId`
+- [x] `src/server/services/skill.ts` — update `createSkill` to create initial revision, `updateSkill` to create new revision when content changes, add `getSkill` returning `revisionId`
+- [x] Update `listSkills` to exclude `content`, include `revisionId`
 
 ### Task 3: Update skill API routes
 
-- [ ] `src/app/api/projects/[projectId]/skills/route.ts` — update GET to exclude content, include revisionId
-- [ ] `src/app/api/projects/[projectId]/skills/[skillId]/route.ts` — add GET endpoint, update PATCH for conflict detection (409 on revision mismatch)
+- [x] `src/app/api/projects/[projectId]/skills/route.ts` — update GET to exclude content, include revisionId
+- [x] `src/app/api/projects/[projectId]/skills/[skillId]/route.ts` — add GET endpoint, update PATCH for conflict detection (409 on revision mismatch)
 
 ## Notes
 

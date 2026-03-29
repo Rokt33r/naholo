@@ -1,29 +1,34 @@
 import 'server-only'
 import { db } from '../db'
-import { skills } from '../db/schema'
+import { skills, skillRevisions } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { NotFoundError } from './errors'
+import { NotFoundError, ConflictError } from './errors'
 
-export type Skill = {
+export type SkillSummary = {
   id: string
   name: string
-  content: string
   position: number
+  currentRevisionId: string | null
   createdAt: Date
   updatedAt: Date
 }
 
+export type Skill = SkillSummary & {
+  content: string
+}
+
 /**
  * List skills for a project (ordered by position)
+ * Excludes content — use getSkill for full content
  */
-export async function listSkills(projectId: string): Promise<Skill[]> {
+export async function listSkills(projectId: string): Promise<SkillSummary[]> {
   return db.query.skills.findMany({
     columns: {
       id: true,
       name: true,
-      content: true,
+      currentRevisionId: true,
       position: true,
       createdAt: true,
       updatedAt: true,
@@ -34,7 +39,7 @@ export async function listSkills(projectId: string): Promise<Skill[]> {
 }
 
 /**
- * Get a single skill
+ * Get a single skill with full content
  */
 export async function getSkill(
   projectId: string,
@@ -45,6 +50,7 @@ export async function getSkill(
       id: true,
       name: true,
       content: true,
+      currentRevisionId: true,
       position: true,
       createdAt: true,
       updatedAt: true,
@@ -52,16 +58,17 @@ export async function getSkill(
     where: (t, { eq, and }) =>
       and(eq(t.id, skillId), eq(t.projectId, projectId)),
   })
+
   return skill ?? null
 }
 
 /**
- * Create a new skill
+ * Create a new skill with initial revision
  */
 export async function createSkill(
   projectId: string,
   data: { name: string; content: string },
-): Promise<ReturnResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string; currentRevisionId: string }>> {
   const existingSkills = await db.query.skills.findMany({
     columns: { position: true },
     where: (t, { eq }) => eq(t.projectId, projectId),
@@ -73,41 +80,110 @@ export async function createSkill(
       ? Math.max(...existingSkills.map((s) => s.position))
       : -1
 
-  const [skill] = await db
-    .insert(skills)
-    .values({
-      projectId,
-      name: data.name,
-      content: data.content,
-      position: maxPosition + 1,
-    })
-    .returning({ id: skills.id })
+  const result = await db.transaction(async (tx) => {
+    const [skill] = await tx
+      .insert(skills)
+      .values({
+        projectId,
+        name: data.name,
+        content: data.content,
+        position: maxPosition + 1,
+      })
+      .returning({ id: skills.id })
 
-  return ok({ id: skill.id })
+    const [revision] = await tx
+      .insert(skillRevisions)
+      .values({
+        skillId: skill.id,
+        content: data.content,
+      })
+      .returning({ id: skillRevisions.id })
+
+    await tx
+      .update(skills)
+      .set({ currentRevisionId: revision.id })
+      .where(eq(skills.id, skill.id))
+
+    return { id: skill.id, currentRevisionId: revision.id }
+  })
+
+  return ok(result)
 }
 
 /**
- * Update a skill
+ * Update a skill. Creates a new revision when content changes.
+ * If expectedRevisionId is provided and doesn't match current, returns ConflictError.
  */
 export async function updateSkill(
   projectId: string,
   skillId: string,
-  data: { name?: string; content?: string },
-): Promise<ReturnResult<undefined>> {
-  const [skill] = await db
-    .update(skills)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(skills.id, skillId), eq(skills.projectId, projectId)))
-    .returning({ id: skills.id })
+  data: { name?: string; content?: string; expectedRevisionId?: string },
+): Promise<ReturnResult<{ currentRevisionId: string | null }>> {
+  const { expectedRevisionId, ...updateData } = data
 
-  if (!skill) {
-    return err(new NotFoundError('Skill'))
+  const result = await db.transaction(async (tx) => {
+    const existing = await tx.query.skills.findFirst({
+      columns: {
+        id: true,
+        currentRevisionId: true,
+      },
+      where: (t, { eq, and }) =>
+        and(eq(t.id, skillId), eq(t.projectId, projectId)),
+    })
+
+    if (!existing) {
+      return { error: 'not_found' as const }
+    }
+
+    if (
+      expectedRevisionId &&
+      existing.currentRevisionId !== expectedRevisionId
+    ) {
+      return { error: 'conflict' as const }
+    }
+
+    let newRevisionId: string | null = null
+
+    if (updateData.content) {
+      const [revision] = await tx
+        .insert(skillRevisions)
+        .values({
+          skillId,
+          content: updateData.content,
+        })
+        .returning({ id: skillRevisions.id })
+
+      newRevisionId = revision.id
+
+      await tx
+        .update(skills)
+        .set({
+          ...updateData,
+          currentRevisionId: revision.id,
+          updatedAt: new Date(),
+        })
+        .where(eq(skills.id, skillId))
+    } else {
+      await tx
+        .update(skills)
+        .set({
+          ...updateData,
+          updatedAt: new Date(),
+        })
+        .where(eq(skills.id, skillId))
+    }
+
+    return { currentRevisionId: newRevisionId }
+  })
+
+  if ('error' in result) {
+    if (result.error === 'not_found') {
+      return err(new NotFoundError('Skill'))
+    }
+    return err(new ConflictError('Skill revision conflict'))
   }
 
-  return ok()
+  return ok({ currentRevisionId: result.currentRevisionId })
 }
 
 /**

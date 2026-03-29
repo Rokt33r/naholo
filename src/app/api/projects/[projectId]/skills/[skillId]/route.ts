@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireAdminProjectWorker } from '@/server/auth/utils'
-import { updateSkill, deleteSkill } from '@/server/services/skill'
+import {
+  requireProjectWorker,
+  requireAdminProjectWorker,
+} from '@/server/auth/utils'
+import { getSkill, updateSkill, deleteSkill } from '@/server/services/skill'
+import { ConflictError } from '@/server/services/errors'
 
 type RouteContext = {
   params: Promise<{
@@ -10,9 +14,34 @@ type RouteContext = {
   }>
 }
 
+/**
+ * GET /api/projects/[projectId]/skills/[skillId]
+ * Get a single skill with full content
+ */
+export async function GET(_request: NextRequest, context: RouteContext) {
+  try {
+    const { projectId, skillId } = await context.params
+    await requireProjectWorker(projectId)
+
+    const skill = await getSkill(projectId, skillId)
+    if (!skill) {
+      return NextResponse.json({ error: 'Skill not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(skill)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
+    )
+  }
+}
+
 const updateSkillSchema = z.object({
   name: z.string().min(1, 'Name must not be empty string').trim().optional(),
   content: z.string().min(1, 'Content must not be empty string').optional(),
+  expectedRevisionId: z.string().uuid().optional(),
 })
 
 /**
@@ -41,10 +70,16 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const result = await updateSkill(projectId, skillId, validation.data)
     if (!result.success) {
+      if (result.error instanceof ConflictError) {
+        return NextResponse.json(
+          { error: result.error.message },
+          { status: 409 },
+        )
+      }
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json(result.data)
   } catch (error) {
     console.error(error)
     return NextResponse.json(

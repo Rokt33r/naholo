@@ -14,3 +14,10 @@ export class NotFoundError extends ServiceError {
     this.resource = resource
   }
 }
+
+export class ConflictError extends ServiceError {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ConflictError'
+  }
+}
