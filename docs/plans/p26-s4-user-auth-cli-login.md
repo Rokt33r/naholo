@@ -64,14 +64,14 @@ created_at    timestamp   NOT NULL, default now()
 
 ```
 id              uuid        PK, default random
-state_hash      text        NOT NULL, UNIQUE
+state           text        NOT NULL, UNIQUE
 words           text        NOT NULL (human-readable verification phrase, e.g. "brave-ocean-tiger")
 code            text        NULL (set on confirm)
 code_expires_at timestamp   NULL (60s after confirm)
 user_id         uuid        NULL FK → users.id (set on confirm)
 callback_url    text        NOT NULL (must be localhost)
 ip_address      text        NOT NULL (requester's IP, verified again on exchange)
-consumed        boolean     NOT NULL, default false (set true when token is issued)
+consumed_at     timestamp   NULL (set when token is issued)
 expires_at      timestamp   NOT NULL (10 min from creation)
 created_at      timestamp   NOT NULL, default now()
 ```
@@ -85,8 +85,8 @@ CLI                     Route                          Service                  
  │   requests             │                              │                             │
  │  {state, callbackUrl}  │                              │                             │
  ├───────────────────────>│  createCliLoginRequest()     │                             │
- │                        ├─────────────────────────────>│  hash(state) → stateHash    │
- │                        │  generateReadableWords()     │  INSERT cli_login_requests  │
+ │                        ├─────────────────────────────>│  generateReadableWords()    │
+ │                        │                              │  INSERT cli_login_requests  │
  │                        │                              ├────────────────────────────>│
  │<───────────────────────┤                              │                             │
  │  {requestId, words}    │                              │                             │
@@ -124,13 +124,12 @@ CLI                       │                              │                  
  │  {state, requestId,    │                              │                             │
  │   code, tokenName}     │                              │                             │
  ├───────────────────────>│  exchangeCliLoginCode()      │                             │
- │                        ├─────────────────────────────>│  hash(state) → stateHash    │
- │                        │                              │  SELECT WHERE stateHash     │
+ │                        ├─────────────────────────────>│  SELECT WHERE state         │
  │                        │                              │    AND id AND code match    │
  │                        │                              │    AND not expired          │
- │                        │                              │    AND NOT consumed         │
+ │                        │                              │    AND NOT consumed_at      │
  │                        │                              │  Verify IP matches          │
- │                        │                              │  UPDATE consumed = true     │
+ │                        │                              │  UPDATE consumed_at = now   │
  │                        │                              ├────────────────────────────>│
  │                        │                              │                             │
  │                        │  generateUserApiToken()      │                             │
@@ -196,9 +195,9 @@ Currently, auth redirects always go to `/` after login. The CLI confirm page nee
 ### `POST /api/auth/cli/exchange` (no auth)
 
 - Body: `{ state: string, requestId: string, code: string, tokenName: string }`
-- Hashes state, verifies match + code + not expired + not consumed
+- Verifies state match + code + not expired + not consumed (`consumedAt IS NULL`)
 - Verifies requester's IP matches the IP stored when the request was created — returns 403 if mismatch
-- Marks the login request as `consumed = true`
+- Marks the login request as consumed (`consumedAt = now`)
 - Creates user API token, returns: `{ token: string, tokenHint: string, tokenName: string }`
 
 ### `GET /auth/cli/complete`
@@ -289,34 +288,26 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 3a. Database schema
 
-- [ ] `src/server/db/schema/cli-login-requests.ts` — table definition as specified in Data Model
+- [x] `src/server/db/schema/cli-login-requests.ts` — table definition as specified in Data Model
   - Add relation: `one` relation to `users` table for `userId`
-- [ ] `src/server/db/schema/index.ts` — add `export * from './cli-login-requests'`
+- [x] `src/server/db/schema/index.ts` — add `export * from './cli-login-requests'`
 
 #### 3b. Word generation utility
 
-- [ ] `src/lib/auth/cli-words.ts`
+- [x] `src/lib/auth/cli-words.ts`
   - Hardcoded ~256 simple English words (mix of adjectives and nouns)
   - `generateReadableWords(): string` — pick 3 random words via `crypto.randomInt`, join with `-`
 
 #### 3c. Service layer
 
-- [ ] `src/server/services/cli-login-request.ts`
-  - `hashState(state: string): string` — SHA-256 hex
-  - `createCliLoginRequest(state: string, callbackUrl: string, ipAddress: string): Promise<SuccessResult<{ requestId: string; words: string }>>`
-    - Validate `callbackUrl` starts with `http://localhost:` or `http://127.0.0.1:`
-    - Hash state, generate words, insert with `expiresAt = now + 10 minutes`, store `ipAddress`
-  - `getCliLoginRequestById(requestId: string): Promise<CliLoginRequest | null>`
-    - Find by id WHERE `expiresAt > now` AND `code IS NULL` (not yet confirmed)
-  - `confirmCliLoginRequest(requestId: string, userId: string): Promise<SuccessResult<{ code: string; callbackUrl: string }>>`
-    - Generate code (`randomBytes(32).toString('hex')`)
-    - Update: set `code`, `codeExpiresAt = now + 60s`, `userId`
-    - Return code and callbackUrl for redirect
-  - `exchangeCliLoginCode(state: string, requestId: string, code: string, ipAddress: string): Promise<{ userId: string } | null>`
-    - Hash state, find by id WHERE `stateHash` matches AND `code` matches AND `codeExpiresAt > now` AND `consumed = false`
-    - Verify `ipAddress` matches stored `ip_address` — return null if mismatch
-    - Set `consumed = true`
-    - Return `{ userId }` or null
+- [x] `src/server/services/cli-login-request.ts`
+  - `createCliLoginRequest(state, callbackUrl, ipAddress)` — generate words, insert with `expiresAt = now + 10 minutes`
+  - `getCliLoginRequestById(requestId)` — find by id, no filtering (returns full row or null)
+  - `isCliLoginRequestPending(request)` — checks not expired + no code issued yet
+  - `isCliLoginRequestConsumable(request)` — checks code issued, code not expired, not consumed
+  - `issueCliLoginRequestCode(requestId, userId)` — pure mutation: generate code, set `codeExpiresAt = now + 60s`, `userId`
+  - `markCliLoginRequestConsumed(requestId)` — pure mutation: set `consumedAt = now`
+  - Verification logic (expiry, state match, IP match, consumed check) is handled by callers (routes), not the service
 
 ### Task 4: CLI auth API routes + pages
 
