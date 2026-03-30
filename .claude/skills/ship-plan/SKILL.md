@@ -32,8 +32,8 @@ Anything after the plan identifier in quotes is an extra instruction. Parse the 
    - Follow all conventions in `CLAUDE.md` (formatting, routing patterns, schema rules, etc.)
 
 5. **Verify as you go**: After completing each top-level task (e.g., all of "Task 1"), do a quick sanity check:
-   - Run the formatter if source files were changed: `cd apps/gunship-web && npm run format`
-   - Check for TypeScript errors if applicable: `npx tsc --noEmit`
+   - Run the formatter if source files were changed: `npm run format`
+   - Check for TypeScript errors if applicable: `npm test`
    - Fix any issues before moving to the next task
 
 6. **Update the plan doc**: The plan doc should reflect the final state — all implemented items checked off. If the implementation deviated from the plan (e.g., different approach, extra file needed), update the plan description to match what was actually done.
