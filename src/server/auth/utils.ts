@@ -9,8 +9,13 @@ import {
 } from '../services/project-worker-api-token'
 import {
   resolveProjectWorkerByUserIdAndProjectId,
+  getProjectWorker,
   type ProjectWorker,
 } from '../services/project-worker'
+import {
+  resolveUserByApiToken,
+  touchUserApiToken,
+} from '../services/user-api-token'
 import { NotFoundError } from '../services/errors'
 
 export async function getRequestMetadata(): Promise<{
@@ -124,6 +129,10 @@ export async function requireProjectWorker(
   // Try Bearer token auth first
   const headersList = await headers()
   const authorization = headersList.get('authorization')
+  if (authorization?.startsWith('Bearer naholo_user_')) {
+    const token = authorization.slice('Bearer '.length)
+    return requireProjectWorkerByUserApiToken(projectId, token, headersList)
+  }
   if (authorization?.startsWith('Bearer naholo_')) {
     const token = authorization.slice('Bearer '.length)
     return requireProjectWorkerByApiToken(projectId, token)
@@ -150,6 +159,41 @@ async function requireProjectWorkerByApiToken(
   touchProjectWorkerApiToken(result.tokenId)
 
   return { projectWorker: result.projectWorker }
+}
+
+async function requireProjectWorkerByUserApiToken(
+  projectId: string,
+  token: string,
+  headersList: Headers,
+): Promise<{ projectWorker: ProjectWorker }> {
+  const result = await resolveUserByApiToken(token)
+  if (!result) {
+    throw new Error('Unauthorized')
+  }
+
+  // Update lastUsedAt in the background
+  touchUserApiToken(result.tokenId)
+
+  // Check for project worker override header (only for user tokens)
+  const overrideWorkerId = headersList.get('x-naholo-project-worker')
+  if (overrideWorkerId) {
+    const worker = await getProjectWorker(overrideWorkerId, projectId)
+    if (!worker || worker.type !== 'bot') {
+      throw new Error('Forbidden')
+    }
+    return { projectWorker: worker }
+  }
+
+  // Fall back to user's own project worker
+  const worker = await resolveProjectWorkerByUserIdAndProjectId(
+    result.userId,
+    projectId,
+  )
+  if (!worker) {
+    throw new Error('Forbidden')
+  }
+
+  return { projectWorker: worker }
 }
 
 async function requireProjectWorkerBySession(

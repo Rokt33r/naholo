@@ -254,15 +254,15 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 2a. Database schema
 
-- [ ] `src/server/db/schema/user-api-tokens.ts` — new table definition
+- [x] `src/server/db/schema/user-api-tokens.ts` — new table definition
   - Schema fields as defined in Data Model section above
   - Add `relations`: `one` relation to `users` table
   - Pattern: follow `src/server/db/schema/project-worker-api-tokens.ts` exactly
-- [ ] `src/server/db/schema/index.ts` — add `export * from './user-api-tokens'`
+- [x] `src/server/db/schema/index.ts` — add `export * from './user-api-tokens'`
 
 #### 2b. Service layer
 
-- [ ] `src/server/services/user-api-token.ts` — CRUD + validation
+- [x] `src/server/services/user-api-token.ts` — CRUD + validation
   - Follow pattern from `src/server/services/project-worker-api-token.ts`
   - `USER_TOKEN_PREFIX = 'naholo_user_'`
   - `generateUserToken(): string` — `USER_TOKEN_PREFIX + randomBytes(20).toString('hex')`
@@ -275,7 +275,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 2c. Auth middleware update
 
-- [ ] `src/server/auth/utils.ts` — update `requireProjectWorker` to accept user API tokens
+- [x] `src/server/auth/utils.ts` — update `requireProjectWorker` to accept user API tokens
   - Current flow checks `Bearer naholo_` prefix → resolves to project worker via token
   - Add new branch: if token starts with `naholo_user_`, call `resolveUserByApiToken(token)` to get `userId`, then resolve project worker
   - Token dispatch order: `naholo_user_` prefix → user token path; `naholo_` prefix → worker token path (existing)
