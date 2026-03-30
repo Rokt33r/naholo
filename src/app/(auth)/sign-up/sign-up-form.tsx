@@ -26,7 +26,7 @@ import {
   initiateGoogleOAuthAction,
 } from '../actions'
 
-export function SignUpForm() {
+export function SignUpForm({ returnTo }: { returnTo?: string }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -70,14 +70,14 @@ export function SignUpForm() {
       return
     }
 
-    router.push('/')
+    router.push(returnTo || '/')
     router.refresh()
   }
 
   const handleGoogleSignUp = async () => {
     setError('')
 
-    const result = await initiateGoogleOAuth('sign-up')
+    const result = await initiateGoogleOAuth('sign-up', returnTo)
 
     if (!result.success) {
       setError(result.error.message)
@@ -211,7 +211,11 @@ export function SignUpForm() {
         <p className='text-sm text-zinc-600 dark:text-zinc-400'>
           Already have an account?{' '}
           <Link
-            href='/sign-in'
+            href={
+              returnTo
+                ? `/sign-in?returnTo=${encodeURIComponent(returnTo)}`
+                : '/sign-in'
+            }
             className='font-medium text-zinc-950 dark:text-zinc-50 hover:underline'
           >
             Sign in

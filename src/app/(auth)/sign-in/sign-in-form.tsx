@@ -26,7 +26,7 @@ import {
   initiateGoogleOAuthAction,
 } from '../actions'
 
-export function SignInForm() {
+export function SignInForm({ returnTo }: { returnTo?: string }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [otpId, setOtpId] = useState('')
@@ -69,14 +69,14 @@ export function SignInForm() {
       return
     }
 
-    router.push('/')
+    router.push(returnTo || '/')
     router.refresh()
   }
 
   const handleGoogleSignIn = async () => {
     setError('')
 
-    const result = await initiateGoogleOAuth('sign-in')
+    const result = await initiateGoogleOAuth('sign-in', returnTo)
 
     if (!result.success) {
       setError(result.error.message)
@@ -198,7 +198,11 @@ export function SignInForm() {
         <p className='text-sm text-zinc-600 dark:text-zinc-400'>
           Don&apos;t have an account?{' '}
           <Link
-            href='/sign-up'
+            href={
+              returnTo
+                ? `/sign-up?returnTo=${encodeURIComponent(returnTo)}`
+                : '/sign-up'
+            }
             className='font-medium text-zinc-950 dark:text-zinc-50 hover:underline'
           >
             Sign up

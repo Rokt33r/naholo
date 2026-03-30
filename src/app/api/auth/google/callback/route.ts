@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { auth } from '../../../../../server/auth/auth'
 import { googleOAuthAuthenticator } from '../../../../../server/auth/authenticators/google'
 import { getRequestMetadata } from '../../../../../server/auth/utils'
+import { validateReturnTo } from '../../../../../lib/validate-return-to'
 import { config } from '../../../../../server/config'
 
 export async function GET(request: NextRequest) {
@@ -59,7 +61,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(new URL('/', config.baseUrl))
+    // Read and clear the returnTo cookie
+    const cookieStore = await cookies()
+    const returnToCookie = cookieStore.get('oauth_return_to')?.value
+    const validatedReturnTo = validateReturnTo(returnToCookie)
+    cookieStore.delete('oauth_return_to')
+
+    return NextResponse.redirect(
+      new URL(validatedReturnTo || '/', config.baseUrl),
+    )
   } catch (error) {
     console.error('Google OAuth callback error:', error)
     return NextResponse.redirect(

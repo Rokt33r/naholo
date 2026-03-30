@@ -4,8 +4,10 @@ import { auth } from '../../server/auth/auth'
 import { emailOTPAuthenticator } from '../../server/auth/authenticators/email-otp'
 import { googleOAuthAuthenticator } from '../../server/auth/authenticators/google'
 import { getRequestMetadata } from '../../server/auth/utils'
+import { validateReturnTo } from '@/lib/validate-return-to'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { cookies } from 'next/headers'
 
 export async function sendOTPAction(
   email: string,
@@ -86,7 +88,20 @@ export async function verifyOTPForSigningInAction(
 
 export async function initiateGoogleOAuthAction(
   intent: 'sign-in' | 'sign-up',
+  returnTo?: string,
 ): Promise<ReturnResult<{ authUrl: string }>> {
+  const validatedReturnTo = validateReturnTo(returnTo)
+  if (validatedReturnTo) {
+    const cookieStore = await cookies()
+    cookieStore.set('oauth_return_to', validatedReturnTo, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 600, // 10 minutes, matches OAuth state expiry
+      path: '/',
+    })
+  }
+
   const authUrl = googleOAuthAuthenticator.getAuthUrl(intent)
   return ok({ authUrl })
 }
