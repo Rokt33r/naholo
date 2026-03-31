@@ -313,7 +313,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 4a. Create request endpoint
 
-- [ ] `src/app/api/auth/cli/requests/route.ts` — `POST`
+- [x] `src/app/api/auth/cli/requests/route.ts` — `POST`
   - No auth required
   - Zod validate body: `{ state: string, callbackUrl: string }`
   - Extract IP via `getRequestMetadata()` from `src/server/auth/utils.ts`
@@ -322,7 +322,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 4b. Confirm page
 
-- [ ] `src/app/auth/cli/confirm/[requestId]/page.tsx` — server component
+- [x] `src/app/auth/cli/confirm/[requestId]/page.tsx` — server component
   - Call `getAuthUser()` — if null, `redirect('/sign-in?returnTo=/auth/cli/confirm/' + requestId)`
   - Call `getCliLoginRequestById(requestId)` — if null/expired, show error message
   - Render: verification words prominently, "A CLI app is requesting access to your account", Approve button
@@ -330,7 +330,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 4c. Confirm API endpoint
 
-- [ ] `src/app/api/auth/cli/confirm/[requestId]/route.ts` — `POST`
+- [x] `src/app/api/auth/cli/confirm/[requestId]/route.ts` — `POST`
   - Requires session auth (call `getAuthUser()`, return 401 if null)
   - Call `confirmCliLoginRequest(requestId, userId)`
   - Return JSON `{ redirectUrl: callbackUrl + '?code=' + code }`
@@ -338,7 +338,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 4d. Exchange endpoint
 
-- [ ] `src/app/api/auth/cli/exchange/route.ts` — `POST`
+- [x] `src/app/api/auth/cli/exchange/route.ts` — `POST`
   - No auth required
   - Zod validate body: `{ state: string, requestId: string, code: string, tokenName: string }`
   - Extract IP via `getRequestMetadata()`
@@ -348,7 +348,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 #### 4e. Complete page
 
-- [ ] `src/app/auth/cli/complete/page.tsx` — static page
+- [x] `src/app/auth/cli/complete/page.tsx` — static page
   - Default: "Login successful! You can close this tab."
   - If `?error=...` searchParam: show error message
 
