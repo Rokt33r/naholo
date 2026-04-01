@@ -69,6 +69,35 @@ export const getAuthUser = cache(
 )
 
 /**
+ * Requires authentication via Bearer user API token or session.
+ * Use in API routes that need to support both CLI and browser access.
+ * Throws 'Unauthorized' if neither is valid.
+ */
+export async function requireAuthUser(): Promise<{ id: string; name: string }> {
+  const headersList = await headers()
+  const authorization = headersList.get('authorization')
+  if (authorization?.startsWith('Bearer naholo_user_')) {
+    const token = authorization.slice('Bearer '.length)
+    const result = await resolveUserByApiToken(token)
+    if (result == null) {
+      throw new Error('Unauthorized')
+    }
+    touchUserApiToken(result.tokenId)
+    const user = await auth.storage.getUserById(result.userId)
+    if (user == null) {
+      throw new Error('Unauthorized')
+    }
+    return { id: user.id, name: user.name }
+  }
+
+  const user = await getAuthUser()
+  if (user == null) {
+    throw new Error('Unauthorized')
+  }
+  return user
+}
+
+/**
  * Requires authentication, redirects to sign-in if not authenticated.
  * Use in server components at the top of the render function.
  */

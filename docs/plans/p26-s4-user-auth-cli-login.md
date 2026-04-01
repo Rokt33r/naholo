@@ -354,7 +354,7 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
 
 ### Task 5: CLI login command
 
-- [ ] `packages/naholo-cli/src/commands/login.ts` — full login flow
+- [x] `packages/naholo-cli/src/commands/login.ts` — full login flow
   - Accept `--base-url <url>` flag (default: prompt for server URL)
   - Prompt for token name (default: `os.userInfo().username + '@' + os.hostname()`, accept with Enter)
   - Generate crypto-safe random `state` via `crypto.randomBytes(32).toString('hex')`
@@ -368,16 +368,16 @@ Add `returnTo` query param support to the existing sign-in flow. This is a prere
   - Create profile file at `~/.naholo/profiles/{baseUrlHost}.yml`
   - Update `config.yml` to set as default profile
   - Print success message
-- [ ] `packages/naholo-cli/src/config.ts` — read/write `~/.naholo/config.yml`
-- [ ] `packages/naholo-cli/src/profile.ts` — read/write/list profiles under `~/.naholo/profiles/`
+- [x] `packages/naholo-cli/src/config.ts` — read/write `~/.naholo/config.yml`
+- [x] `packages/naholo-cli/src/profile.ts` — read/write/list profiles under `~/.naholo/profiles/`
 
 ### Task 6: CLI logout + whoami
 
-- [ ] `packages/naholo-cli/src/commands/logout.ts`
+- [x] `packages/naholo-cli/src/commands/logout.ts`
   - Read default profile (or `--profile` override)
   - Delete profile file, update `config.yml`
   - Print "Logged out of {profileName}"
-- [ ] `packages/naholo-cli/src/commands/whoami.ts`
+- [x] `packages/naholo-cli/src/commands/whoami.ts`
   - Read default profile, call `GET /api/auth/me` (needs new endpoint or reuse existing)
   - Print: profile name, server URL, user info
   - If token invalid (401/403), suggest `naholo login`

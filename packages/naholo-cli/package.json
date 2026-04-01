@@ -1,0 +1,26 @@
+{
+  "name": "naholo-cli",
+  "version": "0.1.0",
+  "description": "CLI for Naholo — task/issue management",
+  "type": "module",
+  "bin": {
+    "naholo": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@inquirer/select": "^5.1.2",
+    "commander": "^13.1.0",
+    "open": "^10.1.0",
+    "yaml": "^2.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "typescript": "^5"
+  }
+}

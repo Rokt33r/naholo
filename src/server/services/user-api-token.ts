@@ -100,7 +100,7 @@ export async function listUserApiTokens(
 }
 
 /**
- * Revoke (delete) a user API token.
+ * Revoke (delete) a user API token by ID.
  */
 export async function revokeUserApiToken(
   tokenId: string,
@@ -108,6 +108,25 @@ export async function revokeUserApiToken(
   const [deleted] = await db
     .delete(userApiTokens)
     .where(and(eq(userApiTokens.id, tokenId)))
+    .returning({ id: userApiTokens.id })
+
+  if (!deleted) {
+    return err(new NotFoundError('API token'))
+  }
+
+  return ok()
+}
+
+/**
+ * Revoke (delete) a user API token by its plaintext token string.
+ */
+export async function revokeUserApiTokenByToken(
+  token: string,
+): Promise<ReturnResult<undefined>> {
+  const tokenHash = hashToken(token)
+  const [deleted] = await db
+    .delete(userApiTokens)
+    .where(eq(userApiTokens.tokenHash, tokenHash))
     .returning({ id: userApiTokens.id })
 
   if (!deleted) {

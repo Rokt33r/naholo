@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getAuthUser } from '@/server/auth/utils'
+import { requireAuthUser } from '@/server/auth/utils'
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) {
+  try {
+    const user = await requireAuthUser()
+    return NextResponse.json(user)
+  } catch (error) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  return NextResponse.json(user)
 }

@@ -1,0 +1,243 @@
+import select from '@inquirer/select'
+import { Command } from 'commander'
+import crypto from 'node:crypto'
+import http from 'node:http'
+import os from 'node:os'
+import readline from 'node:readline/promises'
+import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
+import { listProfiles, readProfile, writeProfile } from '../profile.js'
+
+export const loginCommand = new Command('login')
+  .description('Authenticate with a Naholo server')
+  .option('--base-url <url>', 'server URL')
+  .action(async (options: { baseUrl?: string }) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    })
+
+    try {
+      // 1. Get base URL
+      let baseUrl = options.baseUrl
+      if (!baseUrl) {
+        baseUrl = 'http://localhost:3000'
+      }
+      baseUrl = baseUrl.replace(/\/$/, '')
+
+      // 2. Select existing profile or create new one
+      const existingProfileNames = listProfiles()
+
+      if (existingProfileNames.length > 0) {
+        const choices: { name: string; value: string | null }[] =
+          existingProfileNames.map((name) => {
+            const profile = readProfile(name)
+            const detail = profile != null ? ` (${profile.baseUrl})` : ''
+            return { name: `${name}${detail}`, value: name }
+          })
+        choices.push({ name: 'Create new profile', value: null })
+
+        const selected = await select({
+          message: 'Select a profile or create a new one',
+          choices,
+        })
+
+        if (selected != null) {
+          setDefaultProfile(selected)
+          console.log(`Switched to profile "${selected}".`)
+          rl.close()
+          return
+        }
+      }
+
+      // 3. Prompt for new profile name
+      let defaultProfileName: string
+      const existingSet = new Set(existingProfileNames)
+      do {
+        defaultProfileName = `profile-${crypto.randomBytes(4).toString('hex')}`
+      } while (existingSet.has(defaultProfileName))
+
+      const profileNameInput = await rl.question(
+        `Profile name in local (${defaultProfileName}): `,
+      )
+      const profileName = profileNameInput.trim() || defaultProfileName
+
+      if (existingSet.has(profileName)) {
+        const overwrite = await rl.question(
+          `Profile "${profileName}" already exists. Overwrite? (y/N): `,
+        )
+        if (overwrite.toLowerCase() !== 'y') {
+          console.log('Aborted.')
+          rl.close()
+          return
+        }
+      }
+
+      // 4. Prompt for token name (name shown in the web app)
+      const defaultTokenName = `${os.userInfo().username}@${os.hostname()}`
+      const tokenNameInput = await rl.question(
+        `Token name in naholo server (${defaultTokenName}): `,
+      )
+      const tokenName = tokenNameInput.trim() || defaultTokenName
+
+      // 5. Generate state
+      const state = crypto.randomBytes(32).toString('hex')
+
+      // 4. Start local server to receive callback
+      const callbackServer = await startCallbackServer(baseUrl)
+
+      try {
+        // 5. Create CLI login request
+        const callbackUrl = `http://localhost:${callbackServer.port}/callback`
+        const createRes = await fetch(`${baseUrl}/api/auth/cli/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state, callbackUrl }),
+        })
+
+        if (!createRes.ok) {
+          const text = await createRes.text()
+          console.error(`Failed to create login request: ${text}`)
+          process.exit(1)
+        }
+
+        const { requestId, words } = (await createRes.json()) as {
+          requestId: string
+          words: string
+        }
+
+        // 6. Display verification words
+        console.log()
+        console.log('Verification words:')
+        console.log()
+        console.log(`  ${words}`)
+        console.log()
+        console.log('Verify these words match what you see in the browser.')
+        console.log()
+
+        await rl.question('Press Enter to open browser...')
+        rl.close()
+
+        // 7. Open browser
+        const open = (await import('open')).default
+        const child = await open(`${baseUrl}/auth/cli/confirm/${requestId}`)
+        child.unref()
+
+        console.log('Waiting for approval in browser...')
+
+        // 8. Wait for callback code
+        const code = await callbackServer.waitForCode()
+
+        if (code == null) {
+          console.error('Login timed out or was cancelled.')
+          process.exit(1)
+        }
+
+        // 9. Exchange code for token
+        const exchangeRes = await fetch(`${baseUrl}/api/auth/cli/exchange`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state, requestId, code, tokenName }),
+        })
+
+        if (!exchangeRes.ok) {
+          const text = await exchangeRes.text()
+          console.error(`Failed to exchange code: ${text}`)
+          process.exit(1)
+        }
+
+        const { token, tokenHint } = (await exchangeRes.json()) as {
+          token: string
+          tokenHint: string
+          tokenName: string
+        }
+
+        // 10. Save profile
+        ensureNaholoHomeDir()
+        writeProfile(profileName, {
+          baseUrl,
+          token,
+          tokenName,
+          createdAt: new Date().toISOString(),
+        })
+        setDefaultProfile(profileName)
+
+        console.log()
+        console.log(`Logged in successfully.`)
+        console.log(`  Profile: ${profileName}`)
+        console.log(`  Token:   ${tokenHint}`)
+      } finally {
+        callbackServer.close()
+      }
+    } catch (err) {
+      rl.close()
+      console.error('Login failed:', err instanceof Error ? err.message : err)
+      process.exit(1)
+    }
+  })
+
+interface CallbackServer {
+  port: number
+  waitForCode: () => Promise<string | null>
+  close: () => void
+}
+
+function startCallbackServer(baseUrl: string): Promise<CallbackServer> {
+  return new Promise((resolve, reject) => {
+    let codeResolve: (code: string | null) => void
+    const codePromise = new Promise<string | null>((res) => {
+      codeResolve = res
+    })
+
+    const completeUrl = `${baseUrl}/auth/cli/complete`
+
+    const server = http.createServer((req, res) => {
+      const url = new URL(req.url ?? '/', `http://localhost`)
+      if (url.pathname === '/callback') {
+        const code = url.searchParams.get('code')
+        if (code) {
+          res.writeHead(302, { Location: completeUrl })
+          res.end()
+          codeResolve(code)
+        } else {
+          const error = url.searchParams.get('error') ?? 'No code received'
+          res.writeHead(302, {
+            Location: `${completeUrl}?error=${encodeURIComponent(error)}`,
+          })
+          res.end()
+          codeResolve(null)
+        }
+      } else {
+        res.writeHead(404)
+        res.end()
+      }
+    })
+
+    const timeout = setTimeout(
+      () => {
+        codeResolve(null)
+        server.closeAllConnections()
+        server.close()
+      },
+      5 * 60 * 1000,
+    )
+
+    server.listen(0, () => {
+      const addr = server.address()
+      if (!addr || typeof addr === 'string') {
+        reject(new Error('Failed to start callback server'))
+        return
+      }
+      resolve({
+        port: addr.port,
+        waitForCode: () => codePromise,
+        close: () => {
+          clearTimeout(timeout)
+          server.closeAllConnections()
+          server.close()
+        },
+      })
+    })
+
+    server.on('error', reject)
+  })
+}
