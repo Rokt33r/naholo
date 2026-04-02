@@ -6,7 +6,7 @@ Introduce user-scoped API tokens (separate from project worker tokens) so the CL
 
 ## Motivation
 
-Worker API tokens are per-project and per-worker — requiring a separate token for every cloned repo makes token management impractical. User API tokens are personal and work across all projects the user has access to, similar to how `gh` auth tokens work.
+Worker API tokens are per-project and per-worker — requiring a separate token for every cloned repo makes token management impractical. User API tokens are per-user and work across all projects the user has access to, similar to how `gh` auth tokens work.
 
 ## Prerequisites
 

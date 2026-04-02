@@ -1,9 +1,10 @@
+import confirm from '@inquirer/confirm'
+import input from '@inquirer/input'
 import select from '@inquirer/select'
 import { Command } from 'commander'
 import crypto from 'node:crypto'
 import http from 'node:http'
 import os from 'node:os'
-import readline from 'node:readline/promises'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
 import { listProfiles, readProfile, writeProfile } from '../profile.js'
 
@@ -11,11 +12,6 @@ export const loginCommand = new Command('login')
   .description('Authenticate with a Naholo server')
   .option('--base-url <url>', 'server URL')
   .action(async (options: { baseUrl?: string }) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    })
-
     try {
       // 1. Get base URL
       let baseUrl = options.baseUrl
@@ -44,7 +40,6 @@ export const loginCommand = new Command('login')
         if (selected != null) {
           setDefaultProfile(selected)
           console.log(`Switched to profile "${selected}".`)
-          rl.close()
           return
         }
       }
@@ -56,37 +51,37 @@ export const loginCommand = new Command('login')
         defaultProfileName = `profile-${crypto.randomBytes(4).toString('hex')}`
       } while (existingSet.has(defaultProfileName))
 
-      const profileNameInput = await rl.question(
-        `Profile name in local (${defaultProfileName}): `,
-      )
-      const profileName = profileNameInput.trim() || defaultProfileName
+      const profileName = await input({
+        message: 'Profile name',
+        default: defaultProfileName,
+      })
 
       if (existingSet.has(profileName)) {
-        const overwrite = await rl.question(
-          `Profile "${profileName}" already exists. Overwrite? (y/N): `,
-        )
-        if (overwrite.toLowerCase() !== 'y') {
+        const overwrite = await confirm({
+          message: `Profile "${profileName}" already exists. Overwrite?`,
+          default: false,
+        })
+        if (!overwrite) {
           console.log('Aborted.')
-          rl.close()
           return
         }
       }
 
       // 4. Prompt for token name (name shown in the web app)
       const defaultTokenName = `${os.userInfo().username}@${os.hostname()}`
-      const tokenNameInput = await rl.question(
-        `Token name in naholo server (${defaultTokenName}): `,
-      )
-      const tokenName = tokenNameInput.trim() || defaultTokenName
+      const tokenName = await input({
+        message: 'Token name in naholo server',
+        default: defaultTokenName,
+      })
 
       // 5. Generate state
       const state = crypto.randomBytes(32).toString('hex')
 
-      // 4. Start local server to receive callback
+      // 6. Start local server to receive callback
       const callbackServer = await startCallbackServer(baseUrl)
 
       try {
-        // 5. Create CLI login request
+        // 7. Create CLI login request
         const callbackUrl = `http://localhost:${callbackServer.port}/callback`
         const createRes = await fetch(`${baseUrl}/api/auth/cli/requests`, {
           method: 'POST',
@@ -105,7 +100,7 @@ export const loginCommand = new Command('login')
           words: string
         }
 
-        // 6. Display verification words
+        // 8. Display verification words and open browser
         console.log()
         console.log('Verification words:')
         console.log()
@@ -114,10 +109,9 @@ export const loginCommand = new Command('login')
         console.log('Verify these words match what you see in the browser.')
         console.log()
 
-        await rl.question('Press Enter to open browser...')
-        rl.close()
+        await input({ message: 'Press Enter to open browser...' })
 
-        // 7. Open browser
+        // 9. Open browser
         const open = (await import('open')).default
         const child = await open(`${baseUrl}/auth/cli/confirm/${requestId}`)
         child.unref()
@@ -169,7 +163,6 @@ export const loginCommand = new Command('login')
         callbackServer.close()
       }
     } catch (err) {
-      rl.close()
       console.error('Login failed:', err instanceof Error ? err.message : err)
       process.exit(1)
     }
