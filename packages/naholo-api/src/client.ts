@@ -1,0 +1,325 @@
+import type {
+  AuthUser,
+  CreateTaskInput,
+  CreateWorkerTokenResult,
+  Issue,
+  IssueDetail,
+  IssueListItem,
+  Log,
+  MoveTaskInput,
+  Note,
+  Project,
+  ProjectWithWorker,
+  Skill,
+  Task,
+  UpdateTaskInput,
+  Worker,
+  WorkerToken,
+} from './types.js'
+
+export class NaholoClient {
+  private baseUrl: string
+  private token: string
+
+  constructor(options: { baseUrl: string; token: string }) {
+    this.baseUrl = options.baseUrl.replace(/\/$/, '')
+    this.token = options.token
+  }
+
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const url = `${this.baseUrl}${path}`
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: body != null ? JSON.stringify(body) : undefined,
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`${method} ${path} failed (${res.status}): ${text}`)
+    }
+
+    if (res.status === 204) {
+      return undefined as T
+    }
+
+    return res.json() as Promise<T>
+  }
+
+  private projectPath(projectId: string, suffix = '') {
+    return `/api/projects/${projectId}${suffix}`
+  }
+
+  private issuePath(projectId: string, issueId: string, suffix = '') {
+    return this.projectPath(projectId, `/issues/${issueId}${suffix}`)
+  }
+
+  // ---- Auth ----
+
+  getAuthUser(): Promise<AuthUser> {
+    return this.request('GET', '/api/auth/user')
+  }
+
+  // ---- Projects ----
+
+  listProjects(): Promise<ProjectWithWorker[]> {
+    return this.request('GET', '/api/projects')
+  }
+
+  getProject(projectId: string): Promise<Project> {
+    return this.request('GET', this.projectPath(projectId))
+  }
+
+  updateProject(
+    projectId: string,
+    input: { name?: string; description?: string },
+  ): Promise<Project> {
+    return this.request('PATCH', this.projectPath(projectId), input)
+  }
+
+  // ---- Issues ----
+
+  listIssues(
+    projectId: string,
+    opts?: { closed?: boolean },
+  ): Promise<IssueListItem[]> {
+    const qs = opts?.closed ? '?closed=true' : ''
+    return this.request('GET', this.projectPath(projectId, `/issues${qs}`))
+  }
+
+  getIssue(projectId: string, issueId: string): Promise<IssueDetail> {
+    return this.request('GET', this.issuePath(projectId, issueId))
+  }
+
+  createIssue(projectId: string, input: { title: string }): Promise<Issue> {
+    return this.request('POST', this.projectPath(projectId, '/issues'), input)
+  }
+
+  updateIssue(
+    projectId: string,
+    issueId: string,
+    input: { title: string },
+  ): Promise<Issue> {
+    return this.request('PATCH', this.issuePath(projectId, issueId), input)
+  }
+
+  deleteIssue(projectId: string, issueId: string): Promise<void> {
+    return this.request('DELETE', this.issuePath(projectId, issueId))
+  }
+
+  closeIssue(projectId: string, issueId: string): Promise<void> {
+    return this.request('POST', this.issuePath(projectId, issueId, '/close'))
+  }
+
+  reopenIssue(projectId: string, issueId: string): Promise<void> {
+    return this.request('DELETE', this.issuePath(projectId, issueId, '/close'))
+  }
+
+  // ---- Tasks ----
+
+  listTasks(projectId: string, issueId: string): Promise<Task[]> {
+    return this.request('GET', this.issuePath(projectId, issueId, '/tasks'))
+  }
+
+  createTask(
+    projectId: string,
+    issueId: string,
+    input: CreateTaskInput,
+  ): Promise<Task> {
+    return this.request(
+      'POST',
+      this.issuePath(projectId, issueId, '/tasks'),
+      input,
+    )
+  }
+
+  updateTask(
+    projectId: string,
+    issueId: string,
+    taskId: string,
+    input: UpdateTaskInput,
+  ): Promise<Task> {
+    return this.request(
+      'PATCH',
+      this.issuePath(projectId, issueId, `/tasks/${taskId}`),
+      input,
+    )
+  }
+
+  deleteTask(
+    projectId: string,
+    issueId: string,
+    taskId: string,
+  ): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.issuePath(projectId, issueId, `/tasks/${taskId}`),
+    )
+  }
+
+  moveTask(
+    projectId: string,
+    issueId: string,
+    taskId: string,
+    input: MoveTaskInput,
+  ): Promise<Task> {
+    return this.request(
+      'POST',
+      this.issuePath(projectId, issueId, `/tasks/${taskId}/move`),
+      input,
+    )
+  }
+
+  // ---- Notes ----
+
+  listNotes(projectId: string, issueId: string): Promise<Note[]> {
+    return this.request('GET', this.issuePath(projectId, issueId, '/notes'))
+  }
+
+  createNote(
+    projectId: string,
+    issueId: string,
+    input: { title: string; content: string },
+  ): Promise<Note> {
+    return this.request(
+      'POST',
+      this.issuePath(projectId, issueId, '/notes'),
+      input,
+    )
+  }
+
+  updateNote(
+    projectId: string,
+    issueId: string,
+    noteId: string,
+    input: { title?: string; content?: string },
+  ): Promise<Note> {
+    return this.request(
+      'PATCH',
+      this.issuePath(projectId, issueId, `/notes/${noteId}`),
+      input,
+    )
+  }
+
+  deleteNote(
+    projectId: string,
+    issueId: string,
+    noteId: string,
+  ): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.issuePath(projectId, issueId, `/notes/${noteId}`),
+    )
+  }
+
+  // ---- Logs ----
+
+  listLogs(projectId: string, issueId: string): Promise<Log[]> {
+    return this.request('GET', this.issuePath(projectId, issueId, '/logs'))
+  }
+
+  createLog(
+    projectId: string,
+    issueId: string,
+    input: { content: string },
+  ): Promise<Log> {
+    return this.request(
+      'POST',
+      this.issuePath(projectId, issueId, '/logs'),
+      input,
+    )
+  }
+
+  deleteLog(projectId: string, issueId: string, logId: string): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.issuePath(projectId, issueId, `/logs/${logId}`),
+    )
+  }
+
+  // ---- Skills ----
+
+  listSkills(projectId: string): Promise<Skill[]> {
+    return this.request('GET', this.projectPath(projectId, '/skills'))
+  }
+
+  createSkill(
+    projectId: string,
+    input: { name: string; content: string },
+  ): Promise<Skill> {
+    return this.request('POST', this.projectPath(projectId, '/skills'), input)
+  }
+
+  updateSkill(
+    projectId: string,
+    skillId: string,
+    input: { name?: string; content?: string },
+  ): Promise<Skill> {
+    return this.request(
+      'PATCH',
+      this.projectPath(projectId, `/skills/${skillId}`),
+      input,
+    )
+  }
+
+  deleteSkill(projectId: string, skillId: string): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.projectPath(projectId, `/skills/${skillId}`),
+    )
+  }
+
+  // ---- Workers ----
+
+  listWorkers(projectId: string): Promise<Worker[]> {
+    return this.request('GET', this.projectPath(projectId, '/workers'))
+  }
+
+  getWorker(projectId: string, workerId: string): Promise<Worker> {
+    return this.request(
+      'GET',
+      this.projectPath(projectId, `/workers/${workerId}`),
+    )
+  }
+
+  listWorkerTokens(
+    projectId: string,
+    workerId: string,
+  ): Promise<WorkerToken[]> {
+    return this.request(
+      'GET',
+      this.projectPath(projectId, `/workers/${workerId}/tokens`),
+    )
+  }
+
+  createWorkerToken(
+    projectId: string,
+    workerId: string,
+    input: { name: string },
+  ): Promise<CreateWorkerTokenResult> {
+    return this.request(
+      'POST',
+      this.projectPath(projectId, `/workers/${workerId}/tokens`),
+      input,
+    )
+  }
+
+  deleteWorkerToken(
+    projectId: string,
+    workerId: string,
+    tokenId: string,
+  ): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.projectPath(projectId, `/workers/${workerId}/tokens/${tokenId}`),
+    )
+  }
+}

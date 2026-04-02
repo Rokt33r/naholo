@@ -1,0 +1,12 @@
+{
+  "name": "naholo-api",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./types": "./src/types.ts",
+    "./client": "./src/client.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
