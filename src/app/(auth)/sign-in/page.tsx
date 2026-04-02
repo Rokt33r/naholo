@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser } from '@/server/auth/permissions'
 import { validateReturnTo } from '@/lib/validate-return-to'
 import { SignInForm } from './sign-in-form'
 
@@ -11,7 +11,9 @@ export default async function SignInPage({
   const { returnTo } = await searchParams
   const validatedReturnTo = validateReturnTo(returnTo)
 
-  const user = await getAuthUser()
+  const user = await getAuthUser({
+    allowedAuthMethods: ['session'],
+  })
   if (user) {
     redirect(validatedReturnTo || '/')
   }

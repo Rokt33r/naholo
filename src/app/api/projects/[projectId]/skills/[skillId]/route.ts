@@ -3,7 +3,7 @@ import { z } from 'zod'
 import {
   requireProjectWorker,
   requireAdminProjectWorker,
-} from '@/server/auth/utils'
+} from '@/server/auth/permissions'
 import { getSkill, updateSkill, deleteSkill } from '@/server/services/skill'
 import { ConflictError } from '@/server/services/errors'
 

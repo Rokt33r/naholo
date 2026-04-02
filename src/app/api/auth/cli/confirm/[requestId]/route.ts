@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser } from '@/server/auth/permissions'
 import {
   getCliLoginRequestById,
   isCliLoginRequestPending,

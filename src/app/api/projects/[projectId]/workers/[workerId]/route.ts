@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/permissions'
 import { getProjectWorker } from '@/server/services/project-worker'
 
 export async function GET(

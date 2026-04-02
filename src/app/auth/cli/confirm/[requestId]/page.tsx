@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser, requireAuthUser } from '@/server/auth/permissions'
 import {
   getCliLoginRequestById,
   isCliLoginRequestPending,
@@ -13,10 +13,10 @@ export default async function CliConfirmPage({
 }) {
   const { requestId } = await params
 
-  const user = await getAuthUser()
-  if (!user) {
-    redirect(`/sign-in?returnTo=/auth/cli/confirm/${requestId}`)
-  }
+  const user = await requireAuthUser({
+    allowedAuthMethods: ['session'],
+    redirectUrlOnFail: `/sign-in?returnTo=/auth/cli/confirm/${requestId}`,
+  })
 
   const loginRequest = await getCliLoginRequestById(requestId)
   if (!loginRequest || !isCliLoginRequestPending(loginRequest)) {

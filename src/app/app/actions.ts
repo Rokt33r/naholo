@@ -6,7 +6,7 @@ import {
   requireAdminProjectWorker,
   requireProjectWorker,
   requireIssueAccess,
-} from '@/server/auth/utils'
+} from '@/server/auth/permissions'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { auth } from '../../server/auth/auth'

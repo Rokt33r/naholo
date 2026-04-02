@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
-import { requireAuthUser } from '@/server/auth/utils'
+import { requireAuthUser } from '@/server/auth/permissions'
 import { revokeUserApiTokenByToken } from '@/server/services/user-api-token'
 
 /**

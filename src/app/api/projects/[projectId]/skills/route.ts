@@ -3,7 +3,7 @@ import { z } from 'zod'
 import {
   requireProjectWorker,
   requireAdminProjectWorker,
-} from '@/server/auth/utils'
+} from '@/server/auth/permissions'
 import { listSkills, createSkill } from '@/server/services/skill'
 
 type RouteContext = {

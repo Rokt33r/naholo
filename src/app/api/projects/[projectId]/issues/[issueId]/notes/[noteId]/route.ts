@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireIssueNoteAccess } from '@/server/auth/utils'
+import { requireIssueNoteAccess } from '@/server/auth/permissions'
 import { updateNote, deleteNote } from '@/server/services/note'
 
 type RouteContext = {

@@ -1,10 +1,10 @@
-import { requireAdminOrNotFound } from '@/server/auth/utils'
+import { requireAppAdmin } from '@/server/auth/permissions'
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  await requireAdminOrNotFound()
+  await requireAppAdmin()
   return <>{children}</>
 }

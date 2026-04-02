@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser } from '@/server/auth/permissions'
 
 export default async function HomePage() {
-  const user = await getAuthUser()
+  const user = await getAuthUser({
+    allowedAuthMethods: ['session'],
+  })
 
   return (
     <div className='flex min-h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950'>

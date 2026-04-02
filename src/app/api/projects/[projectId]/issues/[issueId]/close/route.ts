@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireIssueAccess } from '@/server/auth/utils'
+import { requireIssueAccess } from '@/server/auth/permissions'
 import { closeIssue, reopenIssue } from '@/server/services/issue'
 
 type RouteContext = {

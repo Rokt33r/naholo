@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser } from '@/server/auth/utils'
+import { getAuthUser } from '@/server/auth/permissions'
 import { listProjects } from '@/server/services/project'
 
 export async function GET(request: NextRequest) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/utils'
+import { requireProjectWorker } from '@/server/auth/permissions'
 import { listIssues, createIssue } from '@/server/services/issue'
 
 type RouteContext = {
