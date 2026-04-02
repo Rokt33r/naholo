@@ -2,13 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-export type WorkerToken = {
-  id: string
-  name: string
-  tokenHint: string
-  lastUsedAt: Date | null
-  createdAt: Date
-}
+export type { WorkerToken, CreateWorkerTokenResult } from 'naholo-api/types'
+
+import type { WorkerToken } from 'naholo-api/types'
 
 /**
  * Hook to fetch API tokens for a worker

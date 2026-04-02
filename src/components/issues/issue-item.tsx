@@ -4,20 +4,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CircleCheckBig, CircleDot, CircleCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatIssueDate } from '@/lib/date-utils'
-
-type Issue = {
-  id: string
-  title: string
-  lastLogPreview: string | null
-  closed: boolean
-  closedAt: Date | null
-  updatedAt: Date
-  totalTasks: number
-  completedTasks: string | null
-}
+import type { IssueListItem } from 'naholo-api/types'
 
 type IssueItemProps = {
-  issue: Issue
+  issue: IssueListItem
   projectId: string
   isActive: boolean
 }
@@ -34,8 +24,6 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
   }
 
   const completedCount = issue.completedTasks
-    ? parseInt(issue.completedTasks, 10)
-    : 0
   const totalCount = issue.totalTasks || 0
 
   return (

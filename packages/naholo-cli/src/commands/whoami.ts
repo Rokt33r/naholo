@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { NaholoClient } from 'naholo-api/client'
 import { getActiveProfile } from '../profile.js'
 
 export const whoamiCommand = new Command('whoami')
@@ -14,30 +15,13 @@ export const whoamiCommand = new Command('whoami')
 
     const { name, profile } = active
 
-    // Verify token is still valid
+    const client = new NaholoClient({
+      baseUrl: profile.baseUrl,
+      token: profile.token,
+    })
+
     try {
-      const res = await fetch(`${profile.baseUrl}/api/auth/user`, {
-        headers: {
-          Authorization: `Bearer ${profile.token}`,
-        },
-      })
-
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          console.error(
-            'Token is invalid or expired. Run "naholo login" to re-authenticate.',
-          )
-          process.exit(2)
-        }
-        console.error(`Server error: ${res.status}`)
-        process.exit(1)
-      }
-
-      const user = (await res.json()) as {
-        id?: string
-        email?: string
-        name?: string
-      }
+      const user = await client.getAuthUser()
 
       const parentOpts = cmd.parent?.opts() as { json?: boolean } | undefined
       if (parentOpts?.json) {
@@ -64,11 +48,15 @@ export const whoamiCommand = new Command('whoami')
           console.log(`User:       ${user.name}`)
         }
       }
-    } catch (err) {
-      console.error(
-        'Failed to connect to server:',
-        err instanceof Error ? err.message : err,
-      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (message.includes('401') || message.includes('403')) {
+        console.error(
+          'Token is invalid or expired. Run "naholo login" to re-authenticate.',
+        )
+        process.exit(2)
+      }
+      console.error('Failed to connect to server:', message)
       process.exit(1)
     }
   })

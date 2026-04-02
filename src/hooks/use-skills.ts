@@ -2,14 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-export type Skill = {
-  id: string
-  name: string
-  content: string
-  position: number
-  createdAt: string
-  updatedAt: string
-}
+export type { Skill } from 'naholo-api/types'
+
+import type { Skill } from 'naholo-api/types'
 
 export function useSkills(projectId: string) {
   const query = useQuery({
@@ -52,6 +47,7 @@ export function useCreateSkill(projectId: string) {
           name: input.name,
           content: input.content,
           position: (old ?? []).length,
+          currentRevisionId: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },

@@ -1,23 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetcher } from '@/lib/fetcher'
 
-export type Project = {
-  id: string
-  name: string
-  description: string | null
-  createdAt: Date
-}
+export type {
+  Project,
+  ProjectWorkerInfo,
+  ProjectWithWorker,
+} from 'naholo-api/types'
 
-export type ProjectWorkerInfo = {
-  id: string
-  type: string
-  name: string
-  role: string
-}
-
-export type ProjectWithWorker = Project & {
-  projectWorkerOfCurrentUser: ProjectWorkerInfo
-}
+import type { ProjectWithWorker } from 'naholo-api/types'
 
 export function useProjects() {
   return useQuery({

@@ -2,14 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-type Note = {
-  id: string
-  title: string
-  content: string
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
+export type { Note } from 'naholo-api/types'
+
+import type { Note } from 'naholo-api/types'
 
 /**
  * Hook to fetch notes for an issue
@@ -65,8 +60,8 @@ export function useCreateNote(projectId: string, issueId: string) {
         title,
         content,
         position: maxPosition + 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
 
       queryClient.setQueryData<Note[]>(['notes', issueId], (old) => [
@@ -125,7 +120,7 @@ export function useUpdateNote(projectId: string, issueId: string) {
       queryClient.setQueryData<Note[]>(['notes', issueId], (old) =>
         old?.map((note) =>
           note.id === noteId
-            ? { ...note, title, content, updatedAt: new Date() }
+            ? { ...note, title, content, updatedAt: new Date().toISOString() }
             : note,
         ),
       )

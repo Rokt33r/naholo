@@ -10,13 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
-
-type Project = {
-  id: string
-  name: string
-  description: string | null
-  createdAt: Date
-}
+import type { Project } from 'naholo-api/types'
 
 type ProjectSwitcherProps = {
   projects: Project[]

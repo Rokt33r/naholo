@@ -7,7 +7,7 @@ import { format, isToday, isThisWeek, isThisYear } from 'date-fns'
  * - Within a year: "MMM d" (e.g., "Oct 2")
  * - Else: "yyyy MMM" (e.g., "2024 Oct")
  */
-export function formatIssueDate(date: Date): string {
+export function formatIssueDate(date: string | Date): string {
   if (isToday(date)) {
     return format(date, 'HH:mm')
   }

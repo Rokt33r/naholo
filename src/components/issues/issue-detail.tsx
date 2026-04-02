@@ -31,25 +31,7 @@ import {
 } from '@/hooks/use-issues'
 import { useUpdateNote } from '@/hooks/use-notes'
 import { useIssueNoteStore } from '@/hooks/use-issue-note-store'
-
-type IssueDetail = {
-  id: string
-  projectId: string
-  title: string
-  closed: boolean
-  closedAt: Date | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-type Note = {
-  id: string
-  title: string
-  content: string
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
+import type { IssueDetail, Note } from 'naholo-api/types'
 
 type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 

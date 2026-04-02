@@ -2,13 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-export type Log = {
-  id: string
-  content: string
-  projectWorker: { id: string; name: string; type: string } | null
-  createdAt: Date
-  updatedAt: Date
-}
+export type { Log } from 'naholo-api/types'
+
+import type { Log } from 'naholo-api/types'
 
 /**
  * Hook to fetch logs for an issue
@@ -60,8 +56,8 @@ export function useCreateLog(
           name: currentWorker.name,
           type: currentWorker.type,
         },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
 
       queryClient.setQueryData<Log[]>(['logs', issueId], (old) => [
@@ -117,7 +113,9 @@ export function useUpdateLog(projectId: string, issueId: string) {
 
       queryClient.setQueryData<Log[]>(['logs', issueId], (old) =>
         old?.map((log) =>
-          log.id === logId ? { ...log, content, updatedAt: new Date() } : log,
+          log.id === logId
+            ? { ...log, content, updatedAt: new Date().toISOString() }
+            : log,
         ),
       )
 

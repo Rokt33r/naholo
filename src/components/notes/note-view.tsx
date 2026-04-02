@@ -13,15 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
 import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
-
-type Note = {
-  id: string
-  title: string
-  content: string
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
+import type { Note } from 'naholo-api/types'
 
 type ViewMode = 'editor' | 'split' | 'preview'
 

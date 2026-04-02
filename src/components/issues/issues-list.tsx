@@ -18,13 +18,7 @@ import { useIssuesList } from './issues-list-context'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
 import { useIssues } from '@/hooks/use-issues'
-
-type Project = {
-  id: string
-  name: string
-  description: string | null
-  createdAt: Date
-}
+import type { Project } from 'naholo-api/types'
 
 type IssuesListProps = {
   projectId: string

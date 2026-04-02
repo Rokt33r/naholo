@@ -89,6 +89,9 @@ importers:
       lucide-react:
         specifier: ^0.553.0
         version: 0.553.0(react@19.2.0)
+      naholo-api:
+        specifier: workspace:*
+        version: link:packages/naholo-api
       next:
         specifier: 16.0.7
         version: 16.0.7(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -189,6 +192,9 @@ importers:
       commander:
         specifier: ^13.1.0
         version: 13.1.0
+      naholo-api:
+        specifier: workspace:*
+        version: link:../naholo-api
       open:
         specifier: ^10.1.0
         version: 10.2.0
@@ -208,6 +214,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.1
         version: 1.29.0(zod@4.3.6)
+      naholo-api:
+        specifier: workspace:*
+        version: link:../naholo-api
       zod:
         specifier: ^4.3.6
         version: 4.3.6

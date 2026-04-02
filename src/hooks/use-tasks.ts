@@ -2,16 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-export type Task = {
-  id: string
-  parentTaskId: string | null
-  name: string
-  note: string | null
-  done: boolean
-  position: number
-  createdAt: Date
-  updatedAt: Date
-}
+export type { Task } from 'naholo-api/types'
+
+import type { Task } from 'naholo-api/types'
 
 /**
  * Hook to fetch tasks for an issue
@@ -78,8 +71,8 @@ export function useCreateTask(projectId: string, issueId: string) {
         parentTaskId: parentTaskId ?? null,
         done: false,
         position: optimisticPosition,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
 
       queryClient.setQueryData<Task[]>(['tasks', issueId], (old) => {
@@ -141,7 +134,9 @@ export function useUpdateTask(projectId: string, issueId: string) {
 
       queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
         old?.map((task) =>
-          task.id === taskId ? { ...task, name, updatedAt: new Date() } : task,
+          task.id === taskId
+            ? { ...task, name, updatedAt: new Date().toISOString() }
+            : task,
         ),
       )
 
@@ -187,7 +182,9 @@ export function useSetTaskDone(projectId: string, issueId: string) {
 
       queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
         old?.map((task) =>
-          task.id === taskId ? { ...task, done, updatedAt: new Date() } : task,
+          task.id === taskId
+            ? { ...task, done, updatedAt: new Date().toISOString() }
+            : task,
         ),
       )
 
@@ -239,7 +236,9 @@ export function useUpdateTaskNote(projectId: string, issueId: string) {
 
       queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
         old?.map((task) =>
-          task.id === taskId ? { ...task, note, updatedAt: new Date() } : task,
+          task.id === taskId
+            ? { ...task, note, updatedAt: new Date().toISOString() }
+            : task,
         ),
       )
 
@@ -363,7 +362,7 @@ export function useMoveTask(projectId: string, issueId: string) {
               ...t,
               parentTaskId: newParentTaskId,
               position: newPosition,
-              updatedAt: new Date(),
+              updatedAt: new Date().toISOString(),
             }
           }
 

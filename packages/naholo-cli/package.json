@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@inquirer/confirm": "^6.0.10",
+    "naholo-api": "workspace:*",
     "@inquirer/input": "^5.0.10",
     "@inquirer/select": "^5.1.2",
     "commander": "^13.1.0",

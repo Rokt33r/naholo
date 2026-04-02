@@ -6,7 +6,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import * as client from './client.js'
+import { getClient, getProjectId } from './client.js'
 
 const server = new McpServer({
   name: 'naholo',
@@ -19,7 +19,7 @@ server.registerTool(
   'get_project',
   { description: 'Get current project details' },
   async () => {
-    const project = await client.getProject()
+    const project = await getClient().getProject(getProjectId())
     return {
       content: [{ type: 'text', text: JSON.stringify(project, null, 2) }],
     }
@@ -35,7 +35,7 @@ server.registerTool(
     },
   },
   async ({ closed }) => {
-    const issues = await client.listIssues(closed)
+    const issues = await getClient().listIssues(getProjectId(), { closed })
     return {
       content: [{ type: 'text', text: JSON.stringify(issues, null, 2) }],
     }
@@ -49,7 +49,7 @@ server.registerTool(
     inputSchema: { issueId: z.string().describe('Issue ID') },
   },
   async ({ issueId }) => {
-    const issue = await client.getIssue(issueId)
+    const issue = await getClient().getIssue(getProjectId(), issueId)
     return {
       content: [{ type: 'text', text: JSON.stringify(issue, null, 2) }],
     }
@@ -63,7 +63,7 @@ server.registerTool(
     inputSchema: { title: z.string().describe('Issue title') },
   },
   async ({ title }) => {
-    const issue = await client.createIssue(title)
+    const issue = await getClient().createIssue(getProjectId(), { title })
     return {
       content: [{ type: 'text', text: JSON.stringify(issue, null, 2) }],
     }
@@ -77,7 +77,7 @@ server.registerTool(
     inputSchema: { issueId: z.string().describe('Issue ID') },
   },
   async ({ issueId }) => {
-    await client.closeIssue(issueId)
+    await getClient().closeIssue(getProjectId(), issueId)
     return { content: [{ type: 'text', text: 'Issue closed.' }] }
   },
 )
@@ -89,7 +89,7 @@ server.registerTool(
     inputSchema: { issueId: z.string().describe('Issue ID') },
   },
   async ({ issueId }) => {
-    const tasks = await client.getTasks(issueId)
+    const tasks = await getClient().listTasks(getProjectId(), issueId)
     return {
       content: [{ type: 'text', text: JSON.stringify(tasks, null, 2) }],
     }
@@ -112,7 +112,7 @@ server.registerTool(
     },
   },
   async ({ issueId, name, note, parentTaskId, position }) => {
-    const task = await client.createTask(issueId, {
+    const task = await getClient().createTask(getProjectId(), issueId, {
       name,
       note,
       parentTaskId,
@@ -137,7 +137,11 @@ server.registerTool(
     },
   },
   async ({ issueId, taskId, name, note, done }) => {
-    await client.updateTask(issueId, taskId, { name, note, done })
+    await getClient().updateTask(getProjectId(), issueId, taskId, {
+      name,
+      note,
+      done,
+    })
     return { content: [{ type: 'text', text: 'Task updated.' }] }
   },
 )
@@ -149,7 +153,7 @@ server.registerTool(
     inputSchema: { issueId: z.string().describe('Issue ID') },
   },
   async ({ issueId }) => {
-    const notes = await client.getNotes(issueId)
+    const notes = await getClient().listNotes(getProjectId(), issueId)
     return {
       content: [{ type: 'text', text: JSON.stringify(notes, null, 2) }],
     }
@@ -166,7 +170,9 @@ server.registerTool(
     },
   },
   async ({ issueId, content }) => {
-    const log = await client.createLog(issueId, content)
+    const log = await getClient().createLog(getProjectId(), issueId, {
+      content,
+    })
     return {
       content: [{ type: 'text', text: JSON.stringify(log, null, 2) }],
     }
@@ -180,7 +186,7 @@ server.registerResource(
   'naholo://project',
   { description: 'Current project details' },
   async (uri) => {
-    const project = await client.getProject()
+    const project = await getClient().getProject(getProjectId())
     return {
       contents: [
         {
@@ -198,7 +204,7 @@ server.registerResource(
   'naholo://issues',
   { description: 'Issue list for the project' },
   async (uri) => {
-    const issues = await client.listIssues()
+    const issues = await getClient().listIssues(getProjectId())
     return {
       contents: [
         {
@@ -217,11 +223,13 @@ server.registerResource(
   { description: 'Full issue context (tasks + notes + recent logs)' },
   async (uri, variables) => {
     const issueId = variables.issueId as string
+    const pid = getProjectId()
+    const client = getClient()
     const [issue, tasks, notes, logs] = await Promise.all([
-      client.getIssue(issueId),
-      client.getTasks(issueId),
-      client.getNotes(issueId),
-      client.getLogs(issueId),
+      client.getIssue(pid, issueId),
+      client.listTasks(pid, issueId),
+      client.listNotes(pid, issueId),
+      client.listLogs(pid, issueId),
     ])
     const data = { issue, tasks, notes, logs }
     return {
@@ -243,7 +251,7 @@ async function main() {
   await server.connect(transport)
 }
 
-main().catch((err) => {
-  console.error('Fatal:', err)
+main().catch((error) => {
+  console.error('Fatal:', error)
   process.exit(1)
 })

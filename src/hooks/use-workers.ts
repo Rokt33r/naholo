@@ -1,15 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetcher } from '@/lib/fetcher'
 
-export type Worker = {
-  id: string
-  projectId: string
-  userId: string | null
-  type: string
-  name: string
-  role: string
-  createdAt: Date
-}
+export type { Worker } from 'naholo-api/types'
+
+import type { Worker } from 'naholo-api/types'
 
 /**
  * Hook to fetch all workers in a project

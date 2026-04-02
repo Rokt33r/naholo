@@ -2,43 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
-type Issue = {
-  id: string
-  projectId: string
-  title: string
-  closed: boolean
-  closedAt: Date | null
-  createdAt: Date
-  updatedAt: Date
-  lastLogPreview: string | null
-  totalTasks: number
-  completedTasks: string | null
-}
+export type { IssueListItem, IssueDetail } from 'naholo-api/types'
 
-// Type for issue list items (subset of Issue)
-type IssueListItem = Pick<
-  Issue,
-  | 'id'
-  | 'title'
-  | 'closed'
-  | 'closedAt'
-  | 'updatedAt'
-  | 'lastLogPreview'
-  | 'totalTasks'
-  | 'completedTasks'
->
-
-// Type for issue detail (subset of Issue)
-type IssueDetail = Pick<
-  Issue,
-  | 'id'
-  | 'projectId'
-  | 'title'
-  | 'closed'
-  | 'closedAt'
-  | 'createdAt'
-  | 'updatedAt'
->
+import type { IssueListItem, IssueDetail } from 'naholo-api/types'
 
 /**
  * Hook to fetch issues list for a project
@@ -174,7 +140,8 @@ export function useCloseIssue(projectId: string, issueId: string) {
       const now = new Date()
       queryClient.setQueryData<IssueDetail>(
         ['issue', projectId, issueId],
-        (old) => (old ? { ...old, closed: true, closedAt: now } : old),
+        (old) =>
+          old ? { ...old, closed: true, closedAt: now.toISOString() } : old,
       )
 
       return { previousIssue }
