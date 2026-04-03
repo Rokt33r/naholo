@@ -10,20 +10,22 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "tsup",
+    "dev": "tsup --watch src --watch ../naholo-api/src",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@inquirer/confirm": "^6.0.10",
-    "naholo-api": "workspace:*",
     "@inquirer/input": "^5.0.10",
     "@inquirer/select": "^5.1.2",
     "commander": "^13.1.0",
+    "naholo-api": "workspace:*",
     "open": "^10.1.0",
     "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.37",
+    "tsup": "^8.5.1",
     "typescript": "^5"
   }
 }

@@ -14,7 +14,7 @@ Create `packages/naholo-api` as the single source of truth for API response type
 
 - **Types-only + client**: The package exports (1) API response types and (2) a typed HTTP client. No Zod schemas — request validation stays in the API routes.
 - **JSON-serialized types**: API response types use `string` for dates (not `Date`), since JSON serialization converts `Date` to ISO strings. This matches what consumers actually receive over HTTP.
-- **No build step for types**: Use TypeScript project references. Consumers import from source via `exports` field pointing to `./src/types.ts` and `./src/client.ts`.
+- **No build step for naholo-api**: The package `exports` field points directly to `.ts` source files (`./src/types.ts`, `./src/client.ts`). Consumer packages that compile to JS (e.g., CLI, MCP) must use a bundler like `tsup` to resolve `.ts` imports at build time — plain `tsc` output cannot load `.ts` files at runtime.
 - **Client is generic**: The client accepts `baseUrl` + `token` at construction time — no env-var coupling. CLI and MCP wrap it with their own config resolution.
 - **Web app hooks import types only**: The frontend hooks import type definitions from `naholo-api` but keep using the relative-path `fetcher` for requests (since the web app calls its own origin, not an external URL).
 
