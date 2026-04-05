@@ -4,8 +4,10 @@ import { getActiveProfile } from '../profile.js'
 
 export const whoamiCommand = new Command('whoami')
   .description('Show current user and profile info')
-  .action(async (_options: Record<string, unknown>, cmd: Command) => {
-    const profileOverride = cmd.parent?.opts().profile as string | undefined
+  .option('--profile <name>', 'use a specific profile instead of default')
+  .action(async (options: Record<string, string>, cmd: Command) => {
+    const profileOverride =
+      typeof options.profile !== 'string' ? options.profile : undefined
 
     const active = getActiveProfile(profileOverride)
     if (!active) {

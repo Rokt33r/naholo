@@ -11,6 +11,7 @@ import type {
   Project,
   ProjectWithWorker,
   Skill,
+  SkillSummary,
   Task,
   UpdateTaskInput,
   Worker,
@@ -20,10 +21,16 @@ import type {
 export class NaholoClient {
   private baseUrl: string
   private token: string
+  private projectWorkerId: string | undefined
 
-  constructor(options: { baseUrl: string; token: string }) {
+  constructor(options: {
+    baseUrl: string
+    token: string
+    projectWorkerId?: string
+  }) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '')
     this.token = options.token
+    this.projectWorkerId = options.projectWorkerId
   }
 
   private async request<T>(
@@ -33,12 +40,17 @@ export class NaholoClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`
 
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.token}`,
+      'Content-Type': 'application/json',
+    }
+    if (this.projectWorkerId != null) {
+      headers['x-naholo-project-worker'] = this.projectWorkerId
+    }
+
     const res = await fetch(url, {
       method,
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: body != null ? JSON.stringify(body) : undefined,
     })
 
@@ -247,8 +259,15 @@ export class NaholoClient {
 
   // ---- Skills ----
 
-  listSkills(projectId: string): Promise<Skill[]> {
+  listSkills(projectId: string): Promise<SkillSummary[]> {
     return this.request('GET', this.projectPath(projectId, '/skills'))
+  }
+
+  getSkill(projectId: string, skillId: string): Promise<Skill> {
+    return this.request(
+      'GET',
+      this.projectPath(projectId, `/skills/${skillId}`),
+    )
   }
 
   createSkill(
@@ -261,8 +280,8 @@ export class NaholoClient {
   updateSkill(
     projectId: string,
     skillId: string,
-    input: { name?: string; content?: string },
-  ): Promise<Skill> {
+    input: { name?: string; content?: string; expectedRevisionId?: string },
+  ): Promise<{ currentRevisionId: string | null }> {
     return this.request(
       'PATCH',
       this.projectPath(projectId, `/skills/${skillId}`),
