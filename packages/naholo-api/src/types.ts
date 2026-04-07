@@ -104,12 +104,21 @@ export type Log = {
   updatedAt: string
 }
 
+// ---- Skill Set ----
+
+export type SkillSetSummary = {
+  id: string
+  name: string
+  slug: string
+  createdAt: string
+  updatedAt: string
+}
+
 // ---- Skill ----
 
 export type SkillSummary = {
   id: string
   name: string
-  position: number
   currentRevisionId: string | null
   createdAt: string
   updatedAt: string

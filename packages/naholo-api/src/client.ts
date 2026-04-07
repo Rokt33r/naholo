@@ -11,6 +11,7 @@ import type {
   Project,
   ProjectWithWorker,
   Skill,
+  SkillSetSummary,
   SkillSummary,
   Task,
   UpdateTaskInput,
@@ -72,6 +73,13 @@ export class NaholoClient {
 
   private issuePath(projectId: string, issueId: string, suffix = '') {
     return this.projectPath(projectId, `/issues/${issueId}${suffix}`)
+  }
+
+  private skillSetPath(projectId: string, slug: string, suffix = '') {
+    return this.projectPath(
+      projectId,
+      `/skill-sets/${encodeURIComponent(slug)}${suffix}`,
+    )
   }
 
   // ---- Auth ----
@@ -257,42 +265,92 @@ export class NaholoClient {
     )
   }
 
-  // ---- Skills ----
+  // ---- Skill Sets ----
 
-  listSkills(projectId: string): Promise<SkillSummary[]> {
-    return this.request('GET', this.projectPath(projectId, '/skills'))
+  listSkillSets(projectId: string): Promise<SkillSetSummary[]> {
+    return this.request('GET', this.projectPath(projectId, '/skill-sets'))
   }
 
-  getSkill(projectId: string, name: string): Promise<Skill> {
-    return this.request(
-      'GET',
-      this.projectPath(projectId, `/skills/${encodeURIComponent(name)}`),
-    )
+  getSkillSet(projectId: string, slug: string): Promise<SkillSetSummary> {
+    return this.request('GET', this.skillSetPath(projectId, slug))
   }
 
-  createSkill(
+  createSkillSet(
     projectId: string,
-    input: { name: string; content: string },
-  ): Promise<Skill> {
-    return this.request('POST', this.projectPath(projectId, '/skills'), input)
-  }
-
-  updateSkill(
-    projectId: string,
-    name: string,
-    input: { name?: string; content?: string; expectedRevisionId?: string },
-  ): Promise<{ currentRevisionId: string | null }> {
+    input: { name: string; slug: string },
+  ): Promise<{ id: string }> {
     return this.request(
-      'PATCH',
-      this.projectPath(projectId, `/skills/${encodeURIComponent(name)}`),
+      'POST',
+      this.projectPath(projectId, '/skill-sets'),
       input,
     )
   }
 
-  deleteSkill(projectId: string, name: string): Promise<void> {
+  updateSkillSet(
+    projectId: string,
+    slug: string,
+    input: { name?: string; slug?: string },
+  ): Promise<SkillSetSummary> {
+    return this.request('PATCH', this.skillSetPath(projectId, slug), input)
+  }
+
+  deleteSkillSet(projectId: string, slug: string): Promise<void> {
+    return this.request('DELETE', this.skillSetPath(projectId, slug))
+  }
+
+  // ---- Skills ----
+
+  listSkills(projectId: string, skillSetSlug: string): Promise<SkillSummary[]> {
+    return this.request(
+      'GET',
+      this.skillSetPath(projectId, skillSetSlug, '/skills'),
+    )
+  }
+
+  getSkill(
+    projectId: string,
+    skillSetSlug: string,
+    name: string,
+  ): Promise<Skill> {
+    return this.request(
+      'GET',
+      this.skillSetPath(
+        projectId,
+        skillSetSlug,
+        `/skills/${encodeURIComponent(name)}`,
+      ),
+    )
+  }
+
+  upsertSkill(
+    projectId: string,
+    skillSetSlug: string,
+    name: string,
+    input: { content: string },
+  ): Promise<{ id: string; currentRevisionId: string }> {
+    return this.request(
+      'PUT',
+      this.skillSetPath(
+        projectId,
+        skillSetSlug,
+        `/skills/${encodeURIComponent(name)}`,
+      ),
+      input,
+    )
+  }
+
+  deleteSkill(
+    projectId: string,
+    skillSetSlug: string,
+    name: string,
+  ): Promise<void> {
     return this.request(
       'DELETE',
-      this.projectPath(projectId, `/skills/${encodeURIComponent(name)}`),
+      this.skillSetPath(
+        projectId,
+        skillSetSlug,
+        `/skills/${encodeURIComponent(name)}`,
+      ),
     )
   }
 

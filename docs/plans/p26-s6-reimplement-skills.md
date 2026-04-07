@@ -94,7 +94,7 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
 
 ### Task 6: Update API client (`naholo-api`)
 
-- [ ] `packages/naholo-api/src/types.ts` — add `SkillSetSummary` type:
+- [x] `packages/naholo-api/src/types.ts` — add `SkillSetSummary` type:
   ```ts
   type SkillSetSummary = {
     id: string
@@ -104,7 +104,7 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
     updatedAt: string
   }
   ```
-- [ ] `packages/naholo-api/src/client.ts` — add skill set methods and update skill methods:
+- [x] `packages/naholo-api/src/client.ts` — add skill set methods and update skill methods:
   - Add helper: `private skillSetPath(projectId: string, slug: string, suffix = '')` → `/api/projects/${projectId}/skill-sets/${encodeURIComponent(slug)}${suffix}`
   - `listSkillSets(projectId: string): Promise<SkillSetSummary[]>` — GET `.../skill-sets`
   - `getSkillSet(projectId: string, slug: string): Promise<SkillSetSummary>` — GET `.../skill-sets/{slug}`
@@ -119,8 +119,8 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
 
 ### Task 7: Rewrite CLI skill commands
 
-- [ ] `packages/naholo-cli/src/commands/skills.ts` — replace sub-commands: remove `sync`, `pull`, `push`, `get`. Add `install` and `upsert`.
-- [ ] Create `packages/naholo-cli/src/commands/skills-install.ts`:
+- [x] `packages/naholo-cli/src/commands/skills.ts` — replace sub-commands: remove `sync`, `pull`, `push`, `get`. Add `install` and `upsert`.
+- [x] Create `packages/naholo-cli/src/commands/skills-install.ts`:
   - Command: `naholo skills install`
   - Flow:
     1. Fetch skill sets via `client.listSkillSets(projectId)`
@@ -131,18 +131,18 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
     6. Write to `.claude/skills/{skillName}/SKILL.md` with the full content (not a stub)
     7. If file already exists, use `@inquirer/confirm` to ask "Overwrite {skillName}? (Y/n)" — default yes
     8. Per skill, print "Created: {skillName}" or "Overwritten: {skillName}" or "Skipped: {skillName}"
-- [ ] Create `packages/naholo-cli/src/commands/skills-upsert.ts`:
+- [x] Create `packages/naholo-cli/src/commands/skills-upsert.ts`:
   - Command: `naholo skills upsert <skillSetSlug> <skillName> <skillPath>`
   - All three args required
   - Flow:
     1. Read file at `skillPath` (error if not found)
     2. Call `client.upsertSkill(projectId, skillSetSlug, { name: skillName, content: fileContent })`
     3. Print "Upserted skill '{skillName}' in skill set '{skillSetSlug}'"
-- [ ] Delete `packages/naholo-cli/src/commands/skills-get.ts`
-- [ ] Delete `packages/naholo-cli/src/commands/skills-pull.ts`
-- [ ] Delete `packages/naholo-cli/src/commands/skills-push.ts`
-- [ ] Delete `packages/naholo-cli/src/commands/skills-sync.ts`
-- [ ] Create `packages/naholo-cli/src/commands/skills-sets.ts`:
+- [x] Delete `packages/naholo-cli/src/commands/skills-get.ts`
+- [x] Delete `packages/naholo-cli/src/commands/skills-pull.ts`
+- [x] Delete `packages/naholo-cli/src/commands/skills-push.ts`
+- [x] Delete `packages/naholo-cli/src/commands/skills-sync.ts`
+- [x] Create `packages/naholo-cli/src/commands/skills-sets.ts`:
   - Subcommand group: `naholo skills sets`
   - `naholo skills sets create --name <name> --slug <slug>` — calls `client.createSkillSet(projectId, { name, slug })`
   - `naholo skills sets update <skillSetSlug> --name <name> --slug <slug>` — calls `client.updateSkillSet(projectId, slug, { name, slug })` (name and slug are optional but one should be provided at least.)
@@ -150,11 +150,11 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
 
 ### Task 8: Simplify skill utilities
 
-- [ ] `packages/naholo-cli/src/skills.ts` — remove all pulled-skill machinery (interfaces `PulledSkillMeta`, `PulledSkill`; functions `readPulledSkill`, `writePulledSkill`, `backupPulledSkill`, `writeConflictMarkers`, `removePulledSkill`, `parsePulledSkill`, `getPulledSkillPath`, `getConflictedDir`). Remove `syncSkills` function and `getStubContent`. Keep only a simple `writeSkillFile(name: string, content: string): void` helper that writes to `.claude/skills/{name}/SKILL.md`.
+- [x] `packages/naholo-cli/src/skills.ts` — remove all pulled-skill machinery (interfaces `PulledSkillMeta`, `PulledSkill`; functions `readPulledSkill`, `writePulledSkill`, `backupPulledSkill`, `writeConflictMarkers`, `removePulledSkill`, `parsePulledSkill`, `getPulledSkillPath`, `getConflictedDir`). Remove `syncSkills` function and `getStubContent`. Keep only a simple `writeSkillFile(name: string, content: string): void` helper that writes to `.claude/skills/{name}/SKILL.md`.
 
 ### Task 9: Update `init` command
 
-- [ ] `packages/naholo-cli/src/commands/init.ts` — remove the `syncSkills()` call from both first-time and subsequent init flows. Skills are installed separately now.
+- [x] `packages/naholo-cli/src/commands/init.ts` — remove the `syncSkills()` call from both first-time and subsequent init flows. Skills are installed separately now.
 
 ### Task 10: Update skill UI hooks and components
 

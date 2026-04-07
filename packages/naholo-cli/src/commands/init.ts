@@ -11,7 +11,6 @@ import {
   writeProjectConfig,
   writeGitignore,
 } from '../project-config.js'
-import { syncSkills } from '../skills.js'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
@@ -119,19 +118,7 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   console.log(`Worker: ${selectedWorker.name}(${selectedWorker.type})`)
   console.log()
 
-  // 9. Sync skills
-  const shouldSync = await confirm({
-    message:
-      'Sync skills now? This will remove all existing skill stubs in .claude/skills/ and recreate them from the server.',
-    default: true,
-  })
-  if (shouldSync) {
-    await syncSkills(client, selectedProject.id)
-  } else {
-    console.log('Skipped skill sync. Run "naholo skills sync" later.')
-  }
-
-  // 10. Instruct next steps
+  // 9. Instruct next steps
   console.log()
   console.log('Next steps:')
   console.log('  git add .naholo/')
@@ -207,16 +194,4 @@ async function handleSubsequentInit(
   writeLocalConfig({ projectWorkerId: selectedWorkerId })
 
   console.log(`Worker set to: ${selectedWorker.name}`)
-
-  // Sync skills
-  const shouldSync = await confirm({
-    message:
-      'Sync skills now? This will remove all existing skill stubs in .claude/skills/ and recreate them from the server.',
-    default: true,
-  })
-  if (shouldSync) {
-    await syncSkills(client, projectConfig.projectId)
-  } else {
-    console.log('Skipped skill sync. Run "naholo skills sync" later.')
-  }
 }

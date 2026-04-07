@@ -12,8 +12,6 @@ export const statusCommand = new Command('status')
       projectConfig.projectId,
       localConfig.projectWorkerId,
     )
-    const skills = await client.listSkills(projectConfig.projectId)
-    const skillCount = skills.length
 
     console.log(`Project:    ${project.name}`)
     console.log(
@@ -21,7 +19,4 @@ export const statusCommand = new Command('status')
     )
     console.log(`Worker:     ${worker.name} (${worker.type})`)
     console.log(`Profile:    ${currentProfile.name}`)
-    console.log(
-      `Skills:     ${skillCount} skill${skillCount !== 1 ? 's' : ''} on server`,
-    )
   })
