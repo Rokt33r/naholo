@@ -263,10 +263,10 @@ export class NaholoClient {
     return this.request('GET', this.projectPath(projectId, '/skills'))
   }
 
-  getSkill(projectId: string, skillId: string): Promise<Skill> {
+  getSkill(projectId: string, name: string): Promise<Skill> {
     return this.request(
       'GET',
-      this.projectPath(projectId, `/skills/${skillId}`),
+      this.projectPath(projectId, `/skills/${encodeURIComponent(name)}`),
     )
   }
 
@@ -279,20 +279,20 @@ export class NaholoClient {
 
   updateSkill(
     projectId: string,
-    skillId: string,
+    name: string,
     input: { name?: string; content?: string; expectedRevisionId?: string },
   ): Promise<{ currentRevisionId: string | null }> {
     return this.request(
       'PATCH',
-      this.projectPath(projectId, `/skills/${skillId}`),
+      this.projectPath(projectId, `/skills/${encodeURIComponent(name)}`),
       input,
     )
   }
 
-  deleteSkill(projectId: string, skillId: string): Promise<void> {
+  deleteSkill(projectId: string, name: string): Promise<void> {
     return this.request(
       'DELETE',
-      this.projectPath(projectId, `/skills/${skillId}`),
+      this.projectPath(projectId, `/skills/${encodeURIComponent(name)}`),
     )
   }
 

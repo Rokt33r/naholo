@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import {
-  requireProjectWorker,
-  requireAdminProjectWorker,
-} from '@/server/auth/permissions'
+import { requireProjectWorker } from '@/server/auth/permissions'
 import { listSkills, createSkill } from '@/server/services/skill'
+import { ConflictError } from '@/server/services/errors'
 
 type RouteContext = {
   params: Promise<{
@@ -45,7 +43,7 @@ const createSkillSchema = z.object({
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectId } = await context.params
-    await requireAdminProjectWorker(projectId)
+    await requireProjectWorker(projectId)
 
     let body
     try {
@@ -66,6 +64,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await createSkill(projectId, { name, content })
     if (!result.success) {
+      if (result.error instanceof ConflictError) {
+        return NextResponse.json(
+          { error: result.error.message },
+          { status: 409 },
+        )
+      }
       return NextResponse.json({ error: result.error.message }, { status: 500 })
     }
 

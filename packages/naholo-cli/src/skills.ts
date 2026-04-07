@@ -1,30 +1,14 @@
-import input from '@inquirer/input'
-import select from '@inquirer/select'
 import type { NaholoClient } from 'naholo-api/client'
 import fs from 'node:fs'
 import path from 'node:path'
-import { readProjectConfig, writeProjectConfig } from './project-config.js'
 
 // ---------------------------------------------------------------------------
-// Skill alias record
+// Skill stubs (.claude/skills/)
 // ---------------------------------------------------------------------------
 
 const CLAUDE_SKILLS_DIR = '.claude/skills'
 
-export function readSkillAliasRecord(): Record<string, string> {
-  const config = readProjectConfig()
-  return config?.skillAliasRecord ?? {}
-}
-
-function writeSkillAliasRecord(record: Record<string, string>): void {
-  const config = readProjectConfig()
-  if (config == null) {
-    throw new Error('Project config not found. Run "naholo init" first.')
-  }
-  writeProjectConfig({ ...config, skillAliasRecord: record })
-}
-
-function getAliasSkillContent(skillName: string): string {
+export function getStubContent(skillName: string): string {
   return `# ${skillName}
 
 Run the command below to get the skill content.
@@ -33,97 +17,40 @@ Run the command below to get the skill content.
 naholo skills get ${skillName}
 \`\`\`
 
-If the skill no longer exists, tell users to run \`naholo skills sync-alias\` and start new session so skills are correctly reflected.
+If the skill no longer exists, tell users to run \`naholo skills sync\` and start new session so skills are correctly reflected.
 `
 }
 
-export async function syncSkillAliases(
+export async function syncSkills(
   client: NaholoClient,
   projectId: string,
 ): Promise<void> {
-  // 1. Fetch skill list from server (summaries only — no content)
+  // 1. Fetch skill list from server (summaries only)
   const serverSkills = await client.listSkills(projectId)
 
-  // 2. Build alias ↔ skillId maps
-  const { aliasToIdMap, idToAliasMap } = Object.entries(
-    readSkillAliasRecord(),
-  ).reduce(
-    (acc, [alias, id]) => {
-      acc.aliasToIdMap.set(alias, id)
-      acc.idToAliasMap.set(id, alias)
-      return acc
-    },
-    {
-      aliasToIdMap: new Map<string, string>(),
-      idToAliasMap: new Map<string, string>(),
-    },
-  )
-
-  // 3. For each server skill, create or update stub
-  for (const skill of serverSkills) {
-    const existingAlias = idToAliasMap.get(skill.id)
-    const currentName = existingAlias ?? skill.name
-
-    const skillDir = path.resolve(CLAUDE_SKILLS_DIR, currentName)
-    const skillMdPath = path.join(skillDir, 'SKILL.md')
-
-    // Check for conflict with non-naholo skill
-    if (
-      fs.existsSync(skillMdPath) &&
-      !aliasToIdMap.has(currentName) &&
-      existingAlias == null
-    ) {
-      const action = await select<string>({
-        message: `Skill "${currentName}" conflicts with an existing local skill. What to do?`,
-        choices: [
-          { name: 'Use an alternative name', value: 'rename' },
-          { name: 'Replace existing local skill', value: 'replace' },
-        ],
-      })
-
-      if (action === 'rename') {
-        const altName = await input({
-          message: `Enter an alternative name for "${currentName}":`,
-          default: `${currentName}--naholo`,
-        })
-        const altDir = path.resolve(CLAUDE_SKILLS_DIR, altName)
-        fs.mkdirSync(altDir, { recursive: true })
-        fs.writeFileSync(
-          path.join(altDir, 'SKILL.md'),
-          getAliasSkillContent(skill.name),
-          'utf-8',
-        )
-        aliasToIdMap.set(altName, skill.id)
-        idToAliasMap.set(skill.id, altName)
-        console.log(`  Synced: ${altName} → ${skill.name}`)
-        continue
+  // 2. Flush all skill stubs
+  const claudeSkillsDir = path.resolve(CLAUDE_SKILLS_DIR)
+  if (fs.existsSync(claudeSkillsDir)) {
+    for (const entry of fs.readdirSync(claudeSkillsDir)) {
+      const entryDir = path.join(claudeSkillsDir, entry)
+      const stat = fs.statSync(entryDir)
+      if (stat.isDirectory()) {
+        fs.rmSync(entryDir, { recursive: true, force: true })
       }
     }
+  }
 
-    // Create/update stub
+  // 3. For each server skill, create stub
+  for (const skill of serverSkills) {
+    const skillDir = path.resolve(CLAUDE_SKILLS_DIR, skill.name)
+    const skillMdPath = path.join(skillDir, 'SKILL.md')
+
     fs.mkdirSync(skillDir, { recursive: true })
-    fs.writeFileSync(skillMdPath, getAliasSkillContent(skill.name), 'utf-8')
-    aliasToIdMap.set(currentName, skill.id)
-    idToAliasMap.set(skill.id, currentName)
-    console.log(`  Synced: ${currentName}`)
+    fs.writeFileSync(skillMdPath, getStubContent(skill.name), 'utf-8')
+    console.log(`  Synced: ${skill.name}`)
   }
 
-  // 4. Remove skill folders that no longer exist on server (only naholo-managed ones)
-  const serverSkillIdSet = new Set(serverSkills.map((skill) => skill.id))
-  for (const [aliasName, skillId] of aliasToIdMap) {
-    const stillExists = serverSkillIdSet.has(skillId)
-    if (!stillExists) {
-      const skillDir = path.resolve(CLAUDE_SKILLS_DIR, aliasName)
-      fs.rmSync(skillDir, { recursive: true, force: true })
-      aliasToIdMap.delete(aliasName)
-      idToAliasMap.delete(skillId)
-      console.log(`  Removed: ${aliasName} (skill deleted on server)`)
-    }
-  }
-
-  // 5. Write updated skill alias record
-  writeSkillAliasRecord(Object.fromEntries(aliasToIdMap))
-  console.log('Skill aliases synced.')
+  console.log('Skills synced.')
 }
 
 // ---------------------------------------------------------------------------
@@ -134,8 +61,7 @@ const PULLED_SKILLS_DIR = path.join('.naholo', 'local', 'skills')
 const CONFLICTED_DIR = path.join(PULLED_SKILLS_DIR, 'conflicted')
 
 export interface PulledSkillMeta {
-  revisionId: string
-  skillId: string
+  revisionId?: string
   conflicted?: boolean
 }
 
@@ -169,14 +95,16 @@ export function writePulledSkill(
   const filePath = getPulledSkillPath(name)
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
 
-  const frontmatter = [
-    '---',
-    `revisionId: ${meta.revisionId}`,
-    `skillId: ${meta.skillId}`,
-    ...(meta.conflicted ? ['conflicted: true'] : []),
-    '---',
-  ].join('\n')
+  const frontmatterLines = ['---']
+  if (meta.revisionId != null) {
+    frontmatterLines.push(`revisionId: ${meta.revisionId}`)
+  }
+  if (meta.conflicted) {
+    frontmatterLines.push('conflicted: true')
+  }
+  frontmatterLines.push('---')
 
+  const frontmatter = frontmatterLines.join('\n')
   fs.writeFileSync(filePath, `${frontmatter}\n\n${content}`, 'utf-8')
 }
 
@@ -191,7 +119,6 @@ export function backupPulledSkill(skillName: string): string {
 
 export function writeConflictMarkers(
   skillName: string,
-  skillId: string,
   localContent: string,
   serverContent: string,
   serverRevisionId: string,
@@ -208,7 +135,6 @@ export function writeConflictMarkers(
     skillName,
     {
       revisionId: serverRevisionId,
-      skillId,
       conflicted: true,
     },
     mergedContent,
@@ -231,7 +157,7 @@ function parsePulledSkill(raw: string): PulledSkill | null {
   const frontmatterBlock = match[1]
   const content = match[2]
 
-  const meta: Partial<PulledSkillMeta> = {}
+  const meta: PulledSkillMeta = {}
   for (const line of frontmatterBlock.split('\n')) {
     const colonIdx = line.indexOf(':')
     if (colonIdx === -1) {
@@ -241,16 +167,10 @@ function parsePulledSkill(raw: string): PulledSkill | null {
     const value = line.slice(colonIdx + 1).trim()
     if (key === 'revisionId') {
       meta.revisionId = value
-    } else if (key === 'skillId') {
-      meta.skillId = value
     } else if (key === 'conflicted') {
       meta.conflicted = value === 'true'
     }
   }
 
-  if (meta.revisionId == null || meta.skillId == null) {
-    return null
-  }
-
-  return { meta: meta as PulledSkillMeta, content }
+  return { meta, content }
 }

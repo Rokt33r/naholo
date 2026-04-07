@@ -11,7 +11,7 @@ import {
   writeProjectConfig,
   writeGitignore,
 } from '../project-config.js'
-import { syncSkillAliases } from '../skills.js'
+import { syncSkills } from '../skills.js'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
@@ -119,8 +119,17 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   console.log(`Worker: ${selectedWorker.name}(${selectedWorker.type})`)
   console.log()
 
-  // 9. Sync skill aliases
-  await syncSkillAliases(client, selectedProject.id)
+  // 9. Sync skills
+  const shouldSync = await confirm({
+    message:
+      'Sync skills now? This will remove all existing skill stubs in .claude/skills/ and recreate them from the server.',
+    default: true,
+  })
+  if (shouldSync) {
+    await syncSkills(client, selectedProject.id)
+  } else {
+    console.log('Skipped skill sync. Run "naholo skills sync" later.')
+  }
 
   // 10. Instruct next steps
   console.log()
@@ -199,6 +208,15 @@ async function handleSubsequentInit(
 
   console.log(`Worker set to: ${selectedWorker.name}`)
 
-  // Run sync-alias
-  await syncSkillAliases(client, projectConfig.projectId)
+  // Sync skills
+  const shouldSync = await confirm({
+    message:
+      'Sync skills now? This will remove all existing skill stubs in .claude/skills/ and recreate them from the server.',
+    default: true,
+  })
+  if (shouldSync) {
+    await syncSkills(client, projectConfig.projectId)
+  } else {
+    console.log('Skipped skill sync. Run "naholo skills sync" later.')
+  }
 }

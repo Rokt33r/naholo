@@ -1,13 +1,32 @@
-import confirm from '@inquirer/confirm'
 import { Command } from 'commander'
 import { getCliContext } from '../context.js'
 import {
   readPulledSkill,
   removePulledSkill,
-  backupPulledSkill,
   writeConflictMarkers,
+  backupPulledSkill,
   getPulledSkillPath,
 } from '../skills.js'
+import type { Skill } from 'naholo-api/types'
+
+async function fetchServerSkill(
+  client: ReturnType<typeof getCliContext>['client'],
+  projectId: string,
+  skillName: string,
+): Promise<Skill | null> {
+  try {
+    return await client.getSkill(projectId, skillName)
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('404')) {
+      return null
+    }
+    throw error
+  }
+}
+
+function contentEquals(a: string, b: string): boolean {
+  return a.trim() === b.trim()
+}
 
 export const pushCommand = new Command('push')
   .description('Push local skill changes to the server')
@@ -32,23 +51,48 @@ export const pushCommand = new Command('push')
       process.exit(1)
     }
 
-    // 3. Look up skill ID
-    const skillId = projectConfig.skillAliasRecord?.[skillName]
-    if (skillId == null) {
+    // 3. Fetch server skill by name
+    const serverSkill = await fetchServerSkill(client, projectId, skillName)
+
+    const hasRevisionId = local.meta.revisionId != null
+
+    if (serverSkill == null) {
       console.error(
-        `Skill "${skillName}" not found in aliases. Run "naholo skills sync-alias" first.`,
+        `Skill "${skillName}" has been deleted on the server. Cannot push.`,
       )
       process.exit(1)
     }
 
-    // 4. Fetch current revisionId from server
-    const serverSkill = await client.getSkill(projectId, skillId)
+    if (!hasRevisionId) {
+      // --- No revisionId cases ---
+      if (contentEquals(local.content, serverSkill.content)) {
+        // Same content — no-op
+        removePulledSkill(skillName)
+        console.log(`"${skillName}" is already up to date.`)
+        return
+      }
 
-    // 5. Check if matching
+      // Different content — conflict
+      const backupPath = backupPulledSkill(skillName)
+      console.log(`  Backed up local version to: ${backupPath}`)
+      writeConflictMarkers(
+        skillName,
+        local.content,
+        serverSkill.content,
+        serverSkill.currentRevisionId!,
+      )
+      console.log(
+        `Conflict detected for "${skillName}". Review the file and remove "conflicted: true" when resolved:`,
+      )
+      console.log(`  ${getPulledSkillPath(skillName)}`)
+      return
+    }
+
+    // --- Has revisionId cases ---
     if (local.meta.revisionId === serverSkill.currentRevisionId) {
-      // Push update
+      // Matching revisionId — push update
       try {
-        await client.updateSkill(projectId, skillId, {
+        await client.updateSkill(projectId, skillName, {
           content: local.content,
           expectedRevisionId: local.meta.revisionId,
         })
@@ -57,34 +101,46 @@ export const pushCommand = new Command('push')
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         if (message.includes('409')) {
-          console.error(
-            'Conflict detected during push. Another update happened concurrently.',
+          // Race condition — re-fetch and write conflict
+          const freshServer = await fetchServerSkill(
+            client,
+            projectId,
+            skillName,
           )
-          process.exit(1)
+          if (freshServer != null) {
+            const backupPath = backupPulledSkill(skillName)
+            console.log(`  Backed up local version to: ${backupPath}`)
+            writeConflictMarkers(
+              skillName,
+              local.content,
+              freshServer.content,
+              freshServer.currentRevisionId!,
+            )
+            console.log(
+              `Conflict detected for "${skillName}". Review the file and remove "conflicted: true" when resolved:`,
+            )
+            console.log(`  ${getPulledSkillPath(skillName)}`)
+          }
+        } else {
+          throw error
         }
-        throw error
       }
       return
     }
 
-    // 6. Conflict — server has a different revision
-    const resolveNow = await confirm({
-      message: `Skill "${skillName}" has been updated on the server since you pulled. Resolve conflict now?`,
-      default: true,
-    })
-
-    if (!resolveNow) {
-      console.log('Aborted.')
+    // Non-matching revisionId
+    if (contentEquals(local.content, serverSkill.content)) {
+      // Same content — no-op
+      removePulledSkill(skillName)
+      console.log(`"${skillName}" is already up to date.`)
       return
     }
 
-    // Backup local version and write conflict markers for manual resolution
+    // Different content — 2-way conflict (no base revision API yet)
     const backupPath = backupPulledSkill(skillName)
     console.log(`  Backed up local version to: ${backupPath}`)
-
     writeConflictMarkers(
       skillName,
-      skillId,
       local.content,
       serverSkill.content,
       serverSkill.currentRevisionId!,

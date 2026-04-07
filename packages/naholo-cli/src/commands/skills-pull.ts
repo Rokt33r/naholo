@@ -17,19 +17,20 @@ export const pullCommand = new Command('pull')
     const { client, projectConfig } = ctx
     const projectId = projectConfig.projectId
 
-    // 1. Look up skill ID from alias record
-    const skillId = projectConfig.skillAliasRecord?.[skillName]
-    if (skillId == null) {
-      console.error(
-        `Skill "${skillName}" not found in alias map. Run "naholo skills sync-alias" first.`,
-      )
-      process.exit(1)
+    // 1. Fetch skill from server by name
+    let serverSkill
+    try {
+      serverSkill = await client.getSkill(projectId, skillName)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (message.includes('404')) {
+        console.error(`Skill "${skillName}" not found on the server.`)
+        process.exit(1)
+      }
+      throw error
     }
 
-    // 2. Fetch skill from server
-    const serverSkill = await client.getSkill(projectId, skillId)
-
-    // 3. Check if already pulled locally
+    // 2. Check if already pulled locally
     const localSkill = readPulledSkill(skillName)
 
     if (localSkill != null) {
@@ -60,7 +61,6 @@ export const pullCommand = new Command('pull')
 
       writeConflictMarkers(
         skillName,
-        skillId,
         localSkill.content,
         serverSkill.content,
         serverSkill.currentRevisionId!,
@@ -72,7 +72,7 @@ export const pullCommand = new Command('pull')
       return
     }
 
-    // 4. Not pulled yet — write fresh
+    // 3. Not pulled yet — write fresh
     if (serverSkill.currentRevisionId == null) {
       console.error(`Skill "${skillName}" has no revisions on the server.`)
       process.exit(1)
@@ -80,7 +80,7 @@ export const pullCommand = new Command('pull')
 
     writePulledSkill(
       skillName,
-      { revisionId: serverSkill.currentRevisionId, skillId },
+      { revisionId: serverSkill.currentRevisionId },
       serverSkill.content,
     )
 

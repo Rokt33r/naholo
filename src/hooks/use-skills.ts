@@ -72,13 +72,13 @@ export function useUpdateSkill(projectId: string) {
 
   return useMutation({
     mutationFn: async (input: {
-      skillId: string
+      skillName: string
       name?: string
       content?: string
     }) => {
-      const { skillId, ...body } = input
+      const { skillName, ...body } = input
       const response = await fetch(
-        `/api/projects/${projectId}/skills/${skillId}`,
+        `/api/projects/${projectId}/skills/${encodeURIComponent(skillName)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -97,7 +97,7 @@ export function useUpdateSkill(projectId: string) {
 
       queryClient.setQueryData<Skill[]>(['skills', projectId], (old) =>
         old?.map((skill) =>
-          skill.id === input.skillId
+          skill.name === input.skillName
             ? {
                 ...skill,
                 ...(input.name !== undefined ? { name: input.name } : {}),
@@ -127,9 +127,9 @@ export function useDeleteSkill(projectId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: { skillId: string }) => {
+    mutationFn: async (input: { skillName: string }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/skills/${input.skillId}`,
+        `/api/projects/${projectId}/skills/${encodeURIComponent(input.skillName)}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -143,7 +143,7 @@ export function useDeleteSkill(projectId: string) {
       const previous = queryClient.getQueryData<Skill[]>(['skills', projectId])
 
       queryClient.setQueryData<Skill[]>(['skills', projectId], (old) =>
-        old?.filter((skill) => skill.id !== input.skillId),
+        old?.filter((skill) => skill.name !== input.skillName),
       )
 
       return { previous }

@@ -3,39 +3,34 @@ import { getCliContext } from '../context.js'
 import { readPulledSkill } from '../skills.js'
 
 export const getCommand = new Command('get')
-  .description('Fetch and display a skill from the server')
+  .description('Fetch and display a skill')
   .argument('<skill-name>', 'name of the skill to fetch')
   .action(async (skillName: string) => {
     const ctx = getCliContext()
     const { client, projectConfig } = ctx
 
-    // Check if local pulled skill is conflicted
+    // 1. Check local pulled skill first (prefer local edits)
     const local = readPulledSkill(skillName)
-    if (local != null && local.meta.conflicted) {
-      console.error(
-        `Error: Skill "${skillName}" has unresolved conflicts. Resolve the conflict and remove "conflicted: true" from the frontmatter before using this skill.`,
-      )
-      process.exit(1)
+    if (local != null) {
+      if (local.meta.conflicted) {
+        console.error(
+          `Error: Skill "${skillName}" has unresolved conflicts. Resolve the conflict and remove "conflicted: true" from the frontmatter before using this skill.`,
+        )
+        process.exit(1)
+      }
+
+      console.log(local.content)
+      return
     }
 
-    // Look up skill ID from alias record
-    const skillId = projectConfig.skillAliasRecord?.[skillName]
-    if (skillId == null) {
-      console.error(
-        `Skill "${skillName}" not found in alias map. Run "naholo skills sync-alias" first.`,
-      )
-      process.exit(1)
-    }
-
+    // 2. No local pulled skill — fetch from server by name
     try {
-      const skill = await client.getSkill(projectConfig.projectId, skillId)
+      const skill = await client.getSkill(projectConfig.projectId, skillName)
       console.log(skill.content)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       if (message.includes('404')) {
-        console.error(
-          `Skill "${skillName}" no longer exists on the server. Run "naholo skills sync-alias" to update.`,
-        )
+        console.error(`Skill "${skillName}" not found on the server.`)
         process.exit(1)
       }
       throw error

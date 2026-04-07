@@ -60,7 +60,7 @@ export function SkillEditorDialog({
 
     if (isEditMode) {
       updateSkill.mutate(
-        { skillId: skill.id, name, content },
+        { skillName: skill.name, name, content },
         { onSuccess: () => onOpenChange(false) },
       )
     } else {
@@ -79,7 +79,7 @@ export function SkillEditorDialog({
       return
     }
     deleteSkill.mutate(
-      { skillId: skill.id },
+      { skillName: skill.name },
       { onSuccess: () => onOpenChange(false) },
     )
   }
