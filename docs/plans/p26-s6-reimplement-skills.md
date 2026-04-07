@@ -61,8 +61,8 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
   - `listSkillSets(projectId: string): Promise<SkillSetSummary[]>` — ordered by `createdAt` asc
   - `getSkillSet(projectId: string, slug: string): Promise<SkillSet | null>` — find by `(projectId, slug)`
   - `createSkillSet(projectId: string, data: { name: string; slug: string }): Promise<ReturnResult<{ id: string }>>` — returns `ConflictError` if slug already exists (catch `skill_sets_project_id_slug_unique`)
-  - `updateSkillSet(projectId: string, slug: string, data: { name?: string; slug?: string }): Promise<ReturnResult<SkillSet>>` — returns `NotFoundError` / `ConflictError`
-  - `deleteSkillSet(projectId: string, slug: string): Promise<ReturnResult<undefined>>` — returns `NotFoundError` if not found
+  - `updateSkillSet(skillSetId: string, data: { name?: string; slug?: string }): Promise<ReturnResult<SkillSet>>` — returns `ConflictError` on duplicate slug
+  - `deleteSkillSet(skillSetId: string): Promise<void>` — caller uses `requireSkillSetAccess` for not-found check
 
 ### Task 3: Update skill service for skill sets
 
@@ -130,7 +130,7 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
     5. For each skill, fetch full content via `client.getSkill(projectId, slug, skillName)`
     6. Write to `.claude/skills/{skillName}/SKILL.md` with the full content (not a stub)
     7. If file already exists, use `@inquirer/confirm` to ask "Overwrite {skillName}? (Y/n)" — default yes
-    8. Print summary: "Installed N skills from {skillSetName}" // TODO: Instead of summary, print new or override per skill
+    8. Per skill, print "Created: {skillName}" or "Overwritten: {skillName}" or "Skipped: {skillName}"
 - [ ] Create `packages/naholo-cli/src/commands/skills-upsert.ts`:
   - Command: `naholo skills upsert <skillSetSlug> <skillName> <skillPath>`
   - All three args required
@@ -142,12 +142,11 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
 - [ ] Delete `packages/naholo-cli/src/commands/skills-pull.ts`
 - [ ] Delete `packages/naholo-cli/src/commands/skills-push.ts`
 - [ ] Delete `packages/naholo-cli/src/commands/skills-sync.ts`
-
-// TODO: need commands for skill sets
-
-- `naholo skills sets create --name [name] --slug [slug]`
-- `naholo skills sets update [skilLSetSlug] --name [name] --slug [slug]`
-- `naholo skills sets delete [skilLSetSlug]`
+- [ ] Create `packages/naholo-cli/src/commands/skills-sets.ts`:
+  - Subcommand group: `naholo skills sets`
+  - `naholo skills sets create --name <name> --slug <slug>` — calls `client.createSkillSet(projectId, { name, slug })`
+  - `naholo skills sets update <skillSetSlug> --name <name> --slug <slug>` — calls `client.updateSkillSet(projectId, slug, { name, slug })` (name and slug are optional but one should be provided at least.)
+  - `naholo skills sets delete <skillSetSlug>` — calls `client.deleteSkillSet(projectId, slug)` with confirmation prompt
 
 ### Task 8: Simplify skill utilities
 
@@ -198,7 +197,7 @@ naholo skills install
 
 ## Notes
 
-- The `position` column on `skills` can remain — still useful for ordering within a skill set.
+- The `position` column on `skills` has been dropped — skills are sorted by name.
 - Existing data in the `skills` table has `projectId` but no `skillSetId`. The migration (written by user) will need to create a default skill set per project and reassign existing skills. Do NOT write the migration — just note this.
 - Skill revisions are kept as-is — they still track content history per skill. The `upsert` service function creates revisions on update.
 - No separate create/update for skills — upsert handles both. Simpler API surface.
