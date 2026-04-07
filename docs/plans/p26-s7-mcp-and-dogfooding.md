@@ -1,8 +1,12 @@
+Consider merging mcp to cli so mcp can use cli config directly to resolve token. I don't likw how we pass credentials to mcp. Having a file in local and manually copy and paste token feels unsafe.
+
+---
+
 # P26-S6: MCP Config Updates & Dogfooding Skills
 
 ## Goal
 
-Update naholo-mcp to read from the new config structure (`.naholo/config.yml` + personal config), add skill-related MCP tools, and write dogfooding skills for this repo.
+Update naholo-mcp to read from the new config structure (`.naholo/config.yml` + local config), add skill-related MCP tools, and write dogfooding skills for this repo.
 
 ## Prerequisites
 
@@ -16,11 +20,11 @@ Update naholo-mcp to read from the new config structure (`.naholo/config.yml` + 
 
 - [ ] `packages/naholo-mcp/src/client.ts` — update `getConfig()` to read:
   1. `.naholo/config.yml` for `projectId` + `defaultWorkerId`
-  2. `.naholo/personal/personal-config.yml` for `workerId`
+  2. `.naholo/local/local-config.yml` for `workerId`
   3. `~/.naholo/` global profile for `baseUrl` + `token` (user auth)
   4. Fall back to env vars (`NAHOLO_URL`, `NAHOLO_TOKEN`, `NAHOLO_PROJECT_ID`) for CI
 - [ ] `packages/naholo-mcp/package.json` — add `yaml` dependency
-- [ ] Error if `workerId` is not configured (personal-config.yml missing) — instruct user to run `naholo init`
+- [ ] Error if `workerId` is not configured (local-config.yml missing) — instruct user to run `naholo init`
 
 ### Task 2: Add skill MCP tools
 

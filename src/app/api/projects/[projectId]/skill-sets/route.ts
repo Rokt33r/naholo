@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireProjectWorker } from '@/server/auth/permissions'
-import { listSkills, createSkill } from '@/server/services/skill'
+import { listSkillSets, createSkillSet } from '@/server/services/skill-set'
 import { ConflictError } from '@/server/services/errors'
 
 type RouteContext = {
@@ -11,17 +11,17 @@ type RouteContext = {
 }
 
 /**
- * GET /api/projects/[projectId]/skills
- * List skills for a project
+ * GET /api/projects/[projectId]/skill-sets
+ * List skill sets for a project
  */
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const { projectId } = await context.params
     await requireProjectWorker(projectId)
 
-    const skills = await listSkills(projectId)
+    const skillSets = await listSkillSets(projectId)
 
-    return NextResponse.json(skills)
+    return NextResponse.json(skillSets)
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -31,14 +31,17 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 }
 
-const createSkillSchema = z.object({
+const createSkillSetSchema = z.object({
   name: z.string().min(1, 'Name is required').trim(),
-  content: z.string().min(1, 'Content is required'),
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
 })
 
 /**
- * POST /api/projects/[projectId]/skills
- * Create a new skill
+ * POST /api/projects/[projectId]/skill-sets
+ * Create a new skill set
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = createSkillSchema.safeParse(body)
+    const validation = createSkillSetSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -60,9 +63,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { name, content } = validation.data
+    const { name, slug } = validation.data
 
-    const result = await createSkill(projectId, { name, content })
+    const result = await createSkillSet(projectId, { name, slug })
     if (!result.success) {
       if (result.error instanceof ConflictError) {
         return NextResponse.json(

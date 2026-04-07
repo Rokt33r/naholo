@@ -3,7 +3,6 @@ import {
   uuid,
   text,
   timestamp,
-  integer,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
@@ -20,7 +19,6 @@ export const skills = pgTable(
     name: text('name').notNull(),
     content: text('content').notNull(),
     currentRevisionId: uuid('current_revision_id'),
-    position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

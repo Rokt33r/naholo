@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireProjectWorker } from '@/server/auth/permissions'
-import { getSkill, updateSkill, deleteSkill } from '@/server/services/skill'
-import { ConflictError } from '@/server/services/errors'
+import { requireSkillSetAccess } from '@/server/auth/permissions'
+import { getSkill, upsertSkill, deleteSkill } from '@/server/services/skill'
 
 type RouteContext = {
   params: Promise<{
     projectId: string
+    skillSetSlug: string
     skillName: string
   }>
 }
 
 /**
- * GET /api/projects/[projectId]/skills/[skillName]
+ * GET /api/projects/[projectId]/skill-sets/[skillSetSlug]/skills/[skillName]
  * Get a single skill with full content
  */
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, skillName } = await context.params
-    await requireProjectWorker(projectId)
+    const { projectId, skillSetSlug, skillName } = await context.params
+    const decodedSlug = decodeURIComponent(skillSetSlug)
+    const { skillSet } = await requireSkillSetAccess(projectId, decodedSlug)
 
     const decodedName = decodeURIComponent(skillName)
-    const skill = await getSkill(projectId, decodedName)
+    const skill = await getSkill(skillSet.id, decodedName)
     if (skill == null) {
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 })
     }
@@ -36,22 +37,19 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 }
 
-const updateSkillSchema = z.object({
-  name: z.string().min(1, 'Name must not be empty string').trim().optional(),
-  content: z.string().min(1, 'Content must not be empty string').optional(),
-  expectedRevisionId: z.string().uuid().optional(),
+const upsertSkillSchema = z.object({
+  content: z.string().min(1, 'Content is required'),
 })
 
 /**
- * PATCH /api/projects/[projectId]/skills/[skillName]
- * Update a skill
+ * PUT /api/projects/[projectId]/skill-sets/[skillSetSlug]/skills/[skillName]
+ * Upsert a skill — create or update
  */
-export async function PATCH(request: NextRequest, context: RouteContext) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, skillName } = await context.params
-    await requireProjectWorker(projectId)
-
-    const decodedName = decodeURIComponent(skillName)
+    const { projectId, skillSetSlug, skillName } = await context.params
+    const decodedSlug = decodeURIComponent(skillSetSlug)
+    const { skillSet } = await requireSkillSetAccess(projectId, decodedSlug)
 
     let body
     try {
@@ -60,7 +58,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = updateSkillSchema.safeParse(body)
+    const validation = upsertSkillSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -68,15 +66,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const result = await updateSkill(projectId, decodedName, validation.data)
+    const decodedName = decodeURIComponent(skillName)
+    const result = await upsertSkill(skillSet.id, {
+      name: decodedName,
+      content: validation.data.content,
+    })
     if (!result.success) {
-      if (result.error instanceof ConflictError) {
-        return NextResponse.json(
-          { error: result.error.message },
-          { status: 409 },
-        )
-      }
-      return NextResponse.json({ error: result.error.message }, { status: 404 })
+      return NextResponse.json({ error: result.error.message }, { status: 500 })
     }
 
     return NextResponse.json(result.data)
@@ -90,16 +86,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectId]/skills/[skillName]
+ * DELETE /api/projects/[projectId]/skill-sets/[skillSetSlug]/skills/[skillName]
  * Delete a skill
  */
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, skillName } = await context.params
-    await requireProjectWorker(projectId)
+    const { projectId, skillSetSlug, skillName } = await context.params
+    const decodedSlug = decodeURIComponent(skillSetSlug)
+    const { skillSet } = await requireSkillSetAccess(projectId, decodedSlug)
 
     const decodedName = decodeURIComponent(skillName)
-    const result = await deleteSkill(projectId, decodedName)
+    const result = await deleteSkill(skillSet.id, decodedName)
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }

@@ -256,6 +256,28 @@ async function requireProjectWorkerBySession(
 // --- Resource-level permissions ---
 
 /**
+ * Requires project worker access AND verifies skill set belongs to project.
+ */
+export async function requireSkillSetAccess(
+  projectId: string,
+  slug: string,
+): Promise<{ projectWorker: ProjectWorker; skillSet: { id: string } }> {
+  const { projectWorker } = await requireProjectWorker(projectId)
+
+  const skillSet = await db.query.skillSets.findFirst({
+    columns: { id: true },
+    where: (t, { eq, and }) =>
+      and(eq(t.slug, slug), eq(t.projectId, projectId)),
+  })
+
+  if (skillSet == null) {
+    throw new NotFoundError('SkillSet')
+  }
+
+  return { projectWorker, skillSet }
+}
+
+/**
  * Requires project worker access AND verifies issue belongs to project.
  * Use for routes that operate on issue-level resources (logs, notes, tasks).
  */
