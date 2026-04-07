@@ -7,16 +7,16 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { projects } from './projects'
+import { skillSets } from './skill-sets'
 import { skillRevisions } from './skill-revisions'
 
 export const skills = pgTable(
   'skills',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    projectId: uuid('project_id')
+    skillSetId: uuid('skill_set_id')
       .notNull()
-      .references(() => projects.id, { onDelete: 'cascade' }),
+      .references(() => skillSets.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     content: text('content').notNull(),
     currentRevisionId: uuid('current_revision_id'),
@@ -24,13 +24,15 @@ export const skills = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('skills_project_id_name_unique').on(t.projectId, t.name)],
+  (t) => [
+    uniqueIndex('skills_skill_set_id_name_unique').on(t.skillSetId, t.name),
+  ],
 )
 
 export const skillsRelations = relations(skills, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [skills.projectId],
-    references: [projects.id],
+  skillSet: one(skillSets, {
+    fields: [skills.skillSetId],
+    references: [skillSets.id],
   }),
   currentRevision: one(skillRevisions, {
     fields: [skills.currentRevisionId],
