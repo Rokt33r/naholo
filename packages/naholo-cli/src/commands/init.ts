@@ -3,6 +3,7 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithWorker } from 'naholo-api/types'
+import { CliError, withErrorHandling } from '../errors.js'
 import { readLocalConfig, writeLocalConfig } from '../local-config.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -15,37 +16,37 @@ import {
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
   .option('--profile <name>', 'use a specific profile instead of default')
-  .action(async (options: Record<string, string>, cmd: Command) => {
-    const profileOverride =
-      typeof options.profile !== 'string' ? options.profile : undefined
+  .action(
+    withErrorHandling(async (options: Record<string, string>, cmd: Command) => {
+      const profileOverride =
+        typeof options.profile !== 'string' ? options.profile : undefined
 
-    const active = getActiveProfile(profileOverride)
-    if (active == null) {
-      console.error('Not logged in. Run "naholo login" to authenticate.')
-      process.exit(2)
-    }
+      const active = getActiveProfile(profileOverride)
+      if (active == null) {
+        throw new CliError('Not logged in. Run "naholo login" to authenticate.')
+      }
 
-    const { profile } = active
-    const client = new NaholoClient({
-      baseUrl: profile.baseUrl,
-      token: profile.token,
-    })
+      const { profile } = active
+      const client = new NaholoClient({
+        baseUrl: profile.baseUrl,
+        token: profile.token,
+      })
 
-    const existingProjectConfig = readProjectConfig()
+      const existingProjectConfig = readProjectConfig()
 
-    if (existingProjectConfig != null) {
-      await handleSubsequentInit(client, existingProjectConfig)
-    } else {
-      await handleFirstTimeInit(client)
-    }
-  })
+      if (existingProjectConfig != null) {
+        await handleSubsequentInit(client, existingProjectConfig)
+      } else {
+        await handleFirstTimeInit(client)
+      }
+    }),
+  )
 
 async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   // 1-2. Fetch projects linked to the user
   const projects = await client.listProjects()
   if (projects.length === 0) {
-    console.error('No projects found for your account.')
-    process.exit(1)
+    throw new CliError('No projects found for your account.')
   }
 
   // 3. Prompt user to select a project
@@ -69,8 +70,7 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   )
 
   if (selectableWorkers.length === 0) {
-    console.error('Unexpected error: No selectable workers.')
-    process.exit(1)
+    throw new CliError('Unexpected error: No selectable workers.')
   }
 
   const ownWorkerId = selectedProject.projectWorkerOfCurrentUser.id
@@ -139,8 +139,7 @@ async function handleSubsequentInit(
   // Fetch workers
   const workers = await client.listWorkers(projectConfig.projectId)
   if (workers.length === 0) {
-    console.error('Unexpected error: No selectable workers.')
-    process.exit(1)
+    throw new CliError('Unexpected error: No selectable workers.')
   }
 
   // Pre-select defaultWorkerId if valid

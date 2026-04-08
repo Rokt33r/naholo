@@ -5,14 +5,15 @@ import { Command } from 'commander'
 import crypto from 'node:crypto'
 import http from 'node:http'
 import os from 'node:os'
+import { CliError, withErrorHandling } from '../errors.js'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
 import { listProfiles, readProfile, writeProfile } from '../profile.js'
 
 export const loginCommand = new Command('login')
   .description('Authenticate with a Naholo server')
   .option('--base-url <url>', 'server URL')
-  .action(async (options: { baseUrl?: string }) => {
-    try {
+  .action(
+    withErrorHandling(async (options: { baseUrl?: string }) => {
       // 1. Get base URL
       let baseUrl = options.baseUrl
       if (!baseUrl) {
@@ -91,8 +92,7 @@ export const loginCommand = new Command('login')
 
         if (!createRes.ok) {
           const text = await createRes.text()
-          console.error(`Failed to create login request: ${text}`)
-          process.exit(1)
+          throw new CliError(`Failed to create login request: ${text}`)
         }
 
         const { requestId, words } = (await createRes.json()) as {
@@ -122,8 +122,7 @@ export const loginCommand = new Command('login')
         const code = await callbackServer.waitForCode()
 
         if (code == null) {
-          console.error('Login timed out or was cancelled.')
-          process.exit(1)
+          throw new CliError('Login timed out or was cancelled.')
         }
 
         // 9. Exchange code for token
@@ -135,8 +134,7 @@ export const loginCommand = new Command('login')
 
         if (!exchangeRes.ok) {
           const text = await exchangeRes.text()
-          console.error(`Failed to exchange code: ${text}`)
-          process.exit(1)
+          throw new CliError(`Failed to exchange code: ${text}`)
         }
 
         const { token, tokenHint } = (await exchangeRes.json()) as {
@@ -162,11 +160,8 @@ export const loginCommand = new Command('login')
       } finally {
         callbackServer.close()
       }
-    } catch (err) {
-      console.error('Login failed:', err instanceof Error ? err.message : err)
-      process.exit(1)
-    }
-  })
+    }),
+  )
 
 interface CallbackServer {
   port: number
