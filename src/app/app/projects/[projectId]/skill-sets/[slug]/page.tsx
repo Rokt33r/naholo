@@ -1,44 +1,44 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Puzzle } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Plus, Puzzle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ProjectSwitcher } from '@/components/projects/project-switcher'
-import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useProjectContext } from '@/components/app/project-context'
-import { useIsMobile } from '@/hooks/use-is-mobile'
+import { useSkillSets } from '@/hooks/use-skill-sets'
 import { useSkills } from '@/hooks/use-skills'
 import { parseFrontmatterDescription } from '@/lib/parse-frontmatter-description'
 import { SkillEditorDialog } from '@/components/skills/skill-editor-dialog'
 import type { Skill } from '@/hooks/use-skills'
 
-export default function SkillsPage() {
-  const { projectId, projectName, projects } = useProjectContext()
-  const isMobile = useIsMobile()
-  const { skills, isLoading } = useSkills(projectId)
+export default function SkillSetDetailPage() {
+  const { projectId } = useProjectContext()
+  const { slug } = useParams<{ slug: string }>()
+  const router = useRouter()
+  const { skillSets } = useSkillSets(projectId)
+  const { skills, isLoading } = useSkills(projectId, slug)
   const [editorOpen, setEditorOpen] = useState(false)
-  const [editingSkill, setEditingSkill] = useState<Skill | null>(null)
 
-  const handleCreateClick = () => {
-    setEditingSkill(null)
-    setEditorOpen(true)
-  }
-
-  const handleSkillClick = (skill: Skill) => {
-    setEditingSkill(skill)
-    setEditorOpen(true)
-  }
+  const skillSet = skillSets.find((s) => s.slug === slug)
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between px-4 pt-2 gap-2'>
-        {isMobile && <AppModeMenu currentProjectId={projectId} />}
-        <ProjectSwitcher
-          projects={projects}
-          currentProjectId={projectId}
-          currentProjectName={projectName}
-        />
-        <Button variant='ghost' size='icon-sm' onClick={handleCreateClick}>
+      <div className='flex items-center gap-2 px-4 pt-2'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => router.push(`/app/projects/${projectId}/skill-sets`)}
+        >
+          <ArrowLeft className='size-4' />
+        </Button>
+        <h1 className='flex-1 truncate text-sm font-semibold'>
+          {skillSet?.name ?? slug}
+        </h1>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => setEditorOpen(true)}
+        >
           <Plus className='size-4' />
         </Button>
       </div>
@@ -54,7 +54,7 @@ export default function SkillsPage() {
           </div>
         ) : skills.length === 0 ? (
           <div className='p-4 text-center text-sm text-muted-foreground'>
-            No skills in this project
+            No skills in this skill set
           </div>
         ) : (
           <div>
@@ -62,7 +62,11 @@ export default function SkillsPage() {
               <SkillItem
                 key={skill.id}
                 skill={skill}
-                onClick={() => handleSkillClick(skill)}
+                onClick={() =>
+                  router.push(
+                    `/app/projects/${projectId}/skill-sets/${slug}/skills/${encodeURIComponent(skill.name)}`,
+                  )
+                }
               />
             ))}
           </div>
@@ -71,7 +75,7 @@ export default function SkillsPage() {
 
       <SkillEditorDialog
         projectId={projectId}
-        skill={editingSkill}
+        skillSetSlug={slug}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />
@@ -90,7 +94,7 @@ function SkillItem({ skill, onClick }: { skill: Skill; onClick: () => void }) {
       <Puzzle className='size-4 text-muted-foreground' />
       <div className='flex-1 min-w-0'>
         <div className='truncate text-sm font-medium'>{skill.name}</div>
-        {description && (
+        {description != null && (
           <div className='truncate text-xs text-muted-foreground'>
             {description}
           </div>

@@ -49,9 +49,11 @@ export function AppModeSidebar({
         <HardHat className='size-5' />
       </ToolSidebarButton>
       <ToolSidebarButton
-        isActive={currentMode === 'skills'}
+        isActive={currentMode === 'skill-sets'}
         tooltip='Skills'
-        onClick={() => router.push(`/app/projects/${currentProjectId}/skills`)}
+        onClick={() =>
+          router.push(`/app/projects/${currentProjectId}/skill-sets`)
+        }
       >
         <Puzzle className='size-5' />
       </ToolSidebarButton>

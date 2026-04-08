@@ -156,20 +156,118 @@ Replace the sync/push/pull skill workflow with a simpler "install" model inspire
 
 - [x] `packages/naholo-cli/src/commands/init.ts` — remove the `syncSkills()` call from both first-time and subsequent init flows. Skills are installed separately now.
 
-### Task 10: Update skill UI hooks and components
+### Task 10: Add skill set hooks
 
-- [ ] `src/hooks/use-skills.ts` — update all hooks to include `skillSetSlug` parameter. Replace `useCreateSkill`/`useUpdateSkill` with single `useUpsertSkill`:
-  - `useSkills(projectId: string, skillSetSlug: string)` — query key `['skills', projectId, skillSetSlug]`
-  - `useUpsertSkill(projectId: string, skillSetSlug: string)` — POST with optimistic update
-  - `useDeleteSkill(projectId: string, skillSetSlug: string)`
-  - Update all fetch URLs to route through `/skill-sets/{slug}/skills/...`
-- [ ] Add `src/hooks/use-skill-sets.ts` with:
-  - `useSkillSets(projectId: string)` — query key `['skill-sets', projectId]`, fetches from `GET /api/projects/{projectId}/skill-sets`
-  - `useCreateSkillSet(projectId: string)` — POST with optimistic update
-  - `useUpdateSkillSet(projectId: string)` — PATCH with optimistic update
-  - `useDeleteSkillSet(projectId: string)` — DELETE with optimistic update, also invalidates `['skills', projectId, ...]`
-- [ ] `src/components/skills/skill-editor-dialog.tsx` — add `skillSetSlug` prop, pass to skill mutation hooks
-- [ ] Update the skills settings page to show a skill-set selector/tabs before listing skills (exact page path: `src/app/app/projects/[projectId]/skills/` — find and update the page component that renders `SkillEditorDialog` and skill list)
+- [x] Create `src/hooks/use-skill-sets.ts` with:
+  - `useSkillSets(projectId: string)` — query key `['skill-sets', projectId]`, fetches from `GET /api/projects/{projectId}/skill-sets`, staleTime 1 min
+  - `useCreateSkillSet(projectId: string)` — POST to `/api/projects/{projectId}/skill-sets`, body `{ name, slug }`. Optimistic: append temp item. On settled: invalidate `['skill-sets', projectId]`.
+  - `useUpdateSkillSet(projectId: string)` — PATCH to `/api/projects/{projectId}/skill-sets/{slug}`, body `{ name?, slug? }`. Optimistic: update in-place. On settled: invalidate `['skill-sets', projectId]`.
+  - `useDeleteSkillSet(projectId: string)` — DELETE to `/api/projects/{projectId}/skill-sets/{slug}`. Optimistic: remove from list. On settled: invalidate `['skill-sets', projectId]` and `['skills', projectId]` (broad prefix to cover all skill set slugs).
+
+### Task 11: Update skill hooks for skill sets
+
+- [x] `src/hooks/use-skills.ts` — update all hooks to include `skillSetSlug` parameter. Replace `useCreateSkill`/`useUpdateSkill` with single `useUpsertSkill`:
+  - `useSkills(projectId: string, skillSetSlug: string)` — query key `['skills', projectId, skillSetSlug]`, fetches from `GET /api/projects/{projectId}/skill-sets/{skillSetSlug}/skills`
+  - `useUpsertSkill(projectId: string, skillSetSlug: string)` — PUT to `/api/projects/{projectId}/skill-sets/{skillSetSlug}/skills/{name}`, body `{ content }`. Optimistic: if skill with same name exists, update content; otherwise append new temp item. On settled: invalidate `['skills', projectId, skillSetSlug]`.
+  - `useDeleteSkill(projectId: string, skillSetSlug: string)` — DELETE to `.../skills/{skillName}`. Optimistic: filter out. On settled: invalidate.
+  - Remove `useCreateSkill` and `useUpdateSkill` exports.
+
+### Task 12: Add skill-sets list page
+
+- [x] Move `src/app/app/projects/[projectId]/skills/page.tsx` to `src/app/app/projects/[projectId]/skill-sets/page.tsx` and rewrite as a **skill-sets list page**.
+  - Uses `useSkillSets(projectId)` to fetch skill sets
+  - Each skill set renders as a clickable row: `{name} ({slug})` with `FolderOpen` icon (from lucide-react)
+  - Clicking navigates to `/app/projects/${projectId}/skill-sets/${slug}` (same route prefix, just deeper)
+  - Header has a "+" button that opens a create skill set dialog (inline or a small dialog component in the same file)
+  - Create dialog: name + slug fields, calls `useCreateSkillSet`
+  - Empty state: "No skill sets in this project"
+
+Mockup:
+
+```
+┌─────────────────────────────────────┐
+│ [ProjectSwitcher]             [+]   │
+│                                     │
+│ Skill Sets                          │
+│                                     │
+│ 📁 Core Skills (core-skills)        │
+│ 📁 Templates (templates)            │
+│ 📁 Onboarding (onboarding)          │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Task 13: Add skill-set detail page (skill list)
+
+- [x] Create `src/app/app/projects/[projectId]/skill-sets/[slug]/page.tsx`:
+  - Fetches skill set info via `useSkillSets(projectId)` (find by slug from list) or a separate `useSkillSet(projectId, slug)` query
+  - Lists skills in the set using `useSkills(projectId, slug)`
+  - Each skill row: `{name}` with description parsed from frontmatter (reuse `parseFrontmatterDescription`), `Puzzle` icon
+  - Clicking a skill navigates to `/app/projects/${projectId}/skill-sets/${slug}/skills/${skillName}`
+  - Header: back arrow (navigates to `/app/projects/${projectId}/skill-sets`), skill set name, "+" button to create a skill
+  - "+" button opens `SkillEditorDialog` in create mode
+  - Empty state: "No skills in this skill set"
+
+Mockup:
+
+```
+┌─────────────────────────────────────┐
+│ [←] Core Skills               [+]  │
+│                                     │
+│ Skills                              │
+│                                     │
+│ 🧩 elaborate-plan                   │
+│    Elaborate a plan document        │
+│ 🧩 ship-plan                        │
+│    Implement an elaborated plan     │
+│ 🧩 review-pr                        │
+│    Review a pull request            │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Task 14: Add skill detail/editor page
+
+- [x] Create `src/app/app/projects/[projectId]/skill-sets/[slug]/skills/[skillName]/page.tsx`:
+  - Fetches the single skill via a query to `GET /api/projects/{projectId}/skill-sets/{slug}/skills/{skillName}`
+  - Displays skill editor inline (not in a dialog): name field (read-only or editable) + content textarea
+  - Save button calls `useUpsertSkill(projectId, slug)` with `{ name, content }`
+  - Delete button with confirmation, calls `useDeleteSkill(projectId, slug)`, navigates back to skill set page on success
+  - Header: back arrow (navigates to `/app/projects/${projectId}/skill-sets/${slug}`)
+
+Mockup:
+
+```
+┌─────────────────────────────────────┐
+│ [←] elaborate-plan     [Delete]     │
+│                                     │
+│ Name                                │
+│ ┌─────────────────────────────────┐ │
+│ │ elaborate-plan                  │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ Content                             │
+│ ┌─────────────────────────────────┐ │
+│ │ ---                             │ │
+│ │ description: Elaborate a plan   │ │
+│ │ ---                             │ │
+│ │                                 │ │
+│ │ # Elaborate Plan                │ │
+│ │ ...                             │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│                          [Save]     │
+└─────────────────────────────────────┘
+```
+
+### Task 15: Update `SkillEditorDialog` for skill sets
+
+- [x] `src/components/skills/skill-editor-dialog.tsx` — add `skillSetSlug` prop, use `useUpsertSkill(projectId, skillSetSlug)` for both create and edit. Remove `useCreateSkill`/`useUpdateSkill` usage. Update `useDeleteSkill(projectId, skillSetSlug)`. This dialog is now only used for creating new skills from the skill-set detail page (Task 13).
+
+### Task 16: Update sidebar navigation
+
+- [x] Update `src/components/app/app-mode-sidebar.tsx` — change the "skills" nav item to point to `/app/projects/${projectId}/skill-sets`. Update `isActive` check to match `currentMode === 'skill-sets'`.
+- [x] Update `src/components/app/app-mode-menu.tsx` — same change for the mobile menu entry.
 
 ## Diagram: New Data Model
 

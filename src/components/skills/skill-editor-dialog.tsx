@@ -13,15 +13,12 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  useCreateSkill,
-  useUpdateSkill,
-  useDeleteSkill,
-} from '@/hooks/use-skills'
+import { useUpsertSkill, useDeleteSkill } from '@/hooks/use-skills'
 import type { Skill } from '@/hooks/use-skills'
 
 type SkillEditorDialogProps = {
   projectId: string
+  skillSetSlug: string
   skill?: Skill | null
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -29,6 +26,7 @@ type SkillEditorDialogProps = {
 
 export function SkillEditorDialog({
   projectId,
+  skillSetSlug,
   skill,
   open,
   onOpenChange,
@@ -37,12 +35,10 @@ export function SkillEditorDialog({
   const [content, setContent] = useState('')
 
   const isEditMode = !!skill
-  const createSkill = useCreateSkill(projectId)
-  const updateSkill = useUpdateSkill(projectId)
-  const deleteSkill = useDeleteSkill(projectId)
+  const upsertSkill = useUpsertSkill(projectId, skillSetSlug)
+  const deleteSkill = useDeleteSkill(projectId, skillSetSlug)
 
-  const isPending =
-    createSkill.isPending || updateSkill.isPending || deleteSkill.isPending
+  const isPending = upsertSkill.isPending || deleteSkill.isPending
   const isSubmitDisabled = !name.trim() || !content.trim() || isPending
 
   useEffect(() => {
@@ -58,21 +54,14 @@ export function SkillEditorDialog({
       return
     }
 
-    if (isEditMode) {
-      updateSkill.mutate(
-        { skillName: skill.name, name, content },
-        { onSuccess: () => onOpenChange(false) },
-      )
-    } else {
-      createSkill.mutate(
-        { name, content },
-        { onSuccess: () => onOpenChange(false) },
-      )
-    }
+    upsertSkill.mutate(
+      { name, content },
+      { onSuccess: () => onOpenChange(false) },
+    )
   }
 
   const handleDelete = () => {
-    if (!skill) {
+    if (skill == null) {
       return
     }
     if (!window.confirm('Delete this skill?')) {

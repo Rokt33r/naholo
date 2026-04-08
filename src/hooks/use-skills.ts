@@ -6,10 +6,14 @@ export type { Skill } from 'naholo-api/types'
 
 import type { Skill } from 'naholo-api/types'
 
-export function useSkills(projectId: string) {
+function skillsBasePath(projectId: string, skillSetSlug: string) {
+  return `/api/projects/${projectId}/skill-sets/${encodeURIComponent(skillSetSlug)}/skills`
+}
+
+export function useSkills(projectId: string, skillSetSlug: string) {
   const query = useQuery({
-    queryKey: ['skills', projectId],
-    queryFn: () => fetcher<Skill[]>(`/api/projects/${projectId}/skills`),
+    queryKey: ['skills', projectId, skillSetSlug],
+    queryFn: () => fetcher<Skill[]>(skillsBasePath(projectId, skillSetSlug)),
     staleTime: 60_000,
   })
 
@@ -20,116 +24,95 @@ export function useSkills(projectId: string) {
   }
 }
 
-export function useCreateSkill(projectId: string) {
+export function useSkill(
+  projectId: string,
+  skillSetSlug: string,
+  skillName: string,
+) {
+  const query = useQuery({
+    queryKey: ['skills', projectId, skillSetSlug, skillName],
+    queryFn: () =>
+      fetcher<Skill>(
+        `${skillsBasePath(projectId, skillSetSlug)}/${encodeURIComponent(skillName)}`,
+      ),
+    staleTime: 60_000,
+  })
+
+  return {
+    skill: query.data ?? null,
+    isLoading: query.isLoading,
+    error: query.error,
+  }
+}
+
+export function useUpsertSkill(projectId: string, skillSetSlug: string) {
   const queryClient = useQueryClient()
+  const queryKey = ['skills', projectId, skillSetSlug]
 
   return useMutation({
     mutationFn: async (input: { name: string; content: string }) => {
-      const response = await fetch(`/api/projects/${projectId}/skills`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      })
-      if (!response.ok) {
-        throw await createResponseError(response, 'Failed to create skill')
-      }
-      return response.json()
-    },
-    onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: ['skills', projectId] })
-
-      const previous = queryClient.getQueryData<Skill[]>(['skills', projectId])
-
-      queryClient.setQueryData<Skill[]>(['skills', projectId], (old) => [
-        ...(old ?? []),
-        {
-          id: 'temp-' + Date.now(),
-          name: input.name,
-          content: input.content,
-          position: (old ?? []).length,
-          currentRevisionId: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ])
-
-      return { previous }
-    },
-    onError: (err, _, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['skills', projectId], context.previous)
-      }
-      toast.error(err instanceof Error ? err.message : 'Failed to create skill')
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
-    },
-  })
-}
-
-export function useUpdateSkill(projectId: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (input: {
-      skillName: string
-      name?: string
-      content?: string
-    }) => {
-      const { skillName, ...body } = input
       const response = await fetch(
-        `/api/projects/${projectId}/skills/${encodeURIComponent(skillName)}`,
+        `${skillsBasePath(projectId, skillSetSlug)}/${encodeURIComponent(input.name)}`,
         {
-          method: 'PATCH',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ content: input.content }),
         },
       )
       if (!response.ok) {
-        throw await createResponseError(response, 'Failed to update skill')
+        throw await createResponseError(response, 'Failed to save skill')
       }
       return response.json()
     },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: ['skills', projectId] })
+      await queryClient.cancelQueries({ queryKey })
 
-      const previous = queryClient.getQueryData<Skill[]>(['skills', projectId])
+      const previous = queryClient.getQueryData<Skill[]>(queryKey)
 
-      queryClient.setQueryData<Skill[]>(['skills', projectId], (old) =>
-        old?.map((skill) =>
-          skill.name === input.skillName
-            ? {
-                ...skill,
-                ...(input.name !== undefined ? { name: input.name } : {}),
-                ...(input.content !== undefined
-                  ? { content: input.content }
-                  : {}),
-              }
-            : skill,
-        ),
-      )
+      queryClient.setQueryData<Skill[]>(queryKey, (old) => {
+        const existing = old?.find((s) => s.name === input.name)
+        if (existing != null) {
+          return old?.map((s) =>
+            s.name === input.name ? { ...s, content: input.content } : s,
+          )
+        }
+        return [
+          ...(old ?? []),
+          {
+            id: 'temp-' + Date.now(),
+            name: input.name,
+            content: input.content,
+            currentRevisionId: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ]
+      })
 
       return { previous }
     },
-    onError: (err, _, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['skills', projectId], context.previous)
+    onError: (error, _, context) => {
+      if (context?.previous != null) {
+        queryClient.setQueryData(queryKey, context.previous)
       }
-      toast.error(err instanceof Error ? err.message : 'Failed to update skill')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save skill',
+      )
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }
 
-export function useDeleteSkill(projectId: string) {
+export function useDeleteSkill(projectId: string, skillSetSlug: string) {
   const queryClient = useQueryClient()
+  const queryKey = ['skills', projectId, skillSetSlug]
 
   return useMutation({
     mutationFn: async (input: { skillName: string }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/skills/${encodeURIComponent(input.skillName)}`,
+        `${skillsBasePath(projectId, skillSetSlug)}/${encodeURIComponent(input.skillName)}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -138,24 +121,26 @@ export function useDeleteSkill(projectId: string) {
       return response.json()
     },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: ['skills', projectId] })
+      await queryClient.cancelQueries({ queryKey })
 
-      const previous = queryClient.getQueryData<Skill[]>(['skills', projectId])
+      const previous = queryClient.getQueryData<Skill[]>(queryKey)
 
-      queryClient.setQueryData<Skill[]>(['skills', projectId], (old) =>
-        old?.filter((skill) => skill.name !== input.skillName),
+      queryClient.setQueryData<Skill[]>(queryKey, (old) =>
+        old?.filter((s) => s.name !== input.skillName),
       )
 
       return { previous }
     },
-    onError: (err, _, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['skills', projectId], context.previous)
+    onError: (error, _, context) => {
+      if (context?.previous != null) {
+        queryClient.setQueryData(queryKey, context.previous)
       }
-      toast.error(err instanceof Error ? err.message : 'Failed to delete skill')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete skill',
+      )
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
+      queryClient.invalidateQueries({ queryKey })
     },
   })
 }

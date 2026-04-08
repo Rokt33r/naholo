@@ -51,7 +51,7 @@ export function AppModeMenu({ currentProjectId }: AppModeMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectId}/skills`)
+            router.push(`/app/projects/${currentProjectId}/skill-sets`)
           }
         >
           <Puzzle className='mr-2 h-4 w-4' />
