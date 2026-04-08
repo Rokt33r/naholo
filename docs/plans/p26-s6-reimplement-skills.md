@@ -293,9 +293,11 @@ naholo skills install
        └─ Write .claude/skills/{name}/SKILL.md
 ```
 
-## Notes
+## Post-implementation notes
 
+- Query key hierarchy: `useSkill` uses `['skills', projectId, slug, skillName]` (nested under `['skills', projectId, slug]`) so mutations that invalidate the list also invalidate single-item queries via prefix matching.
 - The `position` column on `skills` has been dropped — skills are sorted by name.
 - Existing data in the `skills` table has `projectId` but no `skillSetId`. The migration (written by user) will need to create a default skill set per project and reassign existing skills. Do NOT write the migration — just note this.
 - Skill revisions are kept as-is — they still track content history per skill. The `upsert` service function creates revisions on update.
 - No separate create/update for skills — upsert handles both. Simpler API surface.
+- Sidebar navigation now points to `/app/projects/{projectId}/skill-sets` (was `/skills`).
