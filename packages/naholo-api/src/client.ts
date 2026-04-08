@@ -90,8 +90,15 @@ export class NaholoClient {
 
   // ---- Projects ----
 
-  listProjects(): Promise<ProjectWithWorker[]> {
-    return this.request('GET', '/api/projects')
+  listProjects(opts: {
+    with: 'projectWorkerOfCurrentUser'
+  }): Promise<ProjectWithWorker[]>
+  listProjects(opts?: undefined): Promise<Project[]>
+  listProjects(opts?: {
+    with?: 'projectWorkerOfCurrentUser'
+  }): Promise<Project[] | ProjectWithWorker[]> {
+    const qs = opts?.with != null ? `?with=${opts.with}` : ''
+    return this.request('GET', `/api/projects${qs}`)
   }
 
   getProject(projectId: string): Promise<Project> {

@@ -16,6 +16,26 @@ Merge `naholo-mcp` into `naholo-cli` as a `naholo mcp` subcommand so the MCP ser
 - **Delete `packages/naholo-mcp/`** after migration is complete.
 - `.mcp.json` config becomes `{ "mcpServers": { "naholo": { "command": "naholo", "args": ["mcp"] } } }` -- no env vars needed for local dev.
 
+### Resources (read-only context, fetched by URI)
+
+| Resource | URI                               | Description                                              |
+| -------- | --------------------------------- | -------------------------------------------------------- |
+| project  | `naholo://project`                | Current project details                                  |
+| issues   | `naholo://issues`                 | Open issues list                                         |
+| issue    | `naholo://issues/{issueId}`       | Full issue context (issue + tasks + notes + recent logs) |
+| tasks    | `naholo://issues/{issueId}/tasks` | All tasks for an issue                                   |
+| notes    | `naholo://issues/{issueId}/notes` | All notes for an issue                                   |
+
+### Tools (write actions)
+
+| Tool           | Description                      |
+| -------------- | -------------------------------- |
+| `create_issue` | Create a new issue               |
+| `close_issue`  | Close an issue                   |
+| `create_task`  | Create a task in an issue        |
+| `update_task`  | Update a task (name, note, done) |
+| `create_log`   | Create a log entry for an issue  |
+
 ## Tasks
 
 ### Task 1: Refactor `getCliContext()` to throw instead of `process.exit()`
@@ -25,43 +45,42 @@ Merge `naholo-mcp` into `naholo-cli` as a `naholo mcp` subcommand so the MCP ser
 
 ### Task 2: Add `naholo mcp` subcommand entry point
 
-- [ ] `packages/naholo-cli/package.json` -- add dependencies: `@modelcontextprotocol/sdk` (^1.12.1), `zod` (^4.3.6)
-- [ ] `packages/naholo-cli/src/commands/mcp.ts` -- create new command file:
+- [x] `packages/naholo-cli/package.json` -- add dependencies: `@modelcontextprotocol/sdk` (^1.12.1), `zod` (^4.3.6)
+- [x] `packages/naholo-cli/src/commands/mcp.ts` -- create new command file:
   - Export `mcpCommand` as a `Command` with name `'mcp'` and description `'Start MCP server (stdio transport)'`
   - On action: call `startMcpServer()` (defined in Task 3)
-- [ ] `packages/naholo-cli/src/cli.ts` -- import and `program.addCommand(mcpCommand)`
+- [x] `packages/naholo-cli/src/cli.ts` -- import and `program.addCommand(mcpCommand)`
 
 ### Task 3: Move MCP server logic into CLI
 
-- [ ] `packages/naholo-cli/src/mcp/server.ts` -- create file with `startMcpServer()` function:
+- [x] `packages/naholo-cli/src/mcp/server.ts` -- create file with `startMcpServer()` function:
   - Resolve config using `getCliContext()` from `packages/naholo-cli/src/context.ts` (refactored in Task 1)
-  - Register all existing tools from current `packages/naholo-mcp/src/index.ts` (10 tools: `get_project`, `list_issues`, `get_issue`, `create_issue`, `close_issue`, `get_tasks`, `create_task`, `update_task`, `get_notes`, `create_log`)
-  - Register all existing resources (3 resources: `naholo://project`, `naholo://issues`, `naholo://issues/{issueId}`)
+  - Register tools and resources (see lists below)
   - Connect via `StdioServerTransport`
-  - Tool handlers use `client` and `projectId` from context instead of `getClient()` / `getProjectId()` globals
-- [ ] `packages/naholo-cli/src/mcp/tools.ts` -- extract tool registration into a function `registerTools(server: McpServer, client: NaholoClient, projectId: string)` to keep `server.ts` clean. Move all `server.registerTool()` calls here.
-- [ ] `packages/naholo-cli/src/mcp/resources.ts` -- extract resource registration into `registerResources(server: McpServer, client: NaholoClient, projectId: string)`. Move all `server.registerResource()` calls here.
+  - Handlers use `client` and `projectId` from context instead of `getClient()` / `getProjectId()` globals
+- [x] `packages/naholo-cli/src/mcp/tools.ts` -- extract tool registration into a function `registerTools(server: McpServer, client: NaholoClient, projectId: string)` to keep `server.ts` clean. Move all `server.registerTool()` calls here.
+- [x] `packages/naholo-cli/src/mcp/resources.ts` -- extract resource registration into `registerResources(server: McpServer, client: NaholoClient, projectId: string)`. Move all `server.registerResource()` calls here.
 
 ### Task 4: Delete naholo-mcp package
 
-- [ ] Delete `packages/naholo-mcp/` directory entirely
-- [ ] Remove `naholo-mcp` from root `package.json` workspaces (if listed)
-- [ ] Remove any references to `naholo-mcp` in `tsconfig` or other config files
+- [x] Delete `packages/naholo-mcp/` directory entirely
+- [x] Remove `naholo-mcp` from root `package.json` workspaces (if listed) -- not listed explicitly, `packages/*` glob handles it
+- [x] Remove any references to `naholo-mcp` in `tsconfig` or other config files -- no references found outside the deleted package
 
-### Task 5: Update .mcp.json for this repo
+### Task 5: Configure .mcp.json via `naholo init`
 
-- [ ] `.mcp.json` (project root) -- create or update with:
-  ```json
-  {
-    "mcpServers": {
-      "naholo": {
-        "command": "naholo",
-        "args": ["mcp"]
-      }
-    }
-  }
-  ```
-  No env vars needed -- the MCP server resolves credentials from CLI config files.
+- [x] `packages/naholo-cli/src/commands/init.ts` -- at the end of both `handleFirstTimeInit()` and `handleSubsequentInit()`, call a new `writeMcpConfig()` helper
+- [x] `packages/naholo-cli/src/mcp-config.ts` -- create helper `writeMcpConfig()`:
+  - If `.mcp.json` exists, read and parse it, then add/overwrite `mcpServers.naholo` entry
+  - If `.mcp.json` does not exist, create it with the naholo entry
+  - Entry value: `{ "command": "naholo", "args": ["mcp"] }`
+
+### Task 6: Update tools and resources to match new split
+
+- [x] `packages/naholo-cli/src/mcp/tools.ts` -- remove `get_project`, `list_issues`, `get_issue`, `get_tasks`, `get_notes` tools. Keep only write actions: `create_issue`, `close_issue`, `create_task`, `update_task`, `create_log`.
+- [x] `packages/naholo-cli/src/mcp/resources.ts` -- add two new resource templates:
+  - `tasks`: `naholo://issues/{issueId}/tasks` — calls `client.listTasks(projectId, issueId)`, returns JSON
+  - `notes`: `naholo://issues/{issueId}/notes` — calls `client.listNotes(projectId, issueId)`, returns JSON
 
 ## Notes
 

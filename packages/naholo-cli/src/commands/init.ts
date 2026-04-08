@@ -5,6 +5,7 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithWorker } from 'naholo-api/types'
 import { CliError, withErrorHandling } from '../errors.js'
 import { readLocalConfig, writeLocalConfig } from '../local-config.js'
+import { writeMcpConfig } from '../mcp-config.js'
 import { getActiveProfile } from '../profile.js'
 import {
   type ProjectConfig,
@@ -44,7 +45,9 @@ export const initCommand = new Command('init')
 
 async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   // 1-2. Fetch projects linked to the user
-  const projects = await client.listProjects()
+  const projects = await client.listProjects({
+    with: 'projectWorkerOfCurrentUser',
+  })
   if (projects.length === 0) {
     throw new CliError('No projects found for your account.')
   }
@@ -62,10 +65,7 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   const workers = await client.listWorkers(selectedProject.id)
   const selectableWorkers = workers.filter(
     (w) =>
-      (w.type === 'user' &&
-        w.userId ===
-          (selectedProject.projectWorkerOfCurrentUser as { userId?: string })
-            .userId) ||
+      w.id === selectedProject.projectWorkerOfCurrentUser.id ||
       w.type === 'bot',
   )
 
@@ -112,6 +112,9 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
 
   // 8. Write .naholo/.gitignore
   writeGitignore()
+
+  // 9. Write .mcp.json
+  writeMcpConfig()
 
   console.log()
   console.log(`Project initialized: ${selectedProject.name}`)
@@ -191,6 +194,9 @@ async function handleSubsequentInit(
 
   // Write/update local config
   writeLocalConfig({ projectWorkerId: selectedWorkerId })
+
+  // Write .mcp.json
+  writeMcpConfig()
 
   console.log(`Worker set to: ${selectedWorker.name}`)
 }
