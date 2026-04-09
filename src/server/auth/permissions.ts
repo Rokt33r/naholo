@@ -17,6 +17,8 @@ import {
   touchUserApiToken,
 } from '../services/user-api-token'
 import { NotFoundError } from '../services/errors'
+import { isUUID } from '@/lib/utils'
+import { sql } from 'drizzle-orm'
 
 export type { ProjectWorker } from '../services/project-worker'
 
@@ -283,14 +285,22 @@ export async function requireSkillSetAccess(
  */
 export async function requireIssueAccess(
   projectId: string,
-  issueId: string,
+  issueIdOrNumber: string,
 ): Promise<{ projectWorker: ProjectWorker; issue: { id: string } }> {
   const { projectWorker } = await requireProjectWorker(projectId)
 
   const issue = await db.query.issues.findFirst({
     columns: { id: true },
-    where: (t, { eq, and }) =>
-      and(eq(t.id, issueId), eq(t.projectId, projectId)),
+    where: (t, { eq, and }) => {
+      if (isUUID(issueIdOrNumber)) {
+        return and(eq(t.id, issueIdOrNumber), eq(t.projectId, projectId))
+      }
+      const num = Number(issueIdOrNumber)
+      if (!Number.isInteger(num) || num <= 0) {
+        return sql`false`
+      }
+      return and(eq(t.number, num), eq(t.projectId, projectId))
+    },
   })
 
   if (issue == null) {
@@ -305,18 +315,21 @@ export async function requireIssueAccess(
  */
 export async function requireIssueLogAccess(
   projectId: string,
-  issueId: string,
+  issueIdOrNumber: string,
   logId: string,
 ): Promise<{
   projectWorker: ProjectWorker
   issue: { id: string }
   log: { id: string }
 }> {
-  const { projectWorker, issue } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueIdOrNumber,
+  )
 
   const log = await db.query.logs.findFirst({
     columns: { id: true },
-    where: (t, { eq, and }) => and(eq(t.id, logId), eq(t.issueId, issueId)),
+    where: (t, { eq, and }) => and(eq(t.id, logId), eq(t.issueId, issue.id)),
   })
 
   if (log == null) {
@@ -331,18 +344,21 @@ export async function requireIssueLogAccess(
  */
 export async function requireIssueNoteAccess(
   projectId: string,
-  issueId: string,
+  issueIdOrNumber: string,
   noteId: string,
 ): Promise<{
   projectWorker: ProjectWorker
   issue: { id: string }
   note: { id: string }
 }> {
-  const { projectWorker, issue } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueIdOrNumber,
+  )
 
   const note = await db.query.notes.findFirst({
     columns: { id: true },
-    where: (t, { eq, and }) => and(eq(t.id, noteId), eq(t.issueId, issueId)),
+    where: (t, { eq, and }) => and(eq(t.id, noteId), eq(t.issueId, issue.id)),
   })
 
   if (note == null) {
@@ -357,18 +373,21 @@ export async function requireIssueNoteAccess(
  */
 export async function requireIssueTaskAccess(
   projectId: string,
-  issueId: string,
+  issueIdOrNumber: string,
   taskId: string,
 ): Promise<{
   projectWorker: ProjectWorker
   issue: { id: string }
   task: { id: string }
 }> {
-  const { projectWorker, issue } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueIdOrNumber,
+  )
 
   const task = await db.query.tasks.findFirst({
     columns: { id: true },
-    where: (t, { eq, and }) => and(eq(t.id, taskId), eq(t.issueId, issueId)),
+    where: (t, { eq, and }) => and(eq(t.id, taskId), eq(t.issueId, issue.id)),
   })
 
   if (task == null) {

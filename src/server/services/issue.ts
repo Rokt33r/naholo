@@ -1,14 +1,27 @@
 import 'server-only'
 import { db } from '../db'
-import { issues, tasks } from '../db/schema'
+import { issues, tasks, projects } from '../db/schema'
 import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
+import { isUUID } from '@/lib/utils'
 import { NotFoundError } from './errors'
+
+function issueWhere(projectId: string, issueIdOrNumber: string) {
+  if (isUUID(issueIdOrNumber)) {
+    return and(eq(issues.id, issueIdOrNumber), eq(issues.projectId, projectId))
+  }
+  const num = Number(issueIdOrNumber)
+  if (!Number.isInteger(num) || num <= 0) {
+    return undefined
+  }
+  return and(eq(issues.number, num), eq(issues.projectId, projectId))
+}
 
 export type Issue = {
   id: string
   projectId: string
+  number: number
   title: string
   closed: boolean
   closedAt: Date | null
@@ -18,6 +31,7 @@ export type Issue = {
 
 export type IssueWithStats = {
   id: string
+  number: number
   title: string
   lastLogPreview: string | null
   closed: boolean
@@ -29,16 +43,22 @@ export type IssueWithStats = {
 }
 
 /**
- * Get a single issue by ID, scoped to a project
+ * Get a single issue by ID or number, scoped to a project
  */
 export async function getIssue(data: {
   projectId: string
-  issueId: string
+  issueIdOrNumber: string
 }): Promise<Issue | null> {
+  const where = issueWhere(data.projectId, data.issueIdOrNumber)
+  if (where == null) {
+    return null
+  }
+
   const [issue] = await db
     .select({
       id: issues.id,
       projectId: issues.projectId,
+      number: issues.number,
       title: issues.title,
       closed: issues.closed,
       closedAt: issues.closedAt,
@@ -46,9 +66,7 @@ export async function getIssue(data: {
       updatedAt: issues.updatedAt,
     })
     .from(issues)
-    .where(
-      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
-    )
+    .where(where)
     .limit(1)
 
   return issue || null
@@ -66,6 +84,7 @@ export async function listIssues(data: {
   const rows = await db
     .select({
       id: issues.id,
+      number: issues.number,
       title: issues.title,
       lastLogPreview: issues.lastLogPreview,
       closed: issues.closed,
@@ -97,17 +116,26 @@ export async function createIssue(data: {
   projectWorkerId: string
   projectId: string
   title: string
-}): Promise<ReturnResult<{ id: string }>> {
-  const [issue] = await db
-    .insert(issues)
-    .values({
-      projectId: data.projectId,
-      projectWorkerId: data.projectWorkerId,
-      title: data.title,
-    })
-    .returning({ id: issues.id })
+}): Promise<ReturnResult<{ id: string; number: number }>> {
+  return await db.transaction(async (tx) => {
+    const [{ issueCounter }] = await tx
+      .update(projects)
+      .set({ issueCounter: sql`${projects.issueCounter} + 1` })
+      .where(eq(projects.id, data.projectId))
+      .returning({ issueCounter: projects.issueCounter })
 
-  return ok({ id: issue.id })
+    const [issue] = await tx
+      .insert(issues)
+      .values({
+        projectId: data.projectId,
+        projectWorkerId: data.projectWorkerId,
+        title: data.title,
+        number: issueCounter,
+      })
+      .returning({ id: issues.id })
+
+    return ok({ id: issue.id, number: issueCounter })
+  })
 }
 
 /**
@@ -115,18 +143,21 @@ export async function createIssue(data: {
  */
 export async function updateIssue(data: {
   projectId: string
-  issueId: string
+  issueIdOrNumber: string
   title: string
 }): Promise<ReturnResult<undefined>> {
+  const where = issueWhere(data.projectId, data.issueIdOrNumber)
+  if (where == null) {
+    return err(new NotFoundError('Issue'))
+  }
+
   const [issue] = await db
     .update(issues)
     .set({
       title: data.title,
       updatedAt: new Date(),
     })
-    .where(
-      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
-    )
+    .where(where)
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -141,8 +172,13 @@ export async function updateIssue(data: {
  */
 export async function closeIssue(data: {
   projectId: string
-  issueId: string
+  issueIdOrNumber: string
 }): Promise<ReturnResult<undefined>> {
+  const where = issueWhere(data.projectId, data.issueIdOrNumber)
+  if (where == null) {
+    return err(new NotFoundError('Issue'))
+  }
+
   const [issue] = await db
     .update(issues)
     .set({
@@ -150,9 +186,7 @@ export async function closeIssue(data: {
       closedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(
-      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
-    )
+    .where(where)
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -167,8 +201,13 @@ export async function closeIssue(data: {
  */
 export async function reopenIssue(data: {
   projectId: string
-  issueId: string
+  issueIdOrNumber: string
 }): Promise<ReturnResult<undefined>> {
+  const where = issueWhere(data.projectId, data.issueIdOrNumber)
+  if (where == null) {
+    return err(new NotFoundError('Issue'))
+  }
+
   const [issue] = await db
     .update(issues)
     .set({
@@ -176,9 +215,7 @@ export async function reopenIssue(data: {
       closedAt: null,
       updatedAt: new Date(),
     })
-    .where(
-      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
-    )
+    .where(where)
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -193,13 +230,16 @@ export async function reopenIssue(data: {
  */
 export async function deleteIssue(data: {
   projectId: string
-  issueId: string
+  issueIdOrNumber: string
 }): Promise<ReturnResult<undefined>> {
+  const where = issueWhere(data.projectId, data.issueIdOrNumber)
+  if (where == null) {
+    return err(new NotFoundError('Issue'))
+  }
+
   const [issue] = await db
     .delete(issues)
-    .where(
-      and(eq(issues.id, data.issueId), eq(issues.projectId, data.projectId)),
-    )
+    .where(where)
     .returning({ id: issues.id })
 
   if (!issue) {
