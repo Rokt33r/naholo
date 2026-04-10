@@ -1,21 +1,38 @@
-import { pgTable, uuid, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core'
 import { projects } from './projects'
 import { projectWorkers } from './project-workers'
 
-export const issues = pgTable('issues', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  projectId: uuid('project_id')
-    .notNull()
-    .references(() => projects.id, { onDelete: 'cascade' }),
-  projectWorkerId: uuid('project_worker_id').references(
-    () => projectWorkers.id,
-    { onDelete: 'set null' },
-  ),
-  number: integer('number'),
-  title: text('title').notNull(),
-  lastLogPreview: text('last_log_preview'),
-  closed: boolean('closed').notNull().default(false),
-  closedAt: timestamp('closed_at'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+export const issues = pgTable(
+  'issues',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    projectWorkerId: uuid('project_worker_id').references(
+      () => projectWorkers.id,
+      { onDelete: 'set null' },
+    ),
+    number: integer('number').notNull(),
+    title: text('title').notNull(),
+    lastLogPreview: text('last_log_preview'),
+    closed: boolean('closed').notNull().default(false),
+    closedAt: timestamp('closed_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('issues_project_id_number_idx').on(
+      table.projectId,
+      table.number,
+    ),
+  ],
+)
