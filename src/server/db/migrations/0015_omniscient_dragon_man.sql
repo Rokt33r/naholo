@@ -13,7 +13,3 @@ UPDATE issues SET number = numbered.rn FROM numbered WHERE issues.id = numbered.
 UPDATE projects SET issue_counter = sub.cnt
 FROM (SELECT project_id, COUNT(*) AS cnt FROM issues GROUP BY project_id) AS sub
 WHERE projects.id = sub.project_id;--> statement-breakpoint
-
--- Now add NOT NULL and unique index
-ALTER TABLE issues ALTER COLUMN number SET NOT NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX issues_project_id_number_idx ON issues (project_id, number);
