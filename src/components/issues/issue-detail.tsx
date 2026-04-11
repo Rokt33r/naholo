@@ -210,10 +210,10 @@ export function IssueDetail({
                 className='cursor-text text-xl font-semibold'
                 onClick={() => setIsEditingTitle(true)}
               >
+                {issue.title}{' '}
                 <span className='text-muted-foreground font-normal'>
-                  #{issue.number}{' '}
+                  #{issue.number}
                 </span>
-                {issue.title}
               </h1>
               {isSaving && (
                 <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />

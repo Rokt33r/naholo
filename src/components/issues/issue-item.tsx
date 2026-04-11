@@ -42,9 +42,6 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
           ) : (
             <CircleDot className='h-4 w-4 shrink-0 text-green-600' />
           )}
-          <span className='text-muted-foreground font-normal shrink-0'>
-            #{issue.number}
-          </span>
           <div className='truncate font-bold'>{issue.title}</div>
         </div>
         {totalCount > 0 && (
@@ -58,7 +55,10 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
       </div>
 
       {/* Row 2: Content preview and date */}
-      <div className='mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground'>
+      <div className='mt-1 flex items-center justify-between gap-1 text-xs text-muted-foreground'>
+        <span className='text-muted-foreground font-normal shrink-0'>
+          #{issue.number}
+        </span>
         <div className='flex-1 truncate'>
           {issue.lastLogPreview || '(No log)'}
         </div>
