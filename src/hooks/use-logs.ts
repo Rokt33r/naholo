@@ -1,10 +1,33 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
 export type { Log } from 'naholo-api/types'
 
-import type { Log } from 'naholo-api/types'
+import type { Log, IssueListItem } from 'naholo-api/types'
+import { generateLogPreview } from '@/lib/issue-utils'
+
+function updateIssueListCache(
+  queryClient: QueryClient,
+  projectId: string,
+  issueNumber: number,
+  updater: (issue: IssueListItem) => IssueListItem,
+) {
+  for (const filter of ['open', 'closed'] as const) {
+    queryClient.setQueryData<IssueListItem[]>(
+      ['issues', projectId, filter],
+      (old) =>
+        old?.map((issue) =>
+          issue.number === issueNumber ? updater(issue) : issue,
+        ),
+    )
+  }
+}
 
 /**
  * Hook to fetch logs for an issue
@@ -68,16 +91,24 @@ export function useCreateLog(
         optimisticLog,
       ])
 
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        lastLogPreview: generateLogPreview(content),
+        updatedAt: new Date().toISOString(),
+      }))
+
       return { previousLogs }
     },
     onError: (err, _, context) => {
       if (context?.previousLogs) {
         queryClient.setQueryData(['logs', issueNumber], context.previousLogs)
       }
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
       toast.error(err instanceof Error ? err.message : 'Failed to create log')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['logs', issueNumber] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
     },
   })
 }
@@ -125,16 +156,28 @@ export function useUpdateLog(projectId: string, issueNumber: number) {
         ),
       )
 
+      const logs = previousLogs ?? []
+      const isLastLog = logs.length > 0 && logs[logs.length - 1].id === logId
+      if (isLastLog) {
+        updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+          ...issue,
+          lastLogPreview: generateLogPreview(content),
+          updatedAt: new Date().toISOString(),
+        }))
+      }
+
       return { previousLogs }
     },
     onError: (err, _, context) => {
       if (context?.previousLogs) {
         queryClient.setQueryData(['logs', issueNumber], context.previousLogs)
       }
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
       toast.error(err instanceof Error ? err.message : 'Failed to update log')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['logs', issueNumber] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
     },
   })
 }
@@ -167,16 +210,32 @@ export function useDeleteLog(projectId: string, issueNumber: number) {
         old?.filter((log) => log.id !== logId),
       )
 
+      const remainingLogs = (previousLogs ?? []).filter(
+        (log) => log.id !== logId,
+      )
+      const newLastLog =
+        remainingLogs.length > 0
+          ? remainingLogs[remainingLogs.length - 1]
+          : null
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        lastLogPreview:
+          newLastLog != null ? generateLogPreview(newLastLog.content) : null,
+        updatedAt: new Date().toISOString(),
+      }))
+
       return { previousLogs }
     },
     onError: (err, _, context) => {
       if (context?.previousLogs) {
         queryClient.setQueryData(['logs', issueNumber], context.previousLogs)
       }
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
       toast.error(err instanceof Error ? err.message : 'Failed to delete log')
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['logs', issueNumber] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
     },
   })
 }

@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
+import { generateLogPreview } from '@/lib/issue-utils'
 
 export type Log = {
   id: string
@@ -75,7 +76,7 @@ export async function createLog(data: {
     })
 
   // Update issue's updatedAt timestamp and lastLogPreview
-  const preview = data.content.trim().slice(0, 100)
+  const preview = generateLogPreview(data.content)
   await db
     .update(issues)
     .set({
@@ -139,7 +140,7 @@ export async function updateLog(data: {
 
   // Only update preview if this is the most recent log
   if (lastLog && lastLog.id === data.logId) {
-    const preview = data.content.trim().slice(0, 100)
+    const preview = generateLogPreview(data.content)
     newValues.lastLogPreview = preview || null
   }
 
@@ -183,7 +184,7 @@ export async function deleteLog(data: {
 
   // Update preview with the new most recent log, or null if no logs left
   if (lastLog) {
-    const preview = lastLog.content.trim().slice(0, 100)
+    const preview = generateLogPreview(lastLog.content)
     newValues.lastLogPreview = preview || null
   } else {
     newValues.lastLogPreview = null
