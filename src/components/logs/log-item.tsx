@@ -17,11 +17,11 @@ import { cn } from '@/lib/utils'
 type LogItemProps = {
   log: Log
   projectId: string
-  issueId: string
+  issueNumber: number
   isOwn: boolean
 }
 
-export function LogItem({ log, projectId, issueId, isOwn }: LogItemProps) {
+export function LogItem({ log, projectId, issueNumber, isOwn }: LogItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(log.content)
   const skipBlurSave = useRef(false)
@@ -29,11 +29,11 @@ export function LogItem({ log, projectId, issueId, isOwn }: LogItemProps) {
 
   const { mutateAsync: updateLog, isPending: updateLoading } = useUpdateLog(
     projectId,
-    issueId,
+    issueNumber,
   )
   const { mutateAsync: deleteLog, isPending: deleteLoading } = useDeleteLog(
     projectId,
-    issueId,
+    issueNumber,
   )
 
   const isCreating = log.id.startsWith('temp-')

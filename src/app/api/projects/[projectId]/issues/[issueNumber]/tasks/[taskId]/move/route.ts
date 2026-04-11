@@ -6,7 +6,7 @@ import { moveTask } from '@/server/services/task'
 type RouteContext = {
   params: Promise<{
     projectId: string
-    issueId: string
+    issueNumber: string
     taskId: string
   }>
 }
@@ -17,22 +17,22 @@ const moveTaskSchema = z.object({
 })
 
 /**
- * POST /api/projects/[projectId]/issues/[issueId]/tasks/[taskId]/move
+ * POST /api/projects/[projectId]/issues/[issueNumber]/tasks/[taskId]/move
  * Move a task to a new parent and/or position
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId, taskId } = await context.params
-    const { projectWorker } = await requireIssueTaskAccess(
+    const { projectId, issueNumber, taskId } = await context.params
+    const { projectWorker, issue } = await requireIssueTaskAccess(
       projectId,
-      issueId,
+      issueNumber,
       taskId,
     )
 
     let body
     try {
       body = await request.json()
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await moveTask({
       projectWorkerId: projectWorker.id,
-      issueId,
+      issueId: issue.id,
       taskId,
       newParentTaskId,
       newPosition,

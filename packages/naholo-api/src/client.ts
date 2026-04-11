@@ -71,8 +71,12 @@ export class NaholoClient {
     return `/api/projects/${projectId}${suffix}`
   }
 
-  private issuePath(projectId: string, issueId: string, suffix = '') {
-    return this.projectPath(projectId, `/issues/${issueId}${suffix}`)
+  private issuePath(
+    projectId: string,
+    issueNumber: number | string,
+    suffix = '',
+  ) {
+    return this.projectPath(projectId, `/issues/${issueNumber}${suffix}`)
   }
 
   private skillSetPath(projectId: string, slug: string, suffix = '') {
@@ -122,8 +126,11 @@ export class NaholoClient {
     return this.request('GET', this.projectPath(projectId, `/issues${qs}`))
   }
 
-  getIssue(projectId: string, issueId: string): Promise<IssueDetail> {
-    return this.request('GET', this.issuePath(projectId, issueId))
+  getIssue(
+    projectId: string,
+    issueNumber: number | string,
+  ): Promise<IssueDetail> {
+    return this.request('GET', this.issuePath(projectId, issueNumber))
   }
 
   createIssue(projectId: string, input: { title: string }): Promise<Issue> {
@@ -132,143 +139,153 @@ export class NaholoClient {
 
   updateIssue(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     input: { title: string },
   ): Promise<Issue> {
-    return this.request('PATCH', this.issuePath(projectId, issueId), input)
+    return this.request('PATCH', this.issuePath(projectId, issueNumber), input)
   }
 
-  deleteIssue(projectId: string, issueId: string): Promise<void> {
-    return this.request('DELETE', this.issuePath(projectId, issueId))
+  deleteIssue(projectId: string, issueNumber: number | string): Promise<void> {
+    return this.request('DELETE', this.issuePath(projectId, issueNumber))
   }
 
-  closeIssue(projectId: string, issueId: string): Promise<void> {
-    return this.request('POST', this.issuePath(projectId, issueId, '/close'))
+  closeIssue(projectId: string, issueNumber: number | string): Promise<void> {
+    return this.request(
+      'POST',
+      this.issuePath(projectId, issueNumber, '/close'),
+    )
   }
 
-  reopenIssue(projectId: string, issueId: string): Promise<void> {
-    return this.request('DELETE', this.issuePath(projectId, issueId, '/close'))
+  reopenIssue(projectId: string, issueNumber: number | string): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.issuePath(projectId, issueNumber, '/close'),
+    )
   }
 
   // ---- Tasks ----
 
-  listTasks(projectId: string, issueId: string): Promise<Task[]> {
-    return this.request('GET', this.issuePath(projectId, issueId, '/tasks'))
+  listTasks(projectId: string, issueNumber: number | string): Promise<Task[]> {
+    return this.request('GET', this.issuePath(projectId, issueNumber, '/tasks'))
   }
 
   createTask(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     input: CreateTaskInput,
   ): Promise<Task> {
     return this.request(
       'POST',
-      this.issuePath(projectId, issueId, '/tasks'),
+      this.issuePath(projectId, issueNumber, '/tasks'),
       input,
     )
   }
 
   updateTask(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     taskId: string,
     input: UpdateTaskInput,
   ): Promise<Task> {
     return this.request(
       'PATCH',
-      this.issuePath(projectId, issueId, `/tasks/${taskId}`),
+      this.issuePath(projectId, issueNumber, `/tasks/${taskId}`),
       input,
     )
   }
 
   deleteTask(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     taskId: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(projectId, issueId, `/tasks/${taskId}`),
+      this.issuePath(projectId, issueNumber, `/tasks/${taskId}`),
     )
   }
 
   moveTask(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     taskId: string,
     input: MoveTaskInput,
   ): Promise<Task> {
     return this.request(
       'POST',
-      this.issuePath(projectId, issueId, `/tasks/${taskId}/move`),
+      this.issuePath(projectId, issueNumber, `/tasks/${taskId}/move`),
       input,
     )
   }
 
   // ---- Notes ----
 
-  listNotes(projectId: string, issueId: string): Promise<Note[]> {
-    return this.request('GET', this.issuePath(projectId, issueId, '/notes'))
+  listNotes(projectId: string, issueNumber: number | string): Promise<Note[]> {
+    return this.request('GET', this.issuePath(projectId, issueNumber, '/notes'))
   }
 
   createNote(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     input: { title: string; content: string },
   ): Promise<Note> {
     return this.request(
       'POST',
-      this.issuePath(projectId, issueId, '/notes'),
+      this.issuePath(projectId, issueNumber, '/notes'),
       input,
     )
   }
 
   updateNote(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     noteId: string,
     input: { title?: string; content?: string },
   ): Promise<Note> {
     return this.request(
       'PATCH',
-      this.issuePath(projectId, issueId, `/notes/${noteId}`),
+      this.issuePath(projectId, issueNumber, `/notes/${noteId}`),
       input,
     )
   }
 
   deleteNote(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     noteId: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(projectId, issueId, `/notes/${noteId}`),
+      this.issuePath(projectId, issueNumber, `/notes/${noteId}`),
     )
   }
 
   // ---- Logs ----
 
-  listLogs(projectId: string, issueId: string): Promise<Log[]> {
-    return this.request('GET', this.issuePath(projectId, issueId, '/logs'))
+  listLogs(projectId: string, issueNumber: number | string): Promise<Log[]> {
+    return this.request('GET', this.issuePath(projectId, issueNumber, '/logs'))
   }
 
   createLog(
     projectId: string,
-    issueId: string,
+    issueNumber: number | string,
     input: { content: string },
   ): Promise<Log> {
     return this.request(
       'POST',
-      this.issuePath(projectId, issueId, '/logs'),
+      this.issuePath(projectId, issueNumber, '/logs'),
       input,
     )
   }
 
-  deleteLog(projectId: string, issueId: string, logId: string): Promise<void> {
+  deleteLog(
+    projectId: string,
+    issueNumber: number | string,
+    logId: string,
+  ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(projectId, issueId, `/logs/${logId}`),
+      this.issuePath(projectId, issueNumber, `/logs/${logId}`),
     )
   }
 

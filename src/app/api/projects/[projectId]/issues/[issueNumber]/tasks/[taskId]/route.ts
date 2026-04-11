@@ -11,7 +11,7 @@ import {
 type RouteContext = {
   params: Promise<{
     projectId: string
-    issueId: string
+    issueNumber: string
     taskId: string
   }>
 }
@@ -23,22 +23,22 @@ const updateTaskSchema = z.object({
 })
 
 /**
- * PATCH /api/projects/[projectId]/issues/[issueId]/tasks/[taskId]
+ * PATCH /api/projects/[projectId]/issues/[issueNumber]/tasks/[taskId]
  * Update a task
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId, taskId } = await context.params
-    const { projectWorker } = await requireIssueTaskAccess(
+    const { projectId, issueNumber, taskId } = await context.params
+    const { projectWorker, issue } = await requireIssueTaskAccess(
       projectId,
-      issueId,
+      issueNumber,
       taskId,
     )
 
     let body
     try {
       body = await request.json()
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
@@ -56,7 +56,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (name !== undefined) {
       const result = await updateTask({
         projectWorkerId: projectWorker.id,
-        issueId,
+        issueId: issue.id,
         taskId,
         name,
       })
@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (note !== undefined) {
       const result = await updateTaskNote({
         projectWorkerId: projectWorker.id,
-        issueId,
+        issueId: issue.id,
         taskId,
         note,
       })
@@ -88,7 +88,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (done !== undefined) {
       const result = await setTaskDone({
         projectWorkerId: projectWorker.id,
-        issueId,
+        issueId: issue.id,
         taskId,
         done,
       })
@@ -111,21 +111,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectId]/issues/[issueId]/tasks/[taskId]
+ * DELETE /api/projects/[projectId]/issues/[issueNumber]/tasks/[taskId]
  * Delete a task
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId, taskId } = await context.params
-    const { projectWorker } = await requireIssueTaskAccess(
+    const { projectId, issueNumber, taskId } = await context.params
+    const { projectWorker, issue } = await requireIssueTaskAccess(
       projectId,
-      issueId,
+      issueNumber,
       taskId,
     )
 
     const result = await deleteTask({
       projectWorkerId: projectWorker.id,
-      issueId,
+      issueId: issue.id,
       taskId,
     })
 

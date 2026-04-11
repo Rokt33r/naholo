@@ -47,7 +47,7 @@ export function CreateIssueDialog({
       setOpen(false)
       setTitle('')
       onIssueCreated?.()
-      router.push(`/app/projects/${projectId}/issues/${result.data.id}`)
+      router.push(`/app/projects/${projectId}/issues/${result.data.number}`)
     } else {
       alert('Failed to create issue: ' + result.error.message)
     }

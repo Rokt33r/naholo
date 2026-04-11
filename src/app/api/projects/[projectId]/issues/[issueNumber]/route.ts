@@ -6,26 +6,26 @@ import { getIssue, updateIssue, deleteIssue } from '@/server/services/issue'
 type RouteContext = {
   params: Promise<{
     projectId: string
-    issueId: string
+    issueNumber: string
   }>
 }
 
 /**
- * GET /api/projects/[projectId]/issues/[issueId]
+ * GET /api/projects/[projectId]/issues/[issueNumber]
  * Get a single issue
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
-    await requireIssueAccess(projectId, issueId)
+    const { projectId, issueNumber } = await context.params
+    const { issue } = await requireIssueAccess(projectId, issueNumber)
 
-    const issue = await getIssue({ projectId, issueId })
+    const result = await getIssue({ projectId, issueNumber: issue.number })
 
-    if (!issue) {
+    if (result == null) {
       return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
     }
 
-    return NextResponse.json(issue)
+    return NextResponse.json(result)
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -40,18 +40,18 @@ const updateIssueSchema = z.object({
 })
 
 /**
- * PATCH /api/projects/[projectId]/issues/[issueId]
+ * PATCH /api/projects/[projectId]/issues/[issueNumber]
  * Update issue title
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
-    await requireIssueAccess(projectId, issueId)
+    const { projectId, issueNumber } = await context.params
+    const { issue } = await requireIssueAccess(projectId, issueNumber)
 
     let body
     try {
       body = await request.json()
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
@@ -65,7 +65,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { title } = validation.data
 
-    const result = await updateIssue({ projectId, issueId, title })
+    const result = await updateIssue({
+      projectId,
+      issueNumber: issue.number,
+      title,
+    })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -82,15 +86,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectId]/issues/[issueId]
+ * DELETE /api/projects/[projectId]/issues/[issueNumber]
  * Delete an issue
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
-    await requireIssueAccess(projectId, issueId)
+    const { projectId, issueNumber } = await context.params
+    const { issue } = await requireIssueAccess(projectId, issueNumber)
 
-    const result = await deleteIssue({ projectId, issueId })
+    const result = await deleteIssue({ projectId, issueNumber: issue.number })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

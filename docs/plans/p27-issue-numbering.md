@@ -77,7 +77,7 @@ Since existing issues don't have a `number` value, the `NOT NULL` constraint and
   ]
   ```
 
-- [ ] Let the user run `npm run db:migrate` to apply.
+- [x] Let the user run `npm run db:migrate` to apply.
 
 ### Task 3: Update `isUUID` utility
 
@@ -87,43 +87,43 @@ Since existing issues don't have a `number` value, the `NOT NULL` constraint and
 
 All service functions switch from `issueId` (UUID) to `issueNumber` (number). The `issueWhere` helper and UUID branching are removed — services query directly by `(projectId, number)`.
 
-- [ ] `src/server/services/issue.ts` — Remove the `issueWhere` helper function and the `isUUID` import (no longer needed).
+- [x] `src/server/services/issue.ts` — Remove the `issueWhere` helper function and the `isUUID` import (no longer needed).
 
-- [ ] `src/server/services/issue.ts` — Update `getIssue`:
+- [x] `src/server/services/issue.ts` — Update `getIssue`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Replace `.where(...)` with `.where(and(eq(issues.number, data.issueNumber), eq(issues.projectId, data.projectId)))`
 
-- [ ] `src/server/services/issue.ts` — `listIssues` — already updated with `number` in select fields. No further changes.
+- [x] `src/server/services/issue.ts` — `listIssues` — already updated with `number` in select fields. No further changes.
 
-- [ ] `src/server/services/issue.ts` — `createIssue` — already updated with transaction. No further changes.
+- [x] `src/server/services/issue.ts` — `createIssue` — already updated with transaction. No further changes.
 
-- [ ] `src/server/services/issue.ts` — Update `updateIssue`:
+- [x] `src/server/services/issue.ts` — Update `updateIssue`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Replace `.where(...)` with `.where(and(eq(issues.number, data.issueNumber), eq(issues.projectId, data.projectId)))`
   - Remove the `issueWhere == null` guard
 
-- [ ] `src/server/services/issue.ts` — Update `closeIssue`:
+- [x] `src/server/services/issue.ts` — Update `closeIssue`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Same where clause pattern
 
-- [ ] `src/server/services/issue.ts` — Update `reopenIssue`:
+- [x] `src/server/services/issue.ts` — Update `reopenIssue`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Same where clause pattern
 
-- [ ] `src/server/services/issue.ts` — Update `deleteIssue`:
+- [x] `src/server/services/issue.ts` — Update `deleteIssue`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Same where clause pattern
 
-- [ ] Keep `touchIssue(issueId)` and `updateIssueLastLogPreview(issueId, ...)` as UUID-only — they are internal helpers called with known UUIDs from other services.
+- [x] Keep `touchIssue(issueId)` and `updateIssueLastLogPreview(issueId, ...)` as UUID-only — they are internal helpers called with known UUIDs from other services.
 
 ### Task 5: Update `requireIssueAccess` to use number
 
-- [ ] `src/server/auth/permissions.ts` — Update `requireIssueAccess`:
+- [x] `src/server/auth/permissions.ts` — Update `requireIssueAccess`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Remove `isUUID` import and `sql` import (no longer needed for this)
   - Replace the `findFirst` where clause: `and(eq(t.number, issueNumber), eq(t.projectId, projectId))`
 
-- [ ] `src/server/auth/permissions.ts` — Update `requireIssueLogAccess`, `requireIssueNoteAccess`, `requireIssueTaskAccess`:
+- [x] `src/server/auth/permissions.ts` — Update `requireIssueLogAccess`, `requireIssueNoteAccess`, `requireIssueTaskAccess`:
   - Change param from `issueIdOrNumber: string` to `issueNumber: number`
   - Pass through to `requireIssueAccess`
   - Child lookups already use `issue.id` (resolved UUID) — no change needed there
@@ -147,15 +147,15 @@ This affects 9 route files. In each file:
 
 Files to update:
 
-- [ ] `.../issues/[issueNumber]/route.ts` — GET, PATCH, DELETE handlers
-- [ ] `.../issues/[issueNumber]/close/route.ts` — POST, DELETE handlers
-- [ ] `.../issues/[issueNumber]/tasks/route.ts` — GET, POST handlers
-- [ ] `.../issues/[issueNumber]/tasks/[taskId]/route.ts` — PATCH, DELETE handlers
-- [ ] `.../issues/[issueNumber]/tasks/[taskId]/move/route.ts` — POST handler
-- [ ] `.../issues/[issueNumber]/logs/route.ts` — GET, POST handlers
-- [ ] `.../issues/[issueNumber]/logs/[logId]/route.ts` — PATCH, DELETE handlers
-- [ ] `.../issues/[issueNumber]/notes/route.ts` — GET, POST handlers
-- [ ] `.../issues/[issueNumber]/notes/[noteId]/route.ts` — PATCH, DELETE handlers
+- [x] `.../issues/[issueNumber]/route.ts` — GET, PATCH, DELETE handlers
+- [x] `.../issues/[issueNumber]/close/route.ts` — POST, DELETE handlers
+- [x] `.../issues/[issueNumber]/tasks/route.ts` — GET, POST handlers
+- [x] `.../issues/[issueNumber]/tasks/[taskId]/route.ts` — PATCH, DELETE handlers
+- [x] `.../issues/[issueNumber]/tasks/[taskId]/move/route.ts` — POST handler
+- [x] `.../issues/[issueNumber]/logs/route.ts` — GET, POST handlers
+- [x] `.../issues/[issueNumber]/logs/[logId]/route.ts` — PATCH, DELETE handlers
+- [x] `.../issues/[issueNumber]/notes/route.ts` — GET, POST handlers
+- [x] `.../issues/[issueNumber]/notes/[noteId]/route.ts` — PATCH, DELETE handlers
 
 **Pattern for each handler** (example from close/route.ts):
 
@@ -177,35 +177,35 @@ const result = await closeIssue({ projectId, issueNumber })
 
 ### Task 7: Update `naholo-api` package types
 
-- [ ] `packages/naholo-api/src/types.ts` — Add `number: number` to all issue types:
+- [x] `packages/naholo-api/src/types.ts` — Add `number: number` to all issue types:
   - `Issue` type (line ~23): add `number: number` field
   - `IssueListItem` type (line ~33): add `number: number` field
   - `IssueDetail` type (line ~44): add `'number'` to the `Pick` union
 
 ### Task 8: Update `naholo-api` client to use number
 
-- [ ] `packages/naholo-api/src/client.ts` — Update the `issuePath` helper (line ~74):
+- [x] `packages/naholo-api/src/client.ts` — Update the `issuePath` helper (line ~74):
   - Rename param from `issueId: string` to `issueNumber: number`
   - Path becomes `/issues/${issueNumber}`
 
-- [ ] Update all issue methods to take `issueNumber: number` instead of `issueId: string`:
+- [x] Update all issue methods to take `issueNumber: number` instead of `issueId: string`:
   - `getIssue(projectId, issueNumber)`
   - `updateIssue(projectId, issueNumber, input)`
   - `deleteIssue(projectId, issueNumber)`
   - `closeIssue(projectId, issueNumber)`
   - `reopenIssue(projectId, issueNumber)`
 
-- [ ] Update task/note/log methods to take `issueNumber: number`:
+- [x] Update task/note/log methods to take `issueNumber: number`:
   - `listTasks(projectId, issueNumber)`, `createTask(...)`, `updateTask(...)`, `deleteTask(...)`, `moveTask(...)`
   - `listNotes(projectId, issueNumber)`, `createNote(...)`, `updateNote(...)`, `deleteNote(...)`
   - `listLogs(projectId, issueNumber)`, `createLog(...)`, `deleteLog(...)`
 
 ### Task 9: Update `createIssueAction` and other server actions
 
-- [ ] `src/app/app/actions.ts` — Update `createIssueAction` (line ~96):
+- [x] `src/app/app/actions.ts` — Update `createIssueAction` (line ~96):
   - Change return type from `ReturnResult<{ id: string }>` to `ReturnResult<{ id: string; number: number }>`
 
-- [ ] `src/app/app/actions.ts` — Update all other actions that take `issueId`:
+- [x] `src/app/app/actions.ts` — Update all other actions that take `issueId`:
   - `createLogAction(projectId, issueId, ...)` → `createLogAction(projectId, issueNumber: number, ...)`
   - `createTaskAction(projectId, issueId, ...)` → `createTaskAction(projectId, issueNumber: number, ...)`
   - `updateTaskAction(projectId, issueId, ...)` → `updateTaskAction(projectId, issueNumber: number, ...)`
@@ -215,21 +215,21 @@ const result = await closeIssue({ projectId, issueNumber })
 
 ### Task 10: Update frontend routing
 
-- [ ] Rename directory:
+- [x] Rename directory:
 
   ```
   src/app/app/projects/[projectId]/issues/[issueId]/
   → src/app/app/projects/[projectId]/issues/[issueNumber]/
   ```
 
-- [ ] `src/app/app/projects/[projectId]/issues/[issueNumber]/page.tsx`:
+- [x] `src/app/app/projects/[projectId]/issues/[issueNumber]/page.tsx`:
   - Change `useParams` to extract `issueNumber` (string from URL)
   - Parse to number: `const issueNumber = Number(params.issueNumber)`
   - Pass `issueNumber` to `useIssue`, `useLogs`, `useNotes` hooks
 
 ### Task 11: Update frontend hooks to use number
 
-- [ ] `src/hooks/use-issues.ts` — Update hooks:
+- [x] `src/hooks/use-issues.ts` — Update hooks:
   - `useIssue(projectId, issueNumber: number)` — change API path to use `issueNumber`
   - `useUpdateIssueTitle(projectId, issueNumber: number)` — change API path
   - `useCloseIssue(projectId, issueNumber: number)` — change API path
@@ -237,18 +237,18 @@ const result = await closeIssue({ projectId, issueNumber })
   - `useDeleteIssue(projectId, issueNumber: number)` — change API path
   - Update query keys from `['issue', projectId, issueId]` to `['issue', projectId, issueNumber]`
 
-- [ ] `src/hooks/use-tasks.ts` — Update all hooks to take `issueNumber: number`:
+- [x] `src/hooks/use-tasks.ts` — Update all hooks to take `issueNumber: number`:
   - Change API paths from `/issues/${issueId}/tasks` to `/issues/${issueNumber}/tasks`
 
-- [ ] `src/hooks/use-logs.ts` — Update all hooks to take `issueNumber: number`:
+- [x] `src/hooks/use-logs.ts` — Update all hooks to take `issueNumber: number`:
   - Change API paths from `/issues/${issueId}/logs` to `/issues/${issueNumber}/logs`
 
-- [ ] `src/hooks/use-notes.ts` — Update all hooks to take `issueNumber: number`:
+- [x] `src/hooks/use-notes.ts` — Update all hooks to take `issueNumber: number`:
   - Change API paths from `/issues/${issueId}/notes` to `/issues/${issueNumber}/notes`
 
 ### Task 12: Update frontend components
 
-- [ ] `src/components/issues/issue-item.tsx` — Display `#N` before the title:
+- [x] `src/components/issues/issue-item.tsx` — Display `#N` before the title:
   - In the title row, add before the title div:
     ```tsx
     <span className='text-muted-foreground font-normal shrink-0'>
@@ -257,7 +257,7 @@ const result = await closeIssue({ projectId, issueNumber })
     ```
   - Update `handleClick` to navigate to `/app/projects/${projectId}/issues/${issue.number}` instead of `${issue.id}`
 
-- [ ] `src/components/issues/issues-list.tsx` — Update search filter to also match by number:
+- [x] `src/components/issues/issues-list.tsx` — Update search filter to also match by number:
 
   ```ts
   const query = searchQuery.toLowerCase()
@@ -268,10 +268,10 @@ const result = await closeIssue({ projectId, issueNumber })
   return matchesTitle || matchesNumber
   ```
 
-- [ ] `src/components/issues/create-issue-dialog.tsx` — Update navigation after creation:
+- [x] `src/components/issues/create-issue-dialog.tsx` — Update navigation after creation:
   - Change `router.push(\`/app/projects/${projectId}/issues/${result.data.id}\`)`to`router.push(\`/app/projects/${projectId}/issues/${result.data.number}\`)`
 
-- [ ] `src/components/issues/issue-detail.tsx` — Display `#N` in the header:
+- [x] `src/components/issues/issue-detail.tsx` — Display `#N` in the header:
   - In the non-editing title display, add number before the title:
     ```tsx
     <h1
@@ -289,18 +289,26 @@ const result = await closeIssue({ projectId, issueNumber })
 
 ### Task 13: Update MCP tools in CLI package
 
-- [ ] `packages/naholo-cli/src/mcp/tools.ts` — Update MCP tools that take `issueId`:
+- [x] `packages/naholo-cli/src/mcp/tools.ts` — Update MCP tools that take `issueId`:
   - Rename `issueId` to `issueNumber` with type `z.number()` (instead of `z.string()`)
   - Update descriptions to `'Issue number (e.g. 3)'`
   - Affects: `close_issue`, `create_task`, `update_task`, `create_log`
 
-- [ ] `packages/naholo-cli/src/mcp/resources.ts` — Update the `issue` resource template:
+- [x] `packages/naholo-cli/src/mcp/resources.ts` — Update the `issue` resource template:
   - Change URI template from `naholo://issues/{issueId}` to `naholo://issues/{issueNumber}`
   - Parse `issueNumber` as number from URI variables
 
 ### Task 14: Verify
 
-- [ ] Run `npx tsc` from the repo root to confirm everything compiles without type errors across the main app, `naholo-api`, and `naholo-cli` packages.
+- [x] Run `npx tsc` from the repo root to confirm everything compiles without type errors across the main app, `naholo-api`, and `naholo-cli` packages.
+
+## Post-plan changes
+
+- **`requireIssueAccess` accepts `number | string`**: Changed `issueNumber` param from `number` to `number | string` in `requireIssueAccess` and its child functions (`requireIssueLogAccess`, `requireIssueNoteAccess`, `requireIssueTaskAccess`). The function parses and validates internally, throwing `NotFoundError('Issue')` for invalid values. This eliminated all manual `Number()` parsing and validation boilerplate from the 9 API route files.
+- **`requireIssueAccess` returns `issue.number`**: Return type changed from `{ id: string }` to `{ id: string; number: number }` so routes can use the parsed number for service calls.
+- **`naholo-api` client accepts `number | string`**: All `issueNumber` params in `client.ts` changed to `number | string`, removing the need for callers to convert.
+- **MCP tool schemas**: `issueNumber` in MCP tools uses `z.number().int().positive()` for stricter validation.
+- **MCP resources**: Removed `Number()` casts in `resources.ts` — URI template variables are passed as strings directly to client methods.
 
 ## Notes
 

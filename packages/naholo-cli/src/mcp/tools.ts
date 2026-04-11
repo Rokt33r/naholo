@@ -25,10 +25,16 @@ export function registerTools(
     'close_issue',
     {
       description: 'Close an issue',
-      inputSchema: { issueId: z.string().describe('Issue ID') },
+      inputSchema: {
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
+      },
     },
-    async ({ issueId }) => {
-      await client.closeIssue(projectId, issueId)
+    async ({ issueNumber }) => {
+      await client.closeIssue(projectId, issueNumber)
       return { content: [{ type: 'text', text: 'Issue closed.' }] }
     },
   )
@@ -38,7 +44,11 @@ export function registerTools(
     {
       description: 'Create a new task in an issue',
       inputSchema: {
-        issueId: z.string().describe('Issue ID'),
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
         name: z.string().describe('Task name'),
         note: z.string().optional().describe('Task note (markdown)'),
         parentTaskId: z
@@ -48,8 +58,8 @@ export function registerTools(
         position: z.number().optional().describe('Position index'),
       },
     },
-    async ({ issueId, name, note, parentTaskId, position }) => {
-      const task = await client.createTask(projectId, issueId, {
+    async ({ issueNumber, name, note, parentTaskId, position }) => {
+      const task = await client.createTask(projectId, issueNumber, {
         name,
         note,
         parentTaskId,
@@ -66,15 +76,19 @@ export function registerTools(
     {
       description: 'Update a task (name, note, or done status)',
       inputSchema: {
-        issueId: z.string().describe('Issue ID'),
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
         taskId: z.string().describe('Task ID'),
         name: z.string().optional().describe('New task name'),
         note: z.string().optional().describe('New task note'),
         done: z.boolean().optional().describe('Mark task done/undone'),
       },
     },
-    async ({ issueId, taskId, name, note, done }) => {
-      await client.updateTask(projectId, issueId, taskId, {
+    async ({ issueNumber, taskId, name, note, done }) => {
+      await client.updateTask(projectId, issueNumber, taskId, {
         name,
         note,
         done,
@@ -88,12 +102,16 @@ export function registerTools(
     {
       description: 'Create a log entry for an issue',
       inputSchema: {
-        issueId: z.string().describe('Issue ID'),
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
         content: z.string().describe('Log content'),
       },
     },
-    async ({ issueId, content }) => {
-      const log = await client.createLog(projectId, issueId, { content })
+    async ({ issueNumber, content }) => {
+      const log = await client.createLog(projectId, issueNumber, { content })
       return {
         content: [{ type: 'text', text: JSON.stringify(log, null, 2) }],
       }

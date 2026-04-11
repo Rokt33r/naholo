@@ -37,7 +37,7 @@ type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 type IssueDetailProps = {
   projectId: string
-  issueId: string
+  issueNumber: number
   logs: Log[]
   notes: Note[]
   activeTab: ActiveTab
@@ -50,7 +50,7 @@ type IssueDetailProps = {
 
 export function IssueDetail({
   projectId,
-  issueId,
+  issueNumber,
   logs,
   notes,
   activeTab,
@@ -68,10 +68,13 @@ export function IssueDetail({
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const { issue, isLoading } = useIssue(projectId, issueId)
-  const { mutateAsync: updateTitle } = useUpdateIssueTitle(projectId, issueId)
-  const { mutateAsync: deleteIssue } = useDeleteIssue(projectId, issueId)
-  const { mutateAsync: updateNote } = useUpdateNote(projectId, issueId)
+  const { issue, isLoading } = useIssue(projectId, issueNumber)
+  const { mutateAsync: updateTitle } = useUpdateIssueTitle(
+    projectId,
+    issueNumber,
+  )
+  const { mutateAsync: deleteIssue } = useDeleteIssue(projectId, issueNumber)
+  const { mutateAsync: updateNote } = useUpdateNote(projectId, issueNumber)
 
   const handleNoteSave = useCallback(
     async (noteId: string, content: string) => {
@@ -89,7 +92,7 @@ export function IssueDetail({
   )
 
   const store = useIssueNoteStore({
-    issueId,
+    issueId: issue?.id ?? '',
     onSave: handleNoteSave,
   })
 
@@ -207,6 +210,9 @@ export function IssueDetail({
                 className='cursor-text text-xl font-semibold'
                 onClick={() => setIsEditingTitle(true)}
               >
+                <span className='text-muted-foreground font-normal'>
+                  #{issue.number}{' '}
+                </span>
                 {issue.title}
               </h1>
               {isSaving && (
@@ -248,7 +254,7 @@ export function IssueDetail({
         <div className='flex-1 overflow-hidden'>
           <LogsList
             projectId={issue.projectId}
-            issueId={issue.id}
+            issueNumber={issue.number}
             logs={logs}
             isClosed={issue.closed}
           />
@@ -258,7 +264,7 @@ export function IssueDetail({
           {/* Tabs */}
           <IssueTabs
             projectId={issue.projectId}
-            issueId={issue.id}
+            issueNumber={issue.number}
             notes={notes}
             activeTab={activeTab}
             onTabChange={handleTabChange}
@@ -268,7 +274,10 @@ export function IssueDetail({
           {/* Content */}
           <div className='flex-1 overflow-hidden'>
             {activeTab.type === 'tasks' && (
-              <TasksList projectId={issue.projectId} issueId={issue.id} />
+              <TasksList
+                projectId={issue.projectId}
+                issueNumber={issue.number}
+              />
             )}
             {activeTab.type === 'note' &&
               (() => {
@@ -285,7 +294,7 @@ export function IssueDetail({
                     key={note.id}
                     note={note}
                     projectId={issue.projectId}
-                    issueId={issue.id}
+                    issueNumber={issue.number}
                     initialContent={store.getContent(note.id) ?? note.content}
                     saveState={store.saveStates[note.id] ?? 'idle'}
                     onContentChange={(value) =>

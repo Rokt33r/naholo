@@ -96,7 +96,7 @@ export async function deleteProjectAction(
 export async function createIssueAction(
   projectId: string,
   title: string,
-): Promise<ReturnResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string; number: number }>> {
   const { projectWorker } = await requireProjectWorker(projectId)
 
   const result = await createIssue({
@@ -117,19 +117,22 @@ export async function createIssueAction(
 
 export async function createLogAction(
   projectId: string,
-  issueId: string,
+  issueNumber: number,
   content: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueNumber,
+  )
 
   const result = await createLog({
     projectWorkerId: projectWorker.id,
     projectId,
-    issueId,
+    issueId: issue.id,
     content,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
     return ok({ id: result.data.id })
   }
 
@@ -142,21 +145,24 @@ export async function createLogAction(
 
 export async function createTaskAction(
   projectId: string,
-  issueId: string,
+  issueNumber: number,
   name: string,
   parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueNumber,
+  )
 
   const result = await createTask({
     projectWorkerId: projectWorker.id,
     projectId,
-    issueId,
+    issueId: issue.id,
     name,
     parentTaskId,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
   }
 
   return result
@@ -164,21 +170,24 @@ export async function createTaskAction(
 
 export async function updateTaskAction(
   projectId: string,
-  issueId: string,
+  issueNumber: number,
   id: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueNumber,
+  )
 
   const result = await updateTask({
     projectWorkerId: projectWorker.id,
-    issueId,
+    issueId: issue.id,
     taskId: id,
     name,
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
   }
 
   return result
@@ -186,21 +195,24 @@ export async function updateTaskAction(
 
 export async function setTaskDoneAction(
   projectId: string,
-  issueId: string,
+  issueNumber: number,
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueNumber,
+  )
 
   const result = await setTaskDone({
     projectWorkerId: projectWorker.id,
-    issueId,
+    issueId: issue.id,
     taskId: id,
     done,
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
   }
 
   return result
@@ -208,19 +220,22 @@ export async function setTaskDoneAction(
 
 export async function deleteTaskAction(
   projectId: string,
-  issueId: string,
+  issueNumber: number,
   id: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker } = await requireIssueAccess(projectId, issueId)
+  const { projectWorker, issue } = await requireIssueAccess(
+    projectId,
+    issueNumber,
+  )
 
   const result = await deleteTask({
     projectWorkerId: projectWorker.id,
-    issueId,
+    issueId: issue.id,
     taskId: id,
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueId}`)
+    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
   }
 
   return result

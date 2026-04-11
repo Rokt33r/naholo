@@ -1,41 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireIssueLogAccess } from '@/server/auth/permissions'
-import { updateLog, deleteLog } from '@/server/services/log'
+import { requireIssueNoteAccess } from '@/server/auth/permissions'
+import { updateNote, deleteNote } from '@/server/services/note'
 
 type RouteContext = {
   params: Promise<{
     projectId: string
-    issueId: string
-    logId: string
+    issueNumber: string
+    noteId: string
   }>
 }
 
-const updateLogSchema = z.object({
-  content: z.string().min(1, 'Content is required').trim(),
+const updateNoteSchema = z.object({
+  title: z.string().min(1, 'Title is required').trim(),
+  content: z.string().trim(),
 })
 
 /**
- * PATCH /api/projects/[projectId]/issues/[issueId]/logs/[logId]
- * Update a log
+ * PATCH /api/projects/[projectId]/issues/[issueNumber]/notes/[noteId]
+ * Update a note
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId, logId } = await context.params
-    const { projectWorker } = await requireIssueLogAccess(
+    const { projectId, issueNumber, noteId } = await context.params
+    const { projectWorker, issue } = await requireIssueNoteAccess(
       projectId,
-      issueId,
-      logId,
+      issueNumber,
+      noteId,
     )
 
     let body
     try {
       body = await request.json()
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = updateLogSchema.safeParse(body)
+    const validation = updateNoteSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -43,26 +44,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { content } = validation.data
+    const { title, content } = validation.data
 
-    const result = await updateLog({
+    const result = await updateNote({
       projectWorkerId: projectWorker.id,
-      issueId,
-      logId,
+      noteId,
+      issueId: issue.id,
+      title,
       content,
     })
-
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }
 
-    const log = result.data
-    return NextResponse.json({
-      id: log.id,
-      content: log.content,
-      createdAt: log.createdAt,
-      updatedAt: log.updatedAt,
-    })
+    return NextResponse.json(result.data)
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -73,24 +68,23 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectId]/issues/[issueId]/logs/[logId]
- * Delete a log
+ * DELETE /api/projects/[projectId]/issues/[issueNumber]/notes/[noteId]
+ * Delete a note
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId, logId } = await context.params
-    const { projectWorker } = await requireIssueLogAccess(
+    const { projectId, issueNumber, noteId } = await context.params
+    const { projectWorker, issue } = await requireIssueNoteAccess(
       projectId,
-      issueId,
-      logId,
+      issueNumber,
+      noteId,
     )
 
-    const result = await deleteLog({
+    const result = await deleteNote({
       projectWorkerId: projectWorker.id,
-      issueId,
-      logId,
+      noteId,
+      issueId: issue.id,
     })
-
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }

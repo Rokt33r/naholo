@@ -9,11 +9,11 @@ import type { Log } from 'naholo-api/types'
 /**
  * Hook to fetch logs for an issue
  */
-export function useLogs(projectId: string, issueId: string) {
+export function useLogs(projectId: string, issueNumber: number) {
   return useQuery({
-    queryKey: ['logs', issueId],
+    queryKey: ['logs', issueNumber],
     queryFn: () =>
-      fetcher<Log[]>(`/api/projects/${projectId}/issues/${issueId}/logs`),
+      fetcher<Log[]>(`/api/projects/${projectId}/issues/${issueNumber}/logs`),
     staleTime: 1000 * 60,
   })
 }
@@ -23,7 +23,7 @@ export function useLogs(projectId: string, issueId: string) {
  */
 export function useCreateLog(
   projectId: string,
-  issueId: string,
+  issueNumber: number,
   currentWorker: { id: string; name: string; type: string },
 ) {
   const queryClient = useQueryClient()
@@ -31,7 +31,7 @@ export function useCreateLog(
   return useMutation({
     mutationFn: async (content: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/logs`,
+        `/api/projects/${projectId}/issues/${issueNumber}/logs`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -44,9 +44,12 @@ export function useCreateLog(
       return response.json() as Promise<Log>
     },
     onMutate: async (content) => {
-      await queryClient.cancelQueries({ queryKey: ['logs', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['logs', issueNumber] })
 
-      const previousLogs = queryClient.getQueryData<Log[]>(['logs', issueId])
+      const previousLogs = queryClient.getQueryData<Log[]>([
+        'logs',
+        issueNumber,
+      ])
 
       const optimisticLog: Log = {
         id: `temp-${Date.now()}`,
@@ -60,7 +63,7 @@ export function useCreateLog(
         updatedAt: new Date().toISOString(),
       }
 
-      queryClient.setQueryData<Log[]>(['logs', issueId], (old) => [
+      queryClient.setQueryData<Log[]>(['logs', issueNumber], (old) => [
         ...(old ?? []),
         optimisticLog,
       ])
@@ -69,12 +72,12 @@ export function useCreateLog(
     },
     onError: (err, _, context) => {
       if (context?.previousLogs) {
-        queryClient.setQueryData(['logs', issueId], context.previousLogs)
+        queryClient.setQueryData(['logs', issueNumber], context.previousLogs)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to create log')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['logs', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['logs', issueNumber] })
     },
   })
 }
@@ -82,7 +85,7 @@ export function useCreateLog(
 /**
  * Hook to update a log with optimistic updates
  */
-export function useUpdateLog(projectId: string, issueId: string) {
+export function useUpdateLog(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -94,7 +97,7 @@ export function useUpdateLog(projectId: string, issueId: string) {
       content: string
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/logs/${logId}`,
+        `/api/projects/${projectId}/issues/${issueNumber}/logs/${logId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -107,11 +110,14 @@ export function useUpdateLog(projectId: string, issueId: string) {
       return response.json() as Promise<Log>
     },
     onMutate: async ({ logId, content }) => {
-      await queryClient.cancelQueries({ queryKey: ['logs', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['logs', issueNumber] })
 
-      const previousLogs = queryClient.getQueryData<Log[]>(['logs', issueId])
+      const previousLogs = queryClient.getQueryData<Log[]>([
+        'logs',
+        issueNumber,
+      ])
 
-      queryClient.setQueryData<Log[]>(['logs', issueId], (old) =>
+      queryClient.setQueryData<Log[]>(['logs', issueNumber], (old) =>
         old?.map((log) =>
           log.id === logId
             ? { ...log, content, updatedAt: new Date().toISOString() }
@@ -123,12 +129,12 @@ export function useUpdateLog(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousLogs) {
-        queryClient.setQueryData(['logs', issueId], context.previousLogs)
+        queryClient.setQueryData(['logs', issueNumber], context.previousLogs)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update log')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['logs', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['logs', issueNumber] })
     },
   })
 }
@@ -136,13 +142,13 @@ export function useUpdateLog(projectId: string, issueId: string) {
 /**
  * Hook to delete a log with optimistic updates
  */
-export function useDeleteLog(projectId: string, issueId: string) {
+export function useDeleteLog(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (logId: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/logs/${logId}`,
+        `/api/projects/${projectId}/issues/${issueNumber}/logs/${logId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -150,11 +156,14 @@ export function useDeleteLog(projectId: string, issueId: string) {
       }
     },
     onMutate: async (logId) => {
-      await queryClient.cancelQueries({ queryKey: ['logs', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['logs', issueNumber] })
 
-      const previousLogs = queryClient.getQueryData<Log[]>(['logs', issueId])
+      const previousLogs = queryClient.getQueryData<Log[]>([
+        'logs',
+        issueNumber,
+      ])
 
-      queryClient.setQueryData<Log[]>(['logs', issueId], (old) =>
+      queryClient.setQueryData<Log[]>(['logs', issueNumber], (old) =>
         old?.filter((log) => log.id !== logId),
       )
 
@@ -162,12 +171,12 @@ export function useDeleteLog(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousLogs) {
-        queryClient.setQueryData(['logs', issueId], context.previousLogs)
+        queryClient.setQueryData(['logs', issueNumber], context.previousLogs)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to delete log')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['logs', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['logs', issueNumber] })
     },
   })
 }

@@ -10,7 +10,7 @@ type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 type IssueTabsProps = {
   projectId: string
-  issueId: string
+  issueNumber: number
   notes: Note[]
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
@@ -19,7 +19,7 @@ type IssueTabsProps = {
 
 export function IssueTabs({
   projectId,
-  issueId,
+  issueNumber,
   notes,
   activeTab,
   onTabChange,
@@ -27,7 +27,7 @@ export function IssueTabs({
 }: IssueTabsProps) {
   const { mutateAsync: createNote, isPending: isCreating } = useCreateNote(
     projectId,
-    issueId,
+    issueNumber,
   )
 
   const handleAddNote = async () => {

@@ -9,11 +9,11 @@ import type { Task } from 'naholo-api/types'
 /**
  * Hook to fetch tasks for an issue
  */
-export function useTasks(projectId: string, issueId: string) {
+export function useTasks(projectId: string, issueNumber: number) {
   return useQuery({
-    queryKey: ['tasks', issueId],
+    queryKey: ['tasks', issueNumber],
     queryFn: () =>
-      fetcher<Task[]>(`/api/projects/${projectId}/issues/${issueId}/tasks`),
+      fetcher<Task[]>(`/api/projects/${projectId}/issues/${issueNumber}/tasks`),
     staleTime: 1000 * 60,
   })
 }
@@ -21,7 +21,7 @@ export function useTasks(projectId: string, issueId: string) {
 /**
  * Hook to create a task with optimistic updates
  */
-export function useCreateTask(projectId: string, issueId: string) {
+export function useCreateTask(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -37,7 +37,7 @@ export function useCreateTask(projectId: string, issueId: string) {
       position?: number
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/tasks`,
+        `/api/projects/${projectId}/issues/${issueNumber}/tasks`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -50,9 +50,12 @@ export function useCreateTask(projectId: string, issueId: string) {
       return response.json() as Promise<{ id: string }>
     },
     onMutate: async ({ name, note, parentTaskId, position }) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueNumber] })
 
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        issueNumber,
+      ])
 
       // Calculate position for optimistic update
       const siblings = (previousTasks ?? []).filter(
@@ -75,7 +78,7 @@ export function useCreateTask(projectId: string, issueId: string) {
         updatedAt: new Date().toISOString(),
       }
 
-      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) => {
+      queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) => {
         if (position !== undefined) {
           // Shift existing tasks at or after position
           const updated = (old ?? []).map((t) => {
@@ -96,12 +99,12 @@ export function useCreateTask(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+        queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to create task')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueNumber] })
     },
   })
 }
@@ -109,13 +112,13 @@ export function useCreateTask(projectId: string, issueId: string) {
 /**
  * Hook to update a task's content with optimistic updates
  */
-export function useUpdateTask(projectId: string, issueId: string) {
+export function useUpdateTask(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ taskId, name }: { taskId: string; name: string }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}`,
+        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -128,11 +131,14 @@ export function useUpdateTask(projectId: string, issueId: string) {
       return response.json()
     },
     onMutate: async ({ taskId, name }) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueNumber] })
 
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        issueNumber,
+      ])
 
-      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
+      queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) =>
         old?.map((task) =>
           task.id === taskId
             ? { ...task, name, updatedAt: new Date().toISOString() }
@@ -144,12 +150,12 @@ export function useUpdateTask(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+        queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update task')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueNumber] })
     },
   })
 }
@@ -157,13 +163,13 @@ export function useUpdateTask(projectId: string, issueId: string) {
 /**
  * Hook to set task done status with optimistic updates
  */
-export function useSetTaskDone(projectId: string, issueId: string) {
+export function useSetTaskDone(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ taskId, done }: { taskId: string; done: boolean }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}`,
+        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -176,11 +182,14 @@ export function useSetTaskDone(projectId: string, issueId: string) {
       return response.json()
     },
     onMutate: async ({ taskId, done }) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueNumber] })
 
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        issueNumber,
+      ])
 
-      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
+      queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) =>
         old?.map((task) =>
           task.id === taskId
             ? { ...task, done, updatedAt: new Date().toISOString() }
@@ -192,12 +201,12 @@ export function useSetTaskDone(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+        queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update task')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueNumber] })
     },
   })
 }
@@ -205,7 +214,7 @@ export function useSetTaskDone(projectId: string, issueId: string) {
 /**
  * Hook to update a task's note with optimistic updates
  */
-export function useUpdateTaskNote(projectId: string, issueId: string) {
+export function useUpdateTaskNote(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -217,7 +226,7 @@ export function useUpdateTaskNote(projectId: string, issueId: string) {
       note: string | null
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}`,
+        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -230,11 +239,14 @@ export function useUpdateTaskNote(projectId: string, issueId: string) {
       return response.json()
     },
     onMutate: async ({ taskId, note }) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueNumber] })
 
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        issueNumber,
+      ])
 
-      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
+      queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) =>
         old?.map((task) =>
           task.id === taskId
             ? { ...task, note, updatedAt: new Date().toISOString() }
@@ -246,14 +258,14 @@ export function useUpdateTaskNote(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+        queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
       toast.error(
         err instanceof Error ? err.message : 'Failed to update task note',
       )
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueNumber] })
     },
   })
 }
@@ -261,13 +273,13 @@ export function useUpdateTaskNote(projectId: string, issueId: string) {
 /**
  * Hook to delete a task with optimistic updates
  */
-export function useDeleteTask(projectId: string, issueId: string) {
+export function useDeleteTask(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (taskId: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}`,
+        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -275,9 +287,12 @@ export function useDeleteTask(projectId: string, issueId: string) {
       }
     },
     onMutate: async (taskId) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueNumber] })
 
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        issueNumber,
+      ])
 
       // Remove task and all its descendants
       const getDescendantIds = (id: string, tasks: Task[]): string[] => {
@@ -287,7 +302,7 @@ export function useDeleteTask(projectId: string, issueId: string) {
 
       const idsToRemove = getDescendantIds(taskId, previousTasks ?? [])
 
-      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) =>
+      queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) =>
         old?.filter((task) => !idsToRemove.includes(task.id)),
       )
 
@@ -295,12 +310,12 @@ export function useDeleteTask(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+        queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to delete task')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueNumber] })
     },
   })
 }
@@ -308,7 +323,7 @@ export function useDeleteTask(projectId: string, issueId: string) {
 /**
  * Hook to move a task with optimistic updates
  */
-export function useMoveTask(projectId: string, issueId: string) {
+export function useMoveTask(projectId: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -322,7 +337,7 @@ export function useMoveTask(projectId: string, issueId: string) {
       newPosition: number
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueId}/tasks/${taskId}/move`,
+        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}/move`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -335,11 +350,14 @@ export function useMoveTask(projectId: string, issueId: string) {
       return response.json()
     },
     onMutate: async ({ taskId, newParentTaskId, newPosition }) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', issueId] })
+      await queryClient.cancelQueries({ queryKey: ['tasks', issueNumber] })
 
-      const previousTasks = queryClient.getQueryData<Task[]>(['tasks', issueId])
+      const previousTasks = queryClient.getQueryData<Task[]>([
+        'tasks',
+        issueNumber,
+      ])
 
-      queryClient.setQueryData<Task[]>(['tasks', issueId], (old) => {
+      queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) => {
         if (!old) return old
 
         const task = old.find((t) => t.id === taskId)
@@ -404,12 +422,12 @@ export function useMoveTask(projectId: string, issueId: string) {
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks', issueId], context.previousTasks)
+        queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to move task')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', issueId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', issueNumber] })
     },
   })
 }

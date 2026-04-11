@@ -19,7 +19,7 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
   const handleClick = () => {
     const query = searchParams.toString()
     router.push(
-      `/app/projects/${projectId}/issues/${issue.id}${query ? `?${query}` : ''}`,
+      `/app/projects/${projectId}/issues/${issue.number}${query ? `?${query}` : ''}`,
     )
   }
 
@@ -42,6 +42,9 @@ export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
           ) : (
             <CircleDot className='h-4 w-4 shrink-0 text-green-600' />
           )}
+          <span className='text-muted-foreground font-normal shrink-0'>
+            #{issue.number}
+          </span>
           <div className='truncate font-bold'>{issue.title}</div>
         </div>
         {totalCount > 0 && (

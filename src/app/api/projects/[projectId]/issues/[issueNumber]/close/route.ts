@@ -5,20 +5,23 @@ import { closeIssue, reopenIssue } from '@/server/services/issue'
 type RouteContext = {
   params: Promise<{
     projectId: string
-    issueId: string
+    issueNumber: string
   }>
 }
 
 /**
- * POST /api/projects/[projectId]/issues/[issueId]/close
+ * POST /api/projects/[projectId]/issues/[issueNumber]/close
  * Close an issue
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
-    await requireIssueAccess(projectId, issueId)
+    const { projectId, issueNumber } = await context.params
+    const { issue } = await requireIssueAccess(projectId, issueNumber)
 
-    const result = await closeIssue({ projectId, issueId })
+    const result = await closeIssue({
+      projectId,
+      issueNumber: issue.number,
+    })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -35,15 +38,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectId]/issues/[issueId]/close
+ * DELETE /api/projects/[projectId]/issues/[issueNumber]/close
  * Reopen an issue
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
-    await requireIssueAccess(projectId, issueId)
+    const { projectId, issueNumber } = await context.params
+    const { issue } = await requireIssueAccess(projectId, issueNumber)
 
-    const result = await reopenIssue({ projectId, issueId })
+    const result = await reopenIssue({
+      projectId,
+      issueNumber: issue.number,
+    })
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

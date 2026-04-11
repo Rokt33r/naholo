@@ -23,6 +23,7 @@ export type ProjectWithWorker = Project & {
 export type Issue = {
   id: string
   projectId: string
+  number: number
   title: string
   closed: boolean
   closedAt: string | null
@@ -32,6 +33,7 @@ export type Issue = {
 
 export type IssueListItem = {
   id: string
+  number: number
   title: string
   closed: boolean
   closedAt: string | null
@@ -45,6 +47,7 @@ export type IssueDetail = Pick<
   Issue,
   | 'id'
   | 'projectId'
+  | 'number'
   | 'title'
   | 'closed'
   | 'closedAt'

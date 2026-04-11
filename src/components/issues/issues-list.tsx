@@ -35,7 +35,8 @@ export function IssuesList({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const params = useParams()
-  const currentIssueId = params.issueId as string | undefined
+  const currentIssueNumber =
+    params.issueNumber != null ? Number(params.issueNumber) : undefined
   const isMobile = useIsMobile()
   const { toggle } = useIssuesList()
   const [searchQuery, setSearchQuery] = useState('')
@@ -45,10 +46,12 @@ export function IssuesList({
   const { issues, isLoading, refetch } = useIssues(projectId, filter)
 
   const filteredIssues = issues.filter((issue) => {
-    const matchesSearch = issue.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-    return matchesSearch
+    const query = searchQuery.toLowerCase()
+    const matchesTitle = issue.title.toLowerCase().includes(query)
+    const matchesNumber = query.startsWith('#')
+      ? issue.number.toString().startsWith(query.slice(1))
+      : false
+    return matchesTitle || matchesNumber
   })
 
   const handleFilterChange = (newFilter: 'open' | 'closed') => {
@@ -128,7 +131,7 @@ export function IssuesList({
                 key={issue.id}
                 issue={issue}
                 projectId={projectId}
-                isActive={issue.id === currentIssueId}
+                isActive={issue.number === currentIssueNumber}
               />
             ))}
           </div>

@@ -95,22 +95,22 @@ export function useTaskContext() {
 
 type TaskProviderProps = {
   projectId: string
-  issueId: string
+  issueNumber: number
   children: ReactNode
 }
 
 export function TaskProvider({
   projectId,
-  issueId,
+  issueNumber,
   children,
 }: TaskProviderProps) {
-  const { data: tasks = [], isLoading } = useTasks(projectId, issueId)
-  const createTaskMutation = useCreateTask(projectId, issueId)
-  const updateTaskMutation = useUpdateTask(projectId, issueId)
-  const setTaskDoneMutation = useSetTaskDone(projectId, issueId)
-  const deleteTaskMutation = useDeleteTask(projectId, issueId)
-  const updateTaskNoteMutation = useUpdateTaskNote(projectId, issueId)
-  const moveTaskMutation = useMoveTask(projectId, issueId)
+  const { data: tasks = [], isLoading } = useTasks(projectId, issueNumber)
+  const createTaskMutation = useCreateTask(projectId, issueNumber)
+  const updateTaskMutation = useUpdateTask(projectId, issueNumber)
+  const setTaskDoneMutation = useSetTaskDone(projectId, issueNumber)
+  const deleteTaskMutation = useDeleteTask(projectId, issueNumber)
+  const updateTaskNoteMutation = useUpdateTaskNote(projectId, issueNumber)
+  const moveTaskMutation = useMoveTask(projectId, issueNumber)
 
   const [isListFocused, setIsListFocused] = useState(false)
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null)

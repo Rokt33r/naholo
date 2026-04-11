@@ -4,19 +4,7 @@ import { issues, tasks, projects } from '../db/schema'
 import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { isUUID } from '@/lib/utils'
 import { NotFoundError } from './errors'
-
-function issueWhere(projectId: string, issueIdOrNumber: string) {
-  if (isUUID(issueIdOrNumber)) {
-    return and(eq(issues.id, issueIdOrNumber), eq(issues.projectId, projectId))
-  }
-  const num = Number(issueIdOrNumber)
-  if (!Number.isInteger(num) || num <= 0) {
-    return undefined
-  }
-  return and(eq(issues.number, num), eq(issues.projectId, projectId))
-}
 
 export type Issue = {
   id: string
@@ -47,13 +35,8 @@ export type IssueWithStats = {
  */
 export async function getIssue(data: {
   projectId: string
-  issueIdOrNumber: string
+  issueNumber: number
 }): Promise<Issue | null> {
-  const where = issueWhere(data.projectId, data.issueIdOrNumber)
-  if (where == null) {
-    return null
-  }
-
   const [issue] = await db
     .select({
       id: issues.id,
@@ -66,7 +49,12 @@ export async function getIssue(data: {
       updatedAt: issues.updatedAt,
     })
     .from(issues)
-    .where(where)
+    .where(
+      and(
+        eq(issues.number, data.issueNumber),
+        eq(issues.projectId, data.projectId),
+      ),
+    )
     .limit(1)
 
   return issue || null
@@ -143,21 +131,21 @@ export async function createIssue(data: {
  */
 export async function updateIssue(data: {
   projectId: string
-  issueIdOrNumber: string
+  issueNumber: number
   title: string
 }): Promise<ReturnResult<undefined>> {
-  const where = issueWhere(data.projectId, data.issueIdOrNumber)
-  if (where == null) {
-    return err(new NotFoundError('Issue'))
-  }
-
   const [issue] = await db
     .update(issues)
     .set({
       title: data.title,
       updatedAt: new Date(),
     })
-    .where(where)
+    .where(
+      and(
+        eq(issues.number, data.issueNumber),
+        eq(issues.projectId, data.projectId),
+      ),
+    )
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -172,13 +160,8 @@ export async function updateIssue(data: {
  */
 export async function closeIssue(data: {
   projectId: string
-  issueIdOrNumber: string
+  issueNumber: number
 }): Promise<ReturnResult<undefined>> {
-  const where = issueWhere(data.projectId, data.issueIdOrNumber)
-  if (where == null) {
-    return err(new NotFoundError('Issue'))
-  }
-
   const [issue] = await db
     .update(issues)
     .set({
@@ -186,7 +169,12 @@ export async function closeIssue(data: {
       closedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(where)
+    .where(
+      and(
+        eq(issues.number, data.issueNumber),
+        eq(issues.projectId, data.projectId),
+      ),
+    )
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -201,13 +189,8 @@ export async function closeIssue(data: {
  */
 export async function reopenIssue(data: {
   projectId: string
-  issueIdOrNumber: string
+  issueNumber: number
 }): Promise<ReturnResult<undefined>> {
-  const where = issueWhere(data.projectId, data.issueIdOrNumber)
-  if (where == null) {
-    return err(new NotFoundError('Issue'))
-  }
-
   const [issue] = await db
     .update(issues)
     .set({
@@ -215,7 +198,12 @@ export async function reopenIssue(data: {
       closedAt: null,
       updatedAt: new Date(),
     })
-    .where(where)
+    .where(
+      and(
+        eq(issues.number, data.issueNumber),
+        eq(issues.projectId, data.projectId),
+      ),
+    )
     .returning({ id: issues.id })
 
   if (!issue) {
@@ -230,16 +218,16 @@ export async function reopenIssue(data: {
  */
 export async function deleteIssue(data: {
   projectId: string
-  issueIdOrNumber: string
+  issueNumber: number
 }): Promise<ReturnResult<undefined>> {
-  const where = issueWhere(data.projectId, data.issueIdOrNumber)
-  if (where == null) {
-    return err(new NotFoundError('Issue'))
-  }
-
   const [issue] = await db
     .delete(issues)
-    .where(where)
+    .where(
+      and(
+        eq(issues.number, data.issueNumber),
+        eq(issues.projectId, data.projectId),
+      ),
+    )
     .returning({ id: issues.id })
 
   if (!issue) {

@@ -27,10 +27,12 @@ function parseActiveTab(tabParam: string | null): ActiveTab {
 }
 
 export default function IssuePage() {
-  const { projectId, issueId } = useParams<{
+  const params = useParams<{
     projectId: string
-    issueId: string
+    issueNumber: string
   }>()
+  const projectId = params.projectId
+  const issueNumber = Number(params.issueNumber)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -44,9 +46,9 @@ export default function IssuePage() {
     320,
   )
 
-  const { issue, isLoading } = useIssue(projectId, issueId)
-  const { data: logs = [] } = useLogs(projectId, issueId)
-  const { data: notes = [] } = useNotes(projectId, issueId)
+  const { issue, isLoading } = useIssue(projectId, issueNumber)
+  const { data: logs = [] } = useLogs(projectId, issueNumber)
+  const { data: notes = [] } = useNotes(projectId, issueNumber)
 
   const activeTab = parseActiveTab(searchParams.get('tab'))
 
@@ -76,7 +78,7 @@ export default function IssuePage() {
           <div className='flex-1 overflow-hidden'>
             <IssueDetail
               projectId={projectId}
-              issueId={issueId}
+              issueNumber={issueNumber}
               logs={logs}
               notes={notes}
               activeTab={activeTab}
@@ -98,7 +100,7 @@ export default function IssuePage() {
             >
               <LogsList
                 projectId={projectId}
-                issueId={issueId}
+                issueNumber={issueNumber}
                 logs={logs}
                 isClosed={issue.closed}
               />

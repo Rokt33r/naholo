@@ -7,12 +7,12 @@ import { NewTaskItem } from './new-task-item'
 
 type TasksListProps = {
   projectId: string
-  issueId: string
+  issueNumber: number
 }
 
-export function TasksList({ projectId, issueId }: TasksListProps) {
+export function TasksList({ projectId, issueNumber }: TasksListProps) {
   return (
-    <TaskProvider projectId={projectId} issueId={issueId}>
+    <TaskProvider projectId={projectId} issueNumber={issueNumber}>
       <TasksListContent />
     </TaskProvider>
   )

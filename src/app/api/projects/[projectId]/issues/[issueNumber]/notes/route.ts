@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireIssueAccess } from '@/server/auth/permissions'
-import { listTasks, createTask } from '@/server/services/task'
+import { listNotes, createNote } from '@/server/services/note'
 
 type RouteContext = {
   params: Promise<{
     projectId: string
-    issueId: string
+    issueNumber: string
   }>
 }
 
 /**
- * GET /api/projects/[projectId]/issues/[issueId]/tasks
- * List tasks for an issue
+ * GET /api/projects/[projectId]/issues/[issueNumber]/notes
+ * List notes for an issue
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
-    await requireIssueAccess(projectId, issueId)
+    const { projectId, issueNumber } = await context.params
+    const { issue } = await requireIssueAccess(projectId, issueNumber)
 
-    const tasks = await listTasks({ issueId })
+    const notes = await listNotes({ issueId: issue.id })
 
-    return NextResponse.json(tasks)
+    return NextResponse.json(notes)
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -31,29 +31,27 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
-const createTaskSchema = z.object({
-  name: z.string().min(1, 'Name is required').trim(),
-  note: z.string().trim().nullable().optional(),
-  parentTaskId: z.string().nullable().optional(),
-  position: z.number().int().min(0).optional(),
+const createNoteSchema = z.object({
+  title: z.string().min(1, 'Title is required').trim(),
+  content: z.string().trim(),
 })
 
 /**
- * POST /api/projects/[projectId]/issues/[issueId]/tasks
- * Create a new task
+ * POST /api/projects/[projectId]/issues/[issueNumber]/notes
+ * Create a new note
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { projectId, issueId } = await context.params
+    const { projectId, issueNumber } = await context.params
 
     let body
     try {
       body = await request.json()
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = createTaskSchema.safeParse(body)
+    const validation = createNoteSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -61,20 +59,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { name, note, parentTaskId, position } = validation.data
+    const { title, content } = validation.data
 
-    const { projectWorker } = await requireIssueAccess(projectId, issueId)
+    const { projectWorker, issue } = await requireIssueAccess(
+      projectId,
+      issueNumber,
+    )
 
-    const result = await createTask({
+    const result = await createNote({
       projectWorkerId: projectWorker.id,
       projectId,
-      issueId,
-      name,
-      note,
-      parentTaskId,
-      position,
+      issueId: issue.id,
+      title,
+      content,
     })
-
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
     }
