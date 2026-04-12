@@ -5,6 +5,7 @@ import { fetcher, createResponseError } from '@/lib/fetcher'
 export type { Task } from 'naholo-api/types'
 
 import type { Task } from 'naholo-api/types'
+import { updateIssueListCache } from './use-issues'
 
 /**
  * Hook to fetch tasks for an issue
@@ -95,12 +96,22 @@ export function useCreateTask(projectId: string, issueNumber: number) {
         return [...(old ?? []), optimisticTask]
       })
 
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        totalTasks: issue.totalTasks + 1,
+        updatedAt: new Date().toISOString(),
+      }))
+
       return { previousTasks }
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        totalTasks: issue.totalTasks - 1,
+      }))
       toast.error(err instanceof Error ? err.message : 'Failed to create task')
     },
     onSettled: () => {
@@ -197,12 +208,22 @@ export function useSetTaskDone(projectId: string, issueNumber: number) {
         ),
       )
 
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        completedTasks: issue.completedTasks + (done ? 1 : -1),
+        updatedAt: new Date().toISOString(),
+      }))
+
       return { previousTasks }
     },
-    onError: (err, _, context) => {
+    onError: (err, { done }, context) => {
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        completedTasks: issue.completedTasks + (done ? -1 : 1),
+      }))
       toast.error(err instanceof Error ? err.message : 'Failed to update task')
     },
     onSettled: () => {
@@ -300,18 +321,38 @@ export function useDeleteTask(projectId: string, issueNumber: number) {
         return [id, ...children.flatMap((c) => getDescendantIds(c.id, tasks))]
       }
 
-      const idsToRemove = getDescendantIds(taskId, previousTasks ?? [])
+      const allTasks = previousTasks ?? []
+      const idsToRemove = getDescendantIds(taskId, allTasks)
+      const removedDoneCount = allTasks.filter(
+        (t) => idsToRemove.includes(t.id) && t.done,
+      ).length
 
       queryClient.setQueryData<Task[]>(['tasks', issueNumber], (old) =>
         old?.filter((task) => !idsToRemove.includes(task.id)),
       )
 
-      return { previousTasks }
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        totalTasks: issue.totalTasks - idsToRemove.length,
+        completedTasks: issue.completedTasks - removedDoneCount,
+        updatedAt: new Date().toISOString(),
+      }))
+
+      return {
+        previousTasks,
+        removedCount: idsToRemove.length,
+        removedDoneCount,
+      }
     },
     onError: (err, _, context) => {
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
+      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+        ...issue,
+        totalTasks: issue.totalTasks + (context?.removedCount ?? 0),
+        completedTasks: issue.completedTasks + (context?.removedDoneCount ?? 0),
+      }))
       toast.error(err instanceof Error ? err.message : 'Failed to delete task')
     },
     onSettled: () => {

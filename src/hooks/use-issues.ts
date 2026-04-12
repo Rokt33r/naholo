@@ -1,10 +1,32 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
 export type { IssueListItem, IssueDetail } from 'naholo-api/types'
 
 import type { IssueListItem, IssueDetail } from 'naholo-api/types'
+
+export function updateIssueListCache(
+  queryClient: QueryClient,
+  projectId: string,
+  issueNumber: number,
+  updater: (issue: IssueListItem) => IssueListItem,
+) {
+  for (const filter of ['open', 'closed'] as const) {
+    queryClient.setQueryData<IssueListItem[]>(
+      ['issues', projectId, filter],
+      (old) =>
+        old?.map((issue) =>
+          issue.number === issueNumber ? updater(issue) : issue,
+        ),
+    )
+  }
+}
 
 /**
  * Hook to fetch issues list for a project
