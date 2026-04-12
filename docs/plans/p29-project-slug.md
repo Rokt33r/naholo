@@ -37,7 +37,7 @@ Add `slug` column in two phases: first add nullable column and backfill, then ad
 
 **Phase 2 — Add constraints:**
 
-- [ ] `src/server/db/schema/projects.ts` — Set `notNull` and add unique index:
+- [x] `src/server/db/schema/projects.ts` — Set `notNull` and add unique index:
 
   ```ts
   slug: text('slug').notNull(),
@@ -55,7 +55,7 @@ Add `slug` column in two phases: first add nullable column and backfill, then ad
 
 ### Task 2: Update project service to handle slugs
 
-- [ ] `src/server/services/project.ts` — Add `slug` to the `Project` type:
+- [x] `src/server/services/project.ts` — Add `slug` to the `Project` type:
 
   ```ts
   export type Project = {
@@ -67,9 +67,9 @@ Add `slug` column in two phases: first add nullable column and backfill, then ad
   }
   ```
 
-- [ ] `src/server/services/project.ts` — Add `slug: true` to all `columns` selections in `getProject`, `getProjectById`, and `listProjects`.
+- [x] `src/server/services/project.ts` — Add `slug: true` to all `columns` selections in `getProject`, `getProjectById`, and `listProjects`.
 
-- [ ] `src/server/services/project.ts` — Update `createProject`:
+- [x] `src/server/services/project.ts` — Update `createProject`:
   - Add `slug` to `CreateProjectInput`:
     ```ts
     export type CreateProjectInput = {
@@ -83,7 +83,7 @@ Add `slug` column in two phases: first add nullable column and backfill, then ad
   - Pass `slug` to insert values
   - Return `{ id, slug }` instead of just `{ id }`
 
-- [ ] `src/server/services/project.ts` — Update `updateProject`:
+- [x] `src/server/services/project.ts` — Update `updateProject`:
   - Add optional `slug` to `UpdateProjectInput`:
     ```ts
     export type UpdateProjectInput = {
@@ -97,7 +97,7 @@ Add `slug` column in two phases: first add nullable column and backfill, then ad
 
 ### Task 3: Update `requireProjectWorker` to resolve slug
 
-- [ ] `src/server/auth/permissions.ts` — Update `requireProjectWorker`:
+- [x] `src/server/auth/permissions.ts` — Update `requireProjectWorker`:
   - Change param from `projectId: string` to `projectSlug: string`
   - Add a DB lookup at the top to resolve slug → `{ id, slug }`:
     ```ts
@@ -113,21 +113,21 @@ Add `slug` column in two phases: first add nullable column and backfill, then ad
   - Return `project` alongside `projectWorker`: `Promise<{ projectWorker: ProjectWorker; project: { id: string; slug: string } }>`
   - Update `requireAdminProjectWorker` similarly — change param to `projectSlug: string`, call `requireProjectWorker(projectSlug)`, return both `project` and `projectWorker`.
 
-- [ ] `src/server/auth/permissions.ts` — Update `requireIssueAccess`:
+- [x] `src/server/auth/permissions.ts` — Update `requireIssueAccess`:
   - Change first param from `projectId: string` to `projectSlug: string`
   - Resolve slug → UUID via `requireProjectWorker(projectSlug)` (already called inside), use `project.id` for the issue lookup
   - Return `project` in the result alongside `projectWorker` and `issue`
 
-- [ ] `src/server/auth/permissions.ts` — Update `requireSkillSetAccess`:
+- [x] `src/server/auth/permissions.ts` — Update `requireSkillSetAccess`:
   - Change first param from `projectId: string` to `projectSlug: string`
   - Same pattern: use resolved `project.id` for DB lookups
 
-- [ ] `src/server/auth/permissions.ts` — Update `requireIssueLogAccess`, `requireIssueNoteAccess`, `requireIssueTaskAccess`:
+- [x] `src/server/auth/permissions.ts` — Update `requireIssueLogAccess`, `requireIssueNoteAccess`, `requireIssueTaskAccess`:
   - Change first param from `projectId: string` to `projectSlug: string`
   - Pass through to updated `requireIssueAccess`
   - Return `project` in results
 
-- [ ] `src/server/auth/permissions.ts` — Update internal helpers:
+- [x] `src/server/auth/permissions.ts` — Update internal helpers:
   - `requireProjectWorkerByApiToken(projectId, token)` — keep taking UUID (called with resolved `project.id`)
   - `requireProjectWorkerByUserApiToken(projectId, token, headers)` — keep taking UUID
   - `requireProjectWorkerBySession(projectId)` — keep taking UUID
@@ -150,25 +150,25 @@ This affects all route files under this directory. In each file:
 
 Files to update (pattern for each — extract `projectSlug`, pass to permission, use `project.id` for service):
 
-- [ ] `.../projects/[projectSlug]/route.ts` — GET, PATCH handlers. GET: use `project.id` for `getProjectById()`. PATCH: use `project.id` for `updateProject()`.
-- [ ] `.../projects/[projectSlug]/issues/route.ts` — GET, POST handlers. Use `project.id` for `listIssues()` / `createIssue()`.
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/route.ts` — GET, PATCH, DELETE handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/close/route.ts` — POST, DELETE handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/tasks/route.ts` — GET, POST handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/tasks/[taskId]/route.ts` — PATCH, DELETE handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/tasks/[taskId]/move/route.ts` — POST handler
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/logs/route.ts` — GET, POST handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/logs/[logId]/route.ts` — PATCH, DELETE handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/notes/route.ts` — GET, POST handlers
-- [ ] `.../projects/[projectSlug]/issues/[issueNumber]/notes/[noteId]/route.ts` — PATCH, DELETE handlers
-- [ ] `.../projects/[projectSlug]/workers/route.ts` — GET handler
-- [ ] `.../projects/[projectSlug]/workers/[workerId]/route.ts` — GET handler
-- [ ] `.../projects/[projectSlug]/workers/[workerId]/tokens/route.ts` — GET, POST handlers
-- [ ] `.../projects/[projectSlug]/workers/[workerId]/tokens/[tokenId]/route.ts` — DELETE handler
-- [ ] `.../projects/[projectSlug]/skill-sets/route.ts` — GET, POST handlers
-- [ ] `.../projects/[projectSlug]/skill-sets/[skillSetSlug]/route.ts` — GET, PATCH, DELETE handlers
-- [ ] `.../projects/[projectSlug]/skill-sets/[skillSetSlug]/skills/route.ts` — GET handler
-- [ ] `.../projects/[projectSlug]/skill-sets/[skillSetSlug]/skills/[name]/route.ts` — GET, PUT, DELETE handlers
+- [x] `.../projects/[projectSlug]/route.ts` — GET, PATCH handlers. GET: use `project.id` for `getProjectById()`. PATCH: use `project.id` for `updateProject()`.
+- [x] `.../projects/[projectSlug]/issues/route.ts` — GET, POST handlers. Use `project.id` for `listIssues()` / `createIssue()`.
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/route.ts` — GET, PATCH, DELETE handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/close/route.ts` — POST, DELETE handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/tasks/route.ts` — GET, POST handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/tasks/[taskId]/route.ts` — PATCH, DELETE handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/tasks/[taskId]/move/route.ts` — POST handler
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/logs/route.ts` — GET, POST handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/logs/[logId]/route.ts` — PATCH, DELETE handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/notes/route.ts` — GET, POST handlers
+- [x] `.../projects/[projectSlug]/issues/[issueNumber]/notes/[noteId]/route.ts` — PATCH, DELETE handlers
+- [x] `.../projects/[projectSlug]/workers/route.ts` — GET handler
+- [x] `.../projects/[projectSlug]/workers/[workerId]/route.ts` — GET handler
+- [x] `.../projects/[projectSlug]/workers/[workerId]/tokens/route.ts` — GET, POST handlers
+- [x] `.../projects/[projectSlug]/workers/[workerId]/tokens/[tokenId]/route.ts` — DELETE handler
+- [x] `.../projects/[projectSlug]/skill-sets/route.ts` — GET, POST handlers
+- [x] `.../projects/[projectSlug]/skill-sets/[skillSetSlug]/route.ts` — GET, PATCH, DELETE handlers
+- [x] `.../projects/[projectSlug]/skill-sets/[skillSetSlug]/skills/route.ts` — GET handler
+- [x] `.../projects/[projectSlug]/skill-sets/[skillSetSlug]/skills/[name]/route.ts` — GET, PUT, DELETE handlers
 
 **Pattern for each handler** (example from issues/route.ts):
 

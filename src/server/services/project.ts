@@ -8,6 +8,7 @@ import { NotFoundError } from './errors'
 
 export type Project = {
   id: string
+  slug: string
   name: string
   description: string | null
   createdAt: Date
@@ -24,39 +25,20 @@ export type ProjectWithWorker = Project & {
   projectWorkerOfCurrentUser: ProjectWorkerInfo
 }
 
-export type CreateProjectInput = {
-  name: string
-  description?: string
-}
-
-export type UpdateProjectInput = {
-  name: string
-  description?: string
-}
-
 /**
  * Get a single project by ID
- */
-export async function getProject(
-  userId: string,
-  projectId: string,
-): Promise<Project | null> {
-  const project = await db.query.projects.findFirst({
-    columns: { id: true, name: true, description: true, createdAt: true },
-    where: (t, { eq, and }) => and(eq(t.id, projectId), eq(t.userId, userId)),
-  })
-
-  return project ?? null
-}
-
-/**
- * Get a single project by ID (no user filter — caller must verify access)
  */
 export async function getProjectById(
   projectId: string,
 ): Promise<Project | null> {
   const project = await db.query.projects.findFirst({
-    columns: { id: true, name: true, description: true, createdAt: true },
+    columns: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      createdAt: true,
+    },
     where: (t, { eq }) => eq(t.id, projectId),
   })
 
@@ -72,7 +54,13 @@ export async function listProjects(
 ): Promise<Project[] | ProjectWithWorker[]> {
   if (options?.with === 'projectWorkerOfCurrentUser') {
     const result = await db.query.projects.findMany({
-      columns: { id: true, name: true, description: true, createdAt: true },
+      columns: {
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        createdAt: true,
+      },
       with: {
         projectWorkers: {
           columns: { id: true, type: true, name: true, role: true },
@@ -86,6 +74,7 @@ export async function listProjects(
 
     return result.map((row) => ({
       id: row.id,
+      slug: row.slug,
       name: row.name,
       description: row.description,
       createdAt: row.createdAt,
@@ -94,7 +83,13 @@ export async function listProjects(
   }
 
   return db.query.projects.findMany({
-    columns: { id: true, name: true, description: true, createdAt: true },
+    columns: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      createdAt: true,
+    },
     where: (t, { eq }) => eq(t.userId, userId),
     orderBy: (t, { desc }) => desc(t.createdAt),
   })
@@ -103,20 +98,43 @@ export async function listProjects(
 /**
  * Create a new project
  */
+const SLUG_PATTERN = /^[a-z0-9-]+$/
+
 export async function createProject(
   userId: string,
-  data: CreateProjectInput,
-): Promise<ReturnResult<{ id: string }>> {
+  data: {
+    name: string
+    slug: string
+    description?: string
+  },
+): Promise<ReturnResult<{ id: string; slug: string }>> {
+  if (!SLUG_PATTERN.test(data.slug)) {
+    return err(
+      new Error(
+        'Invalid slug format. Use lowercase alphanumeric characters and hyphens only.',
+      ),
+    )
+  }
+
+  const existing = await db.query.projects.findFirst({
+    columns: { id: true },
+    where: (t, { eq }) => eq(t.slug, data.slug),
+  })
+  if (existing != null) {
+    return err(new Error('Slug is already taken.'))
+  }
+
   const [project] = await db
     .insert(projects)
     .values({
       userId,
       name: data.name,
+      slug: data.slug,
       description: data.description,
     })
-    .returning({ id: projects.id })
+    .returning({ id: projects.id, slug: projects.slug })
 
-  return ok({ id: project.id })
+  return ok({ id: project.id, slug: project.slug })
 }
 
 /**
@@ -124,19 +142,36 @@ export async function createProject(
  */
 export async function updateProject(
   projectId: string,
-  data: UpdateProjectInput,
+  data: {
+    name?: string
+    description?: string
+    slug?: string
+  },
 ): Promise<ReturnResult<undefined>> {
+  // TODO: Validate where this method is used, not in this method
+  if (data.slug != null) {
+    if (!SLUG_PATTERN.test(data.slug)) {
+      return err(
+        new Error(
+          'Invalid slug format. Use lowercase alphanumeric characters and hyphens only.',
+        ),
+      )
+    }
+  }
+
   const [project] = await db
     .update(projects)
     .set({
-      name: data.name,
-      description: data.description,
+      ...(data.name != null && { name: data.name }),
+      ...(data.description != null && { description: data.description }),
+      ...(data.slug != null && { slug: data.slug }),
       updatedAt: new Date(),
     })
     .where(eq(projects.id, projectId))
     .returning({ id: projects.id })
 
-  if (!project) return err(new NotFoundError('Project'))
+  // TODO: requireProjectAccess should confirm this already so we don't need to check this.
+  if (project == null) return err(new NotFoundError('Project'))
 
   return ok()
 }
