@@ -16,23 +16,28 @@ import { cn } from '@/lib/utils'
 
 type LogItemProps = {
   log: Log
-  projectId: string
+  projectSlug: string
   issueNumber: number
   isOwn: boolean
 }
 
-export function LogItem({ log, projectId, issueNumber, isOwn }: LogItemProps) {
+export function LogItem({
+  log,
+  projectSlug,
+  issueNumber,
+  isOwn,
+}: LogItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [content, setContent] = useState(log.content)
   const skipBlurSave = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { mutateAsync: updateLog, isPending: updateLoading } = useUpdateLog(
-    projectId,
+    projectSlug,
     issueNumber,
   )
   const { mutateAsync: deleteLog, isPending: deleteLoading } = useDeleteLog(
-    projectId,
+    projectSlug,
     issueNumber,
   )
 

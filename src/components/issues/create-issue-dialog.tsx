@@ -18,13 +18,13 @@ import { useAction } from '@/lib/use-action'
 import { createIssueAction } from '@/app/app/actions'
 
 type CreateIssueDialogProps = {
-  projectId: string
+  projectSlug: string
   children: React.ReactNode
   onIssueCreated?: () => void
 }
 
 export function CreateIssueDialog({
-  projectId,
+  projectSlug,
   children,
   onIssueCreated,
 }: CreateIssueDialogProps) {
@@ -41,13 +41,13 @@ export function CreateIssueDialog({
       return
     }
 
-    const result = await createIssue(projectId, title.trim())
+    const result = await createIssue(projectSlug, title.trim())
 
     if (result.success) {
       setOpen(false)
       setTitle('')
       onIssueCreated?.()
-      router.push(`/app/projects/${projectId}/issues/${result.data.number}`)
+      router.push(`/app/projects/${projectSlug}/issues/${result.data.number}`)
     } else {
       alert('Failed to create issue: ' + result.error.message)
     }

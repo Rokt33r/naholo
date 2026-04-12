@@ -7,13 +7,13 @@ import type { WorkerToken } from '@/hooks/use-worker-tokens'
 
 type TokenItemProps = {
   token: WorkerToken
-  projectId: string
+  projectSlug: string
   workerId: string
 }
 
-export function TokenItem({ token, projectId, workerId }: TokenItemProps) {
+export function TokenItem({ token, projectSlug, workerId }: TokenItemProps) {
   const { mutate: revoke, isPending } = useRevokeWorkerToken(
-    projectId,
+    projectSlug,
     workerId,
   )
 

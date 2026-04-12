@@ -36,7 +36,7 @@ import type { IssueDetail, Note } from 'naholo-api/types'
 type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 type IssueDetailProps = {
-  projectId: string
+  projectSlug: string
   issueNumber: number
   logs: Log[]
   notes: Note[]
@@ -49,7 +49,7 @@ type IssueDetailProps = {
 }
 
 export function IssueDetail({
-  projectId,
+  projectSlug,
   issueNumber,
   logs,
   notes,
@@ -68,13 +68,13 @@ export function IssueDetail({
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const { issue, isLoading } = useIssue(projectId, issueNumber)
+  const { issue, isLoading } = useIssue(projectSlug, issueNumber)
   const { mutateAsync: updateTitle } = useUpdateIssueTitle(
-    projectId,
+    projectSlug,
     issueNumber,
   )
-  const { mutateAsync: deleteIssue } = useDeleteIssue(projectId, issueNumber)
-  const { mutateAsync: updateNote } = useUpdateNote(projectId, issueNumber)
+  const { mutateAsync: deleteIssue } = useDeleteIssue(projectSlug, issueNumber)
+  const { mutateAsync: updateNote } = useUpdateNote(projectSlug, issueNumber)
 
   const handleNoteSave = useCallback(
     async (noteId: string, content: string) => {
@@ -125,7 +125,7 @@ export function IssueDetail({
     try {
       await deleteIssue()
       const query = searchParams.toString()
-      router.push(`/app/projects/${projectId}${query ? `?${query}` : ''}`)
+      router.push(`/app/projects/${projectSlug}${query ? `?${query}` : ''}`)
     } finally {
       setIsDeleting(false)
     }
@@ -168,7 +168,7 @@ export function IssueDetail({
             onClick={() => {
               const query = searchParams.toString()
               router.push(
-                `/app/projects/${projectId}${query ? `?${query}` : ''}`,
+                `/app/projects/${projectSlug}${query ? `?${query}` : ''}`,
               )
             }}
           >
@@ -253,7 +253,7 @@ export function IssueDetail({
       {showLogs && !isWideScreen ? (
         <div className='flex-1 overflow-hidden'>
           <LogsList
-            projectId={issue.projectId}
+            projectSlug={projectSlug}
             issueNumber={issue.number}
             logs={logs}
             isClosed={issue.closed}
@@ -263,7 +263,7 @@ export function IssueDetail({
         <>
           {/* Tabs */}
           <IssueTabs
-            projectId={issue.projectId}
+            projectSlug={projectSlug}
             issueNumber={issue.number}
             notes={notes}
             activeTab={activeTab}
@@ -274,10 +274,7 @@ export function IssueDetail({
           {/* Content */}
           <div className='flex-1 overflow-hidden'>
             {activeTab.type === 'tasks' && (
-              <TasksList
-                projectId={issue.projectId}
-                issueNumber={issue.number}
-              />
+              <TasksList projectSlug={projectSlug} issueNumber={issue.number} />
             )}
             {activeTab.type === 'note' &&
               (() => {
@@ -293,7 +290,7 @@ export function IssueDetail({
                   <NoteView
                     key={note.id}
                     note={note}
-                    projectId={issue.projectId}
+                    projectSlug={projectSlug}
                     issueNumber={issue.number}
                     initialContent={store.getContent(note.id) ?? note.content}
                     saveState={store.saveStates[note.id] ?? 'idle'}

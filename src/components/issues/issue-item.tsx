@@ -8,18 +8,18 @@ import type { IssueListItem } from 'naholo-api/types'
 
 type IssueItemProps = {
   issue: IssueListItem
-  projectId: string
+  projectSlug: string
   isActive: boolean
 }
 
-export function IssueItem({ issue, projectId, isActive }: IssueItemProps) {
+export function IssueItem({ issue, projectSlug, isActive }: IssueItemProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const handleClick = () => {
     const query = searchParams.toString()
     router.push(
-      `/app/projects/${projectId}/issues/${issue.number}${query ? `?${query}` : ''}`,
+      `/app/projects/${projectSlug}/issues/${issue.number}${query ? `?${query}` : ''}`,
     )
   }
 

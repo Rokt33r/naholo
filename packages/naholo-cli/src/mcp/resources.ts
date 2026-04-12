@@ -7,14 +7,14 @@ import type { NaholoClient } from 'naholo-api/client'
 export function registerResources(
   server: McpServer,
   client: NaholoClient,
-  projectId: string,
+  projectSlug: string,
 ): void {
   server.registerResource(
     'project',
     'naholo://project',
     { description: 'Current project details' },
     async (uri) => {
-      const project = await client.getProject(projectId)
+      const project = await client.getProject(projectSlug)
       return {
         contents: [
           {
@@ -32,7 +32,7 @@ export function registerResources(
     'naholo://issues',
     { description: 'Issue list for the project' },
     async (uri) => {
-      const issues = await client.listIssues(projectId)
+      const issues = await client.listIssues(projectSlug)
       return {
         contents: [
           {
@@ -52,10 +52,10 @@ export function registerResources(
     async (uri, variables) => {
       const issueNumber = variables.issueNumber as string
       const [issue, tasks, notes, logs] = await Promise.all([
-        client.getIssue(projectId, issueNumber),
-        client.listTasks(projectId, issueNumber),
-        client.listNotes(projectId, issueNumber),
-        client.listLogs(projectId, issueNumber),
+        client.getIssue(projectSlug, issueNumber),
+        client.listTasks(projectSlug, issueNumber),
+        client.listNotes(projectSlug, issueNumber),
+        client.listLogs(projectSlug, issueNumber),
       ])
       const data = { issue, tasks, notes, logs }
       return {
@@ -78,7 +78,7 @@ export function registerResources(
     { description: 'All tasks for an issue' },
     async (uri, variables) => {
       const issueNumber = variables.issueNumber as string
-      const tasks = await client.listTasks(projectId, issueNumber)
+      const tasks = await client.listTasks(projectSlug, issueNumber)
       return {
         contents: [
           {
@@ -99,7 +99,7 @@ export function registerResources(
     { description: 'All notes for an issue' },
     async (uri, variables) => {
       const issueNumber = variables.issueNumber as string
-      const notes = await client.listNotes(projectId, issueNumber)
+      const notes = await client.listNotes(projectSlug, issueNumber)
       return {
         contents: [
           {

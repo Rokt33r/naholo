@@ -10,18 +10,18 @@ import { useWorkers } from '@/hooks/use-workers'
 import type { Worker } from '@/hooks/use-workers'
 
 export default function WorkersPage() {
-  const { projectId, projectName, projects } = useProjectContext()
+  const { projectSlug, projectName, projects } = useProjectContext()
   const router = useRouter()
   const isMobile = useIsMobile()
-  const { workers, isLoading } = useWorkers(projectId)
+  const { workers, isLoading } = useWorkers(projectSlug)
 
   return (
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between px-4 pt-2 gap-2'>
-        {isMobile && <AppModeMenu currentProjectId={projectId} />}
+        {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
         <ProjectSwitcher
           projects={projects}
-          currentProjectId={projectId}
+          currentProjectSlug={projectSlug}
           currentProjectName={projectName}
         />
       </div>
@@ -46,7 +46,9 @@ export default function WorkersPage() {
                 key={worker.id}
                 worker={worker}
                 onClick={() =>
-                  router.push(`/app/projects/${projectId}/workers/${worker.id}`)
+                  router.push(
+                    `/app/projects/${projectSlug}/workers/${worker.id}`,
+                  )
                 }
               />
             ))}

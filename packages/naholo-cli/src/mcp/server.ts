@@ -8,15 +8,15 @@ import { registerTools } from './tools.js'
 export async function startMcpServer(): Promise<void> {
   const ctx = getCliContext()
   const { client, projectConfig } = ctx
-  const projectId = projectConfig.projectId
+  const projectSlug = projectConfig.projectSlug ?? projectConfig.projectId
 
   const server = new McpServer({
     name: 'naholo',
     version,
   })
 
-  registerTools(server, client, projectId)
-  registerResources(server, client, projectId)
+  registerTools(server, client, projectSlug)
+  registerResources(server, client, projectSlug)
 
   const transport = new StdioServerTransport()
   await server.connect(transport)

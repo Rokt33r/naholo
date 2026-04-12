@@ -8,21 +8,22 @@ import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useProjects } from '@/hooks/use-projects'
 
 function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
-  const { projectId } = useParams<{ projectId: string }>()
+  const { projectSlug } = useParams<{ projectSlug: string }>()
   const segment = useSelectedLayoutSegment()
   const currentMode = segment ?? 'issues'
   const isMobile = useIsMobile()
   const { data: projects = [] } = useProjects()
-  const project = projects.find((p) => p.id === projectId)
+  const project = projects.find((p) => p.slug === projectSlug)
 
-  if (!project) {
+  if (project == null) {
     return null
   }
 
   return (
     <ProjectContext
       value={{
-        projectId,
+        projectId: project.id,
+        projectSlug,
         projectName: project.name,
         projects,
         currentWorker: project.projectWorkerOfCurrentUser,
@@ -31,7 +32,7 @@ function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
       <div className='flex h-screen w-full'>
         {!isMobile && (
           <AppModeSidebar
-            currentProjectId={projectId}
+            currentProjectSlug={projectSlug}
             currentMode={currentMode}
           />
         )}

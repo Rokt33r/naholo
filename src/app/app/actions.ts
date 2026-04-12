@@ -40,14 +40,15 @@ export async function logoutAction(): Promise<ReturnResult<undefined>> {
 
 export async function createProjectAction(
   name: string,
+  slug: string,
   description?: string,
-): Promise<ReturnResult<{ id: string }>> {
+): Promise<ReturnResult<{ id: string; slug: string }>> {
   const user = await getAuthUser()
-  if (!user) {
+  if (user == null) {
     return err(new Error('Unauthorized'))
   }
 
-  const result = await createProject(user.id, { name, description })
+  const result = await createProject(user.id, { name, slug, description })
   if (result.success) {
     await createProjectWorker({
       projectId: result.data.id,
@@ -62,13 +63,13 @@ export async function createProjectAction(
 }
 
 export async function updateProjectAction(
-  id: string,
+  projectSlug: string,
   name: string,
   description?: string,
 ): Promise<ReturnResult<undefined>> {
-  await requireAdminProjectWorker(id)
+  const { project } = await requireAdminProjectWorker(projectSlug)
 
-  const result = await updateProject(id, { name, description })
+  const result = await updateProject(project.id, { name, description })
   if (result.success) {
     revalidatePath('/app')
   }
@@ -77,11 +78,11 @@ export async function updateProjectAction(
 }
 
 export async function deleteProjectAction(
-  id: string,
+  projectSlug: string,
 ): Promise<ReturnResult<undefined>> {
-  await requireAdminProjectWorker(id)
+  const { project } = await requireAdminProjectWorker(projectSlug)
 
-  const result = await deleteProject(id)
+  const result = await deleteProject(project.id)
   if (result.success) {
     revalidatePath('/app')
   }
@@ -94,18 +95,18 @@ export async function deleteProjectAction(
  */
 
 export async function createIssueAction(
-  projectId: string,
+  projectSlug: string,
   title: string,
 ): Promise<ReturnResult<{ id: string; number: number }>> {
-  const { projectWorker } = await requireProjectWorker(projectId)
+  const { projectWorker, project } = await requireProjectWorker(projectSlug)
 
   const result = await createIssue({
     projectWorkerId: projectWorker.id,
-    projectId,
+    projectId: project.id,
     title,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}`)
+    revalidatePath(`/app/projects/${projectSlug}`)
   }
 
   return result
@@ -116,23 +117,23 @@ export async function createIssueAction(
  */
 
 export async function createLogAction(
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   content: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker, issue } = await requireIssueAccess(
-    projectId,
+  const { projectWorker, project, issue } = await requireIssueAccess(
+    projectSlug,
     issueNumber,
   )
 
   const result = await createLog({
     projectWorkerId: projectWorker.id,
-    projectId,
+    projectId: project.id,
     issueId: issue.id,
     content,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
     return ok({ id: result.data.id })
   }
 
@@ -144,38 +145,38 @@ export async function createLogAction(
  */
 
 export async function createTaskAction(
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   name: string,
   parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker, issue } = await requireIssueAccess(
-    projectId,
+  const { projectWorker, project, issue } = await requireIssueAccess(
+    projectSlug,
     issueNumber,
   )
 
   const result = await createTask({
     projectWorkerId: projectWorker.id,
-    projectId,
+    projectId: project.id,
     issueId: issue.id,
     name,
     parentTaskId,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
   }
 
   return result
 }
 
 export async function updateTaskAction(
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   id: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
   const { projectWorker, issue } = await requireIssueAccess(
-    projectId,
+    projectSlug,
     issueNumber,
   )
 
@@ -187,20 +188,20 @@ export async function updateTaskAction(
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
   }
 
   return result
 }
 
 export async function setTaskDoneAction(
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
   const { projectWorker, issue } = await requireIssueAccess(
-    projectId,
+    projectSlug,
     issueNumber,
   )
 
@@ -212,19 +213,19 @@ export async function setTaskDoneAction(
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
   }
 
   return result
 }
 
 export async function deleteTaskAction(
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   id: string,
 ): Promise<ReturnResult<undefined>> {
   const { projectWorker, issue } = await requireIssueAccess(
-    projectId,
+    projectSlug,
     issueNumber,
   )
 
@@ -235,7 +236,7 @@ export async function deleteTaskAction(
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectId}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
   }
 
   return result

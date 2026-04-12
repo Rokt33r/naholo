@@ -9,11 +9,13 @@ import type { Note } from 'naholo-api/types'
 /**
  * Hook to fetch notes for an issue
  */
-export function useNotes(projectId: string, issueNumber: number) {
+export function useNotes(projectSlug: string, issueNumber: number) {
   return useQuery({
     queryKey: ['notes', issueNumber],
     queryFn: () =>
-      fetcher<Note[]>(`/api/projects/${projectId}/issues/${issueNumber}/notes`),
+      fetcher<Note[]>(
+        `/api/projects/${projectSlug}/issues/${issueNumber}/notes`,
+      ),
     staleTime: 1000 * 60,
   })
 }
@@ -21,7 +23,7 @@ export function useNotes(projectId: string, issueNumber: number) {
 /**
  * Hook to create a note with optimistic updates
  */
-export function useCreateNote(projectId: string, issueNumber: number) {
+export function useCreateNote(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -33,7 +35,7 @@ export function useCreateNote(projectId: string, issueNumber: number) {
       content: string
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/notes`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/notes`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -89,7 +91,7 @@ export function useCreateNote(projectId: string, issueNumber: number) {
 /**
  * Hook to update a note with optimistic updates
  */
-export function useUpdateNote(projectId: string, issueNumber: number) {
+export function useUpdateNote(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -103,7 +105,7 @@ export function useUpdateNote(projectId: string, issueNumber: number) {
       content: string
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/notes/${noteId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${noteId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -148,13 +150,13 @@ export function useUpdateNote(projectId: string, issueNumber: number) {
 /**
  * Hook to delete a note with optimistic updates
  */
-export function useDeleteNote(projectId: string, issueNumber: number) {
+export function useDeleteNote(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (noteId: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/notes/${noteId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${noteId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {

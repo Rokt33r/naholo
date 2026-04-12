@@ -186,19 +186,19 @@ const issues = await listIssues({ projectId: project.id })
 
 ### Task 5: Update `naholo-api` package types
 
-- [ ] `packages/naholo-api/src/types.ts` — Add `slug: string` to project types:
+- [x] `packages/naholo-api/src/types.ts` — Add `slug: string` to project types:
   - `Project` type: add `slug: string` field
   - `ProjectWithWorker` already extends `Project`, so inherits slug
 
 ### Task 6: Update `naholo-api` client to use slug
 
-- [ ] `packages/naholo-api/src/client.ts` — Rename `projectPath` helper:
+- [x] `packages/naholo-api/src/client.ts` — Rename `projectPath` helper:
   - Rename param from `projectId` to `projectSlug`: `private projectPath(projectSlug: string, suffix = '')`
   - Path stays the same shape: `/api/projects/${projectSlug}`
 
-- [ ] Update `issuePath` and `skillSetPath` helpers to use `projectSlug` param name.
+- [x] Update `issuePath` and `skillSetPath` helpers to use `projectSlug` param name.
 
-- [ ] Update all client methods to take `projectSlug: string` instead of `projectId: string`:
+- [x] Update all client methods to take `projectSlug: string` instead of `projectId: string`:
   - `getProject(projectSlug)`, `updateProject(projectSlug, input)`
   - `listIssues(projectSlug, opts?)`, `createIssue(projectSlug, input)`, `getIssue(projectSlug, issueNumber)`, etc.
   - `listTasks(projectSlug, issueNumber)`, `createTask(...)`, `updateTask(...)`, `deleteTask(...)`, `moveTask(...)`
@@ -210,55 +210,55 @@ const issues = await listIssues({ projectId: project.id })
 
 ### Task 7: Update server actions
 
-- [ ] `src/app/app/actions.ts` — Update `createProjectAction`:
+- [x] `src/app/app/actions.ts` — Update `createProjectAction`:
   - Add `slug` param: `createProjectAction(name: string, slug: string, description?: string)`
   - Pass `slug` to `createProject`
   - Return `ReturnResult<{ id: string; slug: string }>` instead of `ReturnResult<{ id: string }>`
 
-- [ ] `src/app/app/actions.ts` — Update all actions that take `projectId`:
+- [x] `src/app/app/actions.ts` — Update all actions that take `projectId`:
   - `updateProjectAction(id, ...)` → `updateProjectAction(projectSlug: string, ...)` — call `requireAdminProjectWorker(projectSlug)`, use `project.id` for `updateProject()`
   - `deleteProjectAction(id)` → `deleteProjectAction(projectSlug: string)` — same pattern
   - `createIssueAction(projectId, title)` → `createIssueAction(projectSlug: string, title)` — call `requireProjectWorker(projectSlug)`, use `project.id` for `createIssue()`
   - `createLogAction(projectId, issueNumber, content)` → `createLogAction(projectSlug: string, issueNumber, content)` — call `requireIssueAccess(projectSlug, issueNumber)`, use `project.id` for `createLog()`
   - `createTaskAction`, `updateTaskAction`, `setTaskDoneAction`, `deleteTaskAction` — same pattern: change first param to `projectSlug`, use resolved `project.id` for service calls
 
-- [ ] Update `revalidatePath` calls in all actions:
+- [x] Update `revalidatePath` calls in all actions:
   - Change from `revalidatePath('/app/projects/${projectId}')` to `revalidatePath('/app/projects/${projectSlug}')`
   - Change from `revalidatePath('/app/projects/${projectId}/issues/${issueNumber}')` to `revalidatePath('/app/projects/${projectSlug}/issues/${issueNumber}')`
 
 ### Task 8: Update frontend routing
 
-- [ ] Rename directory:
+- [x] Rename directory:
 
   ```
   src/app/app/projects/[projectId]/
   → src/app/app/projects/[projectSlug]/
   ```
 
-- [ ] `src/app/app/projects/[projectSlug]/layout.tsx`:
+- [x] `src/app/app/projects/[projectSlug]/layout.tsx`:
   - Change `useParams` to extract `projectSlug`: `const { projectSlug } = useParams<{ projectSlug: string }>()`
   - Change project lookup from `p.id === projectId` to `p.slug === projectSlug`
   - Update `ProjectContext` value: pass `projectSlug` instead of `projectId`, and also pass `projectId` from `project.id`
 
-- [ ] `src/app/app/projects/[projectSlug]/page.tsx` — Update `useParams` to extract `projectSlug`
+- [x] `src/app/app/projects/[projectSlug]/page.tsx` — Update `useParams` to extract `projectSlug`
 
-- [ ] `src/app/app/projects/[projectSlug]/issues/page.tsx` — Update `useParams` to extract `projectSlug`
+- [x] `src/app/app/projects/[projectSlug]/issues/page.tsx` — Update `useParams` to extract `projectSlug`
 
-- [ ] `src/app/app/projects/[projectSlug]/issues/[issueNumber]/page.tsx` — Update `useParams` to extract `projectSlug`
+- [x] `src/app/app/projects/[projectSlug]/issues/[issueNumber]/page.tsx` — Update `useParams` to extract `projectSlug`
 
-- [ ] `src/app/app/projects/[projectSlug]/workers/page.tsx` — Update `useParams` to extract `projectSlug`
+- [x] `src/app/app/projects/[projectSlug]/workers/page.tsx` — Update `useParams` to extract `projectSlug`
 
-- [ ] `src/app/app/projects/[projectSlug]/workers/[workerId]/page.tsx` — Update `useParams` to extract `projectSlug`
+- [x] `src/app/app/projects/[projectSlug]/workers/[workerId]/page.tsx` — Update `useParams` to extract `projectSlug`
 
-- [ ] `src/app/app/projects/[projectSlug]/skill-sets/page.tsx` — Update `useParams`
+- [x] `src/app/app/projects/[projectSlug]/skill-sets/page.tsx` — Update `useParams`
 
-- [ ] `src/app/app/projects/[projectSlug]/skill-sets/[slug]/page.tsx` — Update `useParams`
+- [x] `src/app/app/projects/[projectSlug]/skill-sets/[slug]/page.tsx` — Update `useParams`
 
-- [ ] `src/app/app/projects/[projectSlug]/skill-sets/[slug]/skills/[skillName]/page.tsx` — Update `useParams`
+- [x] `src/app/app/projects/[projectSlug]/skill-sets/[slug]/skills/[skillName]/page.tsx` — Update `useParams`
 
 ### Task 9: Update `ProjectContext`
 
-- [ ] `src/components/app/project-context.tsx` — Update context type:
+- [x] `src/components/app/project-context.tsx` — Update context type:
   ```ts
   type ProjectContextValue = {
     projectId: string // UUID (for internal use like cache keys)
@@ -271,68 +271,68 @@ const issues = await listIssues({ projectId: project.id })
 
 ### Task 10: Update frontend hooks to use slug
 
-- [ ] `src/hooks/use-issues.ts` — Update all hooks:
+- [x] `src/hooks/use-issues.ts` — Update all hooks:
   - Change first param from `projectId: string` to `projectSlug: string`
   - Change API paths from `/api/projects/${projectId}/...` to `/api/projects/${projectSlug}/...`
   - Query keys: use `projectSlug` (e.g., `['issues', projectSlug, filter]`)
 
-- [ ] `src/hooks/use-tasks.ts` — Update all hooks:
+- [x] `src/hooks/use-tasks.ts` — Update all hooks:
   - Change `projectId` to `projectSlug` in API paths
 
-- [ ] `src/hooks/use-logs.ts` — Update all hooks:
+- [x] `src/hooks/use-logs.ts` — Update all hooks:
   - Change `projectId` to `projectSlug` in API paths
 
-- [ ] `src/hooks/use-notes.ts` — Update all hooks:
+- [x] `src/hooks/use-notes.ts` — Update all hooks:
   - Change `projectId` to `projectSlug` in API paths
 
 ### Task 11: Update frontend components
 
-- [ ] `src/components/projects/project-switcher.tsx`:
+- [x] `src/components/projects/project-switcher.tsx`:
   - Change `handleProjectClick` to navigate to `/app/projects/${project.slug}` instead of `${project.id}`
   - Change `currentProjectId` prop to `currentProjectSlug`
   - Change active check from `project.id === currentProjectId` to `project.slug === currentProjectSlug`
 
-- [ ] `src/components/projects/create-project-dialog.tsx`:
+- [x] `src/components/projects/create-project-dialog.tsx`:
   - Add a slug input field (required, validated with `/^[a-z0-9-]+$/`)
   - Pass slug to `createProjectAction(name, slug, description)`
   - Change navigation after creation from `router.push('/app/projects/${result.data.id}')` to `router.push('/app/projects/${result.data.slug}')`
 
-- [ ] `src/components/issues/create-issue-dialog.tsx`:
+- [x] `src/components/issues/create-issue-dialog.tsx`:
   - Uses `projectId` from context — switch to `projectSlug` for URL construction
 
-- [ ] `src/components/issues/issue-detail.tsx`:
+- [x] `src/components/issues/issue-detail.tsx`:
   - Update navigation from `router.push('/app/projects/${projectId}...')` to use `projectSlug`
   - Update all hook calls to pass `projectSlug` instead of `projectId`
 
-- [ ] `src/components/app/app-mode-sidebar.tsx`:
+- [x] `src/components/app/app-mode-sidebar.tsx`:
   - Change `currentProjectId` prop to `currentProjectSlug`
   - Update all `router.push` calls from `/app/projects/${currentProjectId}/...` to `/app/projects/${currentProjectSlug}/...`
 
-- [ ] `src/components/app/app-mode-menu.tsx`:
+- [x] `src/components/app/app-mode-menu.tsx`:
   - Same changes as sidebar — use `currentProjectSlug` for navigation
 
-- [ ] All other components using `useProjectContext()` that reference `projectId` for URL construction — switch to `projectSlug`. Components using `projectId` for non-URL purposes (like passing to server actions or as cache keys) need to use the UUID from context.
+- [x] All other components using `useProjectContext()` that reference `projectId` for URL construction — switch to `projectSlug`. Components using `projectId` for non-URL purposes (like passing to server actions or as cache keys) need to use the UUID from context.
 
 ### Task 12: Update MCP tools in CLI package
 
-- [ ] `packages/naholo-cli/src/mcp/tools.ts` — Change `projectId` param to `projectSlug`:
+- [x] `packages/naholo-cli/src/mcp/tools.ts` — Change `projectId` param to `projectSlug`:
   - `registerTools(server, client, projectSlug: string)`
   - All client calls already pass this as the first arg — since the client methods are also renamed to `projectSlug`, this flows through naturally
 
-- [ ] `packages/naholo-cli/src/mcp/resources.ts` — Change `projectId` param to `projectSlug`:
+- [x] `packages/naholo-cli/src/mcp/resources.ts` — Change `projectId` param to `projectSlug`:
   - `registerResources(server, client, projectSlug: string)`
   - All client calls use the renamed methods
 
-- [ ] `packages/naholo-cli/src/project-config.ts` — Update config interface:
+- [x] `packages/naholo-cli/src/project-config.ts` — Update config interface:
   - Add `projectSlug: string` to `ProjectConfig`
   - Keep `projectId` for backward compatibility (existing `.naholo/config.yml` files still have it)
   - The CLI entrypoint should prefer `projectSlug` and fall back to `projectId`
 
-- [ ] Update the CLI entrypoint (where `registerTools` / `registerResources` are called) to pass `projectSlug` instead of `projectId`.
+- [x] Update the CLI entrypoint (where `registerTools` / `registerResources` are called) to pass `projectSlug` instead of `projectId`.
 
 ### Task 13: Verify
 
-- [ ] Run `npx tsc` from the repo root to confirm everything compiles without type errors across the main app, `naholo-api`, and `naholo-cli` packages.
+- [x] Run `npx tsc` from the repo root to confirm everything compiles without type errors across the main app, `naholo-api`, and `naholo-cli` packages.
 
 ## Notes
 

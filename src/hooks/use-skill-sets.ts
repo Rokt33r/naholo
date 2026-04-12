@@ -6,11 +6,11 @@ export type { SkillSetSummary } from 'naholo-api/types'
 
 import type { SkillSetSummary } from 'naholo-api/types'
 
-export function useSkillSets(projectId: string) {
+export function useSkillSets(projectSlug: string) {
   const query = useQuery({
-    queryKey: ['skill-sets', projectId],
+    queryKey: ['skill-sets', projectSlug],
     queryFn: () =>
-      fetcher<SkillSetSummary[]>(`/api/projects/${projectId}/skill-sets`),
+      fetcher<SkillSetSummary[]>(`/api/projects/${projectSlug}/skill-sets`),
     staleTime: 60_000,
   })
 
@@ -21,12 +21,12 @@ export function useSkillSets(projectId: string) {
   }
 }
 
-export function useCreateSkillSet(projectId: string) {
+export function useCreateSkillSet(projectSlug: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (input: { name: string; slug: string }) => {
-      const response = await fetch(`/api/projects/${projectId}/skill-sets`, {
+      const response = await fetch(`/api/projects/${projectSlug}/skill-sets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
@@ -38,16 +38,16 @@ export function useCreateSkillSet(projectId: string) {
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({
-        queryKey: ['skill-sets', projectId],
+        queryKey: ['skill-sets', projectSlug],
       })
 
       const previous = queryClient.getQueryData<SkillSetSummary[]>([
         'skill-sets',
-        projectId,
+        projectSlug,
       ])
 
       queryClient.setQueryData<SkillSetSummary[]>(
-        ['skill-sets', projectId],
+        ['skill-sets', projectSlug],
         (old) => [
           ...(old ?? []),
           {
@@ -64,7 +64,7 @@ export function useCreateSkillSet(projectId: string) {
     },
     onError: (error, _, context) => {
       if (context?.previous != null) {
-        queryClient.setQueryData(['skill-sets', projectId], context.previous)
+        queryClient.setQueryData(['skill-sets', projectSlug], context.previous)
       }
       toast.error(
         error instanceof Error ? error.message : 'Failed to create skill set',
@@ -72,13 +72,13 @@ export function useCreateSkillSet(projectId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['skill-sets', projectId],
+        queryKey: ['skill-sets', projectSlug],
       })
     },
   })
 }
 
-export function useUpdateSkillSet(projectId: string) {
+export function useUpdateSkillSet(projectSlug: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -95,7 +95,7 @@ export function useUpdateSkillSet(projectId: string) {
         body.slug = input.newSlug
       }
       const response = await fetch(
-        `/api/projects/${projectId}/skill-sets/${encodeURIComponent(input.slug)}`,
+        `/api/projects/${projectSlug}/skill-sets/${encodeURIComponent(input.slug)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -109,16 +109,16 @@ export function useUpdateSkillSet(projectId: string) {
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({
-        queryKey: ['skill-sets', projectId],
+        queryKey: ['skill-sets', projectSlug],
       })
 
       const previous = queryClient.getQueryData<SkillSetSummary[]>([
         'skill-sets',
-        projectId,
+        projectSlug,
       ])
 
       queryClient.setQueryData<SkillSetSummary[]>(
-        ['skill-sets', projectId],
+        ['skill-sets', projectSlug],
         (old) =>
           old?.map((s) =>
             s.slug === input.slug
@@ -135,7 +135,7 @@ export function useUpdateSkillSet(projectId: string) {
     },
     onError: (error, _, context) => {
       if (context?.previous != null) {
-        queryClient.setQueryData(['skill-sets', projectId], context.previous)
+        queryClient.setQueryData(['skill-sets', projectSlug], context.previous)
       }
       toast.error(
         error instanceof Error ? error.message : 'Failed to update skill set',
@@ -143,19 +143,19 @@ export function useUpdateSkillSet(projectId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['skill-sets', projectId],
+        queryKey: ['skill-sets', projectSlug],
       })
     },
   })
 }
 
-export function useDeleteSkillSet(projectId: string) {
+export function useDeleteSkillSet(projectSlug: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (input: { slug: string }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/skill-sets/${encodeURIComponent(input.slug)}`,
+        `/api/projects/${projectSlug}/skill-sets/${encodeURIComponent(input.slug)}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -165,16 +165,16 @@ export function useDeleteSkillSet(projectId: string) {
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({
-        queryKey: ['skill-sets', projectId],
+        queryKey: ['skill-sets', projectSlug],
       })
 
       const previous = queryClient.getQueryData<SkillSetSummary[]>([
         'skill-sets',
-        projectId,
+        projectSlug,
       ])
 
       queryClient.setQueryData<SkillSetSummary[]>(
-        ['skill-sets', projectId],
+        ['skill-sets', projectSlug],
         (old) => old?.filter((s) => s.slug !== input.slug),
       )
 
@@ -182,7 +182,7 @@ export function useDeleteSkillSet(projectId: string) {
     },
     onError: (error, _, context) => {
       if (context?.previous != null) {
-        queryClient.setQueryData(['skill-sets', projectId], context.previous)
+        queryClient.setQueryData(['skill-sets', projectSlug], context.previous)
       }
       toast.error(
         error instanceof Error ? error.message : 'Failed to delete skill set',
@@ -190,10 +190,10 @@ export function useDeleteSkillSet(projectId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['skill-sets', projectId],
+        queryKey: ['skill-sets', projectSlug],
       })
       queryClient.invalidateQueries({
-        queryKey: ['skills', projectId],
+        queryKey: ['skills', projectSlug],
       })
     },
   })

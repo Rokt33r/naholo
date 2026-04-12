@@ -17,12 +17,12 @@ import { useAction } from '@/lib/use-action'
 import { logoutAction } from '@/app/app/actions'
 
 type AppModeSidebarProps = {
-  currentProjectId: string
+  currentProjectSlug: string
   currentMode: string
 }
 
 export function AppModeSidebar({
-  currentProjectId,
+  currentProjectSlug,
   currentMode,
 }: AppModeSidebarProps) {
   const router = useRouter()
@@ -37,14 +37,18 @@ export function AppModeSidebar({
       <ToolSidebarButton
         isActive={currentMode === 'issues'}
         tooltip='Issues'
-        onClick={() => router.push(`/app/projects/${currentProjectId}/issues`)}
+        onClick={() =>
+          router.push(`/app/projects/${currentProjectSlug}/issues`)
+        }
       >
         <ListTodo className='size-5' />
       </ToolSidebarButton>
       <ToolSidebarButton
         isActive={currentMode === 'workers'}
         tooltip='Workers'
-        onClick={() => router.push(`/app/projects/${currentProjectId}/workers`)}
+        onClick={() =>
+          router.push(`/app/projects/${currentProjectSlug}/workers`)
+        }
       >
         <HardHat className='size-5' />
       </ToolSidebarButton>
@@ -52,7 +56,7 @@ export function AppModeSidebar({
         isActive={currentMode === 'skill-sets'}
         tooltip='Skills'
         onClick={() =>
-          router.push(`/app/projects/${currentProjectId}/skill-sets`)
+          router.push(`/app/projects/${currentProjectSlug}/skill-sets`)
         }
       >
         <Puzzle className='size-5' />

@@ -10,14 +10,14 @@ import { useCreateLog, type Log } from '@/hooks/use-logs'
 import { useProjectContext } from '@/components/app/project-context'
 
 type LogsListProps = {
-  projectId: string
+  projectSlug: string
   issueNumber: number
   logs: Log[]
   isClosed: boolean
 }
 
 export function LogsList({
-  projectId,
+  projectSlug,
   issueNumber,
   logs,
   isClosed,
@@ -31,12 +31,12 @@ export function LogsList({
   const { currentWorker } = useProjectContext()
 
   const { mutateAsync: createLog, isPending: createLoading } = useCreateLog(
-    projectId,
+    projectSlug,
     issueNumber,
     currentWorker,
   )
-  const { mutateAsync: closeIssue } = useCloseIssue(projectId, issueNumber)
-  const { mutateAsync: reopenIssue } = useReopenIssue(projectId, issueNumber)
+  const { mutateAsync: closeIssue } = useCloseIssue(projectSlug, issueNumber)
+  const { mutateAsync: reopenIssue } = useReopenIssue(projectSlug, issueNumber)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -111,7 +111,7 @@ export function LogsList({
               <LogItem
                 key={log.id}
                 log={log}
-                projectId={projectId}
+                projectSlug={projectSlug}
                 issueNumber={issueNumber}
                 isOwn={log.projectWorker?.id === currentWorker.id}
               />

@@ -14,10 +14,10 @@ import { useAction } from '@/lib/use-action'
 import { logoutAction } from '@/app/app/actions'
 
 type AppModeMenuProps = {
-  currentProjectId: string
+  currentProjectSlug: string
 }
 
-export function AppModeMenu({ currentProjectId }: AppModeMenuProps) {
+export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
   const router = useRouter()
   const { execute: logout } = useAction(logoutAction)
 
@@ -35,7 +35,7 @@ export function AppModeMenu({ currentProjectId }: AppModeMenuProps) {
       <DropdownMenuContent align='start'>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectId}/issues`)
+            router.push(`/app/projects/${currentProjectSlug}/issues`)
           }
         >
           <ListTodo className='mr-2 h-4 w-4' />
@@ -43,7 +43,7 @@ export function AppModeMenu({ currentProjectId }: AppModeMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectId}/workers`)
+            router.push(`/app/projects/${currentProjectSlug}/workers`)
           }
         >
           <HardHat className='mr-2 h-4 w-4' />
@@ -51,7 +51,7 @@ export function AppModeMenu({ currentProjectId }: AppModeMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectId}/skill-sets`)
+            router.push(`/app/projects/${currentProjectSlug}/skill-sets`)
           }
         >
           <Puzzle className='mr-2 h-4 w-4' />

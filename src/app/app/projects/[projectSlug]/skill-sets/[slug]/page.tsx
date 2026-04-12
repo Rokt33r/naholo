@@ -12,11 +12,11 @@ import { SkillEditorDialog } from '@/components/skills/skill-editor-dialog'
 import type { Skill } from '@/hooks/use-skills'
 
 export default function SkillSetDetailPage() {
-  const { projectId } = useProjectContext()
+  const { projectSlug } = useProjectContext()
   const { slug } = useParams<{ slug: string }>()
   const router = useRouter()
-  const { skillSets } = useSkillSets(projectId)
-  const { skills, isLoading } = useSkills(projectId, slug)
+  const { skillSets } = useSkillSets(projectSlug)
+  const { skills, isLoading } = useSkills(projectSlug, slug)
   const [editorOpen, setEditorOpen] = useState(false)
 
   const skillSet = skillSets.find((s) => s.slug === slug)
@@ -27,7 +27,7 @@ export default function SkillSetDetailPage() {
         <Button
           variant='ghost'
           size='icon-sm'
-          onClick={() => router.push(`/app/projects/${projectId}/skill-sets`)}
+          onClick={() => router.push(`/app/projects/${projectSlug}/skill-sets`)}
         >
           <ArrowLeft className='size-4' />
         </Button>
@@ -64,7 +64,7 @@ export default function SkillSetDetailPage() {
                 skill={skill}
                 onClick={() =>
                   router.push(
-                    `/app/projects/${projectId}/skill-sets/${slug}/skills/${encodeURIComponent(skill.name)}`,
+                    `/app/projects/${projectSlug}/skill-sets/${slug}/skills/${encodeURIComponent(skill.name)}`,
                   )
                 }
               />
@@ -74,7 +74,7 @@ export default function SkillSetDetailPage() {
       </div>
 
       <SkillEditorDialog
-        projectId={projectId}
+        projectSlug={projectSlug}
         skillSetSlug={slug}
         open={editorOpen}
         onOpenChange={setEditorOpen}

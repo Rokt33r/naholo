@@ -10,11 +10,13 @@ import { updateIssueListCache } from './use-issues'
 /**
  * Hook to fetch tasks for an issue
  */
-export function useTasks(projectId: string, issueNumber: number) {
+export function useTasks(projectSlug: string, issueNumber: number) {
   return useQuery({
     queryKey: ['tasks', issueNumber],
     queryFn: () =>
-      fetcher<Task[]>(`/api/projects/${projectId}/issues/${issueNumber}/tasks`),
+      fetcher<Task[]>(
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks`,
+      ),
     staleTime: 1000 * 60,
   })
 }
@@ -22,7 +24,7 @@ export function useTasks(projectId: string, issueNumber: number) {
 /**
  * Hook to create a task with optimistic updates
  */
-export function useCreateTask(projectId: string, issueNumber: number) {
+export function useCreateTask(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -38,7 +40,7 @@ export function useCreateTask(projectId: string, issueNumber: number) {
       position?: number
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/tasks`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -96,7 +98,7 @@ export function useCreateTask(projectId: string, issueNumber: number) {
         return [...(old ?? []), optimisticTask]
       })
 
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         totalTasks: issue.totalTasks + 1,
         updatedAt: new Date().toISOString(),
@@ -108,7 +110,7 @@ export function useCreateTask(projectId: string, issueNumber: number) {
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         totalTasks: issue.totalTasks - 1,
       }))
@@ -123,13 +125,13 @@ export function useCreateTask(projectId: string, issueNumber: number) {
 /**
  * Hook to update a task's content with optimistic updates
  */
-export function useUpdateTask(projectId: string, issueNumber: number) {
+export function useUpdateTask(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ taskId, name }: { taskId: string; name: string }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -174,13 +176,13 @@ export function useUpdateTask(projectId: string, issueNumber: number) {
 /**
  * Hook to set task done status with optimistic updates
  */
-export function useSetTaskDone(projectId: string, issueNumber: number) {
+export function useSetTaskDone(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ taskId, done }: { taskId: string; done: boolean }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -208,7 +210,7 @@ export function useSetTaskDone(projectId: string, issueNumber: number) {
         ),
       )
 
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         completedTasks: issue.completedTasks + (done ? 1 : -1),
         updatedAt: new Date().toISOString(),
@@ -220,7 +222,7 @@ export function useSetTaskDone(projectId: string, issueNumber: number) {
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         completedTasks: issue.completedTasks + (done ? -1 : 1),
       }))
@@ -235,7 +237,7 @@ export function useSetTaskDone(projectId: string, issueNumber: number) {
 /**
  * Hook to update a task's note with optimistic updates
  */
-export function useUpdateTaskNote(projectId: string, issueNumber: number) {
+export function useUpdateTaskNote(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -247,7 +249,7 @@ export function useUpdateTaskNote(projectId: string, issueNumber: number) {
       note: string | null
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks/${taskId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -294,13 +296,13 @@ export function useUpdateTaskNote(projectId: string, issueNumber: number) {
 /**
  * Hook to delete a task with optimistic updates
  */
-export function useDeleteTask(projectId: string, issueNumber: number) {
+export function useDeleteTask(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (taskId: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks/${taskId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -331,7 +333,7 @@ export function useDeleteTask(projectId: string, issueNumber: number) {
         old?.filter((task) => !idsToRemove.includes(task.id)),
       )
 
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         totalTasks: issue.totalTasks - idsToRemove.length,
         completedTasks: issue.completedTasks - removedDoneCount,
@@ -348,7 +350,7 @@ export function useDeleteTask(projectId: string, issueNumber: number) {
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks', issueNumber], context.previousTasks)
       }
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         totalTasks: issue.totalTasks + (context?.removedCount ?? 0),
         completedTasks: issue.completedTasks + (context?.removedDoneCount ?? 0),
@@ -364,7 +366,7 @@ export function useDeleteTask(projectId: string, issueNumber: number) {
 /**
  * Hook to move a task with optimistic updates
  */
-export function useMoveTask(projectId: string, issueNumber: number) {
+export function useMoveTask(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -378,7 +380,7 @@ export function useMoveTask(projectId: string, issueNumber: number) {
       newPosition: number
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/tasks/${taskId}/move`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/tasks/${taskId}/move`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -5,7 +5,7 @@ import { z } from 'zod'
 export function registerTools(
   server: McpServer,
   client: NaholoClient,
-  projectId: string,
+  projectSlug: string,
 ): void {
   server.registerTool(
     'create_issue',
@@ -14,7 +14,7 @@ export function registerTools(
       inputSchema: { title: z.string().describe('Issue title') },
     },
     async ({ title }) => {
-      const issue = await client.createIssue(projectId, { title })
+      const issue = await client.createIssue(projectSlug, { title })
       return {
         content: [{ type: 'text', text: JSON.stringify(issue, null, 2) }],
       }
@@ -34,7 +34,7 @@ export function registerTools(
       },
     },
     async ({ issueNumber }) => {
-      await client.closeIssue(projectId, issueNumber)
+      await client.closeIssue(projectSlug, issueNumber)
       return { content: [{ type: 'text', text: 'Issue closed.' }] }
     },
   )
@@ -59,7 +59,7 @@ export function registerTools(
       },
     },
     async ({ issueNumber, name, note, parentTaskId, position }) => {
-      const task = await client.createTask(projectId, issueNumber, {
+      const task = await client.createTask(projectSlug, issueNumber, {
         name,
         note,
         parentTaskId,
@@ -88,7 +88,7 @@ export function registerTools(
       },
     },
     async ({ issueNumber, taskId, name, note, done }) => {
-      await client.updateTask(projectId, issueNumber, taskId, {
+      await client.updateTask(projectSlug, issueNumber, taskId, {
         name,
         note,
         done,
@@ -111,7 +111,7 @@ export function registerTools(
       },
     },
     async ({ issueNumber, content }) => {
-      const log = await client.createLog(projectId, issueNumber, { content })
+      const log = await client.createLog(projectSlug, issueNumber, { content })
       return {
         content: [{ type: 'text', text: JSON.stringify(log, null, 2) }],
       }

@@ -4,6 +4,7 @@ import { parse, stringify } from 'yaml'
 
 export interface ProjectConfig {
   projectId: string
+  projectSlug?: string
   defaultWorkerId?: string
 }
 

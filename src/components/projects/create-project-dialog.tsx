@@ -25,6 +25,7 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
 
   const { execute: createProject, loading } = useAction(createProjectAction)
@@ -32,20 +33,22 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!name.trim()) {
+    if (!name.trim() || !slug.trim()) {
       return
     }
 
     const result = await createProject(
       name.trim(),
+      slug.trim(),
       description.trim() || undefined,
     )
 
     if (result.success) {
       setOpen(false)
       setName('')
+      setSlug('')
       setDescription('')
-      router.push(`/app/projects/${result.data.id}`)
+      router.push(`/app/projects/${result.data.slug}`)
     } else {
       alert('Failed to create project: ' + result.error.message)
     }
@@ -75,6 +78,17 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
               />
             </div>
             <div className='space-y-2'>
+              <Label htmlFor='slug'>Slug *</Label>
+              <Input
+                id='slug'
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder='my-project'
+                pattern='[a-z0-9-]+'
+                disabled={loading}
+              />
+            </div>
+            <div className='space-y-2'>
               <Label htmlFor='description'>Description</Label>
               <Input
                 id='description'
@@ -94,7 +108,10 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={!name.trim() || loading}>
+            <Button
+              type='submit'
+              disabled={!name.trim() || !slug.trim() || loading}
+            >
               {loading ? 'Creating...' : 'Create Project'}
             </Button>
           </DialogFooter>

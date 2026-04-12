@@ -21,19 +21,19 @@ import { useSkillSets, useCreateSkillSet } from '@/hooks/use-skill-sets'
 import type { SkillSetSummary } from '@/hooks/use-skill-sets'
 
 export default function SkillSetsPage() {
-  const { projectId, projectName, projects } = useProjectContext()
+  const { projectSlug, projectName, projects } = useProjectContext()
   const router = useRouter()
   const isMobile = useIsMobile()
-  const { skillSets, isLoading } = useSkillSets(projectId)
+  const { skillSets, isLoading } = useSkillSets(projectSlug)
   const [createOpen, setCreateOpen] = useState(false)
 
   return (
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between px-4 pt-2 gap-2'>
-        {isMobile && <AppModeMenu currentProjectId={projectId} />}
+        {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
         <ProjectSwitcher
           projects={projects}
-          currentProjectId={projectId}
+          currentProjectSlug={projectSlug}
           currentProjectName={projectName}
         />
         <Button
@@ -68,7 +68,7 @@ export default function SkillSetsPage() {
                 skillSet={skillSet}
                 onClick={() =>
                   router.push(
-                    `/app/projects/${projectId}/skill-sets/${skillSet.slug}`,
+                    `/app/projects/${projectSlug}/skill-sets/${skillSet.slug}`,
                   )
                 }
               />
@@ -78,7 +78,7 @@ export default function SkillSetsPage() {
       </div>
 
       <CreateSkillSetDialog
-        projectId={projectId}
+        projectSlug={projectSlug}
         open={createOpen}
         onOpenChange={setCreateOpen}
       />
@@ -110,17 +110,17 @@ function SkillSetItem({
 }
 
 function CreateSkillSetDialog({
-  projectId,
+  projectSlug,
   open,
   onOpenChange,
 }: {
-  projectId: string
+  projectSlug: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
-  const createSkillSet = useCreateSkillSet(projectId)
+  const createSkillSet = useCreateSkillSet(projectSlug)
 
   const isSubmitDisabled =
     !name.trim() || !slug.trim() || createSkillSet.isPending

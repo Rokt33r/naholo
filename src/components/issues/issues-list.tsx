@@ -21,13 +21,13 @@ import { useIssues } from '@/hooks/use-issues'
 import type { Project } from 'naholo-api/types'
 
 type IssuesListProps = {
-  projectId: string
+  projectSlug: string
   projectName: string
   projects: Project[]
 }
 
 export function IssuesList({
-  projectId,
+  projectSlug,
   projectName,
   projects,
 }: IssuesListProps) {
@@ -43,7 +43,7 @@ export function IssuesList({
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
-  const { issues, isLoading, refetch } = useIssues(projectId, filter)
+  const { issues, isLoading, refetch } = useIssues(projectSlug, filter)
 
   const filteredIssues = issues.filter((issue) => {
     const query = searchQuery.toLowerCase()
@@ -63,10 +63,10 @@ export function IssuesList({
   return (
     <div className='flex h-full flex-col'>
       <div className='flex items-center justify-between px-2 pt-2 gap-2'>
-        {isMobile && <AppModeMenu currentProjectId={projectId} />}
+        {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
         <ProjectSwitcher
           projects={projects}
-          currentProjectId={projectId}
+          currentProjectSlug={projectSlug}
           currentProjectName={projectName}
         />
         {!isMobile && (
@@ -103,7 +103,7 @@ export function IssuesList({
             Closed
           </Button>
         </ButtonGroup>
-        <CreateIssueDialog projectId={projectId} onIssueCreated={refetch}>
+        <CreateIssueDialog projectSlug={projectSlug} onIssueCreated={refetch}>
           <Button size='icon' variant='ghost'>
             <SquarePen className='h-4 w-4' />
           </Button>
@@ -130,7 +130,7 @@ export function IssuesList({
               <IssueItem
                 key={issue.id}
                 issue={issue}
-                projectId={projectId}
+                projectSlug={projectSlug}
                 isActive={issue.number === currentIssueNumber}
               />
             ))}

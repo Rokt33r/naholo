@@ -14,7 +14,7 @@ export default function IssuesLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { projectId, projectName, projects } = useProjectContext()
+  const { projectSlug, projectName, projects } = useProjectContext()
   const isMobile = useIsMobile()
   const segment = useSelectedLayoutSegment()
   const showList = !isMobile || segment === null
@@ -25,7 +25,7 @@ export default function IssuesLayout({
         {!isMobile && (
           <IssuesListPanel>
             <IssuesList
-              projectId={projectId}
+              projectSlug={projectSlug}
               projectName={projectName}
               projects={projects}
             />
@@ -34,7 +34,7 @@ export default function IssuesLayout({
         {showList && isMobile ? (
           <div className='flex-1 overflow-hidden'>
             <IssuesList
-              projectId={projectId}
+              projectSlug={projectSlug}
               projectName={projectName}
               projects={projects}
             />

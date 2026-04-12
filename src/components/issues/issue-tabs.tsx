@@ -9,7 +9,7 @@ import type { Note } from 'naholo-api/types'
 type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
 
 type IssueTabsProps = {
-  projectId: string
+  projectSlug: string
   issueNumber: number
   notes: Note[]
   activeTab: ActiveTab
@@ -18,7 +18,7 @@ type IssueTabsProps = {
 }
 
 export function IssueTabs({
-  projectId,
+  projectSlug,
   issueNumber,
   notes,
   activeTab,
@@ -26,7 +26,7 @@ export function IssueTabs({
   notesSaveState,
 }: IssueTabsProps) {
   const { mutateAsync: createNote, isPending: isCreating } = useCreateNote(
-    projectId,
+    projectSlug,
     issueNumber,
   )
 

@@ -7,18 +7,18 @@ import { TokenItem } from './token-item'
 import { CreateTokenDialog } from './create-token-dialog'
 
 type WorkerTokensProps = {
-  projectId: string
+  projectSlug: string
   workerId: string
 }
 
-export function WorkerTokens({ projectId, workerId }: WorkerTokensProps) {
-  const { tokens, isLoading } = useWorkerTokens(projectId, workerId)
+export function WorkerTokens({ projectSlug, workerId }: WorkerTokensProps) {
+  const { tokens, isLoading } = useWorkerTokens(projectSlug, workerId)
 
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
         <h2 className='text-sm font-semibold'>API Tokens</h2>
-        <CreateTokenDialog projectId={projectId} workerId={workerId}>
+        <CreateTokenDialog projectSlug={projectSlug} workerId={workerId}>
           <Button variant='ghost' size='icon-sm'>
             <Plus className='size-4' />
           </Button>
@@ -37,7 +37,7 @@ export function WorkerTokens({ projectId, workerId }: WorkerTokensProps) {
             <TokenItem
               key={token.id}
               token={token}
-              projectId={projectId}
+              projectSlug={projectSlug}
               workerId={workerId}
             />
           ))}

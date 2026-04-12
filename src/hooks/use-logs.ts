@@ -11,11 +11,11 @@ import { updateIssueListCache } from './use-issues'
 /**
  * Hook to fetch logs for an issue
  */
-export function useLogs(projectId: string, issueNumber: number) {
+export function useLogs(projectSlug: string, issueNumber: number) {
   return useQuery({
     queryKey: ['logs', issueNumber],
     queryFn: () =>
-      fetcher<Log[]>(`/api/projects/${projectId}/issues/${issueNumber}/logs`),
+      fetcher<Log[]>(`/api/projects/${projectSlug}/issues/${issueNumber}/logs`),
     staleTime: 1000 * 60,
   })
 }
@@ -24,7 +24,7 @@ export function useLogs(projectId: string, issueNumber: number) {
  * Hook to create a log with optimistic updates
  */
 export function useCreateLog(
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   currentWorker: { id: string; name: string; type: string },
 ) {
@@ -33,7 +33,7 @@ export function useCreateLog(
   return useMutation({
     mutationFn: async (content: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/logs`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/logs`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -70,7 +70,7 @@ export function useCreateLog(
         optimisticLog,
       ])
 
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         lastLogPreview: generateLogPreview(content),
         updatedAt: new Date().toISOString(),
@@ -84,7 +84,7 @@ export function useCreateLog(
       }
       const logs = context?.previousLogs ?? []
       const lastLog = logs.length > 0 ? logs[logs.length - 1] : null
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         lastLogPreview:
           lastLog != null ? generateLogPreview(lastLog.content) : null,
@@ -100,7 +100,7 @@ export function useCreateLog(
 /**
  * Hook to update a log with optimistic updates
  */
-export function useUpdateLog(projectId: string, issueNumber: number) {
+export function useUpdateLog(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -112,7 +112,7 @@ export function useUpdateLog(projectId: string, issueNumber: number) {
       content: string
     }) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/logs/${logId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/logs/${logId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -143,11 +143,16 @@ export function useUpdateLog(projectId: string, issueNumber: number) {
       const logs = previousLogs ?? []
       const isLastLog = logs.length > 0 && logs[logs.length - 1].id === logId
       if (isLastLog) {
-        updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
-          ...issue,
-          lastLogPreview: generateLogPreview(content),
-          updatedAt: new Date().toISOString(),
-        }))
+        updateIssueListCache(
+          queryClient,
+          projectSlug,
+          issueNumber,
+          (issue) => ({
+            ...issue,
+            lastLogPreview: generateLogPreview(content),
+            updatedAt: new Date().toISOString(),
+          }),
+        )
       }
 
       return { previousLogs }
@@ -158,7 +163,7 @@ export function useUpdateLog(projectId: string, issueNumber: number) {
       }
       const logs = context?.previousLogs ?? []
       const lastLog = logs.length > 0 ? logs[logs.length - 1] : null
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         lastLogPreview:
           lastLog != null ? generateLogPreview(lastLog.content) : null,
@@ -174,13 +179,13 @@ export function useUpdateLog(projectId: string, issueNumber: number) {
 /**
  * Hook to delete a log with optimistic updates
  */
-export function useDeleteLog(projectId: string, issueNumber: number) {
+export function useDeleteLog(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (logId: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/logs/${logId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/logs/${logId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -206,7 +211,7 @@ export function useDeleteLog(projectId: string, issueNumber: number) {
         remainingLogs.length > 0
           ? remainingLogs[remainingLogs.length - 1]
           : null
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         lastLogPreview:
           newLastLog != null ? generateLogPreview(newLastLog.content) : null,
@@ -221,7 +226,7 @@ export function useDeleteLog(projectId: string, issueNumber: number) {
       }
       const logs = context?.previousLogs ?? []
       const lastLog = logs.length > 0 ? logs[logs.length - 1] : null
-      updateIssueListCache(queryClient, projectId, issueNumber, (issue) => ({
+      updateIssueListCache(queryClient, projectSlug, issueNumber, (issue) => ({
         ...issue,
         lastLogPreview:
           lastLog != null ? generateLogPreview(lastLog.content) : null,

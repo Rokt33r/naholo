@@ -19,7 +19,7 @@ type ViewMode = 'editor' | 'split' | 'preview'
 
 type NoteViewProps = {
   note: Note
-  projectId: string
+  projectSlug: string
   issueNumber: number
   initialContent: string
   saveState: DebouncedSaveState
@@ -29,7 +29,7 @@ type NoteViewProps = {
 
 export function NoteView({
   note,
-  projectId,
+  projectSlug,
   issueNumber,
   initialContent,
   saveState,
@@ -42,11 +42,11 @@ export function NoteView({
   const [content, setContentState] = useState(initialContent)
 
   const { mutateAsync: updateNote, isPending: updateLoading } = useUpdateNote(
-    projectId,
+    projectSlug,
     issueNumber,
   )
   const { mutateAsync: deleteNote, isPending: deleteLoading } = useDeleteNote(
-    projectId,
+    projectSlug,
     issueNumber,
   )
 

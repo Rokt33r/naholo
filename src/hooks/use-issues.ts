@@ -13,13 +13,13 @@ import type { IssueListItem, IssueDetail } from 'naholo-api/types'
 
 export function updateIssueListCache(
   queryClient: QueryClient,
-  projectId: string,
+  projectSlug: string,
   issueNumber: number,
   updater: (issue: IssueListItem) => IssueListItem,
 ) {
   for (const filter of ['open', 'closed'] as const) {
     queryClient.setQueryData<IssueListItem[]>(
-      ['issues', projectId, filter],
+      ['issues', projectSlug, filter],
       (old) =>
         old?.map((issue) =>
           issue.number === issueNumber ? updater(issue) : issue,
@@ -31,12 +31,12 @@ export function updateIssueListCache(
 /**
  * Hook to fetch issues list for a project
  */
-export function useIssues(projectId: string, filter: 'open' | 'closed') {
+export function useIssues(projectSlug: string, filter: 'open' | 'closed') {
   const query = useQuery({
-    queryKey: ['issues', projectId, filter],
+    queryKey: ['issues', projectSlug, filter],
     queryFn: () =>
       fetcher<IssueListItem[]>(
-        `/api/projects/${projectId}/issues?closed=${filter === 'closed'}`,
+        `/api/projects/${projectSlug}/issues?closed=${filter === 'closed'}`,
       ),
   })
 
@@ -51,11 +51,13 @@ export function useIssues(projectId: string, filter: 'open' | 'closed') {
 /**
  * Hook to fetch a single issue
  */
-export function useIssue(projectId: string, issueNumber: number) {
+export function useIssue(projectSlug: string, issueNumber: number) {
   const query = useQuery({
-    queryKey: ['issue', projectId, issueNumber],
+    queryKey: ['issue', projectSlug, issueNumber],
     queryFn: () =>
-      fetcher<IssueDetail>(`/api/projects/${projectId}/issues/${issueNumber}`),
+      fetcher<IssueDetail>(
+        `/api/projects/${projectSlug}/issues/${issueNumber}`,
+      ),
   })
 
   return {
@@ -68,13 +70,13 @@ export function useIssue(projectId: string, issueNumber: number) {
 /**
  * Hook to update an issue's title with optimistic updates
  */
-export function useUpdateIssueTitle(projectId: string, issueNumber: number) {
+export function useUpdateIssueTitle(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (newTitle: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -88,24 +90,24 @@ export function useUpdateIssueTitle(projectId: string, issueNumber: number) {
     },
     onMutate: async (newTitle) => {
       await queryClient.cancelQueries({
-        queryKey: ['issue', projectId, issueNumber],
+        queryKey: ['issue', projectSlug, issueNumber],
       })
 
       const previousIssue = queryClient.getQueryData<IssueDetail>([
         'issue',
-        projectId,
+        projectSlug,
         issueNumber,
       ])
 
       queryClient.setQueryData<IssueDetail>(
-        ['issue', projectId, issueNumber],
+        ['issue', projectSlug, issueNumber],
         (old) => (old ? { ...old, title: newTitle } : old),
       )
 
       // Update both issue list caches
       for (const filter of ['open', 'closed'] as const) {
         queryClient.setQueryData<IssueListItem[]>(
-          ['issues', projectId, filter],
+          ['issues', projectSlug, filter],
           (old) =>
             old?.map((issue) =>
               issue.number === issueNumber
@@ -120,18 +122,18 @@ export function useUpdateIssueTitle(projectId: string, issueNumber: number) {
     onError: (err, _, context) => {
       if (context?.previousIssue) {
         queryClient.setQueryData(
-          ['issue', projectId, issueNumber],
+          ['issue', projectSlug, issueNumber],
           context.previousIssue,
         )
       }
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectSlug] })
       toast.error(err instanceof Error ? err.message : 'Failed to update title')
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['issue', projectId, issueNumber],
+        queryKey: ['issue', projectSlug, issueNumber],
       })
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectSlug] })
     },
   })
 }
@@ -139,13 +141,13 @@ export function useUpdateIssueTitle(projectId: string, issueNumber: number) {
 /**
  * Hook to close an issue with optimistic updates
  */
-export function useCloseIssue(projectId: string, issueNumber: number) {
+export function useCloseIssue(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/close`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/close`,
         { method: 'POST' },
       )
       if (!response.ok) {
@@ -154,18 +156,18 @@ export function useCloseIssue(projectId: string, issueNumber: number) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({
-        queryKey: ['issue', projectId, issueNumber],
+        queryKey: ['issue', projectSlug, issueNumber],
       })
 
       const previousIssue = queryClient.getQueryData<IssueDetail>([
         'issue',
-        projectId,
+        projectSlug,
         issueNumber,
       ])
 
       const now = new Date()
       queryClient.setQueryData<IssueDetail>(
-        ['issue', projectId, issueNumber],
+        ['issue', projectSlug, issueNumber],
         (old) =>
           old ? { ...old, closed: true, closedAt: now.toISOString() } : old,
       )
@@ -175,7 +177,7 @@ export function useCloseIssue(projectId: string, issueNumber: number) {
     onError: (err, _, context) => {
       if (context?.previousIssue) {
         queryClient.setQueryData(
-          ['issue', projectId, issueNumber],
+          ['issue', projectSlug, issueNumber],
           context.previousIssue,
         )
       }
@@ -183,9 +185,9 @@ export function useCloseIssue(projectId: string, issueNumber: number) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['issue', projectId, issueNumber],
+        queryKey: ['issue', projectSlug, issueNumber],
       })
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectSlug] })
     },
   })
 }
@@ -193,13 +195,13 @@ export function useCloseIssue(projectId: string, issueNumber: number) {
 /**
  * Hook to reopen an issue with optimistic updates
  */
-export function useReopenIssue(projectId: string, issueNumber: number) {
+export function useReopenIssue(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}/close`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/close`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -208,17 +210,17 @@ export function useReopenIssue(projectId: string, issueNumber: number) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({
-        queryKey: ['issue', projectId, issueNumber],
+        queryKey: ['issue', projectSlug, issueNumber],
       })
 
       const previousIssue = queryClient.getQueryData<IssueDetail>([
         'issue',
-        projectId,
+        projectSlug,
         issueNumber,
       ])
 
       queryClient.setQueryData<IssueDetail>(
-        ['issue', projectId, issueNumber],
+        ['issue', projectSlug, issueNumber],
         (old) => (old ? { ...old, closed: false, closedAt: null } : old),
       )
 
@@ -227,7 +229,7 @@ export function useReopenIssue(projectId: string, issueNumber: number) {
     onError: (err, _, context) => {
       if (context?.previousIssue) {
         queryClient.setQueryData(
-          ['issue', projectId, issueNumber],
+          ['issue', projectSlug, issueNumber],
           context.previousIssue,
         )
       }
@@ -235,9 +237,9 @@ export function useReopenIssue(projectId: string, issueNumber: number) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['issue', projectId, issueNumber],
+        queryKey: ['issue', projectSlug, issueNumber],
       })
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectSlug] })
     },
   })
 }
@@ -245,13 +247,13 @@ export function useReopenIssue(projectId: string, issueNumber: number) {
 /**
  * Hook to delete an issue
  */
-export function useDeleteIssue(projectId: string, issueNumber: number) {
+export function useDeleteIssue(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `/api/projects/${projectId}/issues/${issueNumber}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -262,7 +264,7 @@ export function useDeleteIssue(projectId: string, issueNumber: number) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete issue')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['issues', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['issues', projectSlug] })
     },
   })
 }

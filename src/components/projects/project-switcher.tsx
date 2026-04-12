@@ -14,19 +14,19 @@ import type { Project } from 'naholo-api/types'
 
 type ProjectSwitcherProps = {
   projects: Project[]
-  currentProjectId: string
+  currentProjectSlug: string
   currentProjectName: string
 }
 
 export function ProjectSwitcher({
   projects,
-  currentProjectId,
+  currentProjectSlug,
   currentProjectName,
 }: ProjectSwitcherProps) {
   const router = useRouter()
 
-  const handleProjectClick = (projectId: string) => {
-    router.push(`/app/projects/${projectId}`)
+  const handleProjectClick = (slug: string) => {
+    router.push(`/app/projects/${slug}`)
   }
 
   return (
@@ -41,10 +41,10 @@ export function ProjectSwitcher({
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.id}
-            onClick={() => handleProjectClick(project.id)}
+            onClick={() => handleProjectClick(project.slug)}
           >
             <span className='flex-1'>{project.name}</span>
-            {project.id === currentProjectId && (
+            {project.slug === currentProjectSlug && (
               <Check className='h-4 w-4 text-muted-foreground' />
             )}
           </DropdownMenuItem>

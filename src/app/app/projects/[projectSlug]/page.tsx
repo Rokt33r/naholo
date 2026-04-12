@@ -4,12 +4,12 @@ import { useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 export default function ProjectPage() {
-  const { projectId } = useParams<{ projectId: string }>()
+  const { projectSlug } = useParams<{ projectSlug: string }>()
   const router = useRouter()
 
   useEffect(() => {
-    router.replace(`/app/projects/${projectId}/issues`)
-  }, [router, projectId])
+    router.replace(`/app/projects/${projectSlug}/issues`)
+  }, [router, projectSlug])
 
   return null
 }

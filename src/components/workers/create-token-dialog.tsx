@@ -18,13 +18,13 @@ import {
 import { useCreateWorkerToken } from '@/hooks/use-worker-tokens'
 
 type CreateTokenDialogProps = {
-  projectId: string
+  projectSlug: string
   workerId: string
   children: React.ReactNode
 }
 
 export function CreateTokenDialog({
-  projectId,
+  projectSlug,
   workerId,
   children,
 }: CreateTokenDialogProps) {
@@ -32,7 +32,7 @@ export function CreateTokenDialog({
   const [name, setName] = useState('')
   const [createdToken, setCreatedToken] = useState<string | null>(null)
   const { mutateAsync: createToken, isPending } = useCreateWorkerToken(
-    projectId,
+    projectSlug,
     workerId,
   )
 

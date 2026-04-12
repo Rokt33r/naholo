@@ -9,12 +9,12 @@ import type { WorkerToken } from 'naholo-api/types'
 /**
  * Hook to fetch API tokens for a worker
  */
-export function useWorkerTokens(projectId: string, workerId: string) {
+export function useWorkerTokens(projectSlug: string, workerId: string) {
   const query = useQuery({
-    queryKey: ['workerTokens', projectId, workerId],
+    queryKey: ['workerTokens', projectSlug, workerId],
     queryFn: () =>
       fetcher<WorkerToken[]>(
-        `/api/projects/${projectId}/workers/${workerId}/tokens`,
+        `/api/projects/${projectSlug}/workers/${workerId}/tokens`,
       ),
   })
 
@@ -28,13 +28,13 @@ export function useWorkerTokens(projectId: string, workerId: string) {
 /**
  * Hook to create a new API token
  */
-export function useCreateWorkerToken(projectId: string, workerId: string) {
+export function useCreateWorkerToken(projectSlug: string, workerId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (name: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/workers/${workerId}/tokens`,
+        `/api/projects/${projectSlug}/workers/${workerId}/tokens`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -51,7 +51,7 @@ export function useCreateWorkerToken(projectId: string, workerId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['workerTokens', projectId, workerId],
+        queryKey: ['workerTokens', projectSlug, workerId],
       })
     },
   })
@@ -60,13 +60,13 @@ export function useCreateWorkerToken(projectId: string, workerId: string) {
 /**
  * Hook to revoke an API token
  */
-export function useRevokeWorkerToken(projectId: string, workerId: string) {
+export function useRevokeWorkerToken(projectSlug: string, workerId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (tokenId: string) => {
       const response = await fetch(
-        `/api/projects/${projectId}/workers/${workerId}/tokens/${tokenId}`,
+        `/api/projects/${projectSlug}/workers/${workerId}/tokens/${tokenId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
@@ -75,17 +75,17 @@ export function useRevokeWorkerToken(projectId: string, workerId: string) {
     },
     onMutate: async (tokenId) => {
       await queryClient.cancelQueries({
-        queryKey: ['workerTokens', projectId, workerId],
+        queryKey: ['workerTokens', projectSlug, workerId],
       })
 
       const previous = queryClient.getQueryData<WorkerToken[]>([
         'workerTokens',
-        projectId,
+        projectSlug,
         workerId,
       ])
 
       queryClient.setQueryData<WorkerToken[]>(
-        ['workerTokens', projectId, workerId],
+        ['workerTokens', projectSlug, workerId],
         (old) => old?.filter((t) => t.id !== tokenId),
       )
 
@@ -94,7 +94,7 @@ export function useRevokeWorkerToken(projectId: string, workerId: string) {
     onError: (err, _, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
-          ['workerTokens', projectId, workerId],
+          ['workerTokens', projectSlug, workerId],
           context.previous,
         )
       }
@@ -102,7 +102,7 @@ export function useRevokeWorkerToken(projectId: string, workerId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ['workerTokens', projectId, workerId],
+        queryKey: ['workerTokens', projectSlug, workerId],
       })
     },
   })

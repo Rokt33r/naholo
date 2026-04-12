@@ -8,10 +8,10 @@ import type { Worker } from 'naholo-api/types'
 /**
  * Hook to fetch all workers in a project
  */
-export function useWorkers(projectId: string) {
+export function useWorkers(projectSlug: string) {
   const query = useQuery({
-    queryKey: ['workers', projectId],
-    queryFn: () => fetcher<Worker[]>(`/api/projects/${projectId}/workers`),
+    queryKey: ['workers', projectSlug],
+    queryFn: () => fetcher<Worker[]>(`/api/projects/${projectSlug}/workers`),
   })
 
   return {
@@ -24,11 +24,11 @@ export function useWorkers(projectId: string) {
 /**
  * Hook to fetch a single worker
  */
-export function useWorker(projectId: string, workerId: string) {
+export function useWorker(projectSlug: string, workerId: string) {
   const query = useQuery({
-    queryKey: ['worker', projectId, workerId],
+    queryKey: ['worker', projectSlug, workerId],
     queryFn: () =>
-      fetcher<Worker>(`/api/projects/${projectId}/workers/${workerId}`),
+      fetcher<Worker>(`/api/projects/${projectSlug}/workers/${workerId}`),
   })
 
   return {

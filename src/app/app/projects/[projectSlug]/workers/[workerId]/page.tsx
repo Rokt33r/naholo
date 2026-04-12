@@ -9,11 +9,11 @@ import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useWorker } from '@/hooks/use-workers'
 
 export default function WorkerDetailPage() {
-  const { projectId } = useProjectContext()
+  const { projectSlug } = useProjectContext()
   const { workerId } = useParams<{ workerId: string }>()
   const router = useRouter()
   const isMobile = useIsMobile()
-  const { worker, isLoading } = useWorker(projectId, workerId)
+  const { worker, isLoading } = useWorker(projectSlug, workerId)
 
   return (
     <div className='flex h-full flex-col'>
@@ -22,7 +22,7 @@ export default function WorkerDetailPage() {
           <Button
             variant='ghost'
             size='icon-sm'
-            onClick={() => router.push(`/app/projects/${projectId}/workers`)}
+            onClick={() => router.push(`/app/projects/${projectSlug}/workers`)}
           >
             <ArrowLeft className='size-4' />
           </Button>
@@ -54,7 +54,7 @@ export default function WorkerDetailPage() {
             </div>
 
             <div className='border-t pt-6'>
-              <WorkerTokens projectId={projectId} workerId={workerId} />
+              <WorkerTokens projectSlug={projectSlug} workerId={workerId} />
             </div>
           </div>
         )}

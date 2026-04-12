@@ -5,6 +5,7 @@ import type { Project, ProjectWorkerInfo } from '@/hooks/use-projects'
 
 type ProjectContextValue = {
   projectId: string
+  projectSlug: string
   projectName: string
   projects: Project[]
   currentWorker: ProjectWorkerInfo
