@@ -98,6 +98,57 @@ export function registerTools(
   )
 
   server.registerTool(
+    'create_note',
+    {
+      description: 'Create a note on an issue',
+      inputSchema: {
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
+        name: z
+          .string()
+          .describe('Note name (used as identifier and filename)'),
+        content: z.string().describe('Note content (markdown)'),
+      },
+    },
+    async ({ issueNumber, name, content }) => {
+      const note = await client.createNote(projectSlug, issueNumber, {
+        name,
+        content,
+      })
+      return {
+        content: [{ type: 'text', text: JSON.stringify(note, null, 2) }],
+      }
+    },
+  )
+
+  server.registerTool(
+    'update_note',
+    {
+      description: 'Update a note on an issue',
+      inputSchema: {
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
+        noteId: z.string().describe('Note ID'),
+        name: z.string().optional().describe('New note name'),
+        content: z.string().optional().describe('New note content (markdown)'),
+      },
+    },
+    async ({ issueNumber, noteId, name, content }) => {
+      await client.updateNote(projectSlug, issueNumber, noteId, {
+        name,
+        content,
+      })
+      return { content: [{ type: 'text', text: 'Note updated.' }] }
+    },
+  )
+
+  server.registerTool(
     'create_log',
     {
       description: 'Create a log entry for an issue',

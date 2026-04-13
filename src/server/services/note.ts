@@ -8,7 +8,7 @@ import { NotFoundError } from './errors'
 
 export type Note = {
   id: string
-  title: string
+  name: string
   content: string
   position: number
   createdAt: Date
@@ -22,7 +22,7 @@ export async function listNotes(data: { issueId: string }): Promise<Note[]> {
   return db.query.notes.findMany({
     columns: {
       id: true,
-      title: true,
+      name: true,
       content: true,
       position: true,
       createdAt: true,
@@ -34,13 +34,34 @@ export async function listNotes(data: { issueId: string }): Promise<Note[]> {
 }
 
 /**
+ * Find a note by name within an issue
+ */
+export async function findNoteByName(data: {
+  issueId: string
+  name: string
+}): Promise<Note | undefined> {
+  return db.query.notes.findFirst({
+    columns: {
+      id: true,
+      name: true,
+      content: true,
+      position: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    where: (t, { eq, and }) =>
+      and(eq(t.issueId, data.issueId), eq(t.name, data.name)),
+  })
+}
+
+/**
  * Create a new note
  */
 export async function createNote(data: {
   projectWorkerId: string
   projectId: string
   issueId: string
-  title: string
+  name: string
   content: string
 }): Promise<ReturnResult<Note>> {
   // Get the maximum position for notes in this issue
@@ -61,13 +82,13 @@ export async function createNote(data: {
       projectId: data.projectId,
       issueId: data.issueId,
       projectWorkerId: data.projectWorkerId,
-      title: data.title,
+      name: data.name,
       content: data.content,
       position: maxPosition + 1,
     })
     .returning({
       id: notes.id,
-      title: notes.title,
+      name: notes.name,
       content: notes.content,
       position: notes.position,
       createdAt: notes.createdAt,
@@ -90,16 +111,30 @@ export async function updateNote(data: {
   projectWorkerId: string
   noteId: string
   issueId: string
-  title: string
-  content: string
+  name?: string
+  content?: string
 }): Promise<ReturnResult<Note>> {
+  const updates: Record<string, unknown> = { updatedAt: new Date() }
+  if (data.name != null) {
+    // Validate uniqueness of new name within the issue
+    const existing = await findNoteByName({
+      issueId: data.issueId,
+      name: data.name,
+    })
+    if (existing != null && existing.id !== data.noteId) {
+      return err(
+        new Error('A note with this name already exists in this issue'),
+      )
+    }
+    updates.name = data.name
+  }
+  if (data.content != null) {
+    updates.content = data.content
+  }
+
   const [note] = await db
     .update(notes)
-    .set({
-      title: data.title,
-      content: data.content,
-      updatedAt: new Date(),
-    })
+    .set(updates)
     .where(
       and(
         eq(notes.id, data.noteId),
@@ -108,7 +143,7 @@ export async function updateNote(data: {
     )
     .returning({
       id: notes.id,
-      title: notes.title,
+      name: notes.name,
       content: notes.content,
       position: notes.position,
       createdAt: notes.createdAt,

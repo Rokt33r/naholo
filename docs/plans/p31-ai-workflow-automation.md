@@ -87,12 +87,12 @@ Notes currently have `title` as display name. Replace it with `name` — a singl
 
 **Service + API**:
 
-- [ ] 1.3 Update note service (`src/server/services/note.ts`)
+- [x] 1.3 Update note service (`src/server/services/note.ts`)
   - `createNote`: accept `name` param (required), remove `title`
   - `updateNote`: accept optional `name` for rename
   - Add `findNoteByName(issueId, name)` for lookup
   - Add rename validation: new name must be unique within issue
-- [ ] 1.4 Update note API routes
+- [x] 1.4 Update note API routes
   - POST: `{ name: string, content: string }` — no more `title`
   - PATCH: `{ name?: string, content?: string }`
   - GET returns `name` instead of `title`
@@ -100,33 +100,33 @@ Notes currently have `title` as display name. Replace it with `name` — a singl
 
 **Frontend — tabs, rename, navigation**:
 
-- [ ] 1.5 Update tab display (`src/components/issues/issue-tabs.tsx`)
+- [x] 1.5 Update tab display (`src/components/issues/issue-tabs.tsx`)
   - Tabs show `name` instead of `title`
   - Change URL format from `?tab=note:{noteId}` to `?tab=note:{name}`
   - "Add Note" creates with name `"untitled"` (or `"untitled-2"` etc. if collision)
-- [ ] 1.6 Remove inline title input from `src/components/notes/note-view.tsx`
+- [x] 1.6 Remove inline title input from `src/components/notes/note-view.tsx`
   - The editable title at the top of the note editor goes away
-- [ ] 1.7 Add right-click context menu on note tab items
+- [x] 1.7 Add right-click context menu on note tab items
   - Use Radix `ContextMenu` on each tab button
   - Menu item: "Rename" — opens a rename dialog
-- [ ] 1.8 Create rename dialog
+- [x] 1.8 Create rename dialog
   - Text input pre-filled with current `name`
   - On confirm: call PATCH with new `name`, then navigate to `?tab=note:{newName}` if this note is currently selected
   - Validate: non-empty, unique within issue
-- [ ] 1.9 Update `packages/naholo-api/src/types.ts` — replace `title` with `name` on Note type
-- [ ] 1.10 Update `src/hooks/use-notes.ts` — update mutations to use `name` instead of `title`
+- [x] 1.9 Update `packages/naholo-api/src/types.ts` — replace `title` with `name` on Note type
+- [x] 1.10 Update `src/hooks/use-notes.ts` — update mutations to use `name` instead of `title`
 
 ### Task 2: Add note MCP tools
 
-- [ ] 2.1 Add `Note` type to `packages/naholo-api/src/types.ts` if not already present
-- [ ] 2.2 Add `NaholoClient.createNote()` in `packages/naholo-api/src/client.ts`
-  - `createNote(projectSlug, issueNumber, { name, content }): Promise<Note>`
-- [ ] 2.3 Add `NaholoClient.updateNote()`
-  - `updateNote(projectSlug, issueNumber, noteId, { name?, content? }): Promise<Note>`
-- [ ] 2.4 Add `create_note` MCP tool in `packages/naholo-cli/src/mcp/tools.ts`
+- [x] 2.1 Add `Note` type to `packages/naholo-api/src/types.ts` if not already present
+- [x] 2.2 Add `NaholoClient.createNote()` in `packages/naholo-api/src/client.ts`
+  - Already existed, updated to use `name` instead of `title`
+- [x] 2.3 Add `NaholoClient.updateNote()`
+  - Already existed, updated to use `name` instead of `title`
+- [x] 2.4 Add `create_note` MCP tool in `packages/naholo-cli/src/mcp/tools.ts`
   - Input: `{ issueNumber, name, content }`
   - Returns: Note object
-- [ ] 2.5 Add `update_note` MCP tool
+- [x] 2.5 Add `update_note` MCP tool
   - Input: `{ issueNumber, noteId, name?, content? }`
   - Returns: `'Note updated.'`
 

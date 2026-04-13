@@ -12,12 +12,12 @@ type RouteContext = {
 }
 
 const updateNoteSchema = z.object({
-  title: z.string().min(1, 'Title is required').trim(),
-  content: z.string().trim(),
+  name: z.string().min(1, 'Name is required').trim().optional(),
+  content: z.string().trim().optional(),
 })
 
 /**
- * PATCH /api/projects/[projectId]/issues/[issueNumber]/notes/[noteId]
+ * PATCH /api/projects/[projectSlug]/issues/[issueNumber]/notes/[noteId]
  * Update a note
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
@@ -44,13 +44,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { title, content } = validation.data
+    const { name, content } = validation.data
 
     const result = await updateNote({
       projectWorkerId: projectWorker.id,
       noteId,
       issueId: issue.id,
-      title,
+      name,
       content,
     })
     if (!result.success) {
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectId]/issues/[issueNumber]/notes/[noteId]
+ * DELETE /api/projects/[projectSlug]/issues/[issueNumber]/notes/[noteId]
  * Delete a note
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {

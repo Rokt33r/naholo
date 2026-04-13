@@ -28,10 +28,10 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
 
   return useMutation({
     mutationFn: async ({
-      title,
+      name,
       content,
     }: {
-      title: string
+      name: string
       content: string
     }) => {
       const response = await fetch(
@@ -39,7 +39,7 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content }),
+          body: JSON.stringify({ name, content }),
         },
       )
       if (!response.ok) {
@@ -47,7 +47,7 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
       }
       return response.json() as Promise<Note>
     },
-    onMutate: async ({ title, content }) => {
+    onMutate: async ({ name, content }) => {
       await queryClient.cancelQueries({ queryKey: ['notes', issueNumber] })
 
       const previousNotes = queryClient.getQueryData<Note[]>([
@@ -62,7 +62,7 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
 
       const optimisticNote: Note = {
         id: `temp-${Date.now()}`,
-        title,
+        name,
         content,
         position: maxPosition + 1,
         createdAt: new Date().toISOString(),
@@ -97,19 +97,26 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
   return useMutation({
     mutationFn: async ({
       noteId,
-      title,
+      name,
       content,
     }: {
       noteId: string
-      title: string
-      content: string
+      name?: string
+      content?: string
     }) => {
+      const body: Record<string, string> = {}
+      if (name != null) {
+        body.name = name
+      }
+      if (content != null) {
+        body.content = content
+      }
       const response = await fetch(
         `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${noteId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content }),
+          body: JSON.stringify(body),
         },
       )
       if (!response.ok) {
@@ -117,7 +124,7 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
       }
       return response.json() as Promise<Note>
     },
-    onMutate: async ({ noteId, title, content }) => {
+    onMutate: async ({ noteId, name, content }) => {
       await queryClient.cancelQueries({ queryKey: ['notes', issueNumber] })
 
       const previousNotes = queryClient.getQueryData<Note[]>([
@@ -126,11 +133,17 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
       ])
 
       queryClient.setQueryData<Note[]>(['notes', issueNumber], (old) =>
-        old?.map((note) =>
-          note.id === noteId
-            ? { ...note, title, content, updatedAt: new Date().toISOString() }
-            : note,
-        ),
+        old?.map((note) => {
+          if (note.id !== noteId) {
+            return note
+          }
+          return {
+            ...note,
+            ...(name != null ? { name } : {}),
+            ...(content != null ? { content } : {}),
+            updatedAt: new Date().toISOString(),
+          }
+        }),
       )
 
       return { previousNotes }

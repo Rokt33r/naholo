@@ -91,7 +91,7 @@ export type MoveTaskInput = {
 
 export type Note = {
   id: string
-  title: string
+  name: string
   content: string
   position: number
   createdAt: string

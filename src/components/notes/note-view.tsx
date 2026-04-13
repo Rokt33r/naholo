@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useUpdateNote, useDeleteNote } from '@/hooks/use-notes'
+import { useDeleteNote } from '@/hooks/use-notes'
 import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
 import type { Note } from 'naholo-api/types'
 
@@ -36,15 +36,9 @@ export function NoteView({
   onContentChange,
   onDeleted,
 }: NoteViewProps) {
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [title, setTitle] = useState(note.title)
   const [viewMode, setViewMode] = useState<ViewMode>('editor')
   const [content, setContentState] = useState(initialContent)
 
-  const { mutateAsync: updateNote, isPending: updateLoading } = useUpdateNote(
-    projectSlug,
-    issueNumber,
-  )
   const { mutateAsync: deleteNote, isPending: deleteLoading } = useDeleteNote(
     projectSlug,
     issueNumber,
@@ -52,29 +46,11 @@ export function NoteView({
 
   const isCreating = note.id.startsWith('temp-')
   const isSavingContent = saveState !== 'idle'
-  const isLoading = updateLoading || deleteLoading || isSavingContent
+  const isLoading = deleteLoading || isSavingContent
 
   const setContent = (value: string) => {
     setContentState(value)
     onContentChange(value)
-  }
-
-  const handleSaveTitle = async () => {
-    if (title.trim() && title !== note.title) {
-      try {
-        await updateNote({
-          noteId: note.id,
-          title: title.trim(),
-          content: note.content,
-        })
-      } catch (error) {
-        console.error('Failed to update note title:', error)
-        setTitle(note.title)
-      }
-    } else {
-      setTitle(note.title)
-    }
-    setIsEditingTitle(false)
   }
 
   const handleDelete = async () => {
@@ -86,15 +62,6 @@ export function NoteView({
       onDeleted?.()
     } catch (error) {
       console.error('Failed to delete note:', error)
-    }
-  }
-
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSaveTitle()
-    } else if (e.key === 'Escape') {
-      setTitle(note.title)
-      setIsEditingTitle(false)
     }
   }
 
@@ -132,30 +99,7 @@ export function NoteView({
   return (
     <div className='flex h-full flex-col'>
       {/* Header */}
-      <div className='flex items-center justify-between border-b p-2'>
-        <div className='flex-1 px-1'>
-          {isEditingTitle ? (
-            <input
-              type='text'
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleSaveTitle}
-              onKeyDown={handleTitleKeyDown}
-              className='w-full bg-transparent text-lg font-semibold outline-none'
-              autoFocus
-            />
-          ) : (
-            <div className='flex items-center gap-2'>
-              <h2
-                className='cursor-text text-lg font-semibold'
-                onClick={() => !isCreating && setIsEditingTitle(true)}
-              >
-                {note.title}
-              </h2>
-            </div>
-          )}
-        </div>
-
+      <div className='flex items-center justify-end border-b p-2'>
         <div className='flex items-center gap-1'>
           {/* View mode toggle */}
           {!isCreating && (

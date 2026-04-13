@@ -33,7 +33,7 @@ import { useUpdateNote } from '@/hooks/use-notes'
 import { useIssueNoteStore } from '@/hooks/use-issue-note-store'
 import type { IssueDetail, Note } from 'naholo-api/types'
 
-type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
+type ActiveTab = { type: 'tasks' } | { type: 'note'; noteName: string }
 
 type IssueDetailProps = {
   projectSlug: string
@@ -82,11 +82,9 @@ export function IssueDetail({
       if (!note || note.id.startsWith('temp-')) {
         return
       }
-      await updateNote({ noteId, title: note.title, content }).catch(
-        (error: unknown) => {
-          console.error('Failed to auto-save note content:', error)
-        },
-      )
+      await updateNote({ noteId, content }).catch((error: unknown) => {
+        console.error('Failed to auto-save note content:', error)
+      })
     },
     [notes, updateNote],
   )
@@ -104,11 +102,14 @@ export function IssueDetail({
   const handleTabChange = useCallback(
     (newTab: ActiveTab) => {
       if (activeTab.type === 'note') {
-        store.flush(activeTab.noteId)
+        const note = notes.find((n) => n.name === activeTab.noteName)
+        if (note != null) {
+          store.flush(note.id)
+        }
       }
       onTabChange(newTab)
     },
-    [activeTab, store.flush, onTabChange],
+    [activeTab, notes, store.flush, onTabChange],
   )
 
   // Sync title with fetched issue
@@ -278,7 +279,7 @@ export function IssueDetail({
             )}
             {activeTab.type === 'note' &&
               (() => {
-                const note = notes.find((n) => n.id === activeTab.noteId)
+                const note = notes.find((n) => n.name === activeTab.noteName)
                 if (!note) {
                   return (
                     <div className='flex h-full items-center justify-center text-muted-foreground'>

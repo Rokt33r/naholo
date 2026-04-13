@@ -249,7 +249,7 @@ export class NaholoClient {
   createNote(
     projectSlug: string,
     issueNumber: number | string,
-    input: { title: string; content: string },
+    input: { name: string; content: string },
   ): Promise<Note> {
     return this.request(
       'POST',
@@ -262,7 +262,7 @@ export class NaholoClient {
     projectSlug: string,
     issueNumber: number | string,
     noteId: string,
-    input: { title?: string; content?: string },
+    input: { name?: string; content?: string },
   ): Promise<Note> {
     return this.request(
       'PATCH',

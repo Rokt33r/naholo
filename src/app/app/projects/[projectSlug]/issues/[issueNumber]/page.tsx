@@ -17,11 +17,11 @@ import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { IssueDetail } from '@/components/issues/issue-detail'
 import { LogsList } from '@/components/logs/logs-list'
 
-type ActiveTab = { type: 'tasks' } | { type: 'note'; noteId: string }
+type ActiveTab = { type: 'tasks' } | { type: 'note'; noteName: string }
 
 function parseActiveTab(tabParam: string | null): ActiveTab {
   if (tabParam?.startsWith('note:')) {
-    return { type: 'note', noteId: tabParam.slice(5) }
+    return { type: 'note', noteName: tabParam.slice(5) }
   }
   return { type: 'tasks' }
 }
@@ -57,7 +57,7 @@ export default function IssuePage() {
     if (newTab.type === 'tasks') {
       params.delete('tab')
     } else if (newTab.type === 'note') {
-      params.set('tab', `note:${newTab.noteId}`)
+      params.set('tab', `note:${newTab.noteName}`)
     }
     const query = params.toString()
     router.push(`${pathname}${query ? `?${query}` : ''}`)

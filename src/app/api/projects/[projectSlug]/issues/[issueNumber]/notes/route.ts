@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 const createNoteSchema = z.object({
-  title: z.string().min(1, 'Title is required').trim(),
+  name: z.string().min(1, 'Name is required').trim(),
   content: z.string().trim(),
 })
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { title, content } = validation.data
+    const { name, content } = validation.data
 
     const { projectWorker, project, issue } = await requireIssueAccess(
       projectSlug,
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       projectWorkerId: projectWorker.id,
       projectId: project.id,
       issueId: issue.id,
-      title,
+      name,
       content,
     })
     if (!result.success) {
