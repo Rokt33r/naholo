@@ -141,6 +141,13 @@
       "when": 1776065417341,
       "tag": "0019_graceful_energizer",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1776065861604,
+      "tag": "0020_silent_titania",
+      "breakpoints": true
     }
   ]
 }

@@ -74,32 +74,25 @@ Replace the `docs/plans/` based workflow with a generic, local-first issue lock-
 
 Notes currently have `title` as display name. Replace it with `name` — a single field that serves as display name, slug, URL identifier, and local filename. No separate title.
 
-**Schema migration** (3-step: add nullable → backfill → tighten):
+**Schema migration**:
 
-- [ ] 1.1 Add `name` column to `notes` table in `src/server/db/schema/` as **nullable** initially
-  - `name: text('name')` — the note's identifier (used in tabs, URLs, filenames)
-  - Column must be nullable at first because existing rows have no value
-- [ ] 1.2 Write migration to backfill `name` from existing `title` values
-  - Filenamify: lowercase, replace spaces/special chars with hyphens, collapse consecutive hyphens, trim
-  - Handle duplicates within same issue: append `-2`, `-3`, etc. if collision
-- [ ] 1.3 Tighten the column: add NOT NULL constraint and unique constraint `(issueId, name)`
-  - This is a separate migration step that depends on 1.2 being fully applied
-  - This step must not edit the migration file. Edit the schema file and let user run `db:generate` to create a new sql script for the constraint.
-
-**Drop `title`**:
-
-- [ ] 1.4 Remove `title` column from schema (or mark deprecated — depends on migration comfort)
-  - All reads/writes switch to `name`
+- [x] 1.1 Add `name` column to `notes` table as **nullable** + backfill from `title`
+  - Added `name: text('name')` to schema, generated migration 0019
+  - Appended backfill SQL to migration: normalize whitespace to hyphens, preserve CJK/non-Latin chars, affix first 8 chars of UUID for uniqueness
+  - Applied migration
+- [x] 1.2 Tighten `name` (NOT NULL + unique) and drop `title` — single schema change, single `db:generate`
+  - Set `name` to `.notNull()` with unique constraint `(issueId, name)`
+  - Remove `title` column entirely
   - Edit schema, let user run `db:generate`
 
 **Service + API**:
 
-- [ ] 1.5 Update note service (`src/server/services/note.ts`)
+- [ ] 1.3 Update note service (`src/server/services/note.ts`)
   - `createNote`: accept `name` param (required), remove `title`
   - `updateNote`: accept optional `name` for rename
   - Add `findNoteByName(issueId, name)` for lookup
   - Add rename validation: new name must be unique within issue
-- [ ] 1.6 Update note API routes
+- [ ] 1.4 Update note API routes
   - POST: `{ name: string, content: string }` — no more `title`
   - PATCH: `{ name?: string, content?: string }`
   - GET returns `name` instead of `title`
@@ -107,21 +100,21 @@ Notes currently have `title` as display name. Replace it with `name` — a singl
 
 **Frontend — tabs, rename, navigation**:
 
-- [ ] 1.7 Update tab display (`src/components/issues/issue-tabs.tsx`)
+- [ ] 1.5 Update tab display (`src/components/issues/issue-tabs.tsx`)
   - Tabs show `name` instead of `title`
   - Change URL format from `?tab=note:{noteId}` to `?tab=note:{name}`
   - "Add Note" creates with name `"untitled"` (or `"untitled-2"` etc. if collision)
-- [ ] 1.8 Remove inline title input from `src/components/notes/note-view.tsx`
+- [ ] 1.6 Remove inline title input from `src/components/notes/note-view.tsx`
   - The editable title at the top of the note editor goes away
-- [ ] 1.9 Add right-click context menu on note tab items
+- [ ] 1.7 Add right-click context menu on note tab items
   - Use Radix `ContextMenu` on each tab button
   - Menu item: "Rename" — opens a rename dialog
-- [ ] 1.10 Create rename dialog
+- [ ] 1.8 Create rename dialog
   - Text input pre-filled with current `name`
   - On confirm: call PATCH with new `name`, then navigate to `?tab=note:{newName}` if this note is currently selected
   - Validate: non-empty, unique within issue
-- [ ] 1.11 Update `packages/naholo-api/src/types.ts` — replace `title` with `name` on Note type
-- [ ] 1.12 Update `src/hooks/use-notes.ts` — update mutations to use `name` instead of `title`
+- [ ] 1.9 Update `packages/naholo-api/src/types.ts` — replace `title` with `name` on Note type
+- [ ] 1.10 Update `src/hooks/use-notes.ts` — update mutations to use `name` instead of `title`
 
 ### Task 2: Add note MCP tools
 
