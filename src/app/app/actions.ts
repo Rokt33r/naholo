@@ -64,14 +64,14 @@ export async function createProjectAction(
 
 export async function updateProjectAction(
   projectSlug: string,
-  name: string,
-  description?: string,
-): Promise<ReturnResult<undefined>> {
+  data: { name?: string; description?: string; slug?: string },
+): Promise<ReturnResult<{ slug: string }>> {
   const { project } = await requireAdminProjectWorker(projectSlug)
 
-  const result = await updateProject(project.id, { name, description })
+  const result = await updateProject(project.id, data)
   if (result.success) {
     revalidatePath('/app')
+    return ok({ slug: data.slug ?? projectSlug })
   }
 
   return result

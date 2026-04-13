@@ -1,6 +1,14 @@
 'use client'
 
-import { ListTodo, HardHat, Puzzle, Settings, LogOut } from 'lucide-react'
+import { useState } from 'react'
+import {
+  ListTodo,
+  HardHat,
+  Puzzle,
+  Settings,
+  LogOut,
+  Pencil,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
@@ -15,6 +23,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAction } from '@/lib/use-action'
 import { logoutAction } from '@/app/app/actions'
+import { useProjectContext } from '@/components/app/project-context'
+import { ProjectSettingsDialog } from '@/components/projects/project-settings-dialog'
 
 type AppModeSidebarProps = {
   currentProjectSlug: string
@@ -26,7 +36,9 @@ export function AppModeSidebar({
   currentMode,
 }: AppModeSidebarProps) {
   const router = useRouter()
+  const { currentWorker } = useProjectContext()
   const { execute: logout } = useAction(logoutAction)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const handleLogout = async () => {
     await logout()
@@ -71,12 +83,23 @@ export function AppModeSidebar({
           </ToolSidebarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' side='right'>
+          {currentWorker.role === 'admin' && (
+            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <Pencil className='mr-2 h-4 w-4' />
+              Project Settings
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className='mr-2 h-4 w-4' />
             Logout
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ProjectSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
     </ToolSidebar>
   )
 }

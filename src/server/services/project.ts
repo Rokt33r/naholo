@@ -4,7 +4,7 @@ import { projects } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { NotFoundError } from './errors'
+import { NotFoundError, ConflictError } from './errors'
 
 export type Project = {
   id: string
@@ -159,16 +159,29 @@ export async function updateProject(
     }
   }
 
-  const [project] = await db
-    .update(projects)
-    .set({
-      ...(data.name != null && { name: data.name }),
-      ...(data.description != null && { description: data.description }),
-      ...(data.slug != null && { slug: data.slug }),
-      updatedAt: new Date(),
-    })
-    .where(eq(projects.id, projectId))
-    .returning({ id: projects.id })
+  let project: { id: string } | undefined
+  try {
+    const [row] = await db
+      .update(projects)
+      .set({
+        ...(data.name != null && { name: data.name }),
+        ...(data.description != null && { description: data.description }),
+        ...(data.slug != null && { slug: data.slug }),
+        updatedAt: new Date(),
+      })
+      .where(eq(projects.id, projectId))
+      .returning({ id: projects.id })
+    project = row
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      'code' in error &&
+      (error as { code: string }).code === '23505'
+    ) {
+      return err(new ConflictError('A project with this slug already exists'))
+    }
+    throw error
+  }
 
   // TODO: requireProjectAccess should confirm this already so we don't need to check this.
   if (project == null) return err(new NotFoundError('Project'))
