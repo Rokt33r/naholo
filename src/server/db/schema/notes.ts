@@ -15,6 +15,7 @@ export const notes = pgTable('notes', {
     () => projectWorkers.id,
     { onDelete: 'set null' },
   ),
+  name: text('name'), // note identifier — nullable until backfill migration runs
   title: text('title').notNull(),
   content: text('content').notNull(), // markdown content
   position: integer('position').notNull().default(0), // for tab ordering

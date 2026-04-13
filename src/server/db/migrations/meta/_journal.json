@@ -134,6 +134,13 @@
       "when": 1775975038624,
       "tag": "0018_productive_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1776065417341,
+      "tag": "0019_graceful_energizer",
+      "breakpoints": true
     }
   ]
 }
