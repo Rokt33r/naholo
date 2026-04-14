@@ -138,7 +138,7 @@ Argument: `{issueNumber}`
 
 Behavior:
 
-- [ ] 3.1 Write skill that does the following:
+- [x] 3.1 Write skill that does the following:
   1. **Read issue context** via MCP resource `naholo://issues/{issueNumber}`
   2. **Create local directory**: `.naholo/local/issues/{issueNumber}/notes/`
   3. **Write TASKS.md**: Convert issue tasks to markdown checkbox format with `[ref]` links. Preserve hierarchy via indentation.
@@ -159,7 +159,7 @@ Argument: optional extra instructions in quotes
 
 Behavior:
 
-- [ ] 4.1 Write skill that does the following:
+- [x] 4.1 Write skill that does the following:
   1. **Find locked issue**: Look for `.naholo/local/issues/*/` — if multiple, ask user which one. If none, tell user to run `/infil` first.
   2. **Read local state**: Read `TASKS.md` and all notes (especially `PLAN.md`)
   3. **Research codebase**: Investigate the codebase thoroughly (same approach as existing `/elaborate-plan`)
@@ -181,7 +181,7 @@ Argument: optional extra instructions (e.g., task range `"Task 1 ~ Task 3"`)
 
 Behavior:
 
-- [ ] 5.1 Write skill that does the following:
+- [x] 5.1 Write skill that does the following:
   1. **Find locked issue**: Same as `/elaborate`
   2. **Read plan**: Read `notes/PLAN.md` — must be elaborated (has tasks with checkboxes). If not, tell user to run `/spec` first.
   3. **Read TASKS.md**: Know current completion state
@@ -201,7 +201,7 @@ Argument: optional extra instructions (e.g., `"close, nice work"`, `"don't close
 
 Behavior:
 
-- [ ] 6.1 Write skill that does the following:
+- [x] 6.1 Write skill that does the following:
   1. **Find locked issue**: Same pattern
   2. **Read local state**: TASKS.md + all notes
   3. **Read server state**: via MCP resource `naholo://issues/{issueNumber}` (get current tasks/notes)
