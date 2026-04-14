@@ -6,7 +6,7 @@ argument-hint: '[issueNumber] ["extra instructions in quotes"]'
 
 # Ship — Execute Plan
 
-Implement the elaborated plan for a locked-in issue. Work through tasks top-to-bottom, marking progress in both `PLAN.md` and `TASKS.md`.
+Implement the elaborated plan for a locked-in issue. Work through tasks top-to-bottom, marking progress in `TASKS.md`.
 
 ## Arguments
 
@@ -30,11 +30,11 @@ Anything after in quotes is extra instructions. Common patterns:
 
 3. **Read TASKS.md**: Read `.naholo/local/issues/{issueNumber}/TASKS.md` to know current completion state.
 
-4. **Implement tasks in order**: For each unchecked task in PLAN.md, top to bottom:
-   - Read the task description — it should specify exact file paths, behavior, and key details
+4. **Implement tasks in order**: For each unchecked task in TASKS.md, top to bottom:
+   - Read the corresponding task description in `notes/PLAN.md` — it specifies exact file paths, behavior, and key details
    - Implement the code changes described
-   - After completing a subtask, immediately mark it as `- [x]` in `notes/PLAN.md`
-   - Update the corresponding line in `TASKS.md` to `- [x]`
+   - After completing a subtask, immediately mark the corresponding line in `TASKS.md` as `- [x]`
+   - PLAN.md has no checkboxes — do not add or modify checkboxes there
    - Follow all conventions in `CLAUDE.md`
 
 5. **Verify as you go**: After completing each top-level task (e.g., all of "Task 1"):
@@ -52,7 +52,8 @@ Anything after in quotes is extra instructions. Common patterns:
 ## Rules
 
 - **Follow the plan**: The plan is the spec. Don't add features, refactor surrounding code, or make improvements beyond what's described.
-- **Mark progress incrementally**: Check off each `- [ ]` → `- [x]` immediately after completing it, not in a batch at the end. This lets the user see progress and resume if interrupted.
+- **TASKS.md is the only progress tracker**: PLAN.md is a reference spec with no checkboxes. Mark progress exclusively in TASKS.md.
+- **Mark progress incrementally**: Check off each `- [ ]` → `- [x]` in TASKS.md immediately after completing it, not in a batch at the end. This lets the user see progress and resume if interrupted.
 - **Don't improvise**: If a task can't be implemented as described (API changed, file doesn't exist, unexpected architecture), stop and explain what's blocking. Ask the user what to do.
 - **Don't re-elaborate**: If the plan is missing details, implement your best interpretation. Don't rewrite task descriptions unless the implementation materially differs.
 - **Respect CLAUDE.md**: Don't edit migration files, don't run `db:generate`, update `routes.ts` when adding/removing routes.
