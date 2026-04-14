@@ -51,7 +51,7 @@ If no instructions given, ask the user whether to close.
    - Brief description of code changes (run `git diff --stat` if available, or summarize from PLAN.md progress)
 
 7. **Ask about closing**: Unless extra instructions already specify:
-   - Ask the user: "Close issue #{issueNumber}?"
+   - Use the `AskUserQuestion` tool to ask: "Close issue #{issueNumber}?" Do NOT proceed until they respond.
    - If yes → use `close_issue` MCP tool
    - If no → leave open
 
