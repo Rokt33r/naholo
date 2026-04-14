@@ -6,7 +6,7 @@ argument-hint: '{issueNumber}'
 
 # Infil — Lock Into Issue
 
-Fetch an issue's full context from Naholo and set up a local working directory for the `/spec` → `/ship` → `/exfil` workflow.
+Fetch an issue's full context from Naholo and set up a local working directory for the `/spec` → `/ship` → `/sitrep` (mid-session) → `/exfil` (done) workflow. Use `/sitrep` between `/ship` sessions to sync progress without closing.
 
 ## Arguments
 
@@ -16,7 +16,7 @@ The argument is the issue number (e.g., `42`). Required.
 
 1. **Read issue context**: Use the MCP resource `naholo://issues/{issueNumber}` to fetch the full issue (tasks, notes, logs).
 
-2. **Create local directory**: Create `.naholo/local/issues/{issueNumber}/notes/`.
+2. **Create local directory**: Create `.naholo/local/issues/{issueNumber}/notes/` and `.naholo/local/issues/{issueNumber}/.base/notes/`.
 
 3. **Write TASKS.md**: Convert the issue's tasks into a markdown checkbox file at `.naholo/local/issues/{issueNumber}/TASKS.md`.
 
@@ -34,8 +34,9 @@ The argument is the issue number (e.g., `42`). Required.
    - Use `- [x]` for tasks with `done: true`, `- [ ]` otherwise
    - Append ` [ref](naholo://tasks/{taskId})` to each line for server linkage
    - Order by `position` within each level
+   - Also write a copy to `.naholo/local/issues/{issueNumber}/.base/TASKS.md` — this is the baseline snapshot for future re-run diffs.
 
-4. **Write notes**: For each note on the issue, write its content to `.naholo/local/issues/{issueNumber}/notes/{name}.md`.
+4. **Write notes**: For each note on the issue, write its content to `.naholo/local/issues/{issueNumber}/notes/{name}.md`. Also write a copy to `.naholo/local/issues/{issueNumber}/.base/notes/{name}.md` — this is the baseline snapshot for future re-run diffs.
 
 5. **Handle PLAN.md**:
 
@@ -65,9 +66,35 @@ The argument is the issue number (e.g., `42`). Required.
    - Plan: .naholo/local/issues/42/notes/PLAN.md
    ```
 
+## Re-run behavior (local dir exists)
+
+If `.naholo/local/issues/{issueNumber}/` already exists, do NOT ask "overwrite or abort." Instead, compare and resolve:
+
+1. **Fetch server state**: Use MCP resource `naholo://issues/{issueNumber}` to get current tasks, notes, and logs (same as fresh infil).
+
+2. **Compare tasks**: Diff local `TASKS.md` against `.base/TASKS.md` (local changes) and server tasks (server changes).
+   - Show summary: new tasks on server, tasks completed on server, tasks with changed names.
+   - Update `TASKS.md` to reflect server state while preserving local `[x]` marks for tasks done locally but not yet synced.
+
+3. **Compare notes**: For each note, 3-way diff using `.base/notes/{name}.md` as the common ancestor:
+   - base == local == server → unchanged, skip
+   - base == local, server differs → only server changed, update local silently
+   - base == server, local differs → only local changed, keep local, note in summary
+   - base != local AND base != server → both sides changed, ask user: (a) use server version, (b) keep local version, (c) merge — write the local file with git-style conflict markers (`<<<<<<< local`, `=======`, `>>>>>>> server`) and tell the user to resolve manually, then wait for confirmation before continuing
+   - No base, no local, exists on server → new on server, write to local, note in summary
+   - No base, no server match, exists locally → new locally, keep, note in summary
+
+4. **Review logs**: Show any new log entries since last infil (compare count or timestamps).
+
+5. **PLAN.md update prompt**: If there are new logs or significant task changes, ask user whether to update PLAN.md with new context.
+
+6. **Update `.base/`**: After resolving all notes and tasks, overwrite `.base/` with the current server state — this resets the baseline for the next re-run.
+
+7. **Print re-run summary**: Similar to fresh summary but focused on what changed (notes updated, conflicts resolved, new tasks, new logs).
+
 ## Rules
 
-- If `.naholo/local/issues/{issueNumber}/` already exists, use the `AskUserQuestion` tool to ask the user whether to overwrite or abort. Do NOT proceed until they respond.
+- On re-run, never silently overwrite local changes — always compare and let the user decide for diverged notes.
 - Do NOT implement any code — only fetch and write local files.
 - Do NOT elaborate or expand the plan — just capture current state.
 - Task notes from the server should be folded into PLAN.md context, NOT written to TASKS.md (TASKS.md is a pure checklist).
