@@ -8,6 +8,7 @@ import { readProjectConfig, type ProjectConfig } from './project-config.js'
 export interface CliContext {
   globalConfig: GlobalConfig
   projectConfig: ProjectConfig
+  projectSlug: string
   localConfig: LocalConfig
   currentProfile: { name: string; profile: Profile }
   client: NaholoClient
@@ -40,9 +41,12 @@ export function getCliContext(): CliContext {
     projectWorkerId: localConfig.projectWorkerId,
   })
 
+  const projectSlug = projectConfig.projectSlug
+
   return {
     globalConfig,
     projectConfig,
+    projectSlug,
     localConfig,
     currentProfile: active,
     client,

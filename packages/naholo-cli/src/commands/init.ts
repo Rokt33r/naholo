@@ -5,6 +5,7 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithWorker } from 'naholo-api/types'
 import { CliError, withErrorHandling } from '../errors.js'
 import { readLocalConfig, writeLocalConfig } from '../local-config.js'
+import { writeClaudeProjectSettings } from '../claude-config.js'
 import { writeMcpConfig } from '../mcp-config.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -62,7 +63,7 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   })
 
   // 4. Ask which worker to use
-  const workers = await client.listWorkers(selectedProject.id)
+  const workers = await client.listWorkers(selectedProject.slug)
   const selectableWorkers = workers.filter(
     (w) =>
       w.id === selectedProject.projectWorkerOfCurrentUser.id ||
@@ -101,6 +102,7 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   // 6. Write .naholo/config.yml
   const projectConfig: ProjectConfig = {
     projectId: selectedProject.id,
+    projectSlug: selectedProject.slug,
   }
   if (defaultWorkerId != null) {
     projectConfig.defaultWorkerId = defaultWorkerId
@@ -116,6 +118,9 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
   // 9. Write .mcp.json
   writeMcpConfig()
 
+  // 10. Write .claude/settings.json
+  writeClaudeProjectSettings()
+
   console.log()
   console.log(`Project initialized: ${selectedProject.name}`)
   console.log(`Worker: ${selectedWorker.name}(${selectedWorker.type})`)
@@ -130,8 +135,9 @@ async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
 
 async function handleSubsequentInit(
   client: NaholoClient,
-  projectConfig: ProjectConfig,
+  initialProjectConfig: ProjectConfig,
 ): Promise<void> {
+  let projectConfig = initialProjectConfig
   const existingLocalConfig = readLocalConfig()
 
   if (existingLocalConfig != null) {
@@ -139,8 +145,15 @@ async function handleSubsequentInit(
     console.log()
   }
 
+  const projectSlug = projectConfig.projectSlug
+  if (projectSlug == null) {
+    throw new CliError(
+      'Project config is missing "projectSlug". Fix .naholo/config.yml or delete it and run "naholo init" again.',
+    )
+  }
+
   // Fetch workers
-  const workers = await client.listWorkers(projectConfig.projectId)
+  const workers = await client.listWorkers(projectSlug)
   if (workers.length === 0) {
     throw new CliError('Unexpected error: No selectable workers.')
   }
@@ -197,6 +210,9 @@ async function handleSubsequentInit(
 
   // Write .mcp.json
   writeMcpConfig()
+
+  // Write .claude/settings.json
+  writeClaudeProjectSettings()
 
   console.log(`Worker set to: ${selectedWorker.name}`)
 }

@@ -7,8 +7,7 @@ import { registerTools } from './tools.js'
 
 export async function startMcpServer(): Promise<void> {
   const ctx = getCliContext()
-  const { client, projectConfig } = ctx
-  const projectSlug = projectConfig.projectSlug ?? projectConfig.projectId
+  const { client, projectSlug } = ctx
 
   const server = new McpServer({
     name: 'naholo',

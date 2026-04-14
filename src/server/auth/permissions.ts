@@ -237,7 +237,10 @@ async function requireProjectWorkerByUserApiToken(
   const overrideWorkerId = headersList.get('x-naholo-project-worker')
   if (overrideWorkerId != null) {
     const worker = await getProjectWorker(overrideWorkerId, projectId)
-    if (worker == null || worker.type !== 'bot') {
+    if (
+      worker == null ||
+      (worker.type !== 'bot' && worker.userId !== result.userId)
+    ) {
       throw new Error('Forbidden')
     }
     return { projectWorker: worker }

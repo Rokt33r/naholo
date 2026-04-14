@@ -11,22 +11,16 @@ export const upsertCommand = new Command('upsert')
   .action(
     withErrorHandling(
       async (skillSetSlug: string, skillName: string, skillPath: string) => {
-        const ctx = getCliContext()
-        const { client, projectConfig } = ctx
+        const { client, projectSlug } = getCliContext()
 
         if (!fs.existsSync(skillPath)) {
           throw new CliError(`File not found: ${skillPath}`)
         }
 
         const content = fs.readFileSync(skillPath, 'utf-8')
-        await client.upsertSkill(
-          projectConfig.projectId,
-          skillSetSlug,
-          skillName,
-          {
-            content,
-          },
-        )
+        await client.upsertSkill(projectSlug, skillSetSlug, skillName, {
+          content,
+        })
 
         console.log(
           `Upserted skill '${skillName}' in skill set '${skillSetSlug}'`,

@@ -13,10 +13,9 @@ export const installCommand = new Command('install')
   .description('Install skills from a skill set')
   .action(
     withErrorHandling(async () => {
-      const ctx = getCliContext()
-      const { client, projectConfig } = ctx
+      const { client, projectSlug } = getCliContext()
 
-      const skillSets = await client.listSkillSets(projectConfig.projectId)
+      const skillSets = await client.listSkillSets(projectSlug)
       if (skillSets.length === 0) {
         console.log('No skill sets found.')
         return
@@ -31,10 +30,7 @@ export const installCommand = new Command('install')
       })
 
       const selectedSet = skillSets.find((s) => s.slug === selectedSlug)!
-      const skills = await client.listSkills(
-        projectConfig.projectId,
-        selectedSlug,
-      )
+      const skills = await client.listSkills(projectSlug, selectedSlug)
 
       if (skills.length === 0) {
         console.log(`No skills in "${selectedSet.name}".`)
@@ -43,7 +39,7 @@ export const installCommand = new Command('install')
 
       for (const summary of skills) {
         const skill = await client.getSkill(
-          projectConfig.projectId,
+          projectSlug,
           selectedSlug,
           summary.name,
         )

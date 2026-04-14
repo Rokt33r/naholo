@@ -62,11 +62,12 @@ The argument is the issue number (e.g., `42`). Required.
    - Notes: 3 (api-design, research, PLAN [created])
    - Logs: 8 entries
    - Local: .naholo/local/issues/42/
+   - Plan: .naholo/local/issues/42/notes/PLAN.md
    ```
 
 ## Rules
 
-- If `.naholo/local/issues/{issueNumber}/` already exists, warn the user and ask whether to overwrite or abort.
+- If `.naholo/local/issues/{issueNumber}/` already exists, use the `AskUserQuestion` tool to ask the user whether to overwrite or abort. Do NOT proceed until they respond.
 - Do NOT implement any code — only fetch and write local files.
 - Do NOT elaborate or expand the plan — just capture current state.
 - Task notes from the server should be folded into PLAN.md context, NOT written to TASKS.md (TASKS.md is a pure checklist).

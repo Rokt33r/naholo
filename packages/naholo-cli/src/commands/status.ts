@@ -7,18 +7,18 @@ export const statusCommand = new Command('status')
   .action(
     withErrorHandling(
       async (_options: Record<string, unknown>, cmd: Command) => {
-        const ctx = getCliContext()
-        const { client, projectConfig, localConfig, currentProfile } = ctx
+        const { client, projectSlug, localConfig, currentProfile } =
+          getCliContext()
 
-        const project = await client.getProject(projectConfig.projectId)
+        const project = await client.getProject(projectSlug)
         const worker = await client.getWorker(
-          projectConfig.projectId,
+          projectSlug,
           localConfig.projectWorkerId,
         )
 
         console.log(`Project:    ${project.name}`)
         console.log(
-          `URL:        ${currentProfile.profile.baseUrl}/app/projects/${projectConfig.projectId}`,
+          `URL:        ${currentProfile.profile.baseUrl}/app/projects/${projectSlug}`,
         )
         console.log(`Worker:     ${worker.name} (${worker.type})`)
         console.log(`Profile:    ${currentProfile.name}`)

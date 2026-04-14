@@ -9,10 +9,9 @@ const createCommand = new Command('create')
   .requiredOption('--slug <slug>', 'URL-safe identifier')
   .action(
     withErrorHandling(async (options: { name: string; slug: string }) => {
-      const ctx = getCliContext()
-      const { client, projectConfig } = ctx
+      const { client, projectSlug } = getCliContext()
 
-      await client.createSkillSet(projectConfig.projectId, {
+      await client.createSkillSet(projectSlug, {
         name: options.name,
         slug: options.slug,
       })
@@ -36,8 +35,7 @@ const updateCommand = new Command('update')
           throw new CliError('Provide at least one of --name or --slug')
         }
 
-        const ctx = getCliContext()
-        const { client, projectConfig } = ctx
+        const { client, projectSlug } = getCliContext()
 
         const input: { name?: string; slug?: string } = {}
         if (options.name != null) {
@@ -47,11 +45,7 @@ const updateCommand = new Command('update')
           input.slug = options.slug
         }
 
-        await client.updateSkillSet(
-          projectConfig.projectId,
-          skillSetSlug,
-          input,
-        )
+        await client.updateSkillSet(projectSlug, skillSetSlug, input)
 
         console.log(`Updated skill set '${skillSetSlug}'`)
       },
@@ -73,10 +67,9 @@ const deleteCommand = new Command('delete')
         return
       }
 
-      const ctx = getCliContext()
-      const { client, projectConfig } = ctx
+      const { client, projectSlug } = getCliContext()
 
-      await client.deleteSkillSet(projectConfig.projectId, skillSetSlug)
+      await client.deleteSkillSet(projectSlug, skillSetSlug)
 
       console.log(`Deleted skill set '${skillSetSlug}'`)
     }),
