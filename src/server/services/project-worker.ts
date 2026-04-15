@@ -14,7 +14,7 @@ export type ProjectWorker = {
 
 export type CreateProjectWorkerInput = {
   projectId: string
-  userId: string
+  userId?: string
   name: string
   type?: 'user' | 'bot'
   role?: 'admin' | 'member'

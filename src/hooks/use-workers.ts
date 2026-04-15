@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
-import { fetcher } from '@/lib/fetcher'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { fetcher, createResponseError } from '@/lib/fetcher'
 
 export type { Worker } from 'naholo-api/types'
 
@@ -36,4 +37,35 @@ export function useWorker(projectSlug: string, workerId: string) {
     isLoading: query.isLoading,
     error: query.error,
   }
+}
+
+/**
+ * Hook to create a new bot worker
+ */
+export function useCreateWorker(projectSlug: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const response = await fetch(`/api/projects/${projectSlug}/workers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to create worker')
+      }
+      return response.json() as Promise<{ id: string }>
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create worker',
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['workers', projectSlug],
+      })
+    },
+  })
 }
