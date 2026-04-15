@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ListTodo, HardHat, Puzzle, LogOut, Menu, Pencil } from 'lucide-react'
+import { ListTodo, HardHat, Puzzle, Settings, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,10 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAction } from '@/lib/use-action'
-import { logoutAction } from '@/app/app/actions'
-import { useProjectContext } from '@/components/app/project-context'
-import { ProjectSettingsDialog } from '@/components/projects/project-settings-dialog'
+import { SettingsDialog } from '@/components/settings/settings-dialog'
 
 type AppModeMenuProps = {
   currentProjectSlug: string
@@ -22,13 +19,7 @@ type AppModeMenuProps = {
 
 export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
   const router = useRouter()
-  const { currentWorker } = useProjectContext()
-  const { execute: logout } = useAction(logoutAction)
   const [settingsOpen, setSettingsOpen] = useState(false)
-
-  const handleLogout = async () => {
-    await logout()
-  }
 
   return (
     <DropdownMenu>
@@ -63,22 +54,13 @@ export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
           Skills
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {currentWorker.role === 'admin' && (
-          <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-            <Pencil className='mr-2 h-4 w-4' />
-            Project Settings
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className='mr-2 h-4 w-4' />
-          Logout
+        <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+          <Settings className='mr-2 h-4 w-4' />
+          Settings
         </DropdownMenuItem>
       </DropdownMenuContent>
 
-      <ProjectSettingsDialog
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-      />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </DropdownMenu>
   )
 }
