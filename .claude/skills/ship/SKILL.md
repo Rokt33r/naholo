@@ -1,12 +1,12 @@
 ---
 name: ship
-description: Execute an elaborated PLAN.md for a locked-in Naholo issue — implement code, update checkboxes, post progress logs.
+description: Execute an elaborated SPEC.md for a locked-in Naholo issue — implement code, update checkboxes, post progress logs.
 argument-hint: '[issueNumber] ["extra instructions in quotes"]'
 ---
 
-# Ship — Execute Plan
+# Ship — Execute Spec
 
-Implement the elaborated plan for a locked-in issue. Work through tasks top-to-bottom, marking progress in `TASKS.md`.
+Implement the elaborated spec for a locked-in issue. Work through tasks top-to-bottom, marking progress in `TASKS.md`.
 
 ## Arguments
 
@@ -25,16 +25,16 @@ Anything after in quotes is extra instructions. Common patterns:
    - If multiple exist → ask user which one to use.
    - Verify `.naholo/local/issues/{issueNumber}/` exists — if not, tell user to run `/infil` first.
 
-2. **Read plan**: Read `.naholo/local/issues/{issueNumber}/notes/PLAN.md`.
-   - Check for `specced: true` in the YAML frontmatter. If the frontmatter is missing or `specced` is not `true` → tell user to run `/spec` first and stop.
+2. **Read spec**: Read `.naholo/local/issues/{issueNumber}/notes/SPEC.md`.
+   - If `SPEC.md` does not exist → tell user to run `/spec` first and stop.
 
 3. **Read TASKS.md**: Read `.naholo/local/issues/{issueNumber}/TASKS.md` to know current completion state.
 
 4. **Implement tasks in order**: For each unchecked task in TASKS.md, top to bottom:
-   - Read the corresponding task description in `notes/PLAN.md` — it specifies exact file paths, behavior, and key details
+   - Read the corresponding task description in `notes/SPEC.md` — it specifies exact file paths, behavior, and key details
    - Implement the code changes described
    - After completing a subtask, immediately mark the corresponding line in `TASKS.md` as `- [x]`
-   - PLAN.md has no checkboxes — do not add or modify checkboxes there
+   - SPEC.md has no checkboxes — do not add or modify checkboxes there
    - Follow all conventions in `CLAUDE.md`
 
 5. **Verify as you go**: After completing each top-level task (e.g., all of "Task 1"):
@@ -45,16 +45,16 @@ Anything after in quotes is extra instructions. Common patterns:
 6. **Post progress logs**: After completing each top-level task, post a brief log via `create_log` MCP tool. Include:
    - Which task was completed
    - Key files changed
-   - Any deviations from the plan
+   - Any deviations from the spec
 
-7. **Update PLAN.md if implementation deviates**: If the actual implementation differs from the plan (different approach, extra file needed, changed API shape), update the plan description to match what was actually done.
+7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec description to match what was actually done.
 
 ## Rules
 
-- **Follow the plan**: The plan is the spec. Don't add features, refactor surrounding code, or make improvements beyond what's described.
-- **TASKS.md is the only progress tracker**: PLAN.md is a reference spec with no checkboxes. Mark progress exclusively in TASKS.md.
+- **Follow the spec**: The spec is the source of truth. Don't add features, refactor surrounding code, or make improvements beyond what's described.
+- **TASKS.md is the only progress tracker**: SPEC.md is a reference spec with no checkboxes. Mark progress exclusively in TASKS.md.
 - **Mark progress incrementally**: Check off each `- [ ]` → `- [x]` in TASKS.md immediately after completing it, not in a batch at the end. This lets the user see progress and resume if interrupted.
 - **Don't improvise**: If a task can't be implemented as described (API changed, file doesn't exist, unexpected architecture), stop and explain what's blocking. Ask the user what to do.
-- **Don't re-elaborate**: If the plan is missing details, implement your best interpretation. Don't rewrite task descriptions unless the implementation materially differs.
+- **Don't re-elaborate**: If the spec is missing details, implement your best interpretation. Don't rewrite task descriptions unless the implementation materially differs.
 - **Respect CLAUDE.md**: Don't edit migration files, don't run `db:generate`, update `routes.ts` when adding/removing routes.
 - **Respect task range**: If extra instructions specify a task range, only implement tasks in that range. Tasks before the range are assumed done; tasks after are left for later.

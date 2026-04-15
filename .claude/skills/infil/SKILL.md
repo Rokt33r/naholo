@@ -40,6 +40,8 @@ The argument is the issue number (e.g., `42`). Required.
 
 5. **Handle PLAN.md**:
 
+   PLAN.md is always the evolving context document — it is never the spec.
+
    **If no PLAN note exists on the issue:**
    - Write a brief context document as `notes/PLAN.md` summarizing:
      - What the issue is about (from issue title + description)
@@ -55,15 +57,18 @@ The argument is the issue number (e.g., `42`). Required.
    - If there are no gaps → do nothing, just note "PLAN.md is up to date" in the summary
    - If there are gaps → summarize what new information exists (e.g., "3 new logs since PLAN was written, new note `research.md` not referenced") and **ask the user** whether to update PLAN.md with this new context. Only update if the user confirms.
 
-6. **Print summary**: Output a summary like:
+6. **Handle SPEC.md**: If a SPEC note exists on the server, it is downloaded like any other note in step 4. No special handling is needed — SPEC.md is treated as a regular note file. On re-run, apply the same 3-way merge logic as other notes.
+
+7. **Print summary**: Output a summary using markdown link syntax for clickable paths:
 
    ```
    Locked into issue #42: "Implement user auth"
    - Tasks: 12 (5 done, 7 remaining)
    - Notes: 3 (api-design, research, PLAN [created])
    - Logs: 8 entries
-   - Local: .naholo/local/issues/42/
-   - Plan: .naholo/local/issues/42/notes/PLAN.md
+   - Local: [.naholo/local/issues/42/](.naholo/local/issues/42/)
+   - Plan: [PLAN.md](.naholo/local/issues/42/notes/PLAN.md)
+   - Spec: [SPEC.md](.naholo/local/issues/42/notes/SPEC.md) (if exists)
    ```
 
 ## Re-run behavior (local dir exists)
@@ -90,7 +95,7 @@ If `.naholo/local/issues/{issueNumber}/` already exists, do NOT ask "overwrite o
 
 6. **Update `.base/`**: After resolving all notes and tasks, overwrite `.base/` with the current server state — this resets the baseline for the next re-run.
 
-7. **Print re-run summary**: Similar to fresh summary but focused on what changed (notes updated, conflicts resolved, new tasks, new logs).
+7. **Print re-run summary**: Similar to fresh summary but focused on what changed (notes updated, conflicts resolved, new tasks, new logs). Use markdown link syntax for clickable paths.
 
 ## Rules
 
