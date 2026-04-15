@@ -12,7 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test": "tsc --noEmit"
+    "test": "tsc --noEmit",
+    "cli:build-dist": "tsx scripts/build-cli-dist.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.936.0",

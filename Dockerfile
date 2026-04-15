@@ -34,6 +34,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Build CLI distribution (public/cli/naholo-cli.js + checksums)
+RUN pnpm cli:build-dist
+
 # Build the Next.js application
 # Note: DATABASE_URL is not needed at build time for Next.js
 RUN pnpm build
