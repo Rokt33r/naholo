@@ -17,7 +17,8 @@ export const loginCommand = new Command('login')
       // 1. Get base URL
       let baseUrl = options.baseUrl
       if (!baseUrl) {
-        baseUrl = 'http://localhost:3000'
+        baseUrl = 'https://naholo.app'
+        // baseUrl = 'http://localhost:3000'
       }
       baseUrl = baseUrl.replace(/\/$/, '')
 
