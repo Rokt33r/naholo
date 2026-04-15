@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Execute an elaborated SPEC.md for a locked-in Naholo issue — implement code, update checkboxes, post progress logs.
+description: Execute an elaborated SPEC.md for a locked-in Naholo issue — implement code, update checkboxes, track progress in PLAN.md.
 argument-hint: '[issueNumber] ["extra instructions in quotes"]'
 ---
 
@@ -42,10 +42,10 @@ Anything after in quotes is extra instructions. Common patterns:
    - Run type check: `npx tsc`
    - Fix any issues before moving to the next task
 
-6. **Post progress logs**: After completing each top-level task, post a brief log via `create_log` MCP tool. Include:
-   - Which task was completed
-   - Key files changed
-   - Any deviations from the spec
+6. **Update PLAN.md with progress**: After completing each top-level task, append a brief progress entry to `notes/PLAN.md`:
+   - Under a `## Progress` heading (create it if it doesn't exist, append if it does)
+   - Add a bullet with: which task was completed, key files changed, any deviations from the spec
+   - This keeps PLAN.md as the evolving context document for the session
 
 7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec description to match what was actually done.
 
