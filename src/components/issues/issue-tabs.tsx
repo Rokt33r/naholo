@@ -88,7 +88,7 @@ export function IssueTabs({
       {notes.map((note) => {
         const isActive =
           activeTab.type === 'note' && activeTab.noteName === note.name
-        const savingState = notesSaveState?.[note.id]
+        const savingState = notesSaveState?.[note.name]
         const hasUnsavedChanges = savingState && savingState !== 'idle'
         return (
           <ContextMenu key={note.id}>

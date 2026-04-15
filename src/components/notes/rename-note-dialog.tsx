@@ -57,7 +57,7 @@ export function RenameNoteDialog({
       return
     }
     try {
-      await updateNote({ noteId: note.id, name: trimmed })
+      await updateNote({ noteName: note.name, newName: trimmed })
       onOpenChange(false)
       onRenamed?.(trimmed)
     } catch (error) {

@@ -134,13 +134,13 @@ export function registerTools(
           .int()
           .positive()
           .describe('Issue number (e.g. 3)'),
-        noteId: z.string().describe('Note ID'),
+        noteName: z.string().describe('Note name'),
         name: z.string().optional().describe('New note name'),
         content: z.string().optional().describe('New note content (markdown)'),
       },
     },
-    async ({ issueNumber, noteId, name, content }) => {
-      await client.updateNote(projectSlug, issueNumber, noteId, {
+    async ({ issueNumber, noteName, name, content }) => {
+      await client.updateNote(projectSlug, issueNumber, noteName, {
         name,
         content,
       })

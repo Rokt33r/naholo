@@ -77,12 +77,12 @@ export function IssueDetail({
   const { mutateAsync: updateNote } = useUpdateNote(projectSlug, issueNumber)
 
   const handleNoteSave = useCallback(
-    async (noteId: string, content: string) => {
-      const note = notes.find((n) => n.id === noteId)
+    async (noteName: string, content: string) => {
+      const note = notes.find((n) => n.name === noteName)
       if (!note || note.id.startsWith('temp-')) {
         return
       }
-      await updateNote({ noteId, content }).catch((error: unknown) => {
+      await updateNote({ noteName, content }).catch((error: unknown) => {
         console.error('Failed to auto-save note content:', error)
       })
     },
@@ -96,7 +96,7 @@ export function IssueDetail({
 
   // Initialize store entries when notes load
   useEffect(() => {
-    notes.forEach((n) => store.initNote(n.id, n.content))
+    notes.forEach((n) => store.initNote(n.name, n.content))
   }, [notes, store.initNote])
 
   const handleTabChange = useCallback(
@@ -104,7 +104,7 @@ export function IssueDetail({
       if (activeTab.type === 'note') {
         const note = notes.find((n) => n.name === activeTab.noteName)
         if (note != null) {
-          store.flush(note.id)
+          store.flush(note.name)
         }
       }
       onTabChange(newTab)
@@ -293,10 +293,10 @@ export function IssueDetail({
                     note={note}
                     projectSlug={projectSlug}
                     issueNumber={issue.number}
-                    initialContent={store.getContent(note.id) ?? note.content}
-                    saveState={store.saveStates[note.id] ?? 'idle'}
+                    initialContent={store.getContent(note.name) ?? note.content}
+                    saveState={store.saveStates[note.name] ?? 'idle'}
                     onContentChange={(value) =>
-                      store.setContent(note.id, value)
+                      store.setContent(note.name, value)
                     }
                     onDeleted={() => handleTabChange({ type: 'tasks' })}
                   />

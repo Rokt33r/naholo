@@ -261,12 +261,16 @@ export class NaholoClient {
   updateNote(
     projectSlug: string,
     issueNumber: number | string,
-    noteId: string,
+    noteName: string,
     input: { name?: string; content?: string },
   ): Promise<Note> {
     return this.request(
       'PATCH',
-      this.issuePath(projectSlug, issueNumber, `/notes/${noteId}`),
+      this.issuePath(
+        projectSlug,
+        issueNumber,
+        `/notes/${encodeURIComponent(noteName)}`,
+      ),
       input,
     )
   }
@@ -274,11 +278,15 @@ export class NaholoClient {
   deleteNote(
     projectSlug: string,
     issueNumber: number | string,
-    noteId: string,
+    noteName: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(projectSlug, issueNumber, `/notes/${noteId}`),
+      this.issuePath(
+        projectSlug,
+        issueNumber,
+        `/notes/${encodeURIComponent(noteName)}`,
+      ),
     )
   }
 

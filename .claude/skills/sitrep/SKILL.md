@@ -28,7 +28,7 @@ The argument is the issue number (e.g., `42`). Required. Find local dir at `.nah
 
 4. **Sync notes**: Compare local notes against server notes:
    - For each `notes/*.md` file, match to server note by `name` (filename without `.md` extension)
-   - If content changed → `update_note` with new content (need note ID from server state)
+   - If content changed → `update_note` with note name and new content
    - If new (no server match) → `create_note` with name and content
 
 5. **Post summary log**: Generate a diff summary and post via `create_log` MCP tool. Include:

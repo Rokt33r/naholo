@@ -7,7 +7,7 @@ type RouteContext = {
   params: Promise<{
     projectSlug: string
     issueNumber: string
-    noteId: string
+    noteName: string
   }>
 }
 
@@ -17,16 +17,16 @@ const updateNoteSchema = z.object({
 })
 
 /**
- * PATCH /api/projects/[projectSlug]/issues/[issueNumber]/notes/[noteId]
+ * PATCH /api/projects/[projectSlug]/issues/[issueNumber]/notes/[noteName]
  * Update a note
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const { projectSlug, issueNumber, noteId } = await context.params
+    const { projectSlug, issueNumber, noteName } = await context.params
     const { projectWorker, issue } = await requireIssueNoteAccess(
       projectSlug,
       issueNumber,
-      noteId,
+      noteName,
     )
 
     let body
@@ -48,7 +48,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const result = await updateNote({
       projectWorkerId: projectWorker.id,
-      noteId,
+      noteName,
       issueId: issue.id,
       name,
       content,
@@ -68,21 +68,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectSlug]/issues/[issueNumber]/notes/[noteId]
+ * DELETE /api/projects/[projectSlug]/issues/[issueNumber]/notes/[noteName]
  * Delete a note
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { projectSlug, issueNumber, noteId } = await context.params
+    const { projectSlug, issueNumber, noteName } = await context.params
     const { projectWorker, issue } = await requireIssueNoteAccess(
       projectSlug,
       issueNumber,
-      noteId,
+      noteName,
     )
 
     const result = await deleteNote({
       projectWorkerId: projectWorker.id,
-      noteId,
+      noteName,
       issueId: issue.id,
     })
     if (!result.success) {

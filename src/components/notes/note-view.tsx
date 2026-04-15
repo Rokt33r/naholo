@@ -58,7 +58,7 @@ export function NoteView({
       return
     }
     try {
-      await deleteNote(note.id)
+      await deleteNote(note.name)
       onDeleted?.()
     } catch (error) {
       console.error('Failed to delete note:', error)

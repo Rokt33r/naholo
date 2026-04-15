@@ -373,12 +373,12 @@ export async function requireIssueLogAccess(
 export async function requireIssueNoteAccess(
   projectSlug: string,
   issueNumber: number | string,
-  noteId: string,
+  noteName: string,
 ): Promise<{
   projectWorker: ProjectWorker
   project: { id: string; slug: string }
   issue: { id: string; number: number }
-  note: { id: string }
+  note: { id: string; name: string }
 }> {
   const { projectWorker, project, issue } = await requireIssueAccess(
     projectSlug,
@@ -386,8 +386,9 @@ export async function requireIssueNoteAccess(
   )
 
   const note = await db.query.notes.findFirst({
-    columns: { id: true },
-    where: (t, { eq, and }) => and(eq(t.id, noteId), eq(t.issueId, issue.id)),
+    columns: { id: true, name: true },
+    where: (t, { eq, and }) =>
+      and(eq(t.name, noteName), eq(t.issueId, issue.id)),
   })
 
   if (note == null) {

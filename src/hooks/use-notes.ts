@@ -90,29 +90,31 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
 
 /**
  * Hook to update a note with optimistic updates
+ *
+ * TODO: Split note update and note rename.
  */
 export function useUpdateNote(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({
-      noteId,
-      name,
+      noteName,
+      newName,
       content,
     }: {
-      noteId: string
-      name?: string
+      noteName: string
+      newName?: string
       content?: string
     }) => {
       const body: Record<string, string> = {}
-      if (name != null) {
-        body.name = name
+      if (newName != null) {
+        body.name = newName
       }
       if (content != null) {
         body.content = content
       }
       const response = await fetch(
-        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${noteId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -124,7 +126,7 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
       }
       return response.json() as Promise<Note>
     },
-    onMutate: async ({ noteId, name, content }) => {
+    onMutate: async ({ noteName, newName, content }) => {
       await queryClient.cancelQueries({ queryKey: ['notes', issueNumber] })
 
       const previousNotes = queryClient.getQueryData<Note[]>([
@@ -134,12 +136,12 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
 
       queryClient.setQueryData<Note[]>(['notes', issueNumber], (old) =>
         old?.map((note) => {
-          if (note.id !== noteId) {
+          if (note.name !== noteName) {
             return note
           }
           return {
             ...note,
-            ...(name != null ? { name } : {}),
+            ...(newName != null ? { name: newName } : {}),
             ...(content != null ? { content } : {}),
             updatedAt: new Date().toISOString(),
           }
@@ -167,16 +169,16 @@ export function useDeleteNote(projectSlug: string, issueNumber: number) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (noteId: string) => {
+    mutationFn: async (noteName: string) => {
       const response = await fetch(
-        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${noteId}`,
+        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {
         throw await createResponseError(response, 'Failed to delete note')
       }
     },
-    onMutate: async (noteId) => {
+    onMutate: async (noteName) => {
       await queryClient.cancelQueries({ queryKey: ['notes', issueNumber] })
 
       const previousNotes = queryClient.getQueryData<Note[]>([
@@ -185,7 +187,7 @@ export function useDeleteNote(projectSlug: string, issueNumber: number) {
       ])
 
       queryClient.setQueryData<Note[]>(['notes', issueNumber], (old) =>
-        old?.filter((note) => note.id !== noteId),
+        old?.filter((note) => note.name !== noteName),
       )
 
       return { previousNotes }

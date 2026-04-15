@@ -109,19 +109,19 @@ export async function createNote(data: {
  */
 export async function updateNote(data: {
   projectWorkerId: string
-  noteId: string
+  noteName: string
   issueId: string
   name?: string
   content?: string
 }): Promise<ReturnResult<Note>> {
   const updates: Record<string, unknown> = { updatedAt: new Date() }
-  if (data.name != null) {
+  if (data.name != null && data.name !== data.noteName) {
     // Validate uniqueness of new name within the issue
     const existing = await findNoteByName({
       issueId: data.issueId,
       name: data.name,
     })
-    if (existing != null && existing.id !== data.noteId) {
+    if (existing != null) {
       return err(
         new Error('A note with this name already exists in this issue'),
       )
@@ -135,12 +135,7 @@ export async function updateNote(data: {
   const [note] = await db
     .update(notes)
     .set(updates)
-    .where(
-      and(
-        eq(notes.id, data.noteId),
-        eq(notes.projectWorkerId, data.projectWorkerId),
-      ),
-    )
+    .where(and(eq(notes.issueId, data.issueId), eq(notes.name, data.noteName)))
     .returning({
       id: notes.id,
       name: notes.name,
@@ -168,17 +163,12 @@ export async function updateNote(data: {
  */
 export async function deleteNote(data: {
   projectWorkerId: string
-  noteId: string
+  noteName: string
   issueId: string
 }): Promise<ReturnResult<undefined>> {
   const [note] = await db
     .delete(notes)
-    .where(
-      and(
-        eq(notes.id, data.noteId),
-        eq(notes.projectWorkerId, data.projectWorkerId),
-      ),
-    )
+    .where(and(eq(notes.issueId, data.issueId), eq(notes.name, data.noteName)))
     .returning({ id: notes.id })
 
   if (!note) {

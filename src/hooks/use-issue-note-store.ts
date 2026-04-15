@@ -10,7 +10,7 @@ type NoteEntry = {
 
 type UseIssueNoteStoreOptions = {
   issueId: string
-  onSave: (noteId: string, content: string) => Promise<void>
+  onSave: (noteName: string, content: string) => Promise<void>
   delay?: number
 }
 
@@ -27,28 +27,28 @@ export function useIssueNoteStore({
   onSaveRef.current = onSave
 
   const setSaveState = useCallback(
-    (noteId: string, state: DebouncedSaveState) => {
+    (noteName: string, state: DebouncedSaveState) => {
       setSaveStates((prev) => {
-        if (prev[noteId] === state) return prev
-        return { ...prev, [noteId]: state }
+        if (prev[noteName] === state) return prev
+        return { ...prev, [noteName]: state }
       })
     },
     [],
   )
 
   const doSave = useCallback(
-    (noteId: string, content: string) => {
-      setSaveState(noteId, 'saving')
-      onSaveRef.current(noteId, content).finally(() => {
-        setSaveState(noteId, 'idle')
+    (noteName: string, content: string) => {
+      setSaveState(noteName, 'saving')
+      onSaveRef.current(noteName, content).finally(() => {
+        setSaveState(noteName, 'idle')
       })
     },
     [setSaveState],
   )
 
   const flush = useCallback(
-    (noteId: string) => {
-      const entry = entriesRef.current.get(noteId)
+    (noteName: string) => {
+      const entry = entriesRef.current.get(noteName)
       if (!entry) return
       if (entry.timer) {
         clearTimeout(entry.timer)
@@ -56,21 +56,21 @@ export function useIssueNoteStore({
       }
       if (entry.content !== entry.lastSaved) {
         entry.lastSaved = entry.content
-        doSave(noteId, entry.content)
+        doSave(noteName, entry.content)
       }
     },
     [doSave],
   )
 
   const flushAll = useCallback(() => {
-    for (const [noteId] of entriesRef.current) {
-      flush(noteId)
+    for (const [noteName] of entriesRef.current) {
+      flush(noteName)
     }
   }, [flush])
 
-  const initNote = useCallback((noteId: string, content: string) => {
-    if (!entriesRef.current.has(noteId)) {
-      entriesRef.current.set(noteId, {
+  const initNote = useCallback((noteName: string, content: string) => {
+    if (!entriesRef.current.has(noteName)) {
+      entriesRef.current.set(noteName, {
         content,
         lastSaved: content,
         timer: null,
@@ -78,13 +78,13 @@ export function useIssueNoteStore({
     }
   }, [])
 
-  const getContent = useCallback((noteId: string): string | undefined => {
-    return entriesRef.current.get(noteId)?.content
+  const getContent = useCallback((noteName: string): string | undefined => {
+    return entriesRef.current.get(noteName)?.content
   }, [])
 
   const setContent = useCallback(
-    (noteId: string, value: string) => {
-      const entry = entriesRef.current.get(noteId)
+    (noteName: string, value: string) => {
+      const entry = entriesRef.current.get(noteName)
       if (!entry) return
 
       entry.content = value
@@ -94,11 +94,11 @@ export function useIssueNoteStore({
           clearTimeout(entry.timer)
           entry.timer = null
         }
-        setSaveState(noteId, 'idle')
+        setSaveState(noteName, 'idle')
         return
       }
 
-      setSaveState(noteId, 'debouncing')
+      setSaveState(noteName, 'debouncing')
 
       if (entry.timer) {
         clearTimeout(entry.timer)
@@ -107,7 +107,7 @@ export function useIssueNoteStore({
         entry.timer = null
         if (entry.content !== entry.lastSaved) {
           entry.lastSaved = entry.content
-          doSave(noteId, entry.content)
+          doSave(noteName, entry.content)
         }
       }, delay)
     },
@@ -118,14 +118,14 @@ export function useIssueNoteStore({
   const prevIssueIdRef = useRef(issueId)
   useEffect(() => {
     if (prevIssueIdRef.current !== issueId) {
-      for (const [noteId, entry] of entriesRef.current) {
+      for (const [noteName, entry] of entriesRef.current) {
         if (entry.timer) {
           clearTimeout(entry.timer)
           entry.timer = null
         }
         if (entry.content !== entry.lastSaved) {
           entry.lastSaved = entry.content
-          onSaveRef.current(noteId, entry.content)
+          onSaveRef.current(noteName, entry.content)
         }
       }
       entriesRef.current.clear()
@@ -137,13 +137,13 @@ export function useIssueNoteStore({
   // Flush on unmount
   useEffect(() => {
     return () => {
-      for (const [noteId, entry] of entriesRef.current) {
+      for (const [noteName, entry] of entriesRef.current) {
         if (entry.timer) {
           clearTimeout(entry.timer)
           entry.timer = null
         }
         if (entry.content !== entry.lastSaved) {
-          onSaveRef.current(noteId, entry.content)
+          onSaveRef.current(noteName, entry.content)
         }
       }
     }
