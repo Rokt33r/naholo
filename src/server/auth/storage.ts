@@ -32,6 +32,18 @@ export class DrizzleStorage implements KenmonStorage<User> {
         data: identifier.data,
       })
 
+      // Set notification email
+      const notificationEmail =
+        identifier.type === 'email-otp'
+          ? identifier.value
+          : (identifier.data as Record<string, unknown>)?.email
+      if (typeof notificationEmail === 'string') {
+        await tx.insert(schema.userNotificationEmails).values({
+          userId: user.id,
+          email: notificationEmail,
+        })
+      }
+
       return user
     })
   }

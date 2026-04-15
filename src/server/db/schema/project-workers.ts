@@ -23,6 +23,10 @@ export const projectWorkersRelations = relations(
       fields: [projectWorkers.projectId],
       references: [projects.id],
     }),
+    user: one(users, {
+      fields: [projectWorkers.userId],
+      references: [users.id],
+    }),
     apiTokens: many(projectWorkerApiTokens),
   }),
 )
