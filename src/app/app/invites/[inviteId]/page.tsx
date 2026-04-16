@@ -1,0 +1,108 @@
+import { requireAuthUser } from '@/server/auth/permissions'
+import { getProjectInvite } from '@/server/services/project-invite'
+import { getProjectWorkerByUserId } from '@/server/services/project-worker'
+import { InvitePageClient } from './invite-page-client'
+
+export default async function InvitePage({
+  params,
+}: {
+  params: Promise<{ inviteId: string }>
+}) {
+  const { inviteId } = await params
+  const user = await requireAuthUser({
+    allowedAuthMethods: ['session'],
+    redirectUrlOnFail: '/sign-in',
+  })
+
+  const invite = await getProjectInvite(inviteId)
+
+  // Not found, claimed by someone else, or rejected — show not found
+  if (
+    invite == null ||
+    (invite.status === 'claimed' &&
+      invite.claimerUserId != null &&
+      invite.claimerUserId !== user.id) ||
+    invite.status === 'rejected'
+  ) {
+    return (
+      <CenteredCard>
+        <h1 className='text-lg font-semibold'>Invite not found</h1>
+        <p className='text-sm text-muted-foreground'>
+          This invite may have expired or is no longer valid.
+        </p>
+      </CenteredCard>
+    )
+  }
+
+  // Check if already a member
+  const existingWorker = await getProjectWorkerByUserId(
+    user.id,
+    invite.projectId,
+  )
+
+  if (existingWorker != null) {
+    return (
+      <CenteredCard>
+        <h1 className='text-lg font-semibold'>
+          You&apos;re already in {invite.project.name}
+        </h1>
+        <a
+          href={`/app/projects/${invite.project.slug}/issues`}
+          className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90'
+        >
+          Enter project
+        </a>
+      </CenteredCard>
+    )
+  }
+
+  if (invite.status === 'accepted') {
+    return (
+      <CenteredCard>
+        <h1 className='text-lg font-semibold'>
+          You&apos;ve been added to {invite.project.name}
+        </h1>
+        <a
+          href={`/app/projects/${invite.project.slug}/issues`}
+          className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90'
+        >
+          Enter project
+        </a>
+      </CenteredCard>
+    )
+  }
+
+  if (invite.status === 'claimed') {
+    return (
+      <CenteredCard>
+        <h1 className='text-lg font-semibold'>Request sent</h1>
+        <p className='text-sm text-muted-foreground'>
+          Waiting for an admin of {invite.project.name} to approve your request.
+        </p>
+      </CenteredCard>
+    )
+  }
+
+  // Pending — show claim button
+  return (
+    <CenteredCard>
+      <h1 className='text-lg font-semibold'>
+        You&apos;ve been invited to {invite.project.name}
+      </h1>
+      <p className='text text-muted-foreground'>
+        Request to join this project. An admin will review your request.
+      </p>
+      <InvitePageClient inviteId={inviteId} />
+    </CenteredCard>
+  )
+}
+
+function CenteredCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className='flex min-h-screen items-center justify-center'>
+      <div className='flex max-w-sm flex-col items-center gap-4 text-center'>
+        {children}
+      </div>
+    </div>
+  )
+}

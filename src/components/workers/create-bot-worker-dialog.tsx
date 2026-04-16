@@ -16,17 +16,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateWorker } from '@/hooks/use-workers'
 
-type CreateWorkerDialogProps = {
+type CreateBotWorkerDialogProps = {
   projectSlug: string
   children: React.ReactNode
   onWorkerCreated?: () => void
 }
 
-export function CreateWorkerDialog({
+export function CreateBotWorkerDialog({
   projectSlug,
   children,
   onWorkerCreated,
-}: CreateWorkerDialogProps) {
+}: CreateBotWorkerDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
