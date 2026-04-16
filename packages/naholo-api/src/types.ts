@@ -87,6 +87,22 @@ export type MoveTaskInput = {
   position: number
 }
 
+export type SyncTaskNode = {
+  id?: string
+  name: string
+  done?: boolean
+  childTasks?: SyncTaskNode[]
+}
+
+export type SyncTasksInput = {
+  tasks: SyncTaskNode[]
+  taskIdsToDelete?: string[]
+}
+
+export type SyncTasksResult = {
+  created: { id: string; name: string }[]
+}
+
 // ---- Note ----
 
 export type Note = {

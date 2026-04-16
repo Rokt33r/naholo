@@ -14,6 +14,8 @@ import type {
   SkillSetSummary,
   SkillSummary,
   Task,
+  SyncTasksInput,
+  SyncTasksResult,
   UpdateTaskInput,
   Worker,
   WorkerToken,
@@ -230,6 +232,18 @@ export class NaholoClient {
     return this.request(
       'POST',
       this.issuePath(projectSlug, issueNumber, `/tasks/${taskId}/move`),
+      input,
+    )
+  }
+
+  syncTasks(
+    projectSlug: string,
+    issueNumber: number | string,
+    input: SyncTasksInput,
+  ): Promise<SyncTasksResult> {
+    return this.request(
+      'PUT',
+      this.issuePath(projectSlug, issueNumber, '/tasks'),
       input,
     )
   }

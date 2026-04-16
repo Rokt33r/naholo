@@ -20,11 +20,10 @@ The argument is the issue number (e.g., `42`). Required. Find local dir at `.nah
 
 2. **Read server state**: Use MCP resource `naholo://issues/{issueNumber}` to get current tasks and notes from the server.
 
-3. **Sync tasks**: Compare local TASKS.md against server tasks:
-   - Tasks with `[ref]` that are `[x]` locally but not `done` on server → `update_task` with `done: true`
-   - Tasks with `[ref]` whose name changed locally → `update_task` with new `name`
-   - Tasks without `[ref]` (new, added during `/spec` or `/ship`) → `create_task`, then update TASKS.md with the new `[ref]` link
-   - Preserve hierarchy: new subtasks should use `parentTaskId` from their parent's `[ref]`
+3. **Sync tasks**: Read the full content of `TASKS.md` and pass it to the `sync_tasks` MCP tool as `tasksMarkdown`. This syncs the entire task tree in one call — the server resolves positions, creates new tasks, updates existing ones, and preserves orphans.
+   - After the call, the result contains `created: { id, name }[]` for newly created tasks
+   - For each created task, find the matching line in TASKS.md by name and append ` [ref](naholo://tasks/{id})` to it
+   - Write the updated TASKS.md back to disk
 
 4. **Sync notes**: Compare local notes against server notes:
    - For each `notes/*.md` file, match to server note by `name` (filename without `.md` extension)
@@ -47,6 +46,5 @@ The argument is the issue number (e.g., `42`). Required. Find local dir at `.nah
 - **Do NOT clean up the local directory** — leave `.naholo/local/issues/{issueNumber}/` intact for continued work.
 - **Do NOT implement any code** — only sync state.
 - **Do NOT modify source files** — sitrep is a sync operation only.
-- **Be conservative with task matching**: Only match tasks by their `[ref]` task ID. Don't try to fuzzy-match tasks by name.
-- **Report conflicts**: If a task was modified on both server and locally (different name AND different done state), report the conflict and ask the user which version to keep.
+- **Use `sync_tasks` for task syncing**: Always use the bulk `sync_tasks` MCP tool instead of individual `create_task` / `update_task` calls.
 - **Always post the summary log** — the log is the checkpoint record.

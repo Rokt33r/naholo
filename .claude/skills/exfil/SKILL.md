@@ -33,11 +33,10 @@ If no instructions given, ask the user whether to close.
 
 3. **Read server state**: Use MCP resource `naholo://issues/{issueNumber}` to get current tasks and notes from the server.
 
-4. **Sync tasks**: Compare local TASKS.md against server tasks:
-   - Tasks with `[ref]` that are `[x]` locally but not `done` on server → `update_task` with `done: true`
-   - Tasks with `[ref]` whose name changed locally → `update_task` with new `name`
-   - Tasks without `[ref]` (new, added during `/spec` or `/ship`) → `create_task`, then update TASKS.md with the new `[ref]` link
-   - Preserve hierarchy: new subtasks should use `parentTaskId` from their parent's `[ref]`
+4. **Sync tasks**: Read the full content of `TASKS.md` and pass it to the `sync_tasks` MCP tool as `tasksMarkdown`. This syncs the entire task tree in one call — the server resolves positions, creates new tasks, updates existing ones, and preserves orphans.
+   - After the call, the result contains `created: { id, name }[]` for newly created tasks
+   - For each created task, find the matching line in TASKS.md by name and append ` [ref](naholo://tasks/{id})` to it
+   - Write the updated TASKS.md back to disk
 
 5. **Sync notes**: Compare local notes against server notes:
    - For each `notes/*.md` file, match to server note by `name` (filename without `.md` extension)
@@ -63,6 +62,5 @@ If no instructions given, ask the user whether to close.
 
 - **Do NOT implement any code** — only sync state and clean up.
 - **Do NOT modify source files** — exfil is a sync operation only.
-- **Be conservative with task matching**: Only match tasks by their `[ref]` task ID. Don't try to fuzzy-match tasks by name.
-- **Report conflicts**: If a task was modified on both server and locally (different name AND different done state), report the conflict and ask the user which version to keep.
+- **Use `sync_tasks` for task syncing**: Always use the bulk `sync_tasks` MCP tool instead of individual `create_task` / `update_task` calls.
 - **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this lock-in session.

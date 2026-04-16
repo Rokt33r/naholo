@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { tasks, issues } from '../db/schema'
-import { eq, and, isNull, gt, gte, lt, lte, sql } from 'drizzle-orm'
+import { eq, and, isNull, gt, gte, lt, lte, sql, inArray } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
@@ -385,4 +385,211 @@ export async function moveTask(data: {
     .where(eq(issues.id, data.issueId))
 
   return ok()
+}
+
+// ---- Sync (bulk) ----
+
+export type SyncTaskNode = {
+  id?: string
+  name: string
+  done?: boolean
+  childTasks?: SyncTaskNode[]
+}
+
+/**
+ * Sync the full task tree for an issue.
+ * Accepts the complete task tree and a list of task IDs to delete.
+ * Resolves positions from array order, creates new tasks, updates existing,
+ * and preserves orphans (server tasks not in the tree) at the top.
+ *
+ * Executes in 3 mutations + 1 read:
+ *   1. DELETE tasks in taskIdsToDelete
+ *   2. INSERT all new tasks (name + done only)
+ *   3. UPDATE all tasks with resolved position, parentTaskId, name, done
+ */
+export async function syncTasks(data: {
+  projectWorkerId: string
+  projectId: string
+  issueId: string
+  tasks: SyncTaskNode[]
+  taskIdsToDelete: string[]
+}): Promise<ReturnResult<{ created: { id: string; name: string }[] }>> {
+  // Mutation 1 — Delete (before read so orphan detection doesn't need deleteSet)
+  if (data.taskIdsToDelete.length > 0) {
+    await db
+      .delete(tasks)
+      .where(
+        and(
+          eq(tasks.issueId, data.issueId),
+          inArray(tasks.id, data.taskIdsToDelete),
+        ),
+      )
+  }
+
+  // Collect input task IDs
+  const inputIds = new Set<string>()
+  function collectIds(nodes: SyncTaskNode[]): void {
+    for (const node of nodes) {
+      if (node.id != null) {
+        inputIds.add(node.id)
+      }
+      if (node.childTasks != null) {
+        collectIds(node.childTasks)
+      }
+    }
+  }
+  collectIds(data.tasks)
+
+  // Read existing tasks (post-delete)
+  const existingTasks = await db.query.tasks.findMany({
+    columns: {
+      id: true,
+      parentTaskId: true,
+      name: true,
+      done: true,
+      position: true,
+    },
+    where: (t, { eq }) => eq(t.issueId, data.issueId),
+    orderBy: (t, { asc }) => asc(t.position),
+  })
+  const existingMap = new Map(existingTasks.map((t) => [t.id, t]))
+
+  // Identify orphans (exist on server, not in input tree)
+  const orphanIdSet = new Set<string>()
+  for (const t of existingTasks) {
+    if (!inputIds.has(t.id)) {
+      orphanIdSet.add(t.id)
+    }
+  }
+
+  // Root orphans: parent is null or parent is not an orphan
+  const rootOrphanIds = [...orphanIdSet].filter((id) => {
+    const t = existingMap.get(id)!
+    return t.parentTaskId == null || !orphanIdSet.has(t.parentTaskId)
+  })
+
+  // Walk tree, collect desired state for every task
+  type DesiredTask = {
+    tempId: string
+    existingId: string | null // null = new task
+    parentTempId: string | null
+    name: string
+    done: boolean
+    position: number
+  }
+  const desired: DesiredTask[] = []
+  let tempCounter = 0
+
+  // Root orphans go first (position 0..N-1)
+  for (let i = 0; i < rootOrphanIds.length; i++) {
+    const t = existingMap.get(rootOrphanIds[i])!
+    desired.push({
+      tempId: `t${tempCounter++}`,
+      existingId: rootOrphanIds[i],
+      parentTempId: null,
+      name: t.name,
+      done: t.done,
+      position: i,
+    })
+  }
+
+  function walkTree(
+    nodes: SyncTaskNode[],
+    parentTempId: string | null,
+    posOffset: number,
+  ): void {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const existing = node.id != null ? existingMap.get(node.id) : null
+      const tempId = `t${tempCounter++}`
+
+      desired.push({
+        tempId,
+        existingId: existing != null ? node.id! : null,
+        parentTempId,
+        name: node.name,
+        done: node.done ?? false,
+        position: i + posOffset,
+      })
+
+      if (node.childTasks != null) {
+        walkTree(node.childTasks, tempId, 0)
+      }
+    }
+  }
+  walkTree(data.tasks, null, rootOrphanIds.length)
+
+  // Mutation 2 — Bulk insert new tasks
+  const tempToReal = new Map<string, string>()
+  const created: { id: string; name: string }[] = []
+
+  // Map existing tasks' tempId → real ID
+  for (const d of desired) {
+    if (d.existingId != null) {
+      tempToReal.set(d.tempId, d.existingId)
+    }
+  }
+
+  const newTasks = desired.filter((d) => d.existingId == null)
+  if (newTasks.length > 0) {
+    const inserted = await db
+      .insert(tasks)
+      .values(
+        newTasks.map((t) => ({
+          projectId: data.projectId,
+          issueId: data.issueId,
+          projectWorkerId: data.projectWorkerId,
+          name: t.name,
+          done: t.done,
+          position: 0, // placeholder — resolved in mutation 3
+        })),
+      )
+      .returning({ id: tasks.id })
+
+    for (let i = 0; i < newTasks.length; i++) {
+      tempToReal.set(newTasks[i].tempId, inserted[i].id)
+      created.push({ id: inserted[i].id, name: newTasks[i].name })
+    }
+  }
+
+  // Mutation 3 — Bulk update all tasks with resolved position + parentTaskId
+  if (desired.length > 0) {
+    const values = desired.map((d) => {
+      const realId = tempToReal.get(d.tempId)!
+      const parentRealId =
+        d.parentTempId != null ? (tempToReal.get(d.parentTempId) ?? null) : null
+      return {
+        id: realId,
+        name: d.name,
+        done: d.done,
+        position: d.position,
+        parentTaskId: parentRealId,
+      }
+    })
+
+    await db.execute(
+      sql`UPDATE tasks AS t SET
+        name = v.name,
+        done = v.done,
+        position = v.position,
+        parent_task_id = v.parent_task_id,
+        updated_at = NOW()
+      FROM (VALUES ${sql.join(
+        values.map(
+          (v) =>
+            sql`(${v.id}::uuid, ${v.name}::text, ${v.done}::boolean, ${v.position}::integer, ${v.parentTaskId == null ? sql`NULL` : sql`${v.parentTaskId}`}::uuid)`,
+        ),
+        sql`, `,
+      )}) AS v(id, name, done, position, parent_task_id)
+      WHERE t.id = v.id`,
+    )
+  }
+
+  // Touch issue
+  await db
+    .update(issues)
+    .set({ updatedAt: new Date() })
+    .where(eq(issues.id, data.issueId))
+
+  return ok({ created })
 }

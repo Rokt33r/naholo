@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
+import type { SyncTaskNode } from 'naholo-api/types'
 import { z } from 'zod'
 
 export function registerTools(
@@ -168,4 +169,82 @@ export function registerTools(
       }
     },
   )
+
+  server.registerTool(
+    'sync_tasks',
+    {
+      description:
+        'Sync the full task tree for an issue from TASKS.md markdown. Parses the markdown into a task tree and sends it to the server. The server resolves positions, creates new tasks, updates existing ones, and preserves orphans.',
+      inputSchema: {
+        issueNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Issue number (e.g. 3)'),
+        tasksMarkdown: z
+          .string()
+          .describe('Raw TASKS.md content (checkbox markdown)'),
+      },
+    },
+    async ({ issueNumber, tasksMarkdown }) => {
+      const tasks = parseTasksMarkdown(tasksMarkdown)
+      const result = await client.syncTasks(projectSlug, issueNumber, {
+        tasks,
+        taskIdsToDelete: [],
+      })
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      }
+    },
+  )
+}
+
+const TASK_LINE_RE =
+  /^(\s*)- \[([ x])\] (.+?)(?:\s+\[ref\]\(naholo:\/\/tasks\/([^)]+)\))?$/
+
+function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
+  const lines = markdown.split('\n')
+  const root: SyncTaskNode[] = []
+  // Stack tracks { node, depth } for nesting
+  const stack: { node: SyncTaskNode; depth: number }[] = []
+
+  for (const line of lines) {
+    const match = TASK_LINE_RE.exec(line)
+    if (match == null) {
+      continue
+    }
+
+    const indent = match[1].length
+    const done = match[2] === 'x'
+    const name = match[3].trim()
+    const taskId = match[4] // undefined if no [ref]
+    const depth = Math.floor(indent / 2)
+
+    const node: SyncTaskNode = {
+      ...(taskId != null ? { id: taskId } : {}),
+      name,
+      ...(done ? { done: true } : {}),
+    }
+
+    // Pop stack until we find the parent at depth - 1
+    while (stack.length > 0 && stack[stack.length - 1].depth >= depth) {
+      stack.pop()
+    }
+
+    if (stack.length === 0) {
+      // Root level
+      root.push(node)
+    } else {
+      // Child of the last item on the stack
+      const parent = stack[stack.length - 1].node
+      if (parent.childTasks == null) {
+        parent.childTasks = []
+      }
+      parent.childTasks.push(node)
+    }
+
+    stack.push({ node, depth })
+  }
+
+  return root
 }
