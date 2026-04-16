@@ -7,7 +7,6 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { users } from './users'
 import { projectWorkers } from './project-workers'
 import { skillSets } from './skill-sets'
 
@@ -15,9 +14,6 @@ export const projects = pgTable(
   'projects',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     description: text('description'),
     slug: text('slug').notNull(),

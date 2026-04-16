@@ -52,47 +52,41 @@ export async function listProjects(
   userId: string,
   options?: { with?: 'projectWorkerOfCurrentUser' },
 ): Promise<Project[] | ProjectWithWorker[]> {
-  if (options?.with === 'projectWorkerOfCurrentUser') {
-    const result = await db.query.projects.findMany({
-      columns: {
-        id: true,
-        slug: true,
-        name: true,
-        description: true,
-        createdAt: true,
-      },
-      with: {
-        projectWorkers: {
-          columns: { id: true, type: true, name: true, role: true },
-          where: (t, { eq }) => eq(t.userId, userId),
-          limit: 1,
-        },
-      },
-      where: (t, { eq }) => eq(t.userId, userId),
-      orderBy: (t, { desc }) => desc(t.createdAt),
-    })
-
-    return result.map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      description: row.description,
-      createdAt: row.createdAt,
-      projectWorkerOfCurrentUser: row.projectWorkers[0],
-    }))
-  }
-
-  return db.query.projects.findMany({
+  const workers = await db.query.projectWorkers.findMany({
     columns: {
       id: true,
-      slug: true,
+      type: true,
       name: true,
-      description: true,
-      createdAt: true,
+      role: true,
+    },
+    with: {
+      project: {
+        columns: {
+          id: true,
+          slug: true,
+          name: true,
+          description: true,
+          createdAt: true,
+        },
+      },
     },
     where: (t, { eq }) => eq(t.userId, userId),
     orderBy: (t, { desc }) => desc(t.createdAt),
   })
+
+  if (options?.with === 'projectWorkerOfCurrentUser') {
+    return workers.map((worker) => ({
+      ...worker.project,
+      projectWorkerOfCurrentUser: {
+        id: worker.id,
+        type: worker.type,
+        name: worker.name,
+        role: worker.role,
+      },
+    }))
+  }
+
+  return workers.map((worker) => worker.project)
 }
 
 /**
@@ -100,14 +94,11 @@ export async function listProjects(
  */
 const SLUG_PATTERN = /^[a-z0-9-]+$/
 
-export async function createProject(
-  userId: string,
-  data: {
-    name: string
-    slug: string
-    description?: string
-  },
-): Promise<ReturnResult<{ id: string; slug: string }>> {
+export async function createProject(data: {
+  name: string
+  slug: string
+  description?: string
+}): Promise<ReturnResult<{ id: string; slug: string }>> {
   if (!SLUG_PATTERN.test(data.slug)) {
     return err(
       new Error(
@@ -127,7 +118,6 @@ export async function createProject(
   const [project] = await db
     .insert(projects)
     .values({
-      userId,
       name: data.name,
       slug: data.slug,
       description: data.description,

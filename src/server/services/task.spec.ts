@@ -38,11 +38,10 @@ async function seedUser() {
   return user.id
 }
 
-async function seedProject(userId: string) {
+async function seedProject() {
   const [project] = await testDb
     .insert(schema.projects)
     .values({
-      userId,
       name: 'Test Project',
       slug: `test-${Date.now()}`,
     })
@@ -100,7 +99,7 @@ async function seedTask(data: {
 
 async function seedBase() {
   const userId = await seedUser()
-  const projectId = await seedProject(userId)
+  const projectId = await seedProject()
   const projectWorkerId = await seedWorker(projectId, userId)
   const issue = await seedIssue(projectId)
   return { projectId, projectWorkerId, issueId: issue.id }
@@ -425,7 +424,7 @@ describe('syncTasks', () => {
 
   it('touches issue updatedAt', async () => {
     const userId = await seedUser()
-    const projectId = await seedProject(userId)
+    const projectId = await seedProject()
     const projectWorkerId = await seedWorker(projectId, userId)
     const issue = await seedIssue(projectId)
 

@@ -48,7 +48,7 @@ export async function createProjectAction(
     return err(new Error('Unauthorized'))
   }
 
-  const result = await createProject(user.id, { name, slug, description })
+  const result = await createProject({ name, slug, description })
   if (result.success) {
     await createProjectWorker({
       projectId: result.data.id,
