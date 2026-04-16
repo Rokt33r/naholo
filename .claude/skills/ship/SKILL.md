@@ -14,7 +14,7 @@ Optional issue number as first token (e.g., `42`). If provided, use `.naholo/loc
 
 Anything after in quotes is extra instructions. Common patterns:
 
-- **Task range**: `"Task 1 ~ Task 3"` — only implement tasks in the specified range.
+- **Task range**: `"1 ~ 3"` or `"Task 1 ~ Task 3"` — only implement tasks in the specified range.
 - **Scope**: `"Only the API layer"` — limit implementation to a subset.
 - **Context**: `"Ref docs/style.md"` — read additional reference docs.
 
@@ -31,7 +31,7 @@ Anything after in quotes is extra instructions. Common patterns:
 3. **Read TASKS.md**: Read `.naholo/local/issues/{issueNumber}/TASKS.md` to know current completion state.
 
 4. **Implement tasks in order**: For each unchecked task in TASKS.md, top to bottom:
-   - Read the corresponding task description in `notes/SPEC.md` — it specifies exact file paths, behavior, and key details
+   - Read the corresponding task description in `notes/SPEC.md` (tasks use hierarchical numbering: `### 1. Title`, subtasks `- 1.1. Subtask`) — it specifies exact file paths, behavior, and key details
    - Implement the code changes described
    - After completing a subtask, immediately mark the corresponding line in `TASKS.md` as `- [x]`
    - SPEC.md has no checkboxes — do not add or modify checkboxes there

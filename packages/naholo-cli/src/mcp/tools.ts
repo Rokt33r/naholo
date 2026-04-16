@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import type { SyncTaskNode } from 'naholo-api/types'
+import type { SyncTaskNode, Task } from 'naholo-api/types'
 import { z } from 'zod'
 
 export function registerTools(
@@ -247,4 +247,42 @@ function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
   }
 
   return root
+}
+
+export function formatTasksMarkdown(tasks: Task[]): string {
+  const childrenMap = new Map<string | null, Task[]>()
+  for (const task of tasks) {
+    const key = task.parentTaskId
+    const group = childrenMap.get(key)
+    if (group != null) {
+      group.push(task)
+    } else {
+      childrenMap.set(key, [task])
+    }
+  }
+
+  // Sort each group by position
+  for (const group of childrenMap.values()) {
+    group.sort((a, b) => a.position - b.position)
+  }
+
+  const lines: string[] = []
+
+  function render(parentId: string | null, depth: number): void {
+    const children = childrenMap.get(parentId)
+    if (children == null) {
+      return
+    }
+    for (const task of children) {
+      const indent = '  '.repeat(depth)
+      const checkbox = task.done ? '[x]' : '[ ]'
+      lines.push(
+        `${indent}- ${checkbox} ${task.name} [ref](naholo://tasks/${task.id})`,
+      )
+      render(task.id, depth + 1)
+    }
+  }
+
+  render(null, 0)
+  return lines.join('\n')
 }

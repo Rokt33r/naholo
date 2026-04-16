@@ -40,7 +40,7 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
    - **Goal**: Clear 1-2 sentence description of what this spec achieves and why
    - **Prerequisites**: What must be done before this spec
    - **Architecture Decisions**: Key technical choices with reasoning
-   - **Tasks**: Numbered tasks in dependency order (`### Task 1: ...`), broken into subtasks with plain `- ` bullets (NOT `- [ ]` checkboxes — SPEC.md is a spec, not a tracker). Each subtask should specify:
+   - **Tasks**: Numbered tasks in dependency order using hierarchical numbering (`### 1. Task title`, `### 2. Task title`), broken into subtasks with hierarchical-numbered plain bullets (`- 1.1. Subtask`, `- 1.2. Subtask` — NOT `- [ ]` checkboxes — SPEC.md is a spec, not a tracker). Each subtask should specify:
      - Exact file paths to create or modify
      - What the code should do (behavior, not full implementation)
      - Key details that would require investigation to discover (API shapes, schema fields, type signatures)
@@ -53,9 +53,9 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 5. **Update PLAN.md**: Append a section to `notes/PLAN.md` noting "Spec elaborated on {date}" with a pointer to SPEC.md. Do NOT rewrite PLAN.md — only append.
 
 6. **Update TASKS.md**: TASKS.md is the canonical task list and must mirror the spec's task structure exactly. Update it as follows:
-   - Every numbered task in the spec (`### Task N: ...`) → a top-level `- [ ]` entry in TASKS.md
-   - Every subtask bullet in the spec → an indented `- [ ]` entry under its parent in TASKS.md
-   - Use short task names (e.g., "Add profile selection prompt"), not full descriptions with file paths — those stay in SPEC.md
+   - Every numbered task in the spec (`### 1. Task title`) → a top-level `- [ ] 1. Task title` entry in TASKS.md
+   - Every subtask bullet in the spec (`- 1.1. Subtask`) → an indented `  - [ ] 1.1. Subtask` entry under its parent in TASKS.md
+   - Use short task names (e.g., "1. Add profile selection prompt"), not full descriptions with file paths — those stay in SPEC.md
    - Existing tasks with `[ref]` links → keep their `[ref]` links
    - Preserve any existing `[x]` done states
    - No task in the spec should be missing from TASKS.md
