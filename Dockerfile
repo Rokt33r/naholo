@@ -10,8 +10,10 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy package files (root + workspace manifests for full workspace-aware install)
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/naholo-api/package.json ./packages/naholo-api/
+COPY packages/naholo-cli/package.json ./packages/naholo-cli/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --prod=false
@@ -29,6 +31,10 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # Copy application source
 COPY . .
+
+# Copy workspace package node_modules (pnpm creates symlinks here during install)
+COPY --from=deps /app/packages/naholo-cli/node_modules ./packages/naholo-cli/node_modules
+COPY --from=deps /app/packages/naholo-api/node_modules ./packages/naholo-api/node_modules
 
 # Set environment variable for build
 ENV NEXT_TELEMETRY_DISABLED=1
