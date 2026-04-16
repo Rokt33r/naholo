@@ -581,7 +581,7 @@ export async function syncTasks(data: {
         ),
         sql`, `,
       )}) AS v(id, name, done, position, parent_task_id)
-      WHERE t.id = v.id`,
+      WHERE t.id = v.id AND t.issue_id = ${data.issueId}::uuid`,
     )
   }
 
