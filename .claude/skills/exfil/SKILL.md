@@ -2,6 +2,7 @@
 name: exfil
 description: Sync local issue changes back to Naholo — push tasks, notes, post summary log, optionally close.
 argument-hint: '[issueNumber] ["extra instructions in quotes"]'
+model: sonnet
 ---
 
 # Exfil — Sync Back and Clean Up

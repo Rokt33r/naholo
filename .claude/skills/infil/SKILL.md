@@ -2,6 +2,7 @@
 name: infil
 description: Infil a Naholo issue — fetch tasks, notes, and logs locally for offline-first workflow.
 argument-hint: '{issueNumber}'
+model: sonnet
 ---
 
 # Infil — Infil Issue

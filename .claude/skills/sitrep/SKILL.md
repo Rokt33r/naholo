@@ -2,6 +2,7 @@
 name: sitrep
 description: Sync local progress to Naholo — push tasks, notes, post summary log. Does not close or clean up.
 argument-hint: '{issueNumber}'
+model: sonnet
 ---
 
 # Sitrep — Sync Progress
