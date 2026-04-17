@@ -7,14 +7,11 @@ export const statusCommand = new Command('status')
   .action(
     withErrorHandling(
       async (_options: Record<string, unknown>, cmd: Command) => {
-        const { client, projectSlug, localConfig, currentProfile } =
+        const { client, projectSlug, projectWorkerId, currentProfile } =
           getCliContext()
 
         const project = await client.getProject(projectSlug)
-        const worker = await client.getWorker(
-          projectSlug,
-          localConfig.projectWorkerId,
-        )
+        const worker = await client.getWorker(projectSlug, projectWorkerId)
 
         console.log(`Project:    ${project.name}`)
         console.log(

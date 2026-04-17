@@ -56,6 +56,12 @@ export async function createProjectAction(
       name: user.name,
       role: 'admin',
     })
+    await createProjectWorker({
+      projectId: result.data.id,
+      name: 'k4tya',
+      type: 'bot',
+      role: 'member',
+    })
     revalidatePath('/app')
   }
 

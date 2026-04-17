@@ -1,19 +1,13 @@
-import confirm from '@inquirer/confirm'
 import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithWorker } from 'naholo-api/types'
 import { CliError, withErrorHandling } from '../errors.js'
-import { readLocalConfig, writeLocalConfig } from '../local-config.js'
+import { writeLocalConfig } from '../local-config.js'
 import { writeClaudeProjectSettings } from '../claude-config.js'
 import { writeMcpConfig } from '../mcp-config.js'
 import { getActiveProfile } from '../profile.js'
-import {
-  type ProjectConfig,
-  readProjectConfig,
-  writeProjectConfig,
-  writeGitignore,
-} from '../project-config.js'
+import { writeProjectConfig, writeGitignore } from '../project-config.js'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
@@ -34,185 +28,85 @@ export const initCommand = new Command('init')
         token: profile.token,
       })
 
-      const existingProjectConfig = readProjectConfig()
-
-      if (existingProjectConfig != null) {
-        await handleSubsequentInit(client, existingProjectConfig)
-      } else {
-        await handleFirstTimeInit(client)
+      // 1. Fetch projects linked to the user
+      const projects = await client.listProjects({
+        with: 'projectWorkerOfCurrentUser',
+      })
+      if (projects.length === 0) {
+        throw new CliError('No projects found for your account.')
       }
+
+      // 2. Prompt user to select a project
+      const selectedProject = await select<ProjectWithWorker>({
+        message: 'Select a project',
+        choices: projects.map((p) => ({
+          name: p.name,
+          value: p,
+        })),
+      })
+
+      // 3. Fetch workers and filter to bot workers only for project-level config
+      const workers = await client.listWorkers(selectedProject.slug)
+      const botWorkers = workers.filter((w) => w.type === 'bot')
+
+      if (botWorkers.length === 0) {
+        throw new CliError(
+          'No bot workers found for this project. Create one via the web UI first.',
+        )
+      }
+
+      const selectedBotWorkerId = await select<string>({
+        message: 'Select a bot worker for the project',
+        choices: botWorkers.map((w) => ({
+          name: w.name,
+          value: w.id,
+        })),
+      })
+
+      const selectedBotWorker = botWorkers.find(
+        (w) => w.id === selectedBotWorkerId,
+      )!
+
+      // 4. Ask which personal worker to use for local config
+      const ownWorkerId = selectedProject.projectWorkerOfCurrentUser.id
+      const selectableWorkers = workers.filter(
+        (w) => w.id === ownWorkerId || w.type === 'bot',
+      )
+
+      const selectedLocalWorkerId = await select<string>({
+        message: 'Select your personal worker (local override)',
+        choices: selectableWorkers.map((w) => ({
+          name: `${w.name} (${w.id === ownWorkerId ? 'you' : w.type})`,
+          value: w.id,
+        })),
+        default: ownWorkerId,
+      })
+
+      // 5. Write .naholo/config.yml
+      writeProjectConfig({
+        projectId: selectedProject.id,
+        projectSlug: selectedProject.slug,
+        projectWorkerId: selectedBotWorkerId,
+      })
+
+      // 6. Write .naholo/local/local-config.yml
+      writeLocalConfig({ projectWorkerId: selectedLocalWorkerId })
+
+      // 7. Write .naholo/.gitignore
+      writeGitignore()
+
+      // 8. Write .mcp.json
+      writeMcpConfig()
+
+      // 9. Write .claude/settings.json
+      writeClaudeProjectSettings()
+
+      console.log()
+      console.log(`Project initialized: ${selectedProject.name}`)
+      console.log(`Project worker: ${selectedBotWorker.name} (bot)`)
+      console.log()
+      console.log('Next steps:')
+      console.log('  git add .naholo/')
+      console.log('  git commit -m "Add naholo project config"')
     }),
   )
-
-async function handleFirstTimeInit(client: NaholoClient): Promise<void> {
-  // 1-2. Fetch projects linked to the user
-  const projects = await client.listProjects({
-    with: 'projectWorkerOfCurrentUser',
-  })
-  if (projects.length === 0) {
-    throw new CliError('No projects found for your account.')
-  }
-
-  // 3. Prompt user to select a project
-  const selectedProject = await select<ProjectWithWorker>({
-    message: 'Select a project',
-    choices: projects.map((p) => ({
-      name: p.name,
-      value: p,
-    })),
-  })
-
-  // 4. Ask which worker to use
-  const workers = await client.listWorkers(selectedProject.slug)
-  const selectableWorkers = workers.filter(
-    (w) =>
-      w.id === selectedProject.projectWorkerOfCurrentUser.id ||
-      w.type === 'bot',
-  )
-
-  if (selectableWorkers.length === 0) {
-    throw new CliError('Unexpected error: No selectable workers.')
-  }
-
-  const ownWorkerId = selectedProject.projectWorkerOfCurrentUser.id
-
-  const selectedWorkerId = await select<string>({
-    message: 'Select a worker',
-    choices: selectableWorkers.map((w) => ({
-      name: `${w.name} (${w.id === ownWorkerId ? 'you' : w.type})`,
-      value: w.id,
-    })),
-    default: ownWorkerId,
-  })
-
-  const selectedWorker = selectableWorkers.find(
-    (w) => w.id === selectedWorkerId,
-  )!
-
-  // 5. Ask to set as default worker
-  let defaultWorkerId: string | undefined
-  const setDefault = await confirm({
-    message: `Set "${selectedWorker.name}" as the default worker for this project?`,
-    default: true,
-  })
-  if (setDefault) {
-    defaultWorkerId = selectedWorkerId
-  }
-
-  // 6. Write .naholo/config.yml
-  const projectConfig: ProjectConfig = {
-    projectId: selectedProject.id,
-    projectSlug: selectedProject.slug,
-  }
-  if (defaultWorkerId != null) {
-    projectConfig.defaultWorkerId = defaultWorkerId
-  }
-  writeProjectConfig(projectConfig)
-
-  // 7. Write .naholo/local/local-config.yml
-  writeLocalConfig({ projectWorkerId: selectedWorkerId })
-
-  // 8. Write .naholo/.gitignore
-  writeGitignore()
-
-  // 9. Write .mcp.json
-  writeMcpConfig()
-
-  // 10. Write .claude/settings.json
-  writeClaudeProjectSettings()
-
-  console.log()
-  console.log(`Project initialized: ${selectedProject.name}`)
-  console.log(`Worker: ${selectedWorker.name}(${selectedWorker.type})`)
-  console.log()
-
-  // 9. Instruct next steps
-  console.log()
-  console.log('Next steps:')
-  console.log('  git add .naholo/')
-  console.log('  git commit -m "Add naholo project config"')
-}
-
-async function handleSubsequentInit(
-  client: NaholoClient,
-  initialProjectConfig: ProjectConfig,
-): Promise<void> {
-  let projectConfig = initialProjectConfig
-  const existingLocalConfig = readLocalConfig()
-
-  if (existingLocalConfig != null) {
-    console.log(`Current worker ID: ${existingLocalConfig.projectWorkerId}`)
-    console.log()
-  }
-
-  const projectSlug = projectConfig.projectSlug
-  if (projectSlug == null) {
-    throw new CliError(
-      'Project config is missing "projectSlug". Fix .naholo/config.yml or delete it and run "naholo init" again.',
-    )
-  }
-
-  // Fetch workers
-  const workers = await client.listWorkers(projectSlug)
-  if (workers.length === 0) {
-    throw new CliError('Unexpected error: No selectable workers.')
-  }
-
-  // Pre-select defaultWorkerId if valid
-  let defaultWorkerExists = false
-  if (projectConfig.defaultWorkerId != null) {
-    defaultWorkerExists = workers.some(
-      (w) => w.id === projectConfig.defaultWorkerId,
-    )
-    if (!defaultWorkerExists) {
-      console.warn(
-        `Warning: default worker (${projectConfig.defaultWorkerId}) no longer exists in this project.`,
-      )
-    }
-  }
-
-  // Default priority: 1) existing local config, 2) project default, 3) own worker
-  const user = await client.getAuthUser()
-  const ownWorkerId = workers.find((w) => w.userId === user.id)?.id
-
-  const defaultSelectId =
-    existingLocalConfig?.projectWorkerId ??
-    (defaultWorkerExists ? projectConfig.defaultWorkerId : null) ??
-    ownWorkerId
-
-  const selectedWorkerId = await select<string>({
-    message: 'Select a worker',
-    choices: workers.map((w) => ({
-      name: `${w.name} (${w.type})`,
-      value: w.id,
-    })),
-    default: defaultSelectId,
-  })
-
-  const selectedWorker = workers.find((w) => w.id === selectedWorkerId)!
-
-  // Only ask to update defaultWorkerId if current one is missing
-  if (!defaultWorkerExists) {
-    const setDefault = await confirm({
-      message: `Set "${selectedWorker.name}" as the default worker for this project?`,
-      default: true,
-    })
-    if (setDefault) {
-      writeProjectConfig({
-        ...projectConfig,
-        defaultWorkerId: selectedWorkerId,
-      })
-    }
-  }
-
-  // Write/update local config
-  writeLocalConfig({ projectWorkerId: selectedWorkerId })
-
-  // Write .mcp.json
-  writeMcpConfig()
-
-  // Write .claude/settings.json
-  writeClaudeProjectSettings()
-
-  console.log(`Worker set to: ${selectedWorker.name}`)
-}

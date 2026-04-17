@@ -9,7 +9,8 @@ export interface CliContext {
   globalConfig: GlobalConfig
   projectConfig: ProjectConfig
   projectSlug: string
-  localConfig: LocalConfig
+  projectWorkerId: string
+  localConfig: LocalConfig | null
   currentProfile: { name: string; profile: Profile }
   client: NaholoClient
 }
@@ -29,16 +30,14 @@ export function getCliContext(): CliContext {
   }
 
   const localConfig = readLocalConfig()
-  if (localConfig == null) {
-    throw new CliError(
-      'No local config found. Run "naholo init" to set up your worker.',
-    )
-  }
+
+  const projectWorkerId =
+    localConfig?.projectWorkerId ?? projectConfig.projectWorkerId
 
   const client = new NaholoClient({
     baseUrl: active.profile.baseUrl,
     token: active.profile.token,
-    projectWorkerId: localConfig.projectWorkerId,
+    projectWorkerId,
   })
 
   const projectSlug = projectConfig.projectSlug
@@ -47,6 +46,7 @@ export function getCliContext(): CliContext {
     globalConfig,
     projectConfig,
     projectSlug,
+    projectWorkerId,
     localConfig,
     currentProfile: active,
     client,
