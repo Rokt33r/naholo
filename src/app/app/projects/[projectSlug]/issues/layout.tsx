@@ -17,10 +17,11 @@ export default function IssuesLayout({
   const { projectSlug, projectName, projects } = useProjectContext()
   const isMobile = useIsMobile()
   const segment = useSelectedLayoutSegment()
-  const showList = !isMobile || segment === null
+  const hasSelectedIssue = segment !== null
+  const showList = !isMobile || !hasSelectedIssue
 
   return (
-    <IssuesListProvider>
+    <IssuesListProvider hasSelectedIssue={hasSelectedIssue}>
       <div className='flex h-full w-full'>
         {!isMobile && (
           <IssuesListPanel>

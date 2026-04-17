@@ -8,22 +8,34 @@ type IssuesListContextValue = {
   collapsed: boolean
   setCollapsed: (value: boolean | ((prev: boolean) => boolean)) => void
   toggle: () => void
+  hasSelectedIssue: boolean
 }
 
 const IssuesListContext = createContext<IssuesListContextValue | null>(null)
 
 export function IssuesListProvider({
   children,
+  hasSelectedIssue,
 }: {
   children: React.ReactNode
+  hasSelectedIssue: boolean
 }) {
   const [collapsed, setCollapsed] = useLocalStorage(
     'issues-list-collapsed',
     false,
   )
   const toggle = () => setCollapsed((prev) => !prev)
+  const effectiveCollapsed = hasSelectedIssue && collapsed
+
   return (
-    <IssuesListContext value={{ collapsed, setCollapsed, toggle }}>
+    <IssuesListContext
+      value={{
+        collapsed: effectiveCollapsed,
+        setCollapsed,
+        toggle,
+        hasSelectedIssue,
+      }}
+    >
       {children}
     </IssuesListContext>
   )

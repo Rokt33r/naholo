@@ -38,7 +38,7 @@ export function IssuesList({
   const currentIssueNumber =
     params.issueNumber != null ? Number(params.issueNumber) : undefined
   const isMobile = useIsMobile()
-  const { toggle } = useIssuesList()
+  const { toggle, hasSelectedIssue } = useIssuesList()
   const [searchQuery, setSearchQuery] = useState('')
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
@@ -69,7 +69,7 @@ export function IssuesList({
           currentProjectSlug={projectSlug}
           currentProjectName={projectName}
         />
-        {!isMobile && (
+        {!isMobile && hasSelectedIssue && (
           <Button size='icon' variant='ghost' onClick={toggle}>
             <PanelLeftClose className='h-4 w-4' />
           </Button>
