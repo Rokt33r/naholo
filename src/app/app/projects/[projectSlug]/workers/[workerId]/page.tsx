@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Bot, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectContext } from '@/components/app/project-context'
+import { EditWorkerSoulForm } from '@/components/workers/edit-worker-soul-form'
 import { WorkerTokens } from '@/components/workers/worker-tokens'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useWorker } from '@/hooks/use-workers'
@@ -52,6 +53,16 @@ export default function WorkerDetailPage() {
                 </p>
               </div>
             </div>
+
+            {worker.type === 'bot' && (
+              <div className='border-t pt-6'>
+                <EditWorkerSoulForm
+                  projectSlug={projectSlug}
+                  workerId={workerId}
+                  soul={worker.soul}
+                />
+              </div>
+            )}
 
             <div className='border-t pt-6'>
               <WorkerTokens projectSlug={projectSlug} workerId={workerId} />

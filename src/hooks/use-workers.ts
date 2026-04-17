@@ -40,6 +40,38 @@ export function useWorker(projectSlug: string, workerId: string) {
 }
 
 /**
+ * Hook to update a worker
+ */
+export function useUpdateWorker(projectSlug: string, workerId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: { soul?: string }) => {
+      const response = await fetch(
+        `/api/projects/${projectSlug}/workers/${workerId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to update worker')
+      }
+      return response.json() as Promise<Worker>
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['worker', projectSlug, workerId], updated)
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to update worker',
+      )
+    },
+  })
+}
+
+/**
  * Hook to create a new bot worker
  */
 export function useCreateWorker(projectSlug: string) {

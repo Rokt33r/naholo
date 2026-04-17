@@ -1,4 +1,5 @@
 import 'server-only'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projectWorkers } from '../db/schema'
 
@@ -9,6 +10,7 @@ export type ProjectWorker = {
   type: string
   name: string
   role: string
+  soul: string | null
   createdAt: Date
 }
 
@@ -18,6 +20,7 @@ export type CreateProjectWorkerInput = {
   name: string
   type?: 'user' | 'bot'
   role?: 'admin' | 'member'
+  soul?: string
 }
 
 /**
@@ -34,10 +37,37 @@ export async function createProjectWorker(
       name: data.name,
       type: data.type ?? 'user',
       role: data.role ?? 'member',
+      soul: data.soul,
     })
     .returning({ id: projectWorkers.id })
 
   return { id: worker.id }
+}
+
+export type UpdateProjectWorkerInput = {
+  soul?: string
+}
+
+/**
+ * Update a project worker
+ */
+export async function updateProjectWorker(
+  workerId: string,
+  projectId: string,
+  data: UpdateProjectWorkerInput,
+): Promise<ProjectWorker | null> {
+  const [updated] = await db
+    .update(projectWorkers)
+    .set(data)
+    .where(
+      and(
+        eq(projectWorkers.id, workerId),
+        eq(projectWorkers.projectId, projectId),
+      ),
+    )
+    .returning()
+
+  return updated ?? null
 }
 
 /**

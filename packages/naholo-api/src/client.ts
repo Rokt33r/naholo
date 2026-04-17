@@ -434,6 +434,18 @@ export class NaholoClient {
     return this.request('GET', this.projectPath(projectSlug, '/workers'))
   }
 
+  updateWorker(
+    projectSlug: string,
+    workerId: string,
+    input: { soul?: string },
+  ): Promise<Worker> {
+    return this.request(
+      'PATCH',
+      this.projectPath(projectSlug, `/workers/${workerId}`),
+      input,
+    )
+  }
+
   getWorker(projectSlug: string, workerId: string): Promise<Worker> {
     return this.request(
       'GET',

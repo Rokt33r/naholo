@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
@@ -81,6 +83,20 @@ export const initCommand = new Command('init')
 
       // 9. Write .claude/settings.json
       writeClaudeProjectSettings()
+
+      // 10. Write .claude/rules/soul.md
+      const soulPath = path.resolve('.claude', 'rules', 'soul.md')
+      if (selectedBotWorker.soul != null && selectedBotWorker.soul !== '') {
+        fs.mkdirSync(path.dirname(soulPath), { recursive: true })
+        fs.writeFileSync(soulPath, selectedBotWorker.soul + '\n')
+      } else {
+        if (fs.existsSync(soulPath)) {
+          fs.unlinkSync(soulPath)
+        }
+        console.log(
+          `⚠ No soul configured for worker "${selectedBotWorker.name}". Agent will run without personality.`,
+        )
+      }
 
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)

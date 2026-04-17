@@ -1,0 +1,1 @@
+ALTER TABLE "project_workers" ADD COLUMN "soul" text;
