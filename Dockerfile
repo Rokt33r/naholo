@@ -40,6 +40,9 @@ COPY --from=deps /app/packages/naholo-api/node_modules ./packages/naholo-api/nod
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+ARG DEPLOYMENT_ID
+ENV DEPLOYMENT_ID=$DEPLOYMENT_ID
+
 # Build CLI distribution (public/cli/naholo-cli.js + checksums)
 RUN pnpm cli:build-dist
 
