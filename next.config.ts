@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import createMDX from '@next/mdx'
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -7,6 +8,9 @@ const nextConfig: NextConfig = {
   // This creates a minimal production build in .next/standalone
   output: 'standalone',
   deploymentId: process.env.DEPLOYMENT_ID,
+  pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
 }
 
-export default nextConfig
+const withMDX = createMDX({})
+
+export default withMDX(nextConfig)
