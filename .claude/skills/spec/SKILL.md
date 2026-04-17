@@ -68,6 +68,7 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 - **Respect existing done states** — don't uncheck `[x]` items.
 - **TASKS.md is the canonical task list** — every task and subtask in the spec MUST have a corresponding entry in TASKS.md. Do NOT create tasks on the server — the user will run `/sitrep` after reviewing.
 - **Keep TASKS.md in sync with SPEC.md** — whenever the spec's task structure changes — whether during `/spec` or from user edits afterward — update TASKS.md to match. Add new tasks, remove deleted ones, rename changed ones. TASKS.md must always mirror the spec.
+- **Never delete implemented tasks from SPEC.md** — if a task is checked `[x]` in TASKS.md, it has been implemented. You MUST NOT delete or rewrite it in SPEC.md. If a subtask is superseded by a later task (e.g., a refactor replaces an earlier approach), use strikethrough (`~~`) on the old subtask text and append a brief note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Task 4`). New tasks can be added freely. This preserves the audit trail of what was actually done.
 - **No checkboxes in SPEC.md** — SPEC.md is a spec document, not a progress tracker. Use plain `- ` bullets for subtasks, never `- [ ]` or `- [x]`.
 - **Do NOT rewrite PLAN.md** — only append a reference to the spec. PLAN.md is the evolving context document and should not be overwritten.
 - Follow the same quality bar as `/elaborate-plan`: the spec must be self-contained and executable.

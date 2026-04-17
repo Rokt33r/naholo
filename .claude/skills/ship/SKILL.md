@@ -46,7 +46,7 @@ Anything after in quotes is extra instructions. Common patterns:
    - Add a bullet with: which task was completed, key files changed, any deviations from the spec
    - This keeps PLAN.md as the evolving context document for the session
 
-7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec description to match what was actually done.
+7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec to reflect what was actually done. However, never delete implemented tasks — if a subtask in SPEC.md corresponds to a checked `[x]` entry in TASKS.md, use strikethrough (`~~`) on the superseded subtask text and append a note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Task 4`). New tasks can be added freely to SPEC.md and TASKS.md.
 
 ## Rules
 
