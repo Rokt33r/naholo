@@ -51,10 +51,12 @@ If no instructions given, ask the user whether to close.
 
 7. **Update PLAN.md Timeline**: Append a timeline entry to `## Timeline` in `notes/PLAN.md`: `- **{date} — exfil**: Final sync. {tasks done}/{total tasks}. {close status}`.
 
-8. **Ask about closing**: Unless extra instructions already specify:
-   - Use the `AskUserQuestion` tool to ask: "Close issue #{issueNumber}?" Do NOT proceed until they respond.
-   - If yes → use `close_issue` MCP tool
-   - If no → leave open
+8. **Close or ask about closing**:
+   - If extra instructions already specify → follow them.
+   - If all tasks in TASKS.md are done → close automatically via `close_issue` MCP tool (no need to ask).
+   - Otherwise → use `AskUserQuestion` to ask: "Close issue #{issueNumber}?" Do NOT proceed until they respond.
+     - If yes → use `close_issue` MCP tool
+     - If no → leave open
 
 9. **Print summary**: Output what was synced to chat before cleanup. Use markdown link syntax for file paths so the user can click to open them (e.g., `[TASKS.md](.naholo/local/issues/{N}/TASKS.md)`, `[SPEC.md](.naholo/local/issues/{N}/notes/SPEC.md)`).
 
