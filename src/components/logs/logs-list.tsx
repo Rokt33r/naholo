@@ -22,7 +22,6 @@ export function LogsList({
   logs,
   isClosed,
 }: LogsListProps) {
-  const [mode, setMode] = useState<'log' | 'task' | 'ai'>('log')
   const [message, setMessage] = useState('')
   const [isClosing, setIsClosing] = useState(false)
   const [isReopening, setIsReopening] = useState(false)
@@ -100,7 +99,7 @@ export function LogsList({
   return (
     <div className='flex h-full flex-col'>
       {/* Messages */}
-      <div className='flex-1 space-y-1 overflow-y-auto p-4'>
+      <div className='mx-auto w-full max-w-3xl flex-1 space-y-1 overflow-y-auto p-4'>
         {logs.length === 0 ? (
           <div className='py-8 text-center text-sm text-zinc-500'>
             No messages yet. Start a discussion below.
@@ -122,7 +121,7 @@ export function LogsList({
       </div>
 
       {/* Input */}
-      <div className='border-t p-2'>
+      <div className='mx-auto w-full max-w-3xl border-t p-2'>
         <div className='relative rounded-md border focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]'>
           <AutoResizeTextarea
             ref={textareaRef}

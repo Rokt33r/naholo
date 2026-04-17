@@ -13,7 +13,10 @@ type MarkdownViewProps = {
 export function MarkdownView({ children, className }: MarkdownViewProps) {
   return (
     <div
-      className={cn('prose prose-sm dark:prose-invert max-w-none', className)}
+      className={cn(
+        'prose prose-sm dark:prose-invert max-w-none break-words',
+        className,
+      )}
     >
       <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
         {children}

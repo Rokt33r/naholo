@@ -130,7 +130,7 @@ export function LogItem({
           />
         </div>
       ) : (
-        <div>
+        <div className='min-w-0'>
           {!isOwn && log.projectWorker?.name && (
             <div className='mb-0.5 text-xs text-muted-foreground'>
               {log.projectWorker.name}
@@ -139,13 +139,13 @@ export function LogItem({
           <div
             onDoubleClick={isCreating || isReadOnly ? undefined : handleEdit}
             className={cn(
-              'inline-block rounded-lg border p-2',
+              'inline-block max-w-full rounded-lg border p-2',
               isOwn ? 'bg-card' : 'bg-muted/50',
               !isCreating && !isReadOnly && 'cursor-text hover:bg-accent/50',
               isCreating && 'opacity-70',
             )}
           >
-            <MarkdownView className='max-w-160'>{log.content}</MarkdownView>
+            <MarkdownView>{log.content}</MarkdownView>
           </div>
           {isCreating && (
             <div className='mt-1 text-xs text-muted-foreground'>Sending...</div>
