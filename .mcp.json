@@ -2,7 +2,9 @@
   "mcpServers": {
     "naholo": {
       "command": "naholo",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
     }
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Create SPEC.md executable spec from PLAN.md context and update TASKS.md for a locked-in Naholo issue.
+description: Create SPEC.md executable spec from PLAN.md context and update TASKS.md for an infiled Naholo issue.
 argument-hint: '[issueNumber] ["extra instructions in quotes"]'
 ---
 
@@ -16,11 +16,9 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 
 ## What to do
 
-1. **Find locked issue**: If an issue number was provided, use it. Otherwise look for `.naholo/local/issues/*/` directories.
+1. **Find infiled issue**: If an issue number was provided, use it. Otherwise read the MCP resource `naholo://local/issues` to list infiled issues.
    - If none exist → tell user to run `/infil {issueNumber}` first.
-   - If multiple exist → ask user which one to use.
-   - Verify `.naholo/local/issues/{issueNumber}/` exists — if not, tell user to run `/infil` first.
-   - Use the found issue number for all subsequent steps.
+   - If multiple exist → show the list and ask user which one to use.
 
 2. **Read local state**: Read the following files:
    - `.naholo/local/issues/{issueNumber}/TASKS.md`

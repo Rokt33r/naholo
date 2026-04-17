@@ -4,7 +4,7 @@ description: Sync local issue changes back to Naholo — push tasks, notes, post
 argument-hint: '[issueNumber] ["extra instructions in quotes"]'
 ---
 
-# Exfil — Sync Back and Unlock
+# Exfil — Sync Back and Clean Up
 
 Sync local changes back to Naholo, post a summary log, and clean up the local working directory.
 
@@ -22,10 +22,9 @@ If no instructions given, ask the user whether to close.
 
 ## What to do
 
-1. **Find locked issue**: If an issue number was provided, use it. Otherwise look for `.naholo/local/issues/*/` directories.
-   - If none exist → tell user there's no locked issue to exfil.
-   - If multiple exist → ask user which one.
-   - Verify `.naholo/local/issues/{issueNumber}/` exists — if not, tell user there's nothing to exfil.
+1. **Find infiled issue**: If an issue number was provided, use it. Otherwise read the MCP resource `naholo://local/issues` to list infiled issues.
+   - If none exist → tell user there's no infiled issue to exfil.
+   - If multiple exist → show the list and ask user which one.
 
 2. **Read local state**:
    - `.naholo/local/issues/{issueNumber}/TASKS.md`
@@ -63,4 +62,4 @@ If no instructions given, ask the user whether to close.
 - **Do NOT implement any code** — only sync state and clean up.
 - **Do NOT modify source files** — exfil is a sync operation only.
 - **Use `sync_tasks` for task syncing**: Always use the bulk `sync_tasks` MCP tool instead of individual `create_task` / `update_task` calls.
-- **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this lock-in session.
+- **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this infil session.

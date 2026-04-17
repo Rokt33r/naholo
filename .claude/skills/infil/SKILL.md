@@ -1,10 +1,10 @@
 ---
 name: infil
-description: Lock into a Naholo issue — fetch tasks, notes, and logs locally for offline-first workflow.
+description: Infil a Naholo issue — fetch tasks, notes, and logs locally for offline-first workflow.
 argument-hint: '{issueNumber}'
 ---
 
-# Infil — Lock Into Issue
+# Infil — Infil Issue
 
 Fetch an issue's full context from Naholo and set up a local working directory for the `/spec` → `/ship` → `/sitrep` (mid-session) → `/exfil` (done) workflow. Use `/sitrep` between `/ship` sessions to sync progress without closing.
 
@@ -62,7 +62,7 @@ The argument is the issue number (e.g., `42`). Required.
 7. **Print summary**: Output a summary using markdown link syntax for clickable paths:
 
    ```
-   Locked into issue #42: "Implement user auth"
+   Infiled issue #42: "Implement user auth"
    - Tasks: 12 (5 done, 7 remaining)
    - Notes: 3 (api-design, research, PLAN [created])
    - Logs: 8 entries

@@ -1,12 +1,12 @@
 ---
 name: ship
-description: Execute an elaborated SPEC.md for a locked-in Naholo issue — implement code, update checkboxes, track progress in PLAN.md.
+description: Execute an elaborated SPEC.md for an infiled Naholo issue — implement code, update checkboxes, track progress in PLAN.md.
 argument-hint: '[issueNumber] ["extra instructions in quotes"]'
 ---
 
 # Ship — Execute Spec
 
-Implement the elaborated spec for a locked-in issue. Work through tasks top-to-bottom, marking progress in `TASKS.md`.
+Implement the elaborated spec for an infiled issue. Work through tasks top-to-bottom, marking progress in `TASKS.md`.
 
 ## Arguments
 
@@ -20,10 +20,9 @@ Anything after in quotes is extra instructions. Common patterns:
 
 ## What to do
 
-1. **Find locked issue**: If an issue number was provided, use it. Otherwise look for `.naholo/local/issues/*/` directories.
+1. **Find infiled issue**: If an issue number was provided, use it. Otherwise read the MCP resource `naholo://local/issues` to list infiled issues.
    - If none exist → tell user to run `/infil {issueNumber}` first.
-   - If multiple exist → ask user which one to use.
-   - Verify `.naholo/local/issues/{issueNumber}/` exists — if not, tell user to run `/infil` first.
+   - If multiple exist → show the list and ask user which one to use.
 
 2. **Read spec**: Read `.naholo/local/issues/{issueNumber}/notes/SPEC.md`.
    - If `SPEC.md` does not exist → tell user to run `/spec` first and stop.
