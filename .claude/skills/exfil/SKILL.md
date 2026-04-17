@@ -48,14 +48,16 @@ If no instructions given, ask the user whether to close.
    - Notes created or updated
    - Brief description of code changes (run `git diff --stat` if available, or summarize from SPEC.md/PLAN.md progress)
 
-7. **Ask about closing**: Unless extra instructions already specify:
+7. **Update PLAN.md Timeline**: Append a timeline entry to `## Timeline` in `notes/PLAN.md`: `- **{date} — exfil**: Final sync. {tasks done}/{total tasks}. {close status}`.
+
+8. **Ask about closing**: Unless extra instructions already specify:
    - Use the `AskUserQuestion` tool to ask: "Close issue #{issueNumber}?" Do NOT proceed until they respond.
    - If yes → use `close_issue` MCP tool
    - If no → leave open
 
-8. **Print summary**: Output what was synced to chat before cleanup. Use markdown link syntax for file paths so the user can click to open them (e.g., `[TASKS.md](.naholo/local/issues/{N}/TASKS.md)`, `[SPEC.md](.naholo/local/issues/{N}/notes/SPEC.md)`).
+9. **Print summary**: Output what was synced to chat before cleanup. Use markdown link syntax for file paths so the user can click to open them (e.g., `[TASKS.md](.naholo/local/issues/{N}/TASKS.md)`, `[SPEC.md](.naholo/local/issues/{N}/notes/SPEC.md)`).
 
-9. **Clean up**: Delete the `.naholo/local/issues/{issueNumber}/` directory.
+10. **Clean up**: Delete the `.naholo/local/issues/{issueNumber}/` directory.
 
 ## Rules
 

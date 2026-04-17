@@ -36,9 +36,11 @@ The argument is the issue number (e.g., `42`). Required. Find local dir at `.nah
    - Notes created or updated
    - Brief description of code changes (run `git diff --stat` if available, or summarize from SPEC.md/PLAN.md progress)
 
-6. **Update `.base/`**: After syncing, overwrite `.base/TASKS.md` and `.base/notes/*.md` with the current server state — this resets the baseline so the next `/infil` re-run diffs correctly.
+6. **Update PLAN.md Timeline**: Append a timeline entry to `## Timeline` in `notes/PLAN.md`: `- **{date} — sitrep**: Synced {N} tasks, {N} notes. {brief summary}`.
 
-7. **Print summary**: Output what was synced to chat. Use markdown link syntax for file paths so the user can click to open them (e.g., `[TASKS.md](.naholo/local/issues/{N}/TASKS.md)`, `[SPEC.md](.naholo/local/issues/{N}/notes/SPEC.md)`).
+7. **Update `.base/`**: After syncing, overwrite `.base/TASKS.md` and `.base/notes/*.md` with the current server state — this resets the baseline so the next `/infil` re-run diffs correctly.
+
+8. **Print summary**: Output what was synced to chat. Use markdown link syntax for file paths so the user can click to open them (e.g., `[TASKS.md](.naholo/local/issues/{N}/TASKS.md)`, `[SPEC.md](.naholo/local/issues/{N}/notes/SPEC.md)`).
 
 ## Rules
 

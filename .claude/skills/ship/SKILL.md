@@ -41,10 +41,10 @@ Anything after in quotes is extra instructions. Common patterns:
    - Run type check: `npx tsc`
    - Fix any issues before moving to the next task
 
-6. **Update PLAN.md with progress**: After completing each top-level task, append a brief progress entry to `notes/PLAN.md`:
-   - Under a `## Progress` heading (create it if it doesn't exist, append if it does)
-   - Add a bullet with: which task was completed, key files changed, any deviations from the spec
-   - This keeps PLAN.md as the evolving context document for the session
+6. **Update PLAN.md with progress**: After completing each top-level task, append to `notes/PLAN.md`:
+   - Under a `## Progress` heading (create it if it doesn't exist, append if it does): add a bullet with which task was completed, key files changed, any deviations from the spec.
+   - Under `## Timeline` heading: append `- **{date} — ship**: Completed tasks {range}. {brief summary}`.
+   - This keeps PLAN.md as the evolving context document for the session.
 
 7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec to reflect what was actually done. However, never delete implemented tasks — if a subtask in SPEC.md corresponds to a checked `[x]` entry in TASKS.md, use strikethrough (`~~`) on the superseded subtask text and append a note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Task 4`). New tasks can be added freely to SPEC.md and TASKS.md.
 

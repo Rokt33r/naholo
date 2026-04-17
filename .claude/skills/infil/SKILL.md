@@ -43,19 +43,53 @@ The argument is the issue number (e.g., `42`). Required.
    PLAN.md is always the evolving context document — it is never the spec.
 
    **If no PLAN note exists on the issue:**
-   - Write a brief context document as `notes/PLAN.md` summarizing:
-     - What the issue is about (from issue title + description)
-     - Key decisions and events from logs (most recent first, highlight important ones)
-     - Pointers to other notes (e.g., "See `api-design.md` for endpoint specs")
-     - Relevant task notes inlined where useful
-   - Do NOT elaborate or create an implementation plan — just summarize the current state so the user has enough context to start planning
+   - Write `notes/PLAN.md` using this structured template:
+
+     ```markdown
+     # PLAN — Issue #{issueNumber}: {issue title}
+
+     ## Pain
+
+     What's wrong or missing. ≤3 sentences extracted from issue title + logs.
+     If not explicitly stated, agent provides assumption marked with "_Agent-generated assumption:_".
+
+     ## Resolution
+
+     How we plan to fix it. ≤3 sentences extracted from issue title + logs.
+     If not explicitly stated, agent provides assumption marked with "_Agent-generated assumption:_".
+
+     ## Open questions
+
+     Questions that would help during `/spec`. Use editor-friendly format:
+
+     ### {Question text}
+
+     Answer ->
+
+     ### {Another question}
+
+     Answer ->
+
+     ## Timeline
+
+     - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
+     - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
+     ```
+
+   - **Pain**: extract from issue title, description, and logs. Keep brief — details go in SPEC.
+   - **Resolution**: extract from logs. Keep brief — details go in SPEC.
+   - **Open questions**: generate questions that would help the agent during `/spec` — the number should scale with the amount of context available. Each question gets its own `###` heading with `Answer -> ` on the next line so the user can fill in answers directly in the editor.
+   - **Timeline**: chronological summary of all log entries with timestamps and author names. One bullet per log entry.
+   - If other notes exist on the issue, add pointers (e.g., "See `api-design.md` for endpoint specs") in the Pain or Resolution sections where relevant. Fold relevant task notes into Pain/Resolution context.
+   - Do NOT elaborate or create an implementation plan — just capture current state.
    - Create the note on the server via `create_note` MCP tool with name `PLAN`
 
    **If a PLAN note already exists:**
    - Download it to `notes/PLAN.md` (already done in step 4)
-   - Compare the PLAN content against the current logs and notes — look for gaps: new logs posted after the PLAN was last updated, new notes that aren't referenced, tasks that changed significantly
+   - Verify the structured sections exist: `## Pain`, `## Resolution`, `## Open questions`, `## Timeline`. If PLAN.md uses the old free-form format (no structured sections), migrate it to the new template automatically and note this in the summary.
+   - Compare the PLAN content against the current logs and notes — look for gaps: new logs posted after the PLAN was last updated (compare against the last Timeline entry), new notes that aren't referenced, tasks that changed significantly
    - If there are no gaps → do nothing, just note "PLAN.md is up to date" in the summary
-   - If there are gaps → summarize what new information exists (e.g., "3 new logs since PLAN was written, new note `research.md` not referenced") and **ask the user** whether to update PLAN.md with this new context. Only update if the user confirms.
+   - If there are gaps → summarize what new information exists (e.g., "3 new logs since PLAN was written, new note `research.md` not referenced") and **ask the user** whether to update PLAN.md with this new context. When updating, append new log entries to the `## Timeline` section. Only update if the user confirms.
 
 6. **Handle SPEC.md**: If a SPEC note exists on the server, it is downloaded like any other note in step 4. No special handling is needed — SPEC.md is treated as a regular note file. On re-run, apply the same 3-way merge logic as other notes.
 
@@ -91,7 +125,7 @@ If `.naholo/local/issues/{issueNumber}/` already exists, do NOT ask "overwrite o
 
 4. **Review logs**: Show any new log entries since last infil (compare count or timestamps).
 
-5. **PLAN.md update prompt**: If there are new logs or significant task changes, ask user whether to update PLAN.md with new context.
+5. **PLAN.md update prompt**: If there are new logs or significant task changes, ask user whether to update PLAN.md with new context. When updating, append new log entries to the `## Timeline` section specifically.
 
 6. **Update `.base/`**: After resolving all notes and tasks, overwrite `.base/` with the current server state — this resets the baseline for the next re-run.
 

@@ -48,7 +48,9 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 
    Quality bar: "Could another session implement this by reading ONLY SPEC.md and CLAUDE.md?"
 
-5. **Update PLAN.md**: Append a section to `notes/PLAN.md` noting "Spec elaborated on {date}" with a pointer to SPEC.md. Do NOT rewrite PLAN.md — only append.
+5. **Update PLAN.md**: Append to `notes/PLAN.md` — do NOT rewrite, only append:
+   - Under `## Spec` heading (create if needed): note "Spec elaborated on {date}" with a pointer to SPEC.md and a brief summary of key decisions.
+   - Under `## Timeline` heading: append `- **{date} — spec**: Elaborated spec. {N} tasks, {N} subtasks. {brief summary of key decisions}`.
 
 6. **Update TASKS.md**: TASKS.md is the canonical task list and must mirror the spec's task structure exactly. Update it as follows:
    - Every numbered task in the spec (`### 1. Task title`) → a top-level `- [ ] 1. Task title` entry in TASKS.md
