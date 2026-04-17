@@ -3,7 +3,6 @@ import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithWorker } from 'naholo-api/types'
 import { CliError, withErrorHandling } from '../errors.js'
-import { writeLocalConfig } from '../local-config.js'
 import { writeClaudeProjectSettings } from '../claude-config.js'
 import { writeMcpConfig } from '../mcp-config.js'
 import { getActiveProfile } from '../profile.js'
@@ -67,32 +66,14 @@ export const initCommand = new Command('init')
         (w) => w.id === selectedBotWorkerId,
       )!
 
-      // 4. Ask which personal worker to use for local config
-      const ownWorkerId = selectedProject.projectWorkerOfCurrentUser.id
-      const selectableWorkers = workers.filter(
-        (w) => w.id === ownWorkerId || w.type === 'bot',
-      )
-
-      const selectedLocalWorkerId = await select<string>({
-        message: 'Select your personal worker (local override)',
-        choices: selectableWorkers.map((w) => ({
-          name: `${w.name} (${w.id === ownWorkerId ? 'you' : w.type})`,
-          value: w.id,
-        })),
-        default: ownWorkerId,
-      })
-
-      // 5. Write .naholo/config.yml
+      // 4. Write .naholo/config.yml
       writeProjectConfig({
         projectId: selectedProject.id,
         projectSlug: selectedProject.slug,
         projectWorkerId: selectedBotWorkerId,
       })
 
-      // 6. Write .naholo/local/local-config.yml
-      writeLocalConfig({ projectWorkerId: selectedLocalWorkerId })
-
-      // 7. Write .naholo/.gitignore
+      // 5. Write .naholo/.gitignore
       writeGitignore()
 
       // 8. Write .mcp.json
