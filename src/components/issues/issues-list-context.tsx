@@ -2,13 +2,15 @@
 
 import { createContext, useContext } from 'react'
 import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { cn } from '@/lib/utils'
 
 type IssuesListContextValue = {
+  isMobile: boolean
   collapsed: boolean
-  setCollapsed: (value: boolean | ((prev: boolean) => boolean)) => void
   toggle: () => void
-  hasSelectedIssue: boolean
+  showList: boolean
+  showCollapseButton: boolean
 }
 
 const IssuesListContext = createContext<IssuesListContextValue | null>(null)
@@ -20,20 +22,24 @@ export function IssuesListProvider({
   children: React.ReactNode
   hasSelectedIssue: boolean
 }) {
-  const [collapsed, setCollapsed] = useLocalStorage(
+  const isMobile = useIsMobile()
+  const [preferCollapsed, setPreferCollapsed] = useLocalStorage(
     'issues-list-collapsed',
     false,
   )
-  const toggle = () => setCollapsed((prev) => !prev)
-  const effectiveCollapsed = hasSelectedIssue && collapsed
+  const toggle = () => setPreferCollapsed((prev) => !prev)
+  const collapsed = hasSelectedIssue && preferCollapsed
+  const showList = isMobile ? !hasSelectedIssue : true
+  const showCollapseButton = !isMobile && hasSelectedIssue
 
   return (
     <IssuesListContext
       value={{
-        collapsed: effectiveCollapsed,
-        setCollapsed,
+        isMobile,
+        collapsed,
         toggle,
-        hasSelectedIssue,
+        showList,
+        showCollapseButton,
       }}
     >
       {children}
@@ -43,8 +49,9 @@ export function IssuesListProvider({
 
 export function useIssuesList() {
   const ctx = useContext(IssuesListContext)
-  if (!ctx)
+  if (!ctx) {
     throw new Error('useIssuesList must be used within IssuesListProvider')
+  }
   return ctx
 }
 

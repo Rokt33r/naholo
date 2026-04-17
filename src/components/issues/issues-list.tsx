@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { ProjectSwitcher } from '@/components/projects/project-switcher'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
-import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useIssuesList } from './issues-list-context'
 import { IssueItem } from './issue-item'
 import { CreateIssueDialog } from './create-issue-dialog'
@@ -37,8 +36,7 @@ export function IssuesList({
   const params = useParams()
   const currentIssueNumber =
     params.issueNumber != null ? Number(params.issueNumber) : undefined
-  const isMobile = useIsMobile()
-  const { toggle, hasSelectedIssue } = useIssuesList()
+  const { isMobile, toggle, showCollapseButton } = useIssuesList()
   const [searchQuery, setSearchQuery] = useState('')
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
@@ -69,7 +67,7 @@ export function IssuesList({
           currentProjectSlug={projectSlug}
           currentProjectName={projectName}
         />
-        {!isMobile && hasSelectedIssue && (
+        {showCollapseButton && (
           <Button size='icon' variant='ghost' onClick={toggle}>
             <PanelLeftClose className='h-4 w-4' />
           </Button>
