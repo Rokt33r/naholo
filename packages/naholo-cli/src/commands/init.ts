@@ -1,12 +1,8 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithWorker } from 'naholo-api/types'
 import { CliError, withErrorHandling } from '../errors.js'
-import { writeClaudeProjectSettings } from '../claude-config.js'
-import { writeMcpConfig } from '../mcp-config.js'
 import { getActiveProfile } from '../profile.js'
 import { writeProjectConfig, writeGitignore } from '../project-config.js'
 
@@ -78,32 +74,8 @@ export const initCommand = new Command('init')
       // 5. Write .naholo/.gitignore
       writeGitignore()
 
-      // 8. Write .mcp.json
-      writeMcpConfig()
-
-      // 9. Write .claude/settings.json
-      writeClaudeProjectSettings()
-
-      // 10. Write .claude/rules/soul.md
-      const soulPath = path.resolve('.claude', 'rules', 'soul.md')
-      if (selectedBotWorker.soul != null && selectedBotWorker.soul !== '') {
-        fs.mkdirSync(path.dirname(soulPath), { recursive: true })
-        fs.writeFileSync(soulPath, selectedBotWorker.soul + '\n')
-      } else {
-        if (fs.existsSync(soulPath)) {
-          fs.unlinkSync(soulPath)
-        }
-        console.log(
-          `⚠ No soul configured for worker "${selectedBotWorker.name}". Agent will run without personality.`,
-        )
-      }
-
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)
       console.log(`Project worker: ${selectedBotWorker.name} (bot)`)
-      console.log()
-      console.log('Next steps:')
-      console.log('  git add .naholo/')
-      console.log('  git commit -m "Add naholo project config"')
     }),
   )

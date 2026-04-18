@@ -5,6 +5,10 @@ import { Command } from 'commander'
 import crypto from 'node:crypto'
 import http from 'node:http'
 import os from 'node:os'
+import {
+  writeGlobalClaudePermissions,
+  writeGlobalMcpConfig,
+} from '../claude-code-config.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
 import { listProfiles, readProfile, writeProfile } from '../profile.js'
@@ -153,6 +157,10 @@ export const loginCommand = new Command('login')
           createdAt: new Date().toISOString(),
         })
         setDefaultProfile(profileName)
+
+        // Register MCP server and permissions globally
+        writeGlobalMcpConfig()
+        writeGlobalClaudePermissions()
 
         console.log()
         console.log(`Logged in successfully.`)
