@@ -1,6 +1,11 @@
+import { Github } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import icon from '@/app/icon.png'
+
+// Placeholder — owner will replace with the actual public repo URL once the
+// project is open-sourced.
+const GITHUB_URL = 'https://github.com/'
 
 export default function PublicLayout({
   children,
@@ -35,9 +40,7 @@ export default function PublicLayout({
         </nav>
       </header>
 
-      <main className='mx-auto w-full max-w-4xl flex-1 px-6 py-12'>
-        <div className='prose dark:prose-invert max-w-none'>{children}</div>
-      </main>
+      <main className='flex-1'>{children}</main>
 
       <footer className='border-t border-zinc-200 dark:border-zinc-800'>
         <div className='mx-auto flex max-w-4xl flex-col items-center gap-4 px-6 py-8 sm:flex-row sm:justify-between'>
@@ -61,10 +64,21 @@ export default function PublicLayout({
               환불 정책
             </Link>
           </div>
-          <p className='text-sm text-zinc-400 dark:text-zinc-500'>
-            &copy; {new Date().getFullYear()} Junyoung Choi. All rights
-            reserved.
-          </p>
+          <div className='flex items-center gap-4'>
+            <p className='text-sm text-zinc-400 dark:text-zinc-500'>
+              &copy; {new Date().getFullYear()} Junyoung Choi. All rights
+              reserved.
+            </p>
+            <a
+              href={GITHUB_URL}
+              aria-label='Source repo'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
+            >
+              <Github className='h-4 w-4' />
+            </a>
+          </div>
         </div>
       </footer>
     </div>
