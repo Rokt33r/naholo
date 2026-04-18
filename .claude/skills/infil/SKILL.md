@@ -81,7 +81,7 @@ The argument is the issue number (e.g., `42`). Required.
 
    - **Pain**: extract from issue title, description, and logs. Keep brief — details go in SPEC.
    - **Resolution**: extract from logs. Keep brief — details go in SPEC.
-   - **Open questions**: generate questions that would help the agent during `/spec` — the number should scale with the amount of context available. Each question gets its own `###` heading with `Answer -> ` on the next line so the user can fill in answers directly in the editor.
+   - **Open questions**: generate the top 3 (or fewer) questions that would help the agent most during `/spec`. Each question gets its own `###` heading with `Answer -> ` on the next line so the user can fill in answers directly in the editor.
    - **Timeline**: chronological summary of all log entries with timestamps and author names. One bullet per log entry.
    - If other notes exist on the issue, add pointers (e.g., "See `api-design.md` for endpoint specs") in the Pain or Resolution sections where relevant. Fold relevant task notes into Pain/Resolution context.
    - Do NOT elaborate or create an implementation plan — just capture current state.
