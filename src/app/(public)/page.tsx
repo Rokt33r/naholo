@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { ClosingCTA } from '@/components/landing/closing-cta'
 import { Hero } from '@/components/landing/hero'
-import { OperationLoop } from '@/components/landing/operation-loop'
-import { OperationPhases } from '@/components/landing/operation-phases'
+import { TacticalOverview } from '@/components/landing/tactical-overview'
 import { SelectLoadout } from '@/components/landing/select-loadout'
 import { getAuthUser } from '@/server/auth/permissions'
 
@@ -24,8 +23,7 @@ export default async function LandingPage() {
   return (
     <div className='not-prose'>
       <Hero isAuthed={isAuthed} />
-      <OperationLoop />
-      <OperationPhases />
+      <TacticalOverview />
       <SelectLoadout />
       <ClosingCTA isAuthed={isAuthed} />
     </div>

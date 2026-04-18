@@ -1,4 +1,4 @@
-import { Users, UserRound } from 'lucide-react'
+import { TowerControl, VenetianMask } from 'lucide-react'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
 
@@ -12,28 +12,28 @@ type Loadout = {
 
 const LOADOUTS: Loadout[] = [
   {
-    tag: 'SOLO',
-    title: 'Solo Operator',
+    tag: 'COVERT',
+    title: 'Covert Ops',
     blurb:
-      'Run missions without committing config to the repo. Kit lives in your ruck (~/.naholo), not the project. Start with `naholo solo init` and go.',
+      'Zero footprint in the codebase. No config files committed, no trace left for teammates. Kit lives in your ruck (~/.naholo), not the project. Start with `naholo covert init` and go dark.',
     useCases: [
-      'Your own side-project repo — no team config to commit.',
-      'Multiple personal repos, each mapped to a different worker.',
+      'Team project — but you don\u2019t want to introduce new tooling to the squad.',
+      'Multiple repos, each mapped to a different worker.',
       'Trying naholo on a codebase you don\u2019t control.',
     ],
-    Icon: UserRound,
+    Icon: VenetianMask,
   },
   {
-    tag: 'SQUAD',
-    title: 'Squad',
+    tag: 'FULL CONTROL',
+    title: 'Full Control',
     blurb:
-      'Share project config across the team. Every operator works the same loop — briefings, tasks, and logs stay in sync across the squad.',
+      'Own the entire project config. Every operator works the same loop — briefings, tasks, and logs stay in sync. You set the rules.',
     useCases: [
-      'Shared project config checked into the repo.',
-      'Per-issue briefings and logs visible to the whole team.',
+      'Personal project or full ownership of the repo.',
+      'Shared config checked in — the whole team runs the same loop.',
       'Bot operators dispatched alongside human reviewers.',
     ],
-    Icon: Users,
+    Icon: TowerControl,
   },
 ]
 
@@ -42,7 +42,7 @@ export function SelectLoadout() {
     <Section>
       <BriefingLabel>{'// 04 · Select loadout'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
-        Solo operator or full squad.
+        Covert ops or full control.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
         Same loop, different kit. Pick the loadout that matches the op.

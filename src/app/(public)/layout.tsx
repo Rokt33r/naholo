@@ -20,7 +20,7 @@ export default function PublicLayout({
             href='/'
             className='flex items-center gap-2 text-lg font-bold text-zinc-900 dark:text-zinc-50'
           >
-            <Image src={icon} alt='' width={24} height={24} />
+            <Image src={icon} alt='' width={50} height={50} />
             naholo
           </Link>
           <div className='flex items-center gap-6'>
