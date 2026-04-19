@@ -16,6 +16,8 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 
 ## What to do
 
+0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+
 1. **Find infiled issue**: If an issue number was provided, use it. Otherwise read the MCP resource `naholo://local/issues` to list infiled issues.
    - If none exist → tell user to run `/infil {issueNumber}` first.
    - If multiple exist → show the list and ask user which one to use.

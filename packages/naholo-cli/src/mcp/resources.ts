@@ -11,6 +11,7 @@ export function registerResources(
   server: McpServer,
   client: NaholoClient,
   projectSlug: string,
+  projectWorkerId: string,
 ): void {
   server.registerResource(
     'project',
@@ -172,6 +173,24 @@ export function registerResources(
             uri: uri.href,
             mimeType: 'application/json',
             text: JSON.stringify(notes, null, 2),
+          },
+        ],
+      }
+    },
+  )
+
+  server.registerResource(
+    'soul',
+    'naholo://soul',
+    { description: 'Personality / soul text for the current bot worker' },
+    async (uri) => {
+      const worker = await client.getWorker(projectSlug, projectWorkerId)
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: 'text/markdown',
+            text: worker.soul ?? '',
           },
         ],
       }

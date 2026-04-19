@@ -3,6 +3,7 @@ import { CliError } from './errors.js'
 import { readGlobalConfig, type GlobalConfig } from './global-config.js'
 import { getActiveProfile, type Profile } from './profile.js'
 import { readProjectConfig, type ProjectConfig } from './project-config.js'
+import { getCovertProjectConfig } from './covert-config.js'
 
 export interface CliContext {
   globalConfig: GlobalConfig
@@ -20,10 +21,11 @@ export function getCliContext(): CliContext {
     throw new CliError('Not logged in. Run "naholo login" to authenticate.')
   }
 
-  const projectConfig = readProjectConfig()
+  const projectConfig =
+    getCovertProjectConfig(process.cwd()) ?? readProjectConfig()
   if (projectConfig == null) {
     throw new CliError(
-      'No project config found. Run "naholo init" to set up this project.',
+      'Naholo hasn\'t been initialized in this codebase. Neither .naholo/config.yml detected in this codebase nor CWD has been registered in ~/.naholo/covert-mode-config.yml. Run  "naholo init" or "naholo covert init" to initialize.',
     )
   }
 

@@ -15,6 +15,8 @@ The argument is the issue number (e.g., `42`). Required.
 
 ## What to do
 
+0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+
 1. **Read issue context**: Use the MCP resource `naholo://issues/{issueNumber}` to fetch the full issue (tasks, notes, logs).
 
 2. **Create local directory**: Create `.naholo/local/issues/{issueNumber}/notes/` and `.naholo/local/issues/{issueNumber}/.base/notes/`.

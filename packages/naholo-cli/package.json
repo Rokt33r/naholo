@@ -15,6 +15,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@inquirer/checkbox": "^5.0.6",
     "@inquirer/confirm": "^6.0.10",
     "@inquirer/input": "^5.0.10",
     "@inquirer/select": "^5.1.2",
