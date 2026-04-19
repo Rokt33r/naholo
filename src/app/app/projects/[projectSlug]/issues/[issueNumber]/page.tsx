@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import {
   useParams,
   useRouter,
@@ -13,17 +13,32 @@ import { useLocalStorage } from '@/hooks/use-local-storage'
 import { useIssue } from '@/hooks/use-issues'
 import { useLogs } from '@/hooks/use-logs'
 import { useNotes } from '@/hooks/use-notes'
+import { useTasks } from '@/hooks/use-tasks'
+import { ListTodo } from 'lucide-react'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { IssueDetail } from '@/components/issues/issue-detail'
-import { LogsList } from '@/components/logs/logs-list'
+import { TasksList } from '@/components/tasks/tasks-list'
 
-type ActiveTab = { type: 'tasks' } | { type: 'note'; noteName: string }
+type ActiveTab =
+  | { type: 'tasks' }
+  | { type: 'logs' }
+  | { type: 'note'; noteName: string }
 
-function parseActiveTab(tabParam: string | null): ActiveTab {
+function parseActiveTab(
+  tabParam: string | null,
+  isWideScreen: boolean,
+): ActiveTab {
+  if (tabParam === 'logs') {
+    return { type: 'logs' }
+  }
+  if (tabParam === 'tasks') {
+    return { type: 'tasks' }
+  }
   if (tabParam?.startsWith('note:')) {
     return { type: 'note', noteName: tabParam.slice(5) }
   }
-  return { type: 'tasks' }
+  // Default: logs on desktop (tasks in sidebar), tasks on mobile
+  return isWideScreen ? { type: 'logs' } : { type: 'tasks' }
 }
 
 export default function IssuePage() {
@@ -40,22 +55,30 @@ export default function IssuePage() {
   const containerWidth = useContainerWidth(containerRef)
   const isMobile = useIsMobile()
   const isWideScreen = containerWidth >= 768
-  const [showLogs, setShowLogs] = useState(false)
-  const [logsPanelWidth, setLogsPanelWidth] = useLocalStorage(
-    'logs-panel-width',
+  const [tasksPanelWidth, setTasksPanelWidth] = useLocalStorage(
+    'tasks-panel-width',
     320,
   )
 
   const { issue, isLoading } = useIssue(projectSlug, issueNumber)
   const { data: logs = [] } = useLogs(projectSlug, issueNumber)
   const { data: notes = [] } = useNotes(projectSlug, issueNumber)
+  const { data: tasks = [] } = useTasks(projectSlug, issueNumber)
 
-  const activeTab = parseActiveTab(searchParams.get('tab'))
+  const activeTab = parseActiveTab(searchParams.get('tab'), isWideScreen)
 
   const handleTabChange = (newTab: ActiveTab) => {
     const params = new URLSearchParams(searchParams)
-    if (newTab.type === 'tasks') {
+    // Default tab: logs on desktop, tasks on mobile — no param needed
+    const isDefault =
+      (newTab.type === 'logs' && isWideScreen) ||
+      (newTab.type === 'tasks' && !isWideScreen)
+    if (isDefault) {
       params.delete('tab')
+    } else if (newTab.type === 'tasks') {
+      params.set('tab', 'tasks')
+    } else if (newTab.type === 'logs') {
+      params.set('tab', 'logs')
     } else if (newTab.type === 'note') {
       params.set('tab', `note:${newTab.noteName}`)
     }
@@ -83,27 +106,34 @@ export default function IssuePage() {
               notes={notes}
               activeTab={activeTab}
               onTabChange={handleTabChange}
-              showLogs={showLogs}
-              onToggleLogs={() => setShowLogs((v) => !v)}
               isWideScreen={isWideScreen}
               isMobile={isMobile}
+              tasksCount={tasks.length}
             />
           </div>
           {isWideScreen && (
             <ResizablePanel
-              width={logsPanelWidth}
-              onWidthChange={setLogsPanelWidth}
+              width={tasksPanelWidth}
+              onWidthChange={setTasksPanelWidth}
               minWidth={240}
               maxWidth={600}
               side='right'
               className='border-l'
             >
-              <LogsList
-                projectSlug={projectSlug}
-                issueNumber={issueNumber}
-                logs={logs}
-                isClosed={issue.closed}
-              />
+              <div className='flex h-full flex-col'>
+                <div className='flex items-center gap-2 px-3 pt-2'>
+                  <h2 className='flex items-center gap-1.5 text-md font-medium h-9'>
+                    <ListTodo className='w-4 h-4' />
+                    Tasks ({tasks.length})
+                  </h2>
+                </div>
+                <div className='flex-1 overflow-hidden'>
+                  <TasksList
+                    projectSlug={projectSlug}
+                    issueNumber={issueNumber}
+                  />
+                </div>
+              </div>
             </ResizablePanel>
           )}
         </>

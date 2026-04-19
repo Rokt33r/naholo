@@ -8,6 +8,7 @@ import { LogItem } from './log-item'
 import { useCloseIssue, useReopenIssue } from '@/hooks/use-issues'
 import { useCreateLog, type Log } from '@/hooks/use-logs'
 import { useProjectContext } from '@/components/app/project-context'
+import { useLocalStorage } from '@/hooks/use-local-storage'
 
 type LogsListProps = {
   projectSlug: string
@@ -22,7 +23,10 @@ export function LogsList({
   logs,
   isClosed,
 }: LogsListProps) {
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useLocalStorage(
+    `log-draft:${projectSlug}:${issueNumber}`,
+    '',
+  )
   const [isClosing, setIsClosing] = useState(false)
   const [isReopening, setIsReopening] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)

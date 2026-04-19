@@ -145,7 +145,7 @@ function TasksListContent() {
   if (!isLoading && flattenedTasks.length === 0 && !newTaskItemState) {
     return (
       <div
-        className='flex h-full flex-col items-center justify-center px-2 py-4 text-center cursor-text'
+        className='flex h-full flex-col items-center justify-center px-2 py-2 text-center cursor-text'
         onClick={() => openNewTaskItem(null, null)}
       >
         <p className='text-sm text-zinc-500'>
@@ -171,7 +171,7 @@ function TasksListContent() {
   return (
     <div
       ref={containerRef}
-      className='flex h-full flex-col py-4 px-2 overflow-auto'
+      className='flex h-full flex-col py-2 px-2 overflow-auto'
       onFocus={handleContainerFocus}
       onBlur={handleContainerBlur}
     >

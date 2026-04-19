@@ -1,17 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreVertical, Loader2, PenLine, Columns2, Eye } from 'lucide-react'
+import { Loader2, PenLine, Columns2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { MarkdownView } from '@/components/ui/markdown-view'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { useDeleteNote } from '@/hooks/use-notes'
 import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
 import type { Note } from 'naholo-api/types'
 
@@ -24,45 +17,22 @@ type NoteViewProps = {
   initialContent: string
   saveState: DebouncedSaveState
   onContentChange: (value: string) => void
-  onDeleted?: () => void
 }
 
 export function NoteView({
   note,
-  projectSlug,
-  issueNumber,
   initialContent,
   saveState,
   onContentChange,
-  onDeleted,
 }: NoteViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('editor')
   const [content, setContentState] = useState(initialContent)
 
-  const { mutateAsync: deleteNote, isPending: deleteLoading } = useDeleteNote(
-    projectSlug,
-    issueNumber,
-  )
-
   const isCreating = note.id.startsWith('temp-')
-  const isSavingContent = saveState !== 'idle'
-  const isLoading = deleteLoading || isSavingContent
 
   const setContent = (value: string) => {
     setContentState(value)
     onContentChange(value)
-  }
-
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this note?')) {
-      return
-    }
-    try {
-      await deleteNote(note.name)
-      onDeleted?.()
-    } catch (error) {
-      console.error('Failed to delete note:', error)
-    }
   }
 
   const handleEditorDoubleClick = () => {
@@ -98,63 +68,42 @@ export function NoteView({
 
   return (
     <div className='flex h-full flex-col'>
-      {/* Header */}
-      <div className='flex items-center justify-end border-b p-2'>
-        <div className='flex items-center gap-1'>
-          {/* View mode toggle */}
-          {!isCreating && (
-            <ButtonGroup>
-              <Button
-                size='icon-sm'
-                variant={viewMode === 'editor' ? 'secondary' : 'ghost'}
-                onClick={() => setViewMode('editor')}
-                title='Editor'
-              >
-                <PenLine />
-              </Button>
-              <Button
-                size='icon-sm'
-                variant={viewMode === 'split' ? 'secondary' : 'ghost'}
-                onClick={() => setViewMode('split')}
-                title='Split'
-              >
-                <Columns2 />
-              </Button>
-              <Button
-                size='icon-sm'
-                variant={viewMode === 'preview' ? 'secondary' : 'ghost'}
-                onClick={() => setViewMode('preview')}
-                title='Preview'
-              >
-                <Eye />
-              </Button>
-            </ButtonGroup>
-          )}
-
-          {/* Actions menu */}
-          {!isCreating && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size='icon-sm' variant='ghost' disabled={isLoading}>
-                  <MoreVertical className='h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  disabled={deleteLoading}
-                  className='text-red-600'
-                >
-                  {deleteLoading ? 'Deleting...' : 'Delete note'}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
-
       {/* Content */}
-      <div className='flex min-h-0 flex-1 overflow-hidden'>
+      <div className='relative flex min-h-0 flex-1 overflow-hidden'>
+        {/* Floating view-mode toggle */}
+        {!isCreating && (
+          <div className='absolute top-2 right-2 z-10'>
+            <div className='rounded-md bg-background/80 p-1'>
+              <ButtonGroup>
+                <Button
+                  size='icon-sm'
+                  variant={viewMode === 'editor' ? 'secondary' : 'ghost'}
+                  onClick={() => setViewMode('editor')}
+                  title='Editor'
+                >
+                  <PenLine />
+                </Button>
+                <Button
+                  size='icon-sm'
+                  variant={viewMode === 'split' ? 'secondary' : 'ghost'}
+                  onClick={() => setViewMode('split')}
+                  title='Split'
+                >
+                  <Columns2 />
+                </Button>
+                <Button
+                  size='icon-sm'
+                  variant={viewMode === 'preview' ? 'secondary' : 'ghost'}
+                  onClick={() => setViewMode('preview')}
+                  title='Preview'
+                >
+                  <Eye />
+                </Button>
+              </ButtonGroup>
+            </div>
+          </div>
+        )}
+
         {isCreating ? (
           <div className='flex items-center gap-2 p-4 text-muted-foreground'>
             <Loader2 className='h-4 w-4 animate-spin' />

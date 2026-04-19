@@ -1,20 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, ListTodo, StickyNote, Loader2 } from 'lucide-react'
+import { Plus, StickyNote, Loader2, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-} from '@/components/ui/context-menu'
+import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { useCreateNote } from '@/hooks/use-notes'
-import { RenameNoteDialog } from '@/components/notes/rename-note-dialog'
+import { NoteDialog } from '@/components/notes/note-dialog'
 import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
 import type { Note } from 'naholo-api/types'
 
-type ActiveTab = { type: 'tasks' } | { type: 'note'; noteName: string }
+type ActiveTab =
+  | { type: 'tasks' }
+  | { type: 'logs' }
+  | { type: 'note'; noteName: string }
 
 type IssueTabsProps = {
   projectSlug: string
@@ -23,6 +21,8 @@ type IssueTabsProps = {
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
   notesSaveState?: Record<string, DebouncedSaveState>
+  isWideScreen: boolean
+  logsCount: number
 }
 
 function generateUniqueName(notes: Note[], base: string): string {
@@ -44,8 +44,10 @@ export function IssueTabs({
   activeTab,
   onTabChange,
   notesSaveState,
+  isWideScreen,
+  logsCount,
 }: IssueTabsProps) {
-  const [renamingNote, setRenamingNote] = useState<Note | null>(null)
+  const [editingNote, setEditingNote] = useState<Note | null>(null)
   const { mutateAsync: createNote, isPending: isCreating } = useCreateNote(
     projectSlug,
     issueNumber,
@@ -66,24 +68,34 @@ export function IssueTabs({
 
   const handleRenamed = (newName: string) => {
     if (
-      renamingNote != null &&
+      editingNote != null &&
       activeTab.type === 'note' &&
-      activeTab.noteName === renamingNote.name
+      activeTab.noteName === editingNote.name
     ) {
       onTabChange({ type: 'note', noteName: newName })
     }
   }
 
-  const isTasksActive = activeTab.type === 'tasks'
+  const handleDeleted = () => {
+    if (
+      editingNote != null &&
+      activeTab.type === 'note' &&
+      activeTab.noteName === editingNote.name
+    ) {
+      onTabChange({ type: 'tasks' })
+    }
+  }
+
+  const isLogsActive = activeTab.type === 'logs'
 
   return (
     <div className='flex items-center gap-1 border-b px-2 py-2'>
       <Button
-        variant={isTasksActive ? 'secondary' : 'ghost'}
-        onClick={() => onTabChange({ type: 'tasks' })}
+        variant={isLogsActive ? 'secondary' : 'ghost'}
+        onClick={() => onTabChange({ type: 'logs' })}
       >
-        <ListTodo className='mr-1 h-4 w-4' />
-        Tasks
+        <MessageSquare className='mr-1 h-4 w-4' />
+        {!isWideScreen ? `Logs (${logsCount})` : 'Logs'}
       </Button>
       {notes.map((note) => {
         const isActive =
@@ -91,19 +103,30 @@ export function IssueTabs({
         const savingState = notesSaveState?.[note.name]
         const hasUnsavedChanges = savingState && savingState !== 'idle'
         return (
-          <ContextMenu key={note.id}>
+          <ContextMenu
+            key={note.id}
+            onOpenChange={(open) => {
+              if (open) {
+                setEditingNote(note)
+              }
+            }}
+          >
             <ContextMenuTrigger asChild>
               <Button
                 variant={isActive ? 'secondary' : 'ghost'}
                 onClick={() =>
                   onTabChange({ type: 'note', noteName: note.name })
                 }
-                className={`max-w-[140px] truncate ${
+                onDoubleClick={(e) => {
+                  e.preventDefault()
+                  setEditingNote(note)
+                }}
+                className={`max-w-[140px] overflow-hidden ${
                   !isActive && hasUnsavedChanges ? 'ring-2 ring-blue-500' : ''
                 }`}
               >
                 <StickyNote className='mr-1 h-4 w-4 shrink-0' />
-                {note.name}
+                <span className='truncate'>{note.name}</span>
                 {isActive && savingState === 'debouncing' && (
                   <Loader2 className='ml-1 h-3 w-3 shrink-0 animate-spin text-muted-foreground' />
                 )}
@@ -112,11 +135,6 @@ export function IssueTabs({
                 )}
               </Button>
             </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem onSelect={() => setRenamingNote(note)}>
-                Rename
-              </ContextMenuItem>
-            </ContextMenuContent>
           </ContextMenu>
         )
       })}
@@ -130,19 +148,20 @@ export function IssueTabs({
         {isCreating ? 'Adding...' : 'Add Note'}
       </Button>
 
-      {renamingNote != null && (
-        <RenameNoteDialog
-          note={renamingNote}
+      {editingNote != null && (
+        <NoteDialog
+          note={editingNote}
           notes={notes}
           projectSlug={projectSlug}
           issueNumber={issueNumber}
           open={true}
           onOpenChange={(open) => {
             if (!open) {
-              setRenamingNote(null)
+              setEditingNote(null)
             }
           }}
           onRenamed={handleRenamed}
+          onDeleted={handleDeleted}
         />
       )}
     </div>

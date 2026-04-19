@@ -8,8 +8,8 @@ import {
   Loader2,
   CircleDot,
   CircleCheck,
-  MessageSquare,
   PanelLeftOpen,
+  ListTodo,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,7 +33,10 @@ import { useUpdateNote } from '@/hooks/use-notes'
 import { useIssueNoteStore } from '@/hooks/use-issue-note-store'
 import type { IssueDetail, Note } from 'naholo-api/types'
 
-type ActiveTab = { type: 'tasks' } | { type: 'note'; noteName: string }
+type ActiveTab =
+  | { type: 'tasks' }
+  | { type: 'logs' }
+  | { type: 'note'; noteName: string }
 
 type IssueDetailProps = {
   projectSlug: string
@@ -42,10 +45,9 @@ type IssueDetailProps = {
   notes: Note[]
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
-  showLogs: boolean
-  onToggleLogs: () => void
   isWideScreen: boolean
   isMobile: boolean
+  tasksCount: number
 }
 
 export function IssueDetail({
@@ -55,10 +57,9 @@ export function IssueDetail({
   notes,
   activeTab,
   onTabChange,
-  showLogs,
-  onToggleLogs,
   isWideScreen,
   isMobile,
+  tasksCount,
 }: IssueDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -226,11 +227,11 @@ export function IssueDetail({
           {!isWideScreen && (
             <Button
               size='sm'
-              variant={showLogs ? 'secondary' : 'ghost'}
-              onClick={onToggleLogs}
+              variant={activeTab.type === 'tasks' ? 'secondary' : 'ghost'}
+              onClick={() => onTabChange({ type: 'tasks' })}
             >
-              <MessageSquare className='mr-1 h-4 w-4' />
-              Logs
+              <ListTodo className='mr-1 h-4 w-4' />
+              Tasks ({tasksCount})
             </Button>
           )}
           <DropdownMenu>
@@ -251,60 +252,54 @@ export function IssueDetail({
         </div>
       </div>
 
-      {showLogs && !isWideScreen ? (
-        <div className='flex-1 overflow-hidden'>
+      {/* Tabs */}
+      <IssueTabs
+        projectSlug={projectSlug}
+        issueNumber={issue.number}
+        notes={notes}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        notesSaveState={store.saveStates}
+        isWideScreen={isWideScreen}
+        logsCount={logs.length}
+      />
+
+      {/* Content */}
+      <div className='flex-1 overflow-hidden'>
+        {activeTab.type === 'logs' && (
           <LogsList
             projectSlug={projectSlug}
             issueNumber={issue.number}
             logs={logs}
             isClosed={issue.closed}
           />
-        </div>
-      ) : (
-        <>
-          {/* Tabs */}
-          <IssueTabs
-            projectSlug={projectSlug}
-            issueNumber={issue.number}
-            notes={notes}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            notesSaveState={store.saveStates}
-          />
-
-          {/* Content */}
-          <div className='flex-1 overflow-hidden'>
-            {activeTab.type === 'tasks' && (
-              <TasksList projectSlug={projectSlug} issueNumber={issue.number} />
-            )}
-            {activeTab.type === 'note' &&
-              (() => {
-                const note = notes.find((n) => n.name === activeTab.noteName)
-                if (!note) {
-                  return (
-                    <div className='flex h-full items-center justify-center text-muted-foreground'>
-                      Note not found
-                    </div>
-                  )
-                }
-                return (
-                  <NoteView
-                    key={note.id}
-                    note={note}
-                    projectSlug={projectSlug}
-                    issueNumber={issue.number}
-                    initialContent={store.getContent(note.name) ?? note.content}
-                    saveState={store.saveStates[note.name] ?? 'idle'}
-                    onContentChange={(value) =>
-                      store.setContent(note.name, value)
-                    }
-                    onDeleted={() => handleTabChange({ type: 'tasks' })}
-                  />
-                )
-              })()}
-          </div>
-        </>
-      )}
+        )}
+        {activeTab.type === 'tasks' && (
+          <TasksList projectSlug={projectSlug} issueNumber={issue.number} />
+        )}
+        {activeTab.type === 'note' &&
+          (() => {
+            const note = notes.find((n) => n.name === activeTab.noteName)
+            if (!note) {
+              return (
+                <div className='flex h-full items-center justify-center text-muted-foreground'>
+                  Note not found
+                </div>
+              )
+            }
+            return (
+              <NoteView
+                key={note.id}
+                note={note}
+                projectSlug={projectSlug}
+                issueNumber={issue.number}
+                initialContent={store.getContent(note.name) ?? note.content}
+                saveState={store.saveStates[note.name] ?? 'idle'}
+                onContentChange={(value) => store.setContent(note.name, value)}
+              />
+            )
+          })()}
+      </div>
     </div>
   )
 }
