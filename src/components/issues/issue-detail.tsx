@@ -305,7 +305,10 @@ export function IssueDetail({
       {/* Mobile tasks dialog */}
       {!isWideScreen && (
         <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
-          <DialogContent className='flex h-[80vh] max-w-lg flex-col p-0'>
+          <DialogContent
+            className='flex h-[80vh] max-w-lg flex-col p-0'
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
             <DialogHeader className='px-4 pt-4'>
               <DialogTitle className='flex items-center gap-1.5'>
                 <ListTodo className='h-4 w-4' />
