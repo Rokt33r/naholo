@@ -13,6 +13,12 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -33,10 +39,7 @@ import { useUpdateNote } from '@/hooks/use-notes'
 import { useIssueNoteStore } from '@/hooks/use-issue-note-store'
 import type { IssueDetail, Note } from 'naholo-api/types'
 
-type ActiveTab =
-  | { type: 'tasks' }
-  | { type: 'logs' }
-  | { type: 'note'; noteName: string }
+type ActiveTab = { type: 'logs' } | { type: 'note'; noteName: string }
 
 type IssueDetailProps = {
   projectSlug: string
@@ -68,6 +71,7 @@ export function IssueDetail({
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showTasksDialog, setShowTasksDialog] = useState(false)
 
   const { issue, isLoading } = useIssue(projectSlug, issueNumber)
   const { mutateAsync: updateTitle } = useUpdateIssueTitle(
@@ -227,8 +231,8 @@ export function IssueDetail({
           {!isWideScreen && (
             <Button
               size='sm'
-              variant={activeTab.type === 'tasks' ? 'secondary' : 'ghost'}
-              onClick={() => onTabChange({ type: 'tasks' })}
+              variant={showTasksDialog ? 'secondary' : 'ghost'}
+              onClick={() => setShowTasksDialog(!showTasksDialog)}
             >
               <ListTodo className='mr-1 h-4 w-4' />
               Tasks ({tasksCount})
@@ -274,9 +278,6 @@ export function IssueDetail({
             isClosed={issue.closed}
           />
         )}
-        {activeTab.type === 'tasks' && (
-          <TasksList projectSlug={projectSlug} issueNumber={issue.number} />
-        )}
         {activeTab.type === 'note' &&
           (() => {
             const note = notes.find((n) => n.name === activeTab.noteName)
@@ -300,6 +301,23 @@ export function IssueDetail({
             )
           })()}
       </div>
+
+      {/* Mobile tasks dialog */}
+      {!isWideScreen && (
+        <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
+          <DialogContent className='flex h-[80vh] max-w-lg flex-col p-0'>
+            <DialogHeader className='px-4 pt-4'>
+              <DialogTitle className='flex items-center gap-1.5'>
+                <ListTodo className='h-4 w-4' />
+                Tasks ({tasksCount})
+              </DialogTitle>
+            </DialogHeader>
+            <div className='flex-1 overflow-hidden'>
+              <TasksList projectSlug={projectSlug} issueNumber={issue.number} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

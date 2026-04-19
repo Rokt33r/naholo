@@ -9,10 +9,7 @@ import { NoteDialog } from '@/components/notes/note-dialog'
 import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
 import type { Note } from 'naholo-api/types'
 
-type ActiveTab =
-  | { type: 'tasks' }
-  | { type: 'logs' }
-  | { type: 'note'; noteName: string }
+type ActiveTab = { type: 'logs' } | { type: 'note'; noteName: string }
 
 type IssueTabsProps = {
   projectSlug: string
@@ -82,7 +79,7 @@ export function IssueTabs({
       activeTab.type === 'note' &&
       activeTab.noteName === editingNote.name
     ) {
-      onTabChange({ type: 'tasks' })
+      onTabChange({ type: 'logs' })
     }
   }
 

@@ -19,26 +19,16 @@ import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { IssueDetail } from '@/components/issues/issue-detail'
 import { TasksList } from '@/components/tasks/tasks-list'
 
-type ActiveTab =
-  | { type: 'tasks' }
-  | { type: 'logs' }
-  | { type: 'note'; noteName: string }
+type ActiveTab = { type: 'logs' } | { type: 'note'; noteName: string }
 
-function parseActiveTab(
-  tabParam: string | null,
-  isWideScreen: boolean,
-): ActiveTab {
+function parseActiveTab(tabParam: string | null): ActiveTab {
   if (tabParam === 'logs') {
     return { type: 'logs' }
-  }
-  if (tabParam === 'tasks') {
-    return { type: 'tasks' }
   }
   if (tabParam?.startsWith('note:')) {
     return { type: 'note', noteName: tabParam.slice(5) }
   }
-  // Default: logs on desktop (tasks in sidebar), tasks on mobile
-  return isWideScreen ? { type: 'logs' } : { type: 'tasks' }
+  return { type: 'logs' }
 }
 
 export default function IssuePage() {
@@ -65,20 +55,12 @@ export default function IssuePage() {
   const { data: notes = [] } = useNotes(projectSlug, issueNumber)
   const { data: tasks = [] } = useTasks(projectSlug, issueNumber)
 
-  const activeTab = parseActiveTab(searchParams.get('tab'), isWideScreen)
+  const activeTab = parseActiveTab(searchParams.get('tab'))
 
   const handleTabChange = (newTab: ActiveTab) => {
     const params = new URLSearchParams(searchParams)
-    // Default tab: logs on desktop, tasks on mobile — no param needed
-    const isDefault =
-      (newTab.type === 'logs' && isWideScreen) ||
-      (newTab.type === 'tasks' && !isWideScreen)
-    if (isDefault) {
+    if (newTab.type === 'logs') {
       params.delete('tab')
-    } else if (newTab.type === 'tasks') {
-      params.set('tab', 'tasks')
-    } else if (newTab.type === 'logs') {
-      params.set('tab', 'logs')
     } else if (newTab.type === 'note') {
       params.set('tab', `note:${newTab.noteName}`)
     }
