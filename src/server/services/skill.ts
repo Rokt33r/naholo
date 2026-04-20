@@ -19,10 +19,12 @@ export type Skill = SkillSummary & {
 }
 
 /**
- * List skills for a skill set (ordered by name)
+ * List skills for a loadout (ordered by name)
  * Excludes content — use getSkill for full content
  */
-export async function listSkills(skillSetId: string): Promise<SkillSummary[]> {
+export async function listSkills(
+  skillLoadoutId: string,
+): Promise<SkillSummary[]> {
   return db.query.skills.findMany({
     columns: {
       id: true,
@@ -31,7 +33,7 @@ export async function listSkills(skillSetId: string): Promise<SkillSummary[]> {
       createdAt: true,
       updatedAt: true,
     },
-    where: (t, { eq }) => eq(t.skillSetId, skillSetId),
+    where: (t, { eq }) => eq(t.skillLoadoutId, skillLoadoutId),
     orderBy: (t, { asc }) => asc(t.name),
   })
 }
@@ -40,7 +42,7 @@ export async function listSkills(skillSetId: string): Promise<SkillSummary[]> {
  * Get a single skill with full content (by name)
  */
 export async function getSkill(
-  skillSetId: string,
+  skillLoadoutId: string,
   name: string,
 ): Promise<Skill | null> {
   const skill = await db.query.skills.findFirst({
@@ -53,7 +55,7 @@ export async function getSkill(
       updatedAt: true,
     },
     where: (t, { eq, and }) =>
-      and(eq(t.name, name), eq(t.skillSetId, skillSetId)),
+      and(eq(t.name, name), eq(t.skillLoadoutId, skillLoadoutId)),
   })
 
   return skill ?? null
@@ -63,7 +65,7 @@ export async function getSkill(
  * Upsert a skill — create if not exists, update content + create revision if exists.
  */
 export async function upsertSkill(
-  skillSetId: string,
+  skillLoadoutId: string,
   data: { name: string; content: string },
 ): Promise<ReturnResult<{ id: string; currentRevisionId: string }>> {
   try {
@@ -71,7 +73,7 @@ export async function upsertSkill(
       const existing = await tx.query.skills.findFirst({
         columns: { id: true },
         where: (t, { eq, and }) =>
-          and(eq(t.name, data.name), eq(t.skillSetId, skillSetId)),
+          and(eq(t.name, data.name), eq(t.skillLoadoutId, skillLoadoutId)),
       })
 
       if (existing != null) {
@@ -100,7 +102,7 @@ export async function upsertSkill(
       const [skill] = await tx
         .insert(skills)
         .values({
-          skillSetId,
+          skillLoadoutId,
           name: data.name,
           content: data.content,
         })
@@ -126,11 +128,11 @@ export async function upsertSkill(
   } catch (error) {
     if (
       error instanceof Error &&
-      error.message.includes('skills_skill_set_id_name_unique')
+      error.message.includes('skills_skill_loadout_id_name_unique')
     ) {
       return err(
         new ConflictError(
-          'A skill with this name already exists in this skill set',
+          'A skill with this name already exists in this skill loadout',
         ),
       )
     }
@@ -142,12 +144,14 @@ export async function upsertSkill(
  * Delete a skill (by name)
  */
 export async function deleteSkill(
-  skillSetId: string,
+  skillLoadoutId: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
   const [skill] = await db
     .delete(skills)
-    .where(and(eq(skills.name, name), eq(skills.skillSetId, skillSetId)))
+    .where(
+      and(eq(skills.name, name), eq(skills.skillLoadoutId, skillLoadoutId)),
+    )
     .returning({ id: skills.id })
 
   if (skill == null) {

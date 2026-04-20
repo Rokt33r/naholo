@@ -1,6 +1,6 @@
 import 'server-only'
 import { db } from '../db'
-import { notes, issues } from '../db/schema'
+import { operationNotes, operations } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -16,10 +16,12 @@ export type Note = {
 }
 
 /**
- * List notes for an issue (ordered by position)
+ * List notes for an operation (ordered by position)
  */
-export async function listNotes(data: { issueId: string }): Promise<Note[]> {
-  return db.query.notes.findMany({
+export async function listNotes(data: {
+  operationId: string
+}): Promise<Note[]> {
+  return db.query.operationNotes.findMany({
     columns: {
       id: true,
       name: true,
@@ -28,19 +30,19 @@ export async function listNotes(data: { issueId: string }): Promise<Note[]> {
       createdAt: true,
       updatedAt: true,
     },
-    where: (t, { eq }) => eq(t.issueId, data.issueId),
+    where: (t, { eq }) => eq(t.operationId, data.operationId),
     orderBy: (t, { asc }) => asc(t.position),
   })
 }
 
 /**
- * Find a note by name within an issue
+ * Find a note by name within an operation
  */
 export async function findNoteByName(data: {
-  issueId: string
+  operationId: string
   name: string
 }): Promise<Note | undefined> {
-  return db.query.notes.findFirst({
+  return db.query.operationNotes.findFirst({
     columns: {
       id: true,
       name: true,
@@ -50,7 +52,7 @@ export async function findNoteByName(data: {
       updatedAt: true,
     },
     where: (t, { eq, and }) =>
-      and(eq(t.issueId, data.issueId), eq(t.name, data.name)),
+      and(eq(t.operationId, data.operationId), eq(t.name, data.name)),
   })
 }
 
@@ -58,16 +60,16 @@ export async function findNoteByName(data: {
  * Create a new note
  */
 export async function createNote(data: {
-  projectWorkerId: string
+  projectOperatorId: string
   projectId: string
-  issueId: string
+  operationId: string
   name: string
   content: string
 }): Promise<ReturnResult<Note>> {
-  // Get the maximum position for notes in this issue
-  const existingNotes = await db.query.notes.findMany({
+  // Get the maximum position for notes in this operation
+  const existingNotes = await db.query.operationNotes.findMany({
     columns: { position: true },
-    where: (t, { eq }) => eq(t.issueId, data.issueId),
+    where: (t, { eq }) => eq(t.operationId, data.operationId),
     orderBy: (t, { asc }) => asc(t.position),
   })
 
@@ -77,29 +79,29 @@ export async function createNote(data: {
       : -1
 
   const [note] = await db
-    .insert(notes)
+    .insert(operationNotes)
     .values({
       projectId: data.projectId,
-      issueId: data.issueId,
-      projectWorkerId: data.projectWorkerId,
+      operationId: data.operationId,
+      projectOperatorId: data.projectOperatorId,
       name: data.name,
       content: data.content,
       position: maxPosition + 1,
     })
     .returning({
-      id: notes.id,
-      name: notes.name,
-      content: notes.content,
-      position: notes.position,
-      createdAt: notes.createdAt,
-      updatedAt: notes.updatedAt,
+      id: operationNotes.id,
+      name: operationNotes.name,
+      content: operationNotes.content,
+      position: operationNotes.position,
+      createdAt: operationNotes.createdAt,
+      updatedAt: operationNotes.updatedAt,
     })
 
-  // Update issue's updatedAt timestamp
+  // Update operation's updatedAt timestamp
   await db
-    .update(issues)
+    .update(operations)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, data.issueId))
+    .where(eq(operations.id, data.operationId))
 
   return ok(note)
 }
@@ -108,22 +110,22 @@ export async function createNote(data: {
  * Update a note.
  */
 export async function updateNote(data: {
-  projectWorkerId: string
+  projectOperatorId: string
   noteName: string
-  issueId: string
+  operationId: string
   name?: string
   content?: string
 }): Promise<ReturnResult<Note>> {
   const updates: Record<string, unknown> = { updatedAt: new Date() }
   if (data.name != null && data.name !== data.noteName) {
-    // Validate uniqueness of new name within the issue
+    // Validate uniqueness of new name within the operation
     const existing = await findNoteByName({
-      issueId: data.issueId,
+      operationId: data.operationId,
       name: data.name,
     })
     if (existing != null) {
       return err(
-        new Error('A note with this name already exists in this issue'),
+        new Error('A note with this name already exists in this operation'),
       )
     }
     updates.name = data.name
@@ -133,27 +135,32 @@ export async function updateNote(data: {
   }
 
   const [note] = await db
-    .update(notes)
+    .update(operationNotes)
     .set(updates)
-    .where(and(eq(notes.issueId, data.issueId), eq(notes.name, data.noteName)))
+    .where(
+      and(
+        eq(operationNotes.operationId, data.operationId),
+        eq(operationNotes.name, data.noteName),
+      ),
+    )
     .returning({
-      id: notes.id,
-      name: notes.name,
-      content: notes.content,
-      position: notes.position,
-      createdAt: notes.createdAt,
-      updatedAt: notes.updatedAt,
+      id: operationNotes.id,
+      name: operationNotes.name,
+      content: operationNotes.content,
+      position: operationNotes.position,
+      createdAt: operationNotes.createdAt,
+      updatedAt: operationNotes.updatedAt,
     })
 
   if (!note) {
     return err(new NotFoundError('Note'))
   }
 
-  // Update issue's updatedAt timestamp
+  // Update operation's updatedAt timestamp
   await db
-    .update(issues)
+    .update(operations)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, data.issueId))
+    .where(eq(operations.id, data.operationId))
 
   return ok(note)
 }
@@ -162,24 +169,29 @@ export async function updateNote(data: {
  * Delete a note.
  */
 export async function deleteNote(data: {
-  projectWorkerId: string
+  projectOperatorId: string
   noteName: string
-  issueId: string
+  operationId: string
 }): Promise<ReturnResult<undefined>> {
   const [note] = await db
-    .delete(notes)
-    .where(and(eq(notes.issueId, data.issueId), eq(notes.name, data.noteName)))
-    .returning({ id: notes.id })
+    .delete(operationNotes)
+    .where(
+      and(
+        eq(operationNotes.operationId, data.operationId),
+        eq(operationNotes.name, data.noteName),
+      ),
+    )
+    .returning({ id: operationNotes.id })
 
   if (!note) {
     return err(new NotFoundError('Note'))
   }
 
-  // Update issue's updatedAt timestamp
+  // Update operation's updatedAt timestamp
   await db
-    .update(issues)
+    .update(operations)
     .set({ updatedAt: new Date() })
-    .where(eq(issues.id, data.issueId))
+    .where(eq(operations.id, data.operationId))
 
   return ok()
 }

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAction } from '@/lib/use-action'
-import { createIssueAction } from '@/app/app/actions'
+import { createOperationAction } from '@/app/app/actions'
 
 type CreateIssueDialogProps = {
   projectSlug: string
@@ -32,7 +32,7 @@ export function CreateIssueDialog({
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
 
-  const { execute: createIssue, loading } = useAction(createIssueAction)
+  const { execute: createIssue, loading } = useAction(createOperationAction)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,7 +47,9 @@ export function CreateIssueDialog({
       setOpen(false)
       setTitle('')
       onIssueCreated?.()
-      router.push(`/app/projects/${projectSlug}/issues/${result.data.number}`)
+      router.push(
+        `/app/projects/${projectSlug}/operations/${result.data.number}`,
+      )
     } else {
       alert('Failed to create issue: ' + result.error.message)
     }

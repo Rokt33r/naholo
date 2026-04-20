@@ -2,7 +2,7 @@ import 'server-only'
 import { eq, and, isNull } from 'drizzle-orm'
 import { db } from '../db'
 import { projectInvites } from '../db/schema'
-import { createProjectWorker } from './project-worker'
+import { createProjectOperator } from './project-operator'
 import { ok } from '@/lib/return-result'
 import type { SuccessResult } from '@/lib/return-result'
 import { ConflictError } from './errors'
@@ -13,7 +13,7 @@ export type ProjectInvite = {
   email: string
   status: string
   claimerUserId: string | null
-  inviterProjectWorkerId: string | null
+  inviterProjectOperatorId: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -26,7 +26,7 @@ export type ProjectInviteWithDetails = ProjectInvite & {
     identifiers: { type: string; value: string }[]
     notificationEmail: { email: string } | null
   } | null
-  inviterWorkerName: string | null
+  inviterOperatorName: string | null
 }
 
 /**
@@ -35,14 +35,14 @@ export type ProjectInviteWithDetails = ProjectInvite & {
 export async function createProjectInvite(
   projectId: string,
   email: string,
-  inviterProjectWorkerId: string,
+  inviterProjectOperatorId: string,
 ): Promise<SuccessResult<{ id: string }>> {
   const [invite] = await db
     .insert(projectInvites)
     .values({
       projectId,
       email,
-      inviterProjectWorkerId,
+      inviterProjectOperatorId,
     })
     .returning({ id: projectInvites.id })
 
@@ -71,7 +71,7 @@ export async function getProjectInvite(
           },
         },
       },
-      inviterProjectWorker: {
+      inviterProjectOperator: {
         columns: { name: true },
       },
     },
@@ -107,7 +107,7 @@ export async function listProjectInvites(
           },
         },
       },
-      inviterProjectWorker: {
+      inviterProjectOperator: {
         columns: { name: true },
       },
     },
@@ -122,7 +122,7 @@ function mapInviteResult(result: {
   email: string
   status: string
   claimerUserId: string | null
-  inviterProjectWorkerId: string | null
+  inviterProjectOperatorId: string | null
   createdAt: Date
   updatedAt: Date
   project: { id: string; name: string; slug: string }
@@ -132,7 +132,7 @@ function mapInviteResult(result: {
     identifiers: { type: string; value: string }[]
     notificationEmail: { email: string } | null
   } | null
-  inviterProjectWorker: { name: string } | null
+  inviterProjectOperator: { name: string } | null
 }): ProjectInviteWithDetails {
   return {
     id: result.id,
@@ -140,12 +140,12 @@ function mapInviteResult(result: {
     email: result.email,
     status: result.status,
     claimerUserId: result.claimerUserId,
-    inviterProjectWorkerId: result.inviterProjectWorkerId,
+    inviterProjectOperatorId: result.inviterProjectOperatorId,
     createdAt: result.createdAt,
     updatedAt: result.updatedAt,
     project: result.project,
     claimerUser: result.claimerUser,
-    inviterWorkerName: result.inviterProjectWorker?.name ?? null,
+    inviterOperatorName: result.inviterProjectOperator?.name ?? null,
   }
 }
 
@@ -194,7 +194,7 @@ export async function acceptProjectInvite(
   inviteId: string,
   projectId: string,
   claimerUser: { id: string; name: string },
-): Promise<{ projectWorkerId: string }> {
+): Promise<{ projectOperatorId: string }> {
   const [updated] = await db
     .update(projectInvites)
     .set({ status: 'accepted', updatedAt: new Date() })
@@ -210,7 +210,7 @@ export async function acceptProjectInvite(
     throw new ConflictError('Invite could not be accepted')
   }
 
-  const worker = await createProjectWorker({
+  const operator = await createProjectOperator({
     projectId,
     userId: claimerUser.id,
     name: claimerUser.name,
@@ -218,5 +218,5 @@ export async function acceptProjectInvite(
     role: 'member',
   })
 
-  return { projectWorkerId: worker.id }
+  return { projectOperatorId: operator.id }
 }

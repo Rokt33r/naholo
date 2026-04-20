@@ -14,15 +14,15 @@ export type Project = {
   createdAt: Date
 }
 
-export type ProjectWorkerInfo = {
+export type ProjectOperatorInfo = {
   id: string
   type: string
   name: string
   role: string
 }
 
-export type ProjectWithWorker = Project & {
-  projectWorkerOfCurrentUser: ProjectWorkerInfo
+export type ProjectWithCurrentOperator = Project & {
+  projectOperatorOfCurrentUser: ProjectOperatorInfo
 }
 
 /**
@@ -50,9 +50,9 @@ export async function getProjectById(
  */
 export async function listProjects(
   userId: string,
-  options?: { with?: 'projectWorkerOfCurrentUser' },
-): Promise<Project[] | ProjectWithWorker[]> {
-  const workers = await db.query.projectWorkers.findMany({
+  options?: { with?: 'projectOperatorOfCurrentUser' },
+): Promise<Project[] | ProjectWithCurrentOperator[]> {
+  const workers = await db.query.projectOperators.findMany({
     columns: {
       id: true,
       type: true,
@@ -74,7 +74,7 @@ export async function listProjects(
     orderBy: (t, { desc }) => desc(t.createdAt),
   })
 
-  if (options?.with === 'projectWorkerOfCurrentUser') {
+  if (options?.with === 'projectOperatorOfCurrentUser') {
     return workers.map((worker) => ({
       ...worker.project,
       projectWorkerOfCurrentUser: {

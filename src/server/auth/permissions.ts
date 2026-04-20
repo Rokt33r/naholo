@@ -4,21 +4,21 @@ import { cache } from 'react'
 import { auth } from './auth'
 import { db } from '../db'
 import {
-  resolveProjectWorkerByApiToken,
-  touchProjectWorkerApiToken,
-} from '../services/project-worker-api-token'
+  resolveProjectOperatorByApiToken,
+  touchProjectOperatorApiToken,
+} from '../services/project-operator-api-token'
 import {
-  resolveProjectWorkerByUserIdAndProjectId,
-  getProjectWorker,
-  type ProjectWorker,
-} from '../services/project-worker'
+  resolveProjectOperatorByUserIdAndProjectId,
+  getProjectOperator,
+  type ProjectOperator,
+} from '../services/project-operator'
 import {
   resolveUserByApiToken,
   touchUserApiToken,
 } from '../services/user-api-token'
 import { NotFoundError } from '../services/errors'
 
-export type { ProjectWorker } from '../services/project-worker'
+export type { ProjectOperator } from '../services/project-operator'
 
 type AuthMethod = 'session' | 'user-api-token'
 
@@ -143,27 +143,29 @@ export async function requireAppAdmin(): Promise<{
 // --- Project-level permissions ---
 
 /**
- * Requires authentication and project worker membership with admin role.
- * Throws if not authenticated, not a worker, or not admin.
+ * Requires authentication and project operator membership with admin role.
+ * Throws if not authenticated, not an operator, or not admin.
  */
-export async function requireAdminProjectWorker(projectSlug: string): Promise<{
-  projectWorker: ProjectWorker
+export async function requireAdminProjectOperator(
+  projectSlug: string,
+): Promise<{
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
 }> {
-  const { projectWorker, project } = await requireProjectWorker(projectSlug)
-  if (projectWorker.role !== 'admin') {
+  const { projectOperator, project } = await requireProjectOperator(projectSlug)
+  if (projectOperator.role !== 'admin') {
     throw new Error('Forbidden')
   }
-  return { projectWorker, project }
+  return { projectOperator, project }
 }
 
 /**
- * Requires authentication and project worker membership.
+ * Requires authentication and project operator membership.
  * Checks Bearer token first, then falls back to session auth.
- * Throws if not authenticated or not a worker in the project.
+ * Throws if not authenticated or not an operator in the project.
  */
-export async function requireProjectWorker(projectSlug: string): Promise<{
-  projectWorker: ProjectWorker
+export async function requireProjectOperator(projectSlug: string): Promise<{
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
 }> {
   // TODO: Handle api token or session first before resolving projectId. It probably better to make require*ByToken and require*BySession accept projectSlug and resolve it internally.
@@ -180,51 +182,51 @@ export async function requireProjectWorker(projectSlug: string): Promise<{
   const authorization = headersList.get('authorization')
   if (authorization?.startsWith('Bearer naholo_user_')) {
     const token = authorization.slice('Bearer '.length)
-    const { projectWorker } = await requireProjectWorkerByUserApiToken(
+    const { projectOperator } = await requireProjectOperatorByUserApiToken(
       project.id,
       token,
       headersList,
     )
-    return { projectWorker, project }
+    return { projectOperator, project }
   }
   if (authorization?.startsWith('Bearer naholo_')) {
     const token = authorization.slice('Bearer '.length)
-    const { projectWorker } = await requireProjectWorkerByApiToken(
+    const { projectOperator } = await requireProjectOperatorByApiToken(
       project.id,
       token,
     )
-    return { projectWorker, project }
+    return { projectOperator, project }
   }
 
   // Fall back to session-based auth
-  const { projectWorker } = await requireProjectWorkerBySession(project.id)
-  return { projectWorker, project }
+  const { projectOperator } = await requireProjectOperatorBySession(project.id)
+  return { projectOperator, project }
 }
 
-async function requireProjectWorkerByApiToken(
+async function requireProjectOperatorByApiToken(
   projectId: string,
   token: string,
-): Promise<{ projectWorker: ProjectWorker }> {
-  const result = await resolveProjectWorkerByApiToken(token)
+): Promise<{ projectOperator: ProjectOperator }> {
+  const result = await resolveProjectOperatorByApiToken(token)
 
   if (result == null) {
     throw new Error('Unauthorized')
   }
-  if (result.projectWorker.projectId !== projectId) {
+  if (result.projectOperator.projectId !== projectId) {
     throw new Error('Forbidden')
   }
 
   // Update lastUsedAt in the background
-  touchProjectWorkerApiToken(result.tokenId)
+  touchProjectOperatorApiToken(result.tokenId)
 
-  return { projectWorker: result.projectWorker }
+  return { projectOperator: result.projectOperator }
 }
 
-async function requireProjectWorkerByUserApiToken(
+async function requireProjectOperatorByUserApiToken(
   projectId: string,
   token: string,
   headersList: Headers,
-): Promise<{ projectWorker: ProjectWorker }> {
+): Promise<{ projectOperator: ProjectOperator }> {
   const result = await resolveUserByApiToken(token)
   if (result == null) {
     throw new Error('Unauthorized')
@@ -233,197 +235,199 @@ async function requireProjectWorkerByUserApiToken(
   // Update lastUsedAt in the background
   touchUserApiToken(result.tokenId)
 
-  // Check for project worker override header (only for user tokens)
-  const overrideWorkerId = headersList.get('x-naholo-project-worker')
-  if (overrideWorkerId != null) {
-    const worker = await getProjectWorker(overrideWorkerId, projectId)
+  // Check for project operator override header (only for user tokens)
+  const overrideOperatorId = headersList.get('x-naholo-project-worker')
+  if (overrideOperatorId != null) {
+    const operator = await getProjectOperator(overrideOperatorId, projectId)
     if (
-      worker == null ||
-      (worker.type !== 'bot' && worker.userId !== result.userId)
+      operator == null ||
+      (operator.type !== 'bot' && operator.userId !== result.userId)
     ) {
       throw new Error('Forbidden')
     }
-    return { projectWorker: worker }
+    return { projectOperator: operator }
   }
 
-  // Fall back to user's own project worker
-  const worker = await resolveProjectWorkerByUserIdAndProjectId(
+  // Fall back to user's own project operator
+  const operator = await resolveProjectOperatorByUserIdAndProjectId(
     result.userId,
     projectId,
   )
-  if (worker == null) {
+  if (operator == null) {
     throw new Error('Forbidden')
   }
 
-  return { projectWorker: worker }
+  return { projectOperator: operator }
 }
 
-async function requireProjectWorkerBySession(
+async function requireProjectOperatorBySession(
   projectId: string,
-): Promise<{ projectWorker: ProjectWorker }> {
+): Promise<{ projectOperator: ProjectOperator }> {
   const user = await getAuthUserBySession()
   if (user == null) {
     throw new Error('Unauthorized')
   }
 
-  const worker = await resolveProjectWorkerByUserIdAndProjectId(
+  const operator = await resolveProjectOperatorByUserIdAndProjectId(
     user.id,
     projectId,
   )
-  if (worker == null) {
+  if (operator == null) {
     throw new Error('Forbidden')
   }
 
-  return { projectWorker: worker }
+  return { projectOperator: operator }
 }
 
 // --- Resource-level permissions ---
 
 /**
- * Requires project worker access AND verifies skill set belongs to project.
+ * Requires project operator access AND verifies skill loadout belongs to project.
  */
-export async function requireSkillSetAccess(
+export async function requireSkillLoadoutAccess(
   projectSlug: string,
   slug: string,
 ): Promise<{
-  projectWorker: ProjectWorker
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
-  skillSet: { id: string }
+  skillLoadout: { id: string }
 }> {
-  const { projectWorker, project } = await requireProjectWorker(projectSlug)
+  const { projectOperator, project } = await requireProjectOperator(projectSlug)
 
-  const skillSet = await db.query.skillSets.findFirst({
+  const skillLoadout = await db.query.skillLoadouts.findFirst({
     columns: { id: true },
     where: (t, { eq, and }) =>
       and(eq(t.slug, slug), eq(t.projectId, project.id)),
   })
 
-  if (skillSet == null) {
-    throw new NotFoundError('SkillSet')
+  if (skillLoadout == null) {
+    throw new NotFoundError('Skill Loadout')
   }
 
-  return { projectWorker, project, skillSet }
+  return { projectOperator, project, skillLoadout }
 }
 
 /**
- * Requires project worker access AND verifies issue belongs to project.
- * Use for routes that operate on issue-level resources (logs, notes, tasks).
+ * Requires project operator access AND verifies operation belongs to project.
+ * Use for routes that operate on operation-level resources (logs, notes, objectives).
  */
-export async function requireIssueAccess(
+export async function requireOperationAccess(
   projectSlug: string,
-  issueNumber: number | string,
+  operationNumber: number | string,
 ): Promise<{
-  projectWorker: ProjectWorker
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
-  issue: { id: string; number: number }
+  operation: { id: string; number: number }
 }> {
-  const { projectWorker, project } = await requireProjectWorker(projectSlug)
+  const { projectOperator, project } = await requireProjectOperator(projectSlug)
 
-  const parsed = Number(issueNumber)
+  const parsed = Number(operationNumber)
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new NotFoundError('Issue')
+    throw new NotFoundError('Operation')
   }
 
-  const issue = await db.query.issues.findFirst({
+  const operation = await db.query.operations.findFirst({
     columns: { id: true, number: true },
     where: (t, { eq, and }) =>
       and(eq(t.number, parsed), eq(t.projectId, project.id)),
   })
 
-  if (issue == null) {
-    throw new NotFoundError('Issue')
+  if (operation == null) {
+    throw new NotFoundError('Operation')
   }
 
-  return { projectWorker, project, issue }
+  return { projectOperator, project, operation }
 }
 
 /**
- * Requires issue access AND verifies log belongs to issue.
+ * Requires operation access AND verifies operation log belongs to operation.
  */
-export async function requireIssueLogAccess(
+export async function requireOperationLogAccess(
   projectSlug: string,
-  issueNumber: number | string,
+  operationNumber: number | string,
   logId: string,
 ): Promise<{
-  projectWorker: ProjectWorker
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
-  issue: { id: string; number: number }
+  operation: { id: string; number: number }
   log: { id: string }
 }> {
-  const { projectWorker, project, issue } = await requireIssueAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const log = await db.query.logs.findFirst({
+  const log = await db.query.operationLogs.findFirst({
     columns: { id: true },
-    where: (t, { eq, and }) => and(eq(t.id, logId), eq(t.issueId, issue.id)),
+    where: (t, { eq, and }) =>
+      and(eq(t.id, logId), eq(t.operationId, operation.id)),
   })
 
   if (log == null) {
-    throw new NotFoundError('Log')
+    throw new NotFoundError('OperationLog')
   }
 
-  return { projectWorker, project, issue, log }
+  return { projectOperator, project, operation, log }
 }
 
 /**
- * Requires issue access AND verifies note belongs to issue.
+ * Requires operation access AND verifies note belongs to operation.
  */
-export async function requireIssueNoteAccess(
+export async function requireOperationNoteAccess(
   projectSlug: string,
-  issueNumber: number | string,
+  operationNumber: number | string,
   noteName: string,
 ): Promise<{
-  projectWorker: ProjectWorker
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
-  issue: { id: string; number: number }
+  operation: { id: string; number: number }
   note: { id: string; name: string }
 }> {
-  const { projectWorker, project, issue } = await requireIssueAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const note = await db.query.notes.findFirst({
+  const note = await db.query.operationNotes.findFirst({
     columns: { id: true, name: true },
     where: (t, { eq, and }) =>
-      and(eq(t.name, noteName), eq(t.issueId, issue.id)),
+      and(eq(t.name, noteName), eq(t.operationId, operation.id)),
   })
 
   if (note == null) {
     throw new NotFoundError('Note')
   }
 
-  return { projectWorker, project, issue, note }
+  return { projectOperator, project, operation, note }
 }
 
 /**
- * Requires issue access AND verifies task belongs to issue.
+ * Requires operation access AND verifies objective belongs to operation.
  */
-export async function requireIssueTaskAccess(
+export async function requireOperationObjectiveAccess(
   projectSlug: string,
-  issueNumber: number | string,
-  taskId: string,
+  operationNumber: number | string,
+  objectiveId: string,
 ): Promise<{
-  projectWorker: ProjectWorker
+  projectOperator: ProjectOperator
   project: { id: string; slug: string }
-  issue: { id: string; number: number }
-  task: { id: string }
+  operation: { id: string; number: number }
+  objective: { id: string }
 }> {
-  const { projectWorker, project, issue } = await requireIssueAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const task = await db.query.tasks.findFirst({
+  const objective = await db.query.operationObjectives.findFirst({
     columns: { id: true },
-    where: (t, { eq, and }) => and(eq(t.id, taskId), eq(t.issueId, issue.id)),
+    where: (t, { eq, and }) =>
+      and(eq(t.id, objectiveId), eq(t.operationId, operation.id)),
   })
 
-  if (task == null) {
-    throw new NotFoundError('Task')
+  if (objective == null) {
+    throw new NotFoundError('Objective')
   }
 
-  return { projectWorker, project, issue, task }
+  return { projectOperator, project, operation, objective }
 }
