@@ -1,7 +1,7 @@
 import {
   ArrowDownFromLine,
+  Blocks,
   FileText,
-  Hammer,
   PlaneTakeoff,
   Radio,
 } from 'lucide-react'
@@ -22,8 +22,8 @@ const COMMANDS: Command[] = [
     index: '01',
     code: '/infil',
     name: 'Infil',
-    body: 'Pull the issue, notes, tasks, and log history from the server into a local worktree. Now you have the intel — and a clean baseline for later diffs.',
-    artefacts: ['PLAN.md'],
+    body: 'Pull notes, objectives, and logs from the server into a local codebase. Now you have the intel — and a clean baseline for later diffs.',
+    artefacts: ['OPERATION.md'],
     Icon: ArrowDownFromLine,
   },
   {
@@ -31,7 +31,7 @@ const COMMANDS: Command[] = [
     code: '/spec',
     name: 'Spec',
     body: 'Turn the brief into an executable plan. Scout the codebase, lock down architecture, write the objective list.',
-    artefacts: ['SPEC.md', 'TASKS.md'],
+    artefacts: ['SPEC.md', 'OBJECTIVES.md'],
     Icon: FileText,
   },
   {
@@ -39,8 +39,8 @@ const COMMANDS: Command[] = [
     code: '/ship',
     name: 'Ship',
     body: 'Execute the spec top to bottom. Each objective gets checked as its code lands. No improvising outside the plan.',
-    artefacts: ['Code changes', 'TASKS.md'],
-    Icon: Hammer,
+    artefacts: ['Code changes', 'OBJECTIVES.md'],
+    Icon: Blocks,
   },
   {
     index: '04',
@@ -55,7 +55,7 @@ const COMMANDS: Command[] = [
     code: '/exfil',
     name: 'Exfil',
     body: 'Close out the operation. Final sync, debrief log, and an optional close on the issue. Extract.',
-    artefacts: ['Debrief log', 'Issue close'],
+    artefacts: ['Debrief log', 'Operation close'],
     Icon: PlaneTakeoff,
   },
 ]
@@ -65,9 +65,9 @@ const TACTIC_DIAGRAM = `┌─────────────────�
 │                                                                 │
 │  [Ideation: Drop intel as logs or notes]                        │
 └─────────────────────────────────────────────────────────────────┘
-       │                           ^                      ^
-       │ /infil                    │ /sitrep              │ /exfil
-       v                           │ (run anytime)        │
+       │                        ^                         ^
+       │ /infil                 │ /sitrep                 │ /exfil
+       v                        │ (run anytime)           │
 ┌─────────────────────────────────────────────────────────────────┐
 │  Battlefield: Your codebase                                     │
 │                                                                 │
@@ -78,14 +78,13 @@ const TACTIC_DIAGRAM = `┌─────────────────�
 export function TacticalOverview() {
   return (
     <Section>
-      <BriefingLabel>{'// 02 · Tactical overview'}</BriefingLabel>
+      <BriefingLabel>{'// 03 · Tactical overview'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         One cycle. Every op.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
         Two landscapes, one loop. Intel lives in Mission HQ. Code lives in the
-        battlefield. Every command either syncs between them or operates on the
-        ground.
+        battlefield. AI skills sync between them or operate on the ground.
       </p>
 
       <div className='mt-12 flex justify-center'>

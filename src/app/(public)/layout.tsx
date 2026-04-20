@@ -15,13 +15,16 @@ export default function PublicLayout({
   return (
     <div className='flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950'>
       <header className='border-b border-zinc-200 dark:border-zinc-800'>
-        <nav className='mx-auto flex max-w-4xl items-center justify-between px-6 py-4'>
+        <nav className='mx-auto flex max-w-6xl items-center justify-between px-6 py-4'>
           <Link
             href='/'
             className='flex items-center gap-2 text-lg font-bold text-zinc-900 dark:text-zinc-50'
           >
-            <Image src={icon} alt='' width={50} height={50} />
+            <Image src={icon} alt='logo' width={50} height={50} />
             naholo
+            <span className='rounded bg-amber-100 px-1 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'>
+              Alpha
+            </span>
           </Link>
           <div className='flex items-center gap-6'>
             <Link
