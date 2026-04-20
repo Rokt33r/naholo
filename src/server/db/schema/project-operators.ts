@@ -2,9 +2,9 @@ import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { users } from './users'
-import { projectWorkerApiTokens } from './project-worker-api-tokens'
+import { projectOperatorApiTokens } from './project-operator-api-tokens'
 
-export const projectWorkers = pgTable('project_workers', {
+export const projectOperators = pgTable('project_operators', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
     .notNull()
@@ -17,17 +17,17 @@ export const projectWorkers = pgTable('project_workers', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-export const projectWorkersRelations = relations(
-  projectWorkers,
+export const projectOperatorsRelations = relations(
+  projectOperators,
   ({ one, many }) => ({
     project: one(projects, {
-      fields: [projectWorkers.projectId],
+      fields: [projectOperators.projectId],
       references: [projects.id],
     }),
     user: one(users, {
-      fields: [projectWorkers.userId],
+      fields: [projectOperators.userId],
       references: [users.id],
     }),
-    apiTokens: many(projectWorkerApiTokens),
+    apiTokens: many(projectOperatorApiTokens),
   }),
 )

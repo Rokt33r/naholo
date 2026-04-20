@@ -9,8 +9,8 @@ import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { skills } from './skills'
 
-export const skillSets = pgTable(
-  'skill_sets',
+export const skillLoadouts = pgTable(
+  'skill_loadouts',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     projectId: uuid('project_id')
@@ -22,14 +22,20 @@ export const skillSets = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('skill_sets_project_id_slug_unique').on(t.projectId, t.slug),
+    uniqueIndex('skill_loadouts_project_id_slug_unique').on(
+      t.projectId,
+      t.slug,
+    ),
   ],
 )
 
-export const skillSetsRelations = relations(skillSets, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [skillSets.projectId],
-    references: [projects.id],
+export const skillLoadoutsRelations = relations(
+  skillLoadouts,
+  ({ one, many }) => ({
+    project: one(projects, {
+      fields: [skillLoadouts.projectId],
+      references: [projects.id],
+    }),
+    skills: many(skills),
   }),
-  skills: many(skills),
-}))
+)

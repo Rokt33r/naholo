@@ -2,7 +2,7 @@ import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { users } from './users'
-import { projectWorkers } from './project-workers'
+import { projectOperators } from './project-operators'
 
 export const projectInvites = pgTable('project_invites', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -14,8 +14,8 @@ export const projectInvites = pgTable('project_invites', {
   claimerUserId: uuid('claimer_user_id').references(() => users.id, {
     onDelete: 'set null',
   }),
-  inviterProjectWorkerId: uuid('inviter_project_worker_id').references(
-    () => projectWorkers.id,
+  inviterProjectOperatorId: uuid('inviter_project_operator_id').references(
+    () => projectOperators.id,
     { onDelete: 'set null' },
   ),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -31,8 +31,8 @@ export const projectInvitesRelations = relations(projectInvites, ({ one }) => ({
     fields: [projectInvites.claimerUserId],
     references: [users.id],
   }),
-  inviterProjectWorker: one(projectWorkers, {
-    fields: [projectInvites.inviterProjectWorkerId],
-    references: [projectWorkers.id],
+  inviterProjectOperator: one(projectOperators, {
+    fields: [projectInvites.inviterProjectOperatorId],
+    references: [projectOperators.id],
   }),
 }))

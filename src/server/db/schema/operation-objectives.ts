@@ -7,26 +7,29 @@ import {
   integer,
   AnyPgColumn,
 } from 'drizzle-orm/pg-core'
-import { issues } from './issues'
+import { operations } from './operations'
 import { projects } from './projects'
-import { projectWorkers } from './project-workers'
+import { projectOperators } from './project-operators'
 
-export const tasks = pgTable('tasks', {
+export const operationObjectives = pgTable('operation_objectives', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
-  issueId: uuid('issue_id')
+  operationId: uuid('operation_id')
     .notNull()
-    .references(() => issues.id, { onDelete: 'cascade' }),
-  projectWorkerId: uuid('project_worker_id').references(
-    () => projectWorkers.id,
+    .references(() => operations.id, { onDelete: 'cascade' }),
+  projectOperatorId: uuid('project_operator_id').references(
+    () => projectOperators.id,
     { onDelete: 'set null' },
   ),
-  parentTaskId: uuid('parent_task_id').references((): AnyPgColumn => tasks.id, {
-    onDelete: 'cascade',
-  }), // self-referencing for hierarchy
-  name: text('name').notNull(), // task name (single line)
+  parentObjectiveId: uuid('parent_objective_id').references(
+    (): AnyPgColumn => operationObjectives.id,
+    {
+      onDelete: 'cascade',
+    },
+  ), // self-referencing for hierarchy
+  name: text('name').notNull(), // objective name (single line)
   note: text('note'), // additional notes (markdown)
   done: boolean('done').notNull().default(false),
   position: integer('position').notNull().default(0), // for ordering

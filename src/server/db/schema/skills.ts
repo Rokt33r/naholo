@@ -6,16 +6,16 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { skillSets } from './skill-sets'
+import { skillLoadouts } from './skill-loadouts'
 import { skillRevisions } from './skill-revisions'
 
 export const skills = pgTable(
   'skills',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    skillSetId: uuid('skill_set_id')
+    skillLoadoutId: uuid('skill_loadout_id')
       .notNull()
-      .references(() => skillSets.id, { onDelete: 'cascade' }),
+      .references(() => skillLoadouts.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     content: text('content').notNull(),
     currentRevisionId: uuid('current_revision_id'),
@@ -23,14 +23,17 @@ export const skills = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('skills_skill_set_id_name_unique').on(t.skillSetId, t.name),
+    uniqueIndex('skills_skill_loadout_id_name_unique').on(
+      t.skillLoadoutId,
+      t.name,
+    ),
   ],
 )
 
 export const skillsRelations = relations(skills, ({ one, many }) => ({
-  skillSet: one(skillSets, {
-    fields: [skills.skillSetId],
-    references: [skillSets.id],
+  skillLoadout: one(skillLoadouts, {
+    fields: [skills.skillLoadoutId],
+    references: [skillLoadouts.id],
   }),
   currentRevision: one(skillRevisions, {
     fields: [skills.currentRevisionId],

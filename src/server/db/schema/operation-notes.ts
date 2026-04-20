@@ -6,22 +6,22 @@ import {
   integer,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
-import { issues } from './issues'
+import { operations } from './operations'
 import { projects } from './projects'
-import { projectWorkers } from './project-workers'
+import { projectOperators } from './project-operators'
 
-export const notes = pgTable(
-  'notes',
+export const operationNotes = pgTable(
+  'operation_notes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
-    issueId: uuid('issue_id')
+    operationId: uuid('operation_id')
       .notNull()
-      .references(() => issues.id, { onDelete: 'cascade' }),
-    projectWorkerId: uuid('project_worker_id').references(
-      () => projectWorkers.id,
+      .references(() => operations.id, { onDelete: 'cascade' }),
+    projectOperatorId: uuid('project_operator_id').references(
+      () => projectOperators.id,
       { onDelete: 'set null' },
     ),
     name: text('name').notNull(),
@@ -31,6 +31,9 @@ export const notes = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('notes_issue_id_name_idx').on(table.issueId, table.name),
+    uniqueIndex('operation_notes_operation_id_name_idx').on(
+      table.operationId,
+      table.name,
+    ),
   ],
 )

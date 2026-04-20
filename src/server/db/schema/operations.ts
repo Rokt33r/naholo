@@ -8,29 +8,29 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { projects } from './projects'
-import { projectWorkers } from './project-workers'
+import { projectOperators } from './project-operators'
 
-export const issues = pgTable(
-  'issues',
+export const operations = pgTable(
+  'operations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
-    projectWorkerId: uuid('project_worker_id').references(
-      () => projectWorkers.id,
+    projectOperatorId: uuid('project_operator_id').references(
+      () => projectOperators.id,
       { onDelete: 'set null' },
     ),
     number: integer('number').notNull(),
     title: text('title').notNull(),
-    lastLogPreview: text('last_log_preview'),
+    lastOperationLogPreview: text('last_operation_log_preview'),
     closed: boolean('closed').notNull().default(false),
     closedAt: timestamp('closed_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('issues_project_id_number_idx').on(
+    uniqueIndex('operations_project_id_number_idx').on(
       table.projectId,
       table.number,
     ),

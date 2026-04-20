@@ -7,8 +7,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { projectWorkers } from './project-workers'
-import { skillSets } from './skill-sets'
+import { projectOperators } from './project-operators'
+import { skillLoadouts } from './skill-loadouts'
 
 export const projects = pgTable(
   'projects',
@@ -17,7 +17,7 @@ export const projects = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     slug: text('slug').notNull(),
-    issueCounter: integer('issue_counter').notNull().default(0),
+    operationCounter: integer('operation_counter').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -25,6 +25,6 @@ export const projects = pgTable(
 )
 
 export const projectsRelations = relations(projects, ({ many }) => ({
-  projectWorkers: many(projectWorkers),
-  skillSets: many(skillSets),
+  projectOperators: many(projectOperators),
+  skillLoadouts: many(skillLoadouts),
 }))
