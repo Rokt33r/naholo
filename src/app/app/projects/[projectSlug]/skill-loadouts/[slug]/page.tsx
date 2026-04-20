@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Plus, Puzzle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectContext } from '@/components/app/project-context'
-import { useSkillSets } from '@/hooks/use-skill-sets'
+import { useSkillLoadouts } from '@/hooks/use-skill-loadouts'
 import { useSkills } from '@/hooks/use-skills'
 import { parseFrontmatterDescription } from '@/lib/parse-frontmatter-description'
 import { SkillEditorDialog } from '@/components/skills/skill-editor-dialog'
@@ -15,7 +15,7 @@ export default function SkillLoadoutDetailPage() {
   const { projectSlug } = useProjectContext()
   const { slug } = useParams<{ slug: string }>()
   const router = useRouter()
-  const { skillSets: skillLoadouts } = useSkillSets(projectSlug)
+  const { skillLoadouts } = useSkillLoadouts(projectSlug)
   const { skills, isLoading } = useSkills(projectSlug, slug)
   const [editorOpen, setEditorOpen] = useState(false)
 
@@ -77,7 +77,7 @@ export default function SkillLoadoutDetailPage() {
 
       <SkillEditorDialog
         projectSlug={projectSlug}
-        skillSetSlug={slug}
+        skillLoadoutSlug={slug}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />

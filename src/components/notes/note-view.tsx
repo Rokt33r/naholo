@@ -5,7 +5,7 @@ import { Loader2, PenLine, Columns2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { MarkdownView } from '@/components/ui/markdown-view'
-import type { DebouncedSaveState } from '@/hooks/use-issue-note-store'
+import type { DebouncedSaveState } from '@/hooks/use-operation-note-store'
 import type { Note } from 'naholo-api/types'
 
 type ViewMode = 'editor' | 'split' | 'preview'
@@ -13,7 +13,7 @@ type ViewMode = 'editor' | 'split' | 'preview'
 type NoteViewProps = {
   note: Note
   projectSlug: string
-  issueNumber: number
+  operationNumber: number
   initialContent: string
   saveState: DebouncedSaveState
   onContentChange: (value: string) => void

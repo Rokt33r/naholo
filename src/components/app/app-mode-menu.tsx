@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ListTodo, HardHat, Puzzle, Settings, Menu } from 'lucide-react'
+import { LandPlot, Contact, ToolCase, Settings, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,27 +31,27 @@ export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
       <DropdownMenuContent align='start'>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectSlug}/issues`)
+            router.push(`/app/projects/${currentProjectSlug}/operations`)
           }
         >
-          <ListTodo className='mr-2 h-4 w-4' />
-          Issues
+          <LandPlot className='mr-2 h-4 w-4' />
+          Operations
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectSlug}/workers`)
+            router.push(`/app/projects/${currentProjectSlug}/operators`)
           }
         >
-          <HardHat className='mr-2 h-4 w-4' />
-          Workers
+          <Contact className='mr-2 h-4 w-4' />
+          Operators
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() =>
-            router.push(`/app/projects/${currentProjectSlug}/skill-sets`)
+            router.push(`/app/projects/${currentProjectSlug}/skill-loadouts`)
           }
         >
-          <Puzzle className='mr-2 h-4 w-4' />
-          Skills
+          <ToolCase className='mr-2 h-4 w-4' />
+          Skill Loadouts
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setSettingsOpen(true)}>

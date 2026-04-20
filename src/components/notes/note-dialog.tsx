@@ -15,7 +15,7 @@ type NoteDialogProps = {
   note: Note
   notes: Note[]
   projectSlug: string
-  issueNumber: number
+  operationNumber: number
   open: boolean
   onOpenChange: (open: boolean) => void
   onRenamed?: (newName: string) => void
@@ -26,7 +26,7 @@ export function NoteDialog({
   note,
   notes,
   projectSlug,
-  issueNumber,
+  operationNumber,
   open,
   onOpenChange,
   onRenamed,
@@ -36,11 +36,11 @@ export function NoteDialog({
   const [error, setError] = useState<string | null>(null)
   const { mutateAsync: updateNote, isPending: isRenaming } = useUpdateNote(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
   const { mutateAsync: deleteNote, isPending: isDeleting } = useDeleteNote(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
   const handleRename = async (e: React.FormEvent) => {

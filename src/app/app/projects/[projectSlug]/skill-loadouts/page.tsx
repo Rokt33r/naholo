@@ -17,14 +17,17 @@ import { ProjectSwitcher } from '@/components/projects/project-switcher'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useProjectContext } from '@/components/app/project-context'
 import { useIsMobile } from '@/hooks/use-is-mobile'
-import { useSkillSets, useCreateSkillSet } from '@/hooks/use-skill-sets'
-import type { SkillSetSummary } from '@/hooks/use-skill-sets'
+import {
+  useSkillLoadouts,
+  useCreateSkillLoadout,
+} from '@/hooks/use-skill-loadouts'
+import type { SkillLoadoutSummary } from '@/hooks/use-skill-loadouts'
 
 export default function SkillLoadoutsPage() {
   const { projectSlug, projectName, projects } = useProjectContext()
   const router = useRouter()
   const isMobile = useIsMobile()
-  const { skillSets: skillLoadouts, isLoading } = useSkillSets(projectSlug)
+  const { skillLoadouts, isLoading } = useSkillLoadouts(projectSlug)
   const [createOpen, setCreateOpen] = useState(false)
 
   return (
@@ -90,7 +93,7 @@ function SkillLoadoutItem({
   skillLoadout,
   onClick,
 }: {
-  skillLoadout: SkillSetSummary
+  skillLoadout: SkillLoadoutSummary
   onClick: () => void
 }) {
   return (
@@ -120,7 +123,7 @@ function CreateSkillLoadoutDialog({
 }) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
-  const createSkillLoadout = useCreateSkillSet(projectSlug)
+  const createSkillLoadout = useCreateSkillLoadout(projectSlug)
 
   const isSubmitDisabled =
     !name.trim() || !slug.trim() || createSkillLoadout.isPending

@@ -10,25 +10,25 @@ import {
 import { useContainerWidth } from '@/hooks/use-container-width'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useLocalStorage } from '@/hooks/use-local-storage'
-import { useIssue } from '@/hooks/use-issues'
-import { useLogs } from '@/hooks/use-logs'
+import { useOperation } from '@/hooks/use-operations'
+import { useOperationLogs } from '@/hooks/use-operation-logs'
 import { useNotes } from '@/hooks/use-notes'
-import { useTasks } from '@/hooks/use-tasks'
+import { useObjectives } from '@/hooks/use-objectives'
 import { ListTodo } from 'lucide-react'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
-import { IssueDetail } from '@/components/issues/issue-detail'
-import { TasksList } from '@/components/tasks/tasks-list'
+import { OperationDetail } from '@/components/operations/operation-detail'
+import { ObjectivesList } from '@/components/objectives/objectives-list'
 
-type ActiveTab = { type: 'logs' } | { type: 'note'; noteName: string }
+type ActiveTab = { type: 'comms' } | { type: 'note'; noteName: string }
 
 function parseActiveTab(tabParam: string | null): ActiveTab {
-  if (tabParam === 'logs') {
-    return { type: 'logs' }
+  if (tabParam === 'comms') {
+    return { type: 'comms' }
   }
   if (tabParam?.startsWith('note:')) {
     return { type: 'note', noteName: tabParam.slice(5) }
   }
-  return { type: 'logs' }
+  return { type: 'comms' }
 }
 
 export default function OperationPage() {
@@ -50,16 +50,19 @@ export default function OperationPage() {
     320,
   )
 
-  const { issue, isLoading } = useIssue(projectSlug, operationNumber)
-  const { data: logs = [] } = useLogs(projectSlug, operationNumber)
+  const { operation, isLoading } = useOperation(projectSlug, operationNumber)
+  const { data: operationLogs = [] } = useOperationLogs(
+    projectSlug,
+    operationNumber,
+  )
   const { data: notes = [] } = useNotes(projectSlug, operationNumber)
-  const { data: tasks = [] } = useTasks(projectSlug, operationNumber)
+  const { data: objectives = [] } = useObjectives(projectSlug, operationNumber)
 
   const activeTab = parseActiveTab(searchParams.get('tab'))
 
   const handleTabChange = (newTab: ActiveTab) => {
     const params = new URLSearchParams(searchParams)
-    if (newTab.type === 'logs') {
+    if (newTab.type === 'comms') {
       params.delete('tab')
     } else if (newTab.type === 'note') {
       params.set('tab', `note:${newTab.noteName}`)
@@ -74,23 +77,23 @@ export default function OperationPage() {
         <div className='flex flex-1 items-center justify-center text-muted-foreground'>
           Loading...
         </div>
-      ) : !issue ? (
+      ) : !operation ? (
         <div className='flex flex-1 items-center justify-center text-muted-foreground'>
           Operation not found
         </div>
       ) : (
         <>
           <div className='flex-1 overflow-hidden'>
-            <IssueDetail
+            <OperationDetail
               projectSlug={projectSlug}
-              issueNumber={operationNumber}
-              logs={logs}
+              operationNumber={operationNumber}
+              operationLogs={operationLogs}
               notes={notes}
               activeTab={activeTab}
               onTabChange={handleTabChange}
               isWideScreen={isWideScreen}
               isMobile={isMobile}
-              tasksCount={tasks.length}
+              objectivesCount={objectives.length}
             />
           </div>
           {isWideScreen && (
@@ -106,13 +109,13 @@ export default function OperationPage() {
                 <div className='flex items-center gap-2 px-3 pt-2'>
                   <h2 className='flex items-center gap-1.5 text-md font-medium h-9'>
                     <ListTodo className='w-4 h-4' />
-                    Objectives ({tasks.length})
+                    Objectives ({objectives.length})
                   </h2>
                 </div>
                 <div className='flex-1 overflow-hidden'>
-                  <TasksList
+                  <ObjectivesList
                     projectSlug={projectSlug}
-                    issueNumber={operationNumber}
+                    operationNumber={operationNumber}
                   />
                 </div>
               </div>

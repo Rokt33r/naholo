@@ -6,14 +6,15 @@ export type { Skill } from 'naholo-api/types'
 
 import type { Skill } from 'naholo-api/types'
 
-function skillsBasePath(projectSlug: string, skillSetSlug: string) {
-  return `/api/projects/${projectSlug}/skill-sets/${encodeURIComponent(skillSetSlug)}/skills`
+function skillsBasePath(projectSlug: string, skillLoadoutSlug: string) {
+  return `/api/projects/${projectSlug}/skill-loadouts/${encodeURIComponent(skillLoadoutSlug)}/skills`
 }
 
-export function useSkills(projectSlug: string, skillSetSlug: string) {
+export function useSkills(projectSlug: string, skillLoadoutSlug: string) {
   const query = useQuery({
-    queryKey: ['skills', projectSlug, skillSetSlug],
-    queryFn: () => fetcher<Skill[]>(skillsBasePath(projectSlug, skillSetSlug)),
+    queryKey: ['skills', projectSlug, skillLoadoutSlug],
+    queryFn: () =>
+      fetcher<Skill[]>(skillsBasePath(projectSlug, skillLoadoutSlug)),
     staleTime: 60_000,
   })
 
@@ -26,14 +27,14 @@ export function useSkills(projectSlug: string, skillSetSlug: string) {
 
 export function useSkill(
   projectSlug: string,
-  skillSetSlug: string,
+  skillLoadoutSlug: string,
   skillName: string,
 ) {
   const query = useQuery({
-    queryKey: ['skills', projectSlug, skillSetSlug, skillName],
+    queryKey: ['skills', projectSlug, skillLoadoutSlug, skillName],
     queryFn: () =>
       fetcher<Skill>(
-        `${skillsBasePath(projectSlug, skillSetSlug)}/${encodeURIComponent(skillName)}`,
+        `${skillsBasePath(projectSlug, skillLoadoutSlug)}/${encodeURIComponent(skillName)}`,
       ),
     staleTime: 60_000,
   })
@@ -45,14 +46,14 @@ export function useSkill(
   }
 }
 
-export function useUpsertSkill(projectSlug: string, skillSetSlug: string) {
+export function useUpsertSkill(projectSlug: string, skillLoadoutSlug: string) {
   const queryClient = useQueryClient()
-  const queryKey = ['skills', projectSlug, skillSetSlug]
+  const queryKey = ['skills', projectSlug, skillLoadoutSlug]
 
   return useMutation({
     mutationFn: async (input: { name: string; content: string }) => {
       const response = await fetch(
-        `${skillsBasePath(projectSlug, skillSetSlug)}/${encodeURIComponent(input.name)}`,
+        `${skillsBasePath(projectSlug, skillLoadoutSlug)}/${encodeURIComponent(input.name)}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -105,14 +106,14 @@ export function useUpsertSkill(projectSlug: string, skillSetSlug: string) {
   })
 }
 
-export function useDeleteSkill(projectSlug: string, skillSetSlug: string) {
+export function useDeleteSkill(projectSlug: string, skillLoadoutSlug: string) {
   const queryClient = useQueryClient()
-  const queryKey = ['skills', projectSlug, skillSetSlug]
+  const queryKey = ['skills', projectSlug, skillLoadoutSlug]
 
   return useMutation({
     mutationFn: async (input: { skillName: string }) => {
       const response = await fetch(
-        `${skillsBasePath(projectSlug, skillSetSlug)}/${encodeURIComponent(input.skillName)}`,
+        `${skillsBasePath(projectSlug, skillLoadoutSlug)}/${encodeURIComponent(input.skillName)}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {

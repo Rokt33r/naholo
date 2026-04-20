@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
-import { generateLogPreview } from '@/lib/issue-utils'
+import { generateOperationLogPreview } from '@/lib/operation-utils'
 
 export type OperationLog = {
   id: string
@@ -78,7 +78,7 @@ export async function createOperationLog(data: {
     })
 
   // Update operation's updatedAt timestamp and lastOperationLogPreview
-  const preview = generateLogPreview(data.content)
+  const preview = generateOperationLogPreview(data.content)
   await db
     .update(operations)
     .set({
@@ -145,7 +145,7 @@ export async function updateOperationLog(data: {
 
   // Only update preview if this is the most recent log
   if (lastLog && lastLog.id === data.logId) {
-    const preview = generateLogPreview(data.content)
+    const preview = generateOperationLogPreview(data.content)
     newValues.lastOperationLogPreview = preview || null
   }
 
@@ -195,7 +195,7 @@ export async function deleteOperationLog(data: {
 
   // Update preview with the new most recent log, or null if no logs left
   if (lastLog) {
-    const preview = generateLogPreview(lastLog.content)
+    const preview = generateOperationLogPreview(lastLog.content)
     newValues.lastOperationLogPreview = preview || null
   } else {
     newValues.lastOperationLogPreview = null

@@ -1,14 +1,14 @@
 'use client'
 
 import { createContext, useContext } from 'react'
-import type { Project, ProjectWorkerInfo } from '@/hooks/use-projects'
+import type { Project, ProjectOperatorInfo } from '@/hooks/use-projects'
 
 type ProjectContextValue = {
   projectId: string
   projectSlug: string
   projectName: string
   projects: Project[]
-  currentWorker: ProjectWorkerInfo
+  currentOperator: ProjectOperatorInfo
 }
 
 export const ProjectContext = createContext<ProjectContextValue | null>(null)

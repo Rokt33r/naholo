@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ListTodo, HardHat, Puzzle, Settings } from 'lucide-react'
+import { LandPlot, Contact, ToolCase, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
@@ -25,31 +25,31 @@ export function AppModeSidebar({
   return (
     <ToolSidebar>
       <ToolSidebarButton
-        isActive={currentMode === 'issues'}
-        tooltip='Issues'
+        isActive={currentMode === 'operations'}
+        tooltip='Operations'
         onClick={() =>
-          router.push(`/app/projects/${currentProjectSlug}/issues`)
+          router.push(`/app/projects/${currentProjectSlug}/operations`)
         }
       >
-        <ListTodo className='size-5' />
+        <LandPlot className='size-5' />
       </ToolSidebarButton>
       <ToolSidebarButton
-        isActive={currentMode === 'workers'}
-        tooltip='Workers'
+        isActive={currentMode === 'operators'}
+        tooltip='Operators'
         onClick={() =>
-          router.push(`/app/projects/${currentProjectSlug}/workers`)
+          router.push(`/app/projects/${currentProjectSlug}/operators`)
         }
       >
-        <HardHat className='size-5' />
+        <Contact className='size-5' />
       </ToolSidebarButton>
       <ToolSidebarButton
-        isActive={currentMode === 'skill-sets'}
-        tooltip='Skills'
+        isActive={currentMode === 'skill-loadouts'}
+        tooltip='Skill Loadouts'
         onClick={() =>
-          router.push(`/app/projects/${currentProjectSlug}/skill-sets`)
+          router.push(`/app/projects/${currentProjectSlug}/skill-loadouts`)
         }
       >
-        <Puzzle className='size-5' />
+        <ToolCase className='size-5' />
       </ToolSidebarButton>
 
       <ToolSidebarSpacing />

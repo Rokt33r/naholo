@@ -14,7 +14,7 @@ export function useNotes(projectSlug: string, issueNumber: number) {
     queryKey: ['notes', issueNumber],
     queryFn: () =>
       fetcher<Note[]>(
-        `/api/projects/${projectSlug}/issues/${issueNumber}/notes`,
+        `/api/projects/${projectSlug}/operations/${issueNumber}/notes`,
       ),
     staleTime: 1000 * 60,
   })
@@ -35,7 +35,7 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
       content: string
     }) => {
       const response = await fetch(
-        `/api/projects/${projectSlug}/issues/${issueNumber}/notes`,
+        `/api/projects/${projectSlug}/operations/${issueNumber}/notes`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -114,7 +114,7 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
         body.content = content
       }
       const response = await fetch(
-        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
+        `/api/projects/${projectSlug}/operations/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -171,7 +171,7 @@ export function useDeleteNote(projectSlug: string, issueNumber: number) {
   return useMutation({
     mutationFn: async (noteName: string) => {
       const response = await fetch(
-        `/api/projects/${projectSlug}/issues/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
+        `/api/projects/${projectSlug}/operations/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {

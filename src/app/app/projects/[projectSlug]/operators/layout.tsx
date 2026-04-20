@@ -2,7 +2,7 @@
 
 import { useSelectedLayoutSegment } from 'next/navigation'
 import { useProjectContext } from '@/components/app/project-context'
-import { WorkersList } from '@/components/workers/workers-list'
+import { OperatorsList } from '@/components/operators/operators-list'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 
 export default function OperatorsLayout({
@@ -19,7 +19,7 @@ export default function OperatorsLayout({
     <div className='flex h-full w-full'>
       {!isMobile && (
         <div className='flex w-80 flex-col border-r'>
-          <WorkersList
+          <OperatorsList
             projectSlug={projectSlug}
             projectName={projectName}
             projects={projects}
@@ -28,7 +28,7 @@ export default function OperatorsLayout({
       )}
       {showList && isMobile ? (
         <div className='flex-1 overflow-hidden'>
-          <WorkersList
+          <OperatorsList
             projectSlug={projectSlug}
             projectName={projectName}
             projects={projects}

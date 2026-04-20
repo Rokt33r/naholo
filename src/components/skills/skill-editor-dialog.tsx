@@ -18,7 +18,7 @@ import type { Skill } from '@/hooks/use-skills'
 
 type SkillEditorDialogProps = {
   projectSlug: string
-  skillSetSlug: string
+  skillLoadoutSlug: string
   skill?: Skill | null
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -26,7 +26,7 @@ type SkillEditorDialogProps = {
 
 export function SkillEditorDialog({
   projectSlug,
-  skillSetSlug,
+  skillLoadoutSlug,
   skill,
   open,
   onOpenChange,
@@ -35,8 +35,8 @@ export function SkillEditorDialog({
   const [content, setContent] = useState('')
 
   const isEditMode = !!skill
-  const upsertSkill = useUpsertSkill(projectSlug, skillSetSlug)
-  const deleteSkill = useDeleteSkill(projectSlug, skillSetSlug)
+  const upsertSkill = useUpsertSkill(projectSlug, skillLoadoutSlug)
+  const deleteSkill = useDeleteSkill(projectSlug, skillLoadoutSlug)
 
   const isPending = upsertSkill.isPending || deleteSkill.isPending
   const isSubmitDisabled = !name.trim() || !content.trim() || isPending

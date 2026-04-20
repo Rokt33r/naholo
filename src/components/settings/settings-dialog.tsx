@@ -14,8 +14,8 @@ type SettingsDialogProps = {
 }
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const { currentWorker } = useProjectContext()
-  const isAdmin = currentWorker.role === 'admin'
+  const { currentOperator } = useProjectContext()
+  const isAdmin = currentOperator.role === 'admin'
   const defaultTab = isAdmin ? 'project' : 'user'
 
   return (

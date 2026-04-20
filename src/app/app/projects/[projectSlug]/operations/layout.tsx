@@ -2,8 +2,8 @@
 
 import { useSelectedLayoutSegment } from 'next/navigation'
 import { useProjectContext } from '@/components/app/project-context'
-import { IssuesListProvider } from '@/components/issues/issues-list-context'
-import { IssuesLayoutContent } from '@/components/issues/issues-layout-content'
+import { OperationsListProvider } from '@/components/operations/operations-list-context'
+import { OperationsLayoutContent } from '@/components/operations/operations-layout-content'
 
 export default function OperationsLayout({
   children,
@@ -15,14 +15,14 @@ export default function OperationsLayout({
   const hasSelectedOperation = segment !== null
 
   return (
-    <IssuesListProvider hasSelectedIssue={hasSelectedOperation}>
-      <IssuesLayoutContent
+    <OperationsListProvider hasSelectedOperation={hasSelectedOperation}>
+      <OperationsLayoutContent
         projectSlug={projectSlug}
         projectName={projectName}
         projects={projects}
       >
         {children}
-      </IssuesLayoutContent>
-    </IssuesListProvider>
+      </OperationsLayoutContent>
+    </OperationsListProvider>
   )
 }

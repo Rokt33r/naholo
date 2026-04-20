@@ -1,39 +1,39 @@
 import type {
   AuthUser,
-  CreateTaskInput,
-  CreateWorkerTokenResult,
-  Issue,
-  IssueDetail,
-  IssueListItem,
-  Log,
-  MoveTaskInput,
+  CreateObjectiveInput,
+  CreateOperatorTokenResult,
+  Operation,
+  OperationDetail,
+  OperationListItem,
+  OperationLog,
+  MoveObjectiveInput,
   Note,
   Project,
-  ProjectWithWorker,
+  ProjectWithOperator,
   Skill,
-  SkillSetSummary,
+  SkillLoadoutSummary,
   SkillSummary,
-  Task,
-  SyncTasksInput,
-  SyncTasksResult,
-  UpdateTaskInput,
-  Worker,
-  WorkerToken,
+  Objective,
+  SyncObjectivesInput,
+  SyncObjectivesResult,
+  UpdateObjectiveInput,
+  Operator,
+  OperatorToken,
 } from './types.js'
 
 export class NaholoClient {
   private baseUrl: string
   private token: string
-  private projectWorkerId: string | undefined
+  private projectOperatorId: string | undefined
 
   constructor(options: {
     baseUrl: string
     token: string
-    projectWorkerId?: string
+    projectOperatorId?: string
   }) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '')
     this.token = options.token
-    this.projectWorkerId = options.projectWorkerId
+    this.projectOperatorId = options.projectOperatorId
   }
 
   private async request<T>(
@@ -47,8 +47,8 @@ export class NaholoClient {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     }
-    if (this.projectWorkerId != null) {
-      headers['x-naholo-project-worker'] = this.projectWorkerId
+    if (this.projectOperatorId != null) {
+      headers['x-naholo-project-operator'] = this.projectOperatorId
     }
 
     const res = await fetch(url, {
@@ -73,18 +73,21 @@ export class NaholoClient {
     return `/api/projects/${projectSlug}${suffix}`
   }
 
-  private issuePath(
+  private operationPath(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
     suffix = '',
   ) {
-    return this.projectPath(projectSlug, `/issues/${issueNumber}${suffix}`)
-  }
-
-  private skillSetPath(projectSlug: string, slug: string, suffix = '') {
     return this.projectPath(
       projectSlug,
-      `/skill-sets/${encodeURIComponent(slug)}${suffix}`,
+      `/operations/${operationNumber}${suffix}`,
+    )
+  }
+
+  private skillLoadoutPath(projectSlug: string, slug: string, suffix = '') {
+    return this.projectPath(
+      projectSlug,
+      `/skill-loadouts/${encodeURIComponent(slug)}${suffix}`,
     )
   }
 
@@ -97,12 +100,12 @@ export class NaholoClient {
   // ---- Projects ----
 
   listProjects(opts: {
-    with: 'projectWorkerOfCurrentUser'
-  }): Promise<ProjectWithWorker[]>
+    with: 'projectOperatorOfCurrentUser'
+  }): Promise<ProjectWithOperator[]>
   listProjects(opts?: undefined): Promise<Project[]>
   listProjects(opts?: {
-    with?: 'projectWorkerOfCurrentUser'
-  }): Promise<Project[] | ProjectWithWorker[]> {
+    with?: 'projectOperatorOfCurrentUser'
+  }): Promise<Project[] | ProjectWithOperator[]> {
     const qs = opts?.with != null ? `?with=${opts.with}` : ''
     return this.request('GET', `/api/projects${qs}`)
   }
@@ -118,132 +121,160 @@ export class NaholoClient {
     return this.request('PATCH', this.projectPath(projectSlug), input)
   }
 
-  // ---- Issues ----
+  // ---- Operations ----
 
-  listIssues(
+  listOperations(
     projectSlug: string,
     opts?: { closed?: boolean },
-  ): Promise<IssueListItem[]> {
+  ): Promise<OperationListItem[]> {
     const qs = opts?.closed ? '?closed=true' : ''
-    return this.request('GET', this.projectPath(projectSlug, `/issues${qs}`))
-  }
-
-  getIssue(
-    projectSlug: string,
-    issueNumber: number | string,
-  ): Promise<IssueDetail> {
-    return this.request('GET', this.issuePath(projectSlug, issueNumber))
-  }
-
-  createIssue(projectSlug: string, input: { title: string }): Promise<Issue> {
-    return this.request('POST', this.projectPath(projectSlug, '/issues'), input)
-  }
-
-  updateIssue(
-    projectSlug: string,
-    issueNumber: number | string,
-    input: { title: string },
-  ): Promise<Issue> {
-    return this.request(
-      'PATCH',
-      this.issuePath(projectSlug, issueNumber),
-      input,
-    )
-  }
-
-  deleteIssue(
-    projectSlug: string,
-    issueNumber: number | string,
-  ): Promise<void> {
-    return this.request('DELETE', this.issuePath(projectSlug, issueNumber))
-  }
-
-  closeIssue(projectSlug: string, issueNumber: number | string): Promise<void> {
-    return this.request(
-      'POST',
-      this.issuePath(projectSlug, issueNumber, '/close'),
-    )
-  }
-
-  reopenIssue(
-    projectSlug: string,
-    issueNumber: number | string,
-  ): Promise<void> {
-    return this.request(
-      'DELETE',
-      this.issuePath(projectSlug, issueNumber, '/close'),
-    )
-  }
-
-  // ---- Tasks ----
-
-  listTasks(
-    projectSlug: string,
-    issueNumber: number | string,
-  ): Promise<Task[]> {
     return this.request(
       'GET',
-      this.issuePath(projectSlug, issueNumber, '/tasks'),
+      this.projectPath(projectSlug, `/operations${qs}`),
     )
   }
 
-  createTask(
+  getOperation(
     projectSlug: string,
-    issueNumber: number | string,
-    input: CreateTaskInput,
-  ): Promise<Task> {
+    operationNumber: number | string,
+  ): Promise<OperationDetail> {
+    return this.request('GET', this.operationPath(projectSlug, operationNumber))
+  }
+
+  createOperation(
+    projectSlug: string,
+    input: { title: string },
+  ): Promise<Operation> {
     return this.request(
       'POST',
-      this.issuePath(projectSlug, issueNumber, '/tasks'),
+      this.projectPath(projectSlug, '/operations'),
       input,
     )
   }
 
-  updateTask(
+  updateOperation(
     projectSlug: string,
-    issueNumber: number | string,
-    taskId: string,
-    input: UpdateTaskInput,
-  ): Promise<Task> {
+    operationNumber: number | string,
+    input: { title: string },
+  ): Promise<Operation> {
     return this.request(
       'PATCH',
-      this.issuePath(projectSlug, issueNumber, `/tasks/${taskId}`),
+      this.operationPath(projectSlug, operationNumber),
       input,
     )
   }
 
-  deleteTask(
+  deleteOperation(
     projectSlug: string,
-    issueNumber: number | string,
-    taskId: string,
+    operationNumber: number | string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(projectSlug, issueNumber, `/tasks/${taskId}`),
+      this.operationPath(projectSlug, operationNumber),
     )
   }
 
-  moveTask(
+  closeOperation(
     projectSlug: string,
-    issueNumber: number | string,
-    taskId: string,
-    input: MoveTaskInput,
-  ): Promise<Task> {
+    operationNumber: number | string,
+  ): Promise<void> {
     return this.request(
       'POST',
-      this.issuePath(projectSlug, issueNumber, `/tasks/${taskId}/move`),
+      this.operationPath(projectSlug, operationNumber, '/close'),
+    )
+  }
+
+  reopenOperation(
+    projectSlug: string,
+    operationNumber: number | string,
+  ): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.operationPath(projectSlug, operationNumber, '/close'),
+    )
+  }
+
+  // ---- Objectives ----
+
+  listObjectives(
+    projectSlug: string,
+    operationNumber: number | string,
+  ): Promise<Objective[]> {
+    return this.request(
+      'GET',
+      this.operationPath(projectSlug, operationNumber, '/objectives'),
+    )
+  }
+
+  createObjective(
+    projectSlug: string,
+    operationNumber: number | string,
+    input: CreateObjectiveInput,
+  ): Promise<Objective> {
+    return this.request(
+      'POST',
+      this.operationPath(projectSlug, operationNumber, '/objectives'),
       input,
     )
   }
 
-  syncTasks(
+  updateObjective(
     projectSlug: string,
-    issueNumber: number | string,
-    input: SyncTasksInput,
-  ): Promise<SyncTasksResult> {
+    operationNumber: number | string,
+    objectiveId: string,
+    input: UpdateObjectiveInput,
+  ): Promise<Objective> {
+    return this.request(
+      'PATCH',
+      this.operationPath(
+        projectSlug,
+        operationNumber,
+        `/objectives/${objectiveId}`,
+      ),
+      input,
+    )
+  }
+
+  deleteObjective(
+    projectSlug: string,
+    operationNumber: number | string,
+    objectiveId: string,
+  ): Promise<void> {
+    return this.request(
+      'DELETE',
+      this.operationPath(
+        projectSlug,
+        operationNumber,
+        `/objectives/${objectiveId}`,
+      ),
+    )
+  }
+
+  moveObjective(
+    projectSlug: string,
+    operationNumber: number | string,
+    objectiveId: string,
+    input: MoveObjectiveInput,
+  ): Promise<Objective> {
+    return this.request(
+      'POST',
+      this.operationPath(
+        projectSlug,
+        operationNumber,
+        `/objectives/${objectiveId}/move`,
+      ),
+      input,
+    )
+  }
+
+  syncObjectives(
+    projectSlug: string,
+    operationNumber: number | string,
+    input: SyncObjectivesInput,
+  ): Promise<SyncObjectivesResult> {
     return this.request(
       'PUT',
-      this.issuePath(projectSlug, issueNumber, '/tasks'),
+      this.operationPath(projectSlug, operationNumber, '/objectives'),
       input,
     )
   }
@@ -252,37 +283,37 @@ export class NaholoClient {
 
   listNotes(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
   ): Promise<Note[]> {
     return this.request(
       'GET',
-      this.issuePath(projectSlug, issueNumber, '/notes'),
+      this.operationPath(projectSlug, operationNumber, '/notes'),
     )
   }
 
   createNote(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
     input: { name: string; content: string },
   ): Promise<Note> {
     return this.request(
       'POST',
-      this.issuePath(projectSlug, issueNumber, '/notes'),
+      this.operationPath(projectSlug, operationNumber, '/notes'),
       input,
     )
   }
 
   updateNote(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
     noteName: string,
     input: { name?: string; content?: string },
   ): Promise<Note> {
     return this.request(
       'PATCH',
-      this.issuePath(
+      this.operationPath(
         projectSlug,
-        issueNumber,
+        operationNumber,
         `/notes/${encodeURIComponent(noteName)}`,
       ),
       input,
@@ -291,106 +322,120 @@ export class NaholoClient {
 
   deleteNote(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
     noteName: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(
+      this.operationPath(
         projectSlug,
-        issueNumber,
+        operationNumber,
         `/notes/${encodeURIComponent(noteName)}`,
       ),
     )
   }
 
-  // ---- Logs ----
+  // ---- Operation Logs ----
 
-  listLogs(projectSlug: string, issueNumber: number | string): Promise<Log[]> {
+  listOperationLogs(
+    projectSlug: string,
+    operationNumber: number | string,
+  ): Promise<OperationLog[]> {
     return this.request(
       'GET',
-      this.issuePath(projectSlug, issueNumber, '/logs'),
+      this.operationPath(projectSlug, operationNumber, '/operation-logs'),
     )
   }
 
-  createLog(
+  createOperationLog(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
     input: { content: string },
-  ): Promise<Log> {
+  ): Promise<OperationLog> {
     return this.request(
       'POST',
-      this.issuePath(projectSlug, issueNumber, '/logs'),
+      this.operationPath(projectSlug, operationNumber, '/operation-logs'),
       input,
     )
   }
 
-  deleteLog(
+  deleteOperationLog(
     projectSlug: string,
-    issueNumber: number | string,
+    operationNumber: number | string,
     logId: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.issuePath(projectSlug, issueNumber, `/logs/${logId}`),
+      this.operationPath(
+        projectSlug,
+        operationNumber,
+        `/operation-logs/${logId}`,
+      ),
     )
   }
 
-  // ---- Skill Sets ----
+  // ---- Skill Loadouts ----
 
-  listSkillSets(projectSlug: string): Promise<SkillSetSummary[]> {
-    return this.request('GET', this.projectPath(projectSlug, '/skill-sets'))
+  listSkillLoadouts(projectSlug: string): Promise<SkillLoadoutSummary[]> {
+    return this.request('GET', this.projectPath(projectSlug, '/skill-loadouts'))
   }
 
-  getSkillSet(projectSlug: string, slug: string): Promise<SkillSetSummary> {
-    return this.request('GET', this.skillSetPath(projectSlug, slug))
+  getSkillLoadout(
+    projectSlug: string,
+    slug: string,
+  ): Promise<SkillLoadoutSummary> {
+    return this.request('GET', this.skillLoadoutPath(projectSlug, slug))
   }
 
-  createSkillSet(
+  createSkillLoadout(
     projectSlug: string,
     input: { name: string; slug: string },
   ): Promise<{ id: string }> {
     return this.request(
       'POST',
-      this.projectPath(projectSlug, '/skill-sets'),
+      this.projectPath(projectSlug, '/skill-loadouts'),
       input,
     )
   }
 
-  updateSkillSet(
+  updateSkillLoadout(
     projectSlug: string,
     slug: string,
     input: { name?: string; slug?: string },
-  ): Promise<SkillSetSummary> {
-    return this.request('PATCH', this.skillSetPath(projectSlug, slug), input)
+  ): Promise<SkillLoadoutSummary> {
+    return this.request(
+      'PATCH',
+      this.skillLoadoutPath(projectSlug, slug),
+      input,
+    )
   }
 
-  deleteSkillSet(projectSlug: string, slug: string): Promise<void> {
-    return this.request('DELETE', this.skillSetPath(projectSlug, slug))
+  deleteSkillLoadout(projectSlug: string, slug: string): Promise<void> {
+    return this.request('DELETE', this.skillLoadoutPath(projectSlug, slug))
   }
 
   // ---- Skills ----
 
   listSkills(
     projectSlug: string,
-    skillSetSlug: string,
+    skillLoadoutSlug: string,
   ): Promise<SkillSummary[]> {
     return this.request(
       'GET',
-      this.skillSetPath(projectSlug, skillSetSlug, '/skills'),
+      this.skillLoadoutPath(projectSlug, skillLoadoutSlug, '/skills'),
     )
   }
 
   getSkill(
     projectSlug: string,
-    skillSetSlug: string,
+    skillLoadoutSlug: string,
     name: string,
   ): Promise<Skill> {
     return this.request(
       'GET',
-      this.skillSetPath(
+      this.skillLoadoutPath(
         projectSlug,
-        skillSetSlug,
+        skillLoadoutSlug,
         `/skills/${encodeURIComponent(name)}`,
       ),
     )
@@ -398,15 +443,15 @@ export class NaholoClient {
 
   upsertSkill(
     projectSlug: string,
-    skillSetSlug: string,
+    skillLoadoutSlug: string,
     name: string,
     input: { content: string },
   ): Promise<{ id: string; currentRevisionId: string }> {
     return this.request(
       'PUT',
-      this.skillSetPath(
+      this.skillLoadoutPath(
         projectSlug,
-        skillSetSlug,
+        skillLoadoutSlug,
         `/skills/${encodeURIComponent(name)}`,
       ),
       input,
@@ -415,74 +460,77 @@ export class NaholoClient {
 
   deleteSkill(
     projectSlug: string,
-    skillSetSlug: string,
+    skillLoadoutSlug: string,
     name: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.skillSetPath(
+      this.skillLoadoutPath(
         projectSlug,
-        skillSetSlug,
+        skillLoadoutSlug,
         `/skills/${encodeURIComponent(name)}`,
       ),
     )
   }
 
-  // ---- Workers ----
+  // ---- Operators ----
 
-  listWorkers(projectSlug: string): Promise<Worker[]> {
-    return this.request('GET', this.projectPath(projectSlug, '/workers'))
+  listOperators(projectSlug: string): Promise<Operator[]> {
+    return this.request('GET', this.projectPath(projectSlug, '/operators'))
   }
 
-  updateWorker(
+  updateOperator(
     projectSlug: string,
-    workerId: string,
+    operatorId: string,
     input: { soul?: string },
-  ): Promise<Worker> {
+  ): Promise<Operator> {
     return this.request(
       'PATCH',
-      this.projectPath(projectSlug, `/workers/${workerId}`),
+      this.projectPath(projectSlug, `/operators/${operatorId}`),
       input,
     )
   }
 
-  getWorker(projectSlug: string, workerId: string): Promise<Worker> {
+  getOperator(projectSlug: string, operatorId: string): Promise<Operator> {
     return this.request(
       'GET',
-      this.projectPath(projectSlug, `/workers/${workerId}`),
+      this.projectPath(projectSlug, `/operators/${operatorId}`),
     )
   }
 
-  listWorkerTokens(
+  listOperatorTokens(
     projectSlug: string,
-    workerId: string,
-  ): Promise<WorkerToken[]> {
+    operatorId: string,
+  ): Promise<OperatorToken[]> {
     return this.request(
       'GET',
-      this.projectPath(projectSlug, `/workers/${workerId}/tokens`),
+      this.projectPath(projectSlug, `/operators/${operatorId}/tokens`),
     )
   }
 
-  createWorkerToken(
+  createOperatorToken(
     projectSlug: string,
-    workerId: string,
+    operatorId: string,
     input: { name: string },
-  ): Promise<CreateWorkerTokenResult> {
+  ): Promise<CreateOperatorTokenResult> {
     return this.request(
       'POST',
-      this.projectPath(projectSlug, `/workers/${workerId}/tokens`),
+      this.projectPath(projectSlug, `/operators/${operatorId}/tokens`),
       input,
     )
   }
 
-  deleteWorkerToken(
+  deleteOperatorToken(
     projectSlug: string,
-    workerId: string,
+    operatorId: string,
     tokenId: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.projectPath(projectSlug, `/workers/${workerId}/tokens/${tokenId}`),
+      this.projectPath(
+        projectSlug,
+        `/operators/${operatorId}/tokens/${tokenId}`,
+      ),
     )
   }
 }

@@ -3,18 +3,18 @@ import { fetcher } from '@/lib/fetcher'
 
 export type {
   Project,
-  ProjectWorkerInfo,
-  ProjectWithWorker,
+  ProjectOperatorInfo,
+  ProjectWithOperator,
 } from 'naholo-api/types'
 
-import type { ProjectWithWorker } from 'naholo-api/types'
+import type { ProjectWithOperator } from 'naholo-api/types'
 
 export function useProjects() {
   return useQuery({
     queryKey: ['projects', 'withWorker'],
     queryFn: () =>
-      fetcher<ProjectWithWorker[]>(
-        '/api/projects?with=projectWorkerOfCurrentUser',
+      fetcher<ProjectWithOperator[]>(
+        '/api/projects?with=projectOperatorOfCurrentUser',
       ),
   })
 }

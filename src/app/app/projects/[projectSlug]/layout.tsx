@@ -10,7 +10,7 @@ import { useProjects } from '@/hooks/use-projects'
 function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
   const { projectSlug } = useParams<{ projectSlug: string }>()
   const segment = useSelectedLayoutSegment()
-  const currentMode = segment ?? 'issues'
+  const currentMode = segment ?? 'operations'
   const isMobile = useIsMobile()
   const { data: projects = [] } = useProjects()
   const project = projects.find((p) => p.slug === projectSlug)
@@ -26,7 +26,7 @@ function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
         projectSlug,
         projectName: project.name,
         projects,
-        currentWorker: project.projectWorkerOfCurrentUser,
+        currentOperator: project.projectOperatorOfCurrentUser,
       }}
     >
       <div className='flex h-screen w-full'>

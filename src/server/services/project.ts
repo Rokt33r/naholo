@@ -77,7 +77,7 @@ export async function listProjects(
   if (options?.with === 'projectOperatorOfCurrentUser') {
     return workers.map((worker) => ({
       ...worker.project,
-      projectWorkerOfCurrentUser: {
+      projectOperatorOfCurrentUser: {
         id: worker.id,
         type: worker.type,
         name: worker.name,

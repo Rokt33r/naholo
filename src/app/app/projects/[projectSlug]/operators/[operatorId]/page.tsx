@@ -4,17 +4,17 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Bot, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectContext } from '@/components/app/project-context'
-import { EditWorkerSoulForm } from '@/components/workers/edit-worker-soul-form'
-import { WorkerTokens } from '@/components/workers/worker-tokens'
+import { EditOperatorSoulForm } from '@/components/operators/edit-operator-soul-form'
+import { OperatorTokens } from '@/components/operators/operator-tokens'
 import { useIsMobile } from '@/hooks/use-is-mobile'
-import { useWorker } from '@/hooks/use-workers'
+import { useOperator } from '@/hooks/use-operators'
 
 export default function OperatorDetailPage() {
   const { projectSlug } = useProjectContext()
   const { operatorId } = useParams<{ operatorId: string }>()
   const router = useRouter()
   const isMobile = useIsMobile()
-  const { worker, isLoading } = useWorker(projectSlug, operatorId)
+  const { operator, isLoading } = useOperator(projectSlug, operatorId)
 
   return (
     <div className='flex h-full flex-col'>
@@ -36,38 +36,41 @@ export default function OperatorDetailPage() {
           <div className='p-6 text-center text-sm text-muted-foreground'>
             Loading...
           </div>
-        ) : worker == null ? (
+        ) : operator == null ? (
           <div className='p-6 text-center text-sm text-muted-foreground'>
             Operator not found
           </div>
         ) : (
           <div className='space-y-6 p-6'>
             <div className='flex items-center gap-3'>
-              {worker.type === 'bot' ? (
+              {operator.type === 'bot' ? (
                 <Bot className='size-5 text-muted-foreground' />
               ) : (
                 <User className='size-5 text-muted-foreground' />
               )}
               <div>
-                <h1 className='text-lg font-semibold'>{worker.name}</h1>
+                <h1 className='text-lg font-semibold'>{operator.name}</h1>
                 <p className='text-sm text-muted-foreground'>
-                  {worker.type} &middot; {worker.role}
+                  {operator.type} &middot; {operator.role}
                 </p>
               </div>
             </div>
 
-            {worker.type === 'bot' && (
+            {operator.type === 'bot' && (
               <div className='border-t pt-6'>
-                <EditWorkerSoulForm
+                <EditOperatorSoulForm
                   projectSlug={projectSlug}
-                  workerId={operatorId}
-                  soul={worker.soul}
+                  operatorId={operatorId}
+                  soul={operator.soul}
                 />
               </div>
             )}
 
             <div className='border-t pt-6'>
-              <WorkerTokens projectSlug={projectSlug} workerId={operatorId} />
+              <OperatorTokens
+                projectSlug={projectSlug}
+                operatorId={operatorId}
+              />
             </div>
           </div>
         )}

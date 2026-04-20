@@ -236,7 +236,7 @@ async function requireProjectOperatorByUserApiToken(
   touchUserApiToken(result.tokenId)
 
   // Check for project operator override header (only for user tokens)
-  const overrideOperatorId = headersList.get('x-naholo-project-worker')
+  const overrideOperatorId = headersList.get('x-naholo-project-operator')
   if (overrideOperatorId != null) {
     const operator = await getProjectOperator(overrideOperatorId, projectId)
     if (
