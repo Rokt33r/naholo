@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireProjectWorker } from '@/server/auth/permissions'
+import { requireProjectOperator } from '@/server/auth/permissions'
 import { getProjectById } from '@/server/services/project'
 
 type RouteContext = {
@@ -15,7 +15,7 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug } = await context.params
-    const { project } = await requireProjectWorker(projectSlug)
+    const { project } = await requireProjectOperator(projectSlug)
 
     const result = await getProjectById(project.id)
 

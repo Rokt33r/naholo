@@ -1,6 +1,6 @@
 import { requireAuthUser } from '@/server/auth/permissions'
 import { getProjectInvite } from '@/server/services/project-invite'
-import { getProjectWorkerByUserId } from '@/server/services/project-worker'
+import { getProjectOperatorByUserId } from '@/server/services/project-operator'
 import { InvitePageClient } from './invite-page-client'
 
 export default async function InvitePage({
@@ -35,19 +35,19 @@ export default async function InvitePage({
   }
 
   // Check if already a member
-  const existingWorker = await getProjectWorkerByUserId(
+  const existingOperator = await getProjectOperatorByUserId(
     user.id,
     invite.projectId,
   )
 
-  if (existingWorker != null) {
+  if (existingOperator != null) {
     return (
       <CenteredCard>
         <h1 className='text-lg font-semibold'>
           You&apos;re already in {invite.project.name}
         </h1>
         <a
-          href={`/app/projects/${invite.project.slug}/issues`}
+          href={`/app/projects/${invite.project.slug}/operations`}
           className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90'
         >
           Enter project
@@ -63,7 +63,7 @@ export default async function InvitePage({
           You&apos;ve been added to {invite.project.name}
         </h1>
         <a
-          href={`/app/projects/${invite.project.slug}/issues`}
+          href={`/app/projects/${invite.project.slug}/operations`}
           className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90'
         >
           Enter project

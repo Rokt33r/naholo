@@ -4,7 +4,7 @@ import {
   claimProjectInvite,
   getProjectInvite,
 } from '@/server/services/project-invite'
-import { getProjectWorkerByUserId } from '@/server/services/project-worker'
+import { getProjectOperatorByUserId } from '@/server/services/project-operator'
 import { sendInviteClaimedEmail } from '@/server/services/invite-email'
 import { db } from '@/server/db'
 
@@ -29,11 +29,11 @@ export async function POST(
     }
 
     // Check if user is already a member
-    const existingWorker = await getProjectWorkerByUserId(
+    const existingOperator = await getProjectOperatorByUserId(
       user.id,
       invite.projectId,
     )
-    if (existingWorker != null) {
+    if (existingOperator != null) {
       return NextResponse.json(
         { error: 'Already a member of this project' },
         { status: 409 },
@@ -62,7 +62,7 @@ async function notifyAdmins(
 ) {
   try {
     // Find admin workers with notification emails
-    const admins = await db.query.projectWorkers.findMany({
+    const admins = await db.query.projectOperators.findMany({
       where: (t, { eq, and, isNotNull }) =>
         and(
           eq(t.projectId, projectId),

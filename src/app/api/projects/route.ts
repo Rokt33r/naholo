@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
 
     const withParam = request.nextUrl.searchParams.get('with')
     const withOption =
-      withParam === 'projectWorkerOfCurrentUser'
-        ? ('projectWorkerOfCurrentUser' as const)
+      withParam === 'projectOperatorOfCurrentUser'
+        ? ('projectOperatorOfCurrentUser' as const)
         : undefined
 
     const projects = await listProjects(

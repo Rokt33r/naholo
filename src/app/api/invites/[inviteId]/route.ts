@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthUser } from '@/server/auth/permissions'
 import { getProjectInvite } from '@/server/services/project-invite'
-import { getProjectWorkerByUserId } from '@/server/services/project-worker'
+import { getProjectOperatorByUserId } from '@/server/services/project-operator'
 
 export async function GET(
   _request: NextRequest,
@@ -28,7 +28,7 @@ export async function GET(
     }
 
     // Check if user is already a member
-    const existingWorker = await getProjectWorkerByUserId(
+    const existingOperator = await getProjectOperatorByUserId(
       user.id,
       invite.projectId,
     )
@@ -38,7 +38,7 @@ export async function GET(
       status: invite.status,
       projectName: invite.project.name,
       projectSlug: invite.project.slug,
-      alreadyMember: existingWorker != null,
+      alreadyMember: existingOperator != null,
     })
   } catch (error) {
     console.error(error)

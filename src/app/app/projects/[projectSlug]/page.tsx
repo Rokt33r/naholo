@@ -8,7 +8,7 @@ export default function ProjectPage() {
   const router = useRouter()
 
   useEffect(() => {
-    router.replace(`/app/projects/${projectSlug}/issues`)
+    router.replace(`/app/projects/${projectSlug}/operations`)
   }, [router, projectSlug])
 
   return null

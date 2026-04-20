@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdminProjectWorker } from '@/server/auth/permissions'
+import { requireAdminProjectOperator } from '@/server/auth/permissions'
 import {
   getProjectInvite,
   acceptProjectInvite,
@@ -12,7 +12,7 @@ export async function POST(
 ) {
   try {
     const { projectSlug, inviteId } = await params
-    const { project } = await requireAdminProjectWorker(projectSlug)
+    const { project } = await requireAdminProjectOperator(projectSlug)
 
     const invite = await getProjectInvite(inviteId)
     if (invite == null || invite.projectId !== project.id) {

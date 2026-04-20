@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireAdminProjectWorker } from '@/server/auth/permissions'
+import { requireAdminProjectOperator } from '@/server/auth/permissions'
 import {
   createProjectInvite,
   listProjectInvites,
@@ -14,7 +14,7 @@ export async function GET(
 ) {
   try {
     const { projectSlug } = await params
-    const { project } = await requireAdminProjectWorker(projectSlug)
+    const { project } = await requireAdminProjectOperator(projectSlug)
 
     const invites = await listProjectInvites(project.id)
 
@@ -38,8 +38,8 @@ export async function POST(
 ) {
   try {
     const { projectSlug } = await params
-    const { project, projectWorker } =
-      await requireAdminProjectWorker(projectSlug)
+    const { project, projectOperator } =
+      await requireAdminProjectOperator(projectSlug)
 
     const body = await request.json()
     const parsed = createInviteSchema.safeParse(body)
@@ -53,7 +53,7 @@ export async function POST(
     const result = await createProjectInvite(
       project.id,
       parsed.data.email,
-      projectWorker.id,
+      projectOperator.id,
     )
 
     const inviteUrl = `${config.baseUrl}/app/invites/${result.data.id}`
@@ -62,7 +62,7 @@ export async function POST(
       parsed.data.email,
       inviteUrl,
       project.slug,
-      projectWorker.name,
+      projectOperator.name,
     )
 
     return NextResponse.json({ id: result.data.id, inviteUrl }, { status: 201 })

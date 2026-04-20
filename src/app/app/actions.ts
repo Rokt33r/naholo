@@ -3,9 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import {
   getAuthUser,
-  requireAdminProjectWorker,
-  requireProjectWorker,
-  requireIssueAccess,
+  requireAdminProjectOperator,
+  requireProjectOperator,
+  requireOperationAccess,
 } from '@/server/auth/permissions'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -15,15 +15,15 @@ import {
   updateProject,
   deleteProject,
 } from '@/server/services/project'
-import { createProjectWorker } from '@/server/services/project-worker'
-import { createIssue } from '@/server/services/issue'
-import { createLog } from '@/server/services/log'
+import { createProjectOperator } from '@/server/services/project-operator'
+import { createOperation } from '@/server/services/operation'
+import { createOperationLog } from '@/server/services/operation-log'
 import {
-  createTask,
-  updateTask,
-  setTaskDone,
-  deleteTask,
-} from '@/server/services/task'
+  createObjective,
+  updateObjective,
+  setObjectiveDone,
+  deleteObjective,
+} from '@/server/services/objective'
 
 const DEFAULT_K4TYA_SOUL = `You are a genius hacker and a gamer. Follow these rules at all times:
 
@@ -79,13 +79,13 @@ export async function createProjectAction(
 
   const result = await createProject({ name, slug, description })
   if (result.success) {
-    await createProjectWorker({
+    await createProjectOperator({
       projectId: result.data.id,
       userId: user.id,
       name: user.name,
       role: 'admin',
     })
-    await createProjectWorker({
+    await createProjectOperator({
       projectId: result.data.id,
       name: 'k4tya',
       type: 'bot',
@@ -102,7 +102,7 @@ export async function updateProjectAction(
   projectSlug: string,
   data: { name?: string; description?: string; slug?: string },
 ): Promise<ReturnResult<{ slug: string }>> {
-  const { project } = await requireAdminProjectWorker(projectSlug)
+  const { project } = await requireAdminProjectOperator(projectSlug)
 
   const result = await updateProject(project.id, data)
   if (result.success) {
@@ -116,7 +116,7 @@ export async function updateProjectAction(
 export async function deleteProjectAction(
   projectSlug: string,
 ): Promise<ReturnResult<undefined>> {
-  const { project } = await requireAdminProjectWorker(projectSlug)
+  const { project } = await requireAdminProjectOperator(projectSlug)
 
   const result = await deleteProject(project.id)
   if (result.success) {
@@ -127,17 +127,17 @@ export async function deleteProjectAction(
 }
 
 /**
- * Issues
+ * Operations
  */
 
-export async function createIssueAction(
+export async function createOperationAction(
   projectSlug: string,
   title: string,
 ): Promise<ReturnResult<{ id: string; number: number }>> {
-  const { projectWorker, project } = await requireProjectWorker(projectSlug)
+  const { projectOperator, project } = await requireProjectOperator(projectSlug)
 
-  const result = await createIssue({
-    projectWorkerId: projectWorker.id,
+  const result = await createOperation({
+    projectOperatorId: projectOperator.id,
     projectId: project.id,
     title,
   })
@@ -149,27 +149,27 @@ export async function createIssueAction(
 }
 
 /**
- * Logs
+ * Operation Logs
  */
 
-export async function createLogAction(
+export async function createOperationLogAction(
   projectSlug: string,
-  issueNumber: number,
+  operationNumber: number,
   content: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker, project, issue } = await requireIssueAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const result = await createLog({
-    projectWorkerId: projectWorker.id,
+  const result = await createOperationLog({
+    projectOperatorId: projectOperator.id,
     projectId: project.id,
-    issueId: issue.id,
+    operationId: operation.id,
     content,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/operations/${operationNumber}`)
     return ok({ id: result.data.id })
   }
 
@@ -177,102 +177,102 @@ export async function createLogAction(
 }
 
 /**
- * Tasks
+ * Objectives
  */
 
-export async function createTaskAction(
+export async function createObjectiveAction(
   projectSlug: string,
-  issueNumber: number,
+  operationNumber: number,
   name: string,
-  parentTaskId?: string,
+  parentObjectiveId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
-  const { projectWorker, project, issue } = await requireIssueAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const result = await createTask({
-    projectWorkerId: projectWorker.id,
+  const result = await createObjective({
+    projectOperatorId: projectOperator.id,
     projectId: project.id,
-    issueId: issue.id,
+    operationId: operation.id,
     name,
-    parentTaskId,
+    parentObjectiveId,
   })
   if (result.success) {
-    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/operations/${operationNumber}`)
   }
 
   return result
 }
 
-export async function updateTaskAction(
+export async function updateObjectiveAction(
   projectSlug: string,
-  issueNumber: number,
+  operationNumber: number,
   id: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker, issue } = await requireIssueAccess(
+  const { projectOperator, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const result = await updateTask({
-    projectWorkerId: projectWorker.id,
-    issueId: issue.id,
-    taskId: id,
+  const result = await updateObjective({
+    projectOperatorId: projectOperator.id,
+    operationId: operation.id,
+    objectiveId: id,
     name,
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/operations/${operationNumber}`)
   }
 
   return result
 }
 
-export async function setTaskDoneAction(
+export async function setObjectiveDoneAction(
   projectSlug: string,
-  issueNumber: number,
+  operationNumber: number,
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker, issue } = await requireIssueAccess(
+  const { projectOperator, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const result = await setTaskDone({
-    projectWorkerId: projectWorker.id,
-    issueId: issue.id,
-    taskId: id,
+  const result = await setObjectiveDone({
+    projectOperatorId: projectOperator.id,
+    operationId: operation.id,
+    objectiveId: id,
     done,
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/operations/${operationNumber}`)
   }
 
   return result
 }
 
-export async function deleteTaskAction(
+export async function deleteObjectiveAction(
   projectSlug: string,
-  issueNumber: number,
+  operationNumber: number,
   id: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectWorker, issue } = await requireIssueAccess(
+  const { projectOperator, operation } = await requireOperationAccess(
     projectSlug,
-    issueNumber,
+    operationNumber,
   )
 
-  const result = await deleteTask({
-    projectWorkerId: projectWorker.id,
-    issueId: issue.id,
-    taskId: id,
+  const result = await deleteObjective({
+    projectOperatorId: projectOperator.id,
+    operationId: operation.id,
+    objectiveId: id,
   })
 
   if (result.success) {
-    revalidatePath(`/app/projects/${projectSlug}/issues/${issueNumber}`)
+    revalidatePath(`/app/projects/${projectSlug}/operations/${operationNumber}`)
   }
 
   return result
