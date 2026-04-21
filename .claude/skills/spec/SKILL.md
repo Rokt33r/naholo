@@ -73,7 +73,10 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
    - Preserve any existing `[x]` done states
    - No objective in the spec should be missing from OBJECTIVES.md
 
-7. **Print summary**: Show what was elaborated (objective count, new objectives added, files researched). Use markdown link syntax for file paths so the user can click to open them (e.g., `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`). Tell the user to run `/sitrep` to push objectives and spec to the server after review.
+7. **Print summary and prompt for review**: Show what was elaborated (objective count, new objectives added, files researched). Use markdown link syntax for file paths so the user can click to open them (e.g., `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`). Then ask the user to review SPEC.md:
+   - If it looks good → run `/ship` to implement
+   - If changes needed → edit SPEC.md directly or ask the agent to update it
+   - Optionally → run `/sitrep` to push objectives and spec to the server
 
 ## Rules
 
@@ -86,4 +89,5 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 - **Never delete implemented objectives from SPEC.md** — if an objective is checked `[x]` in OBJECTIVES.md, it has been implemented. You MUST NOT delete or rewrite it in SPEC.md. If a sub-objective is superseded by a later objective (e.g., a refactor replaces an earlier approach), use strikethrough (`~~`) on the old sub-objective text and append a brief note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Objective 4`). New objectives can be added freely. This preserves the audit trail of what was actually done.
 - **No checkboxes in SPEC.md** — SPEC.md is a spec document, not a progress tracker. Use plain `- ` bullets for sub-objectives, never `- [ ]` or `- [x]`.
 - **Do NOT rewrite OPERATION.md** — only append a reference to the spec. OPERATION.md is the evolving context document and should not be overwritten.
+- **Spec-only until /ship**: After `/spec` completes, all change requests must edit SPEC.md (and OBJECTIVES.md to stay in sync) only — do NOT implement code. The user must give explicit clearance by running `/ship`. After any SPEC change, print the SPEC link and prompt the user to run `/ship` when ready.
 - Follow the same quality bar as `/elaborate-plan`: the spec must be self-contained and executable.
