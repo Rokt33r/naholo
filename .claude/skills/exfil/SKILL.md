@@ -59,7 +59,7 @@ If no instructions given, ask the user whether to close.
    - Objectives completed (count and names)
    - Objectives added (count and names)
    - Notes created or updated
-   - Brief description of code changes (run `git diff --stat` if available, or summarize from SPEC.md/OPERATION.md progress)
+   - Brief description of code changes (summarize from SPEC.md/OPERATION.md progress)
 
 7. **Update OPERATION.md Timeline**: Append a timeline entry to `## Timeline` in `notes/OPERATION.md`: `- **{date} — exfil**: Final sync. {objectives done}/{total objectives}. {close status}`.
 
