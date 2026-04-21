@@ -49,30 +49,34 @@ If no instructions given, ask the user whether to close.
    - After the call, the result contains `created: { id, name }[]` for newly created objectives
    - For each created objective, find the matching line in OBJECTIVES.md by name and append ` [ref](naholo://objectives/{id})` to it
    - Write the updated OBJECTIVES.md back to disk
+   - **If `sync_objectives` fails → STOP. Do NOT proceed to step 5.** Report the error and preserve local data (see step 8 failure path).
 
 5. **Sync notes**: Compare local notes against server notes:
    - For each `notes/*.md` file, match to server note by `name` (filename without `.md` extension)
    - If content changed → `update_note` with note name and new content
    - If new (no server match) → `create_note` with name and content
+   - **If any `update_note` or `create_note` call fails → STOP. Do NOT proceed to step 6.** Report the error and preserve local data (see step 8 failure path).
 
 6. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed (count and names)
    - Objectives added (count and names)
    - Notes created or updated
    - Brief description of code changes (summarize from SPEC.md/OPERATION.md progress)
+   - **If `create_operation_log` fails → STOP. Do NOT proceed to step 7.** Report the error and preserve local data (see step 8 failure path).
 
-7. **Update OPERATION.md Timeline**: Append a timeline entry to `## Timeline` in `notes/OPERATION.md`: `- **{date} — exfil**: Final sync. {objectives done}/{total objectives}. {close status}`.
-
-8. **Close or ask about closing**:
+7. **Close or ask about closing**:
    - If extra instructions already specify → follow them.
    - If all objectives in OBJECTIVES.md are done → close automatically via `close_operation` MCP tool (no need to ask).
    - Otherwise → use `AskUserQuestion` to ask: "Close operation #{operationNumber}?" Do NOT proceed until they respond.
      - If yes → use `close_operation` MCP tool
      - If no → leave open
 
-9. **Print summary**: Output what was synced to chat before cleanup. Use markdown link syntax for file paths so the user can click to open them (e.g., `[OBJECTIVES.md](.naholo/local/operations/{N}/OBJECTIVES.md)`, `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`).
-
-10. **Clean up**: Delete the `.naholo/local/operations/{operationNumber}/` directory.
+8. **Clean up or abort**:
+   - **If all sync steps (4-6) completed successfully**: Delete the `.naholo/local/operations/{operationNumber}/` directory.
+   - **If any sync step failed**: Do NOT delete. Instead:
+     - Print which step failed and what the error was
+     - Confirm that local data at `.naholo/local/operations/{operationNumber}/` is preserved
+     - Suggest the user retry with `/exfil`
 
 ## Rules
 
