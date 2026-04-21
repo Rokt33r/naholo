@@ -109,6 +109,7 @@ export type Note = {
   id: string
   name: string
   content: string
+  currentRevisionId: string | null
   position: number
   createdAt: string
   updatedAt: string

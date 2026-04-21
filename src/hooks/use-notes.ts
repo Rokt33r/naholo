@@ -64,6 +64,7 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
         id: `temp-${Date.now()}`,
         name,
         content,
+        currentRevisionId: null,
         position: maxPosition + 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
