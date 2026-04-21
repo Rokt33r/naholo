@@ -570,7 +570,7 @@ export async function syncObjectives(data: {
     })
 
     await db.execute(
-      sql`UPDATE operation_operationObjectives AS t SET
+      sql`UPDATE operation_objectives AS t SET
         name = v.name,
         done = v.done,
         position = v.position,
