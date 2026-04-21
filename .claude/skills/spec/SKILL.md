@@ -8,6 +8,17 @@ argument-hint: '[operationNumber] ["extra instructions in quotes"]'
 
 Read the local operation state (from `/infil`), research the codebase, and create `SPEC.md` as an executable specification. Update `OBJECTIVES.md` to reflect the spec's objective structure, and append a reference to `OPERATION.md`.
 
+## Terminology
+
+| Entity    | Acronym | Familiar Term  | Familiar Context                  |
+| --------- | ------- | -------------- | --------------------------------- |
+| Operation | OP      | issue          | GitHub Issues                     |
+| Objective | OBJ     | task           | tasks within an issue             |
+| Operator  | OPR     | project member | GitHub / general PM               |
+| Campaign  | —       | milestone/epic | GitHub Milestones / PM tool epics |
+
+Users may refer to entities by any column — entity name, acronym, or familiar term. For example, "task 1.1" means objective 1.1; "issue #42" means operation #42. Resolve all aliases.
+
 ## Arguments
 
 Optional operation number as first token (e.g., `42`). If provided, use `.naholo/local/operations/42/` directly — if that directory doesn't exist, tell the user to run `/infil 42` first.

@@ -9,6 +9,17 @@ model: sonnet
 
 Fetch an operation's full context from Naholo and set up a local working directory for the `/spec` → `/ship` → `/sitrep` (mid-session) → `/exfil` (done) workflow. Use `/sitrep` between `/ship` sessions to sync progress without closing.
 
+## Terminology
+
+| Entity    | Acronym | Familiar Term  | Familiar Context                  |
+| --------- | ------- | -------------- | --------------------------------- |
+| Operation | OP      | issue          | GitHub Issues                     |
+| Objective | OBJ     | task           | tasks within an issue             |
+| Operator  | OPR     | project member | GitHub / general PM               |
+| Campaign  | —       | milestone/epic | GitHub Milestones / PM tool epics |
+
+Users may refer to entities by any column — entity name, acronym, or familiar term. For example, "task 1.1" means objective 1.1; "issue #42" means operation #42. Resolve all aliases.
+
 ## Arguments
 
 The argument is the operation number (e.g., `42`). Required.

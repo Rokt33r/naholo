@@ -9,6 +9,17 @@ model: sonnet
 
 Sync local changes back to Naholo and post a summary log, without closing the operation or cleaning up the local directory. Use this for mid-session checkpoints.
 
+## Terminology
+
+| Entity    | Acronym | Familiar Term  | Familiar Context                  |
+| --------- | ------- | -------------- | --------------------------------- |
+| Operation | OP      | issue          | GitHub Issues                     |
+| Objective | OBJ     | task           | tasks within an issue             |
+| Operator  | OPR     | project member | GitHub / general PM               |
+| Campaign  | —       | milestone/epic | GitHub Milestones / PM tool epics |
+
+Users may refer to entities by any column — entity name, acronym, or familiar term. For example, "task 1.1" means objective 1.1; "issue #42" means operation #42. Resolve all aliases.
+
 ## Arguments
 
 The argument is the operation number (e.g., `42`). Required. Find local dir at `.naholo/local/operations/{operationNumber}/`. If that directory doesn't exist, tell the user to run `/infil {operationNumber}` first and stop.
