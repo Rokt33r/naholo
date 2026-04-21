@@ -19,7 +19,7 @@ const updateOperationLogSchema = z.object({
 })
 
 /**
- * PATCH /api/projects/[projectSlug]/operations/[operationNumber]/operation-logs/[logId]
+ * PATCH /api/projects/[projectSlug]/operations/[operationNumber]/logs/[logId]
  * Update an operation log
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
@@ -76,7 +76,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/projects/[projectSlug]/operations/[operationNumber]/operation-logs/[logId]
+ * DELETE /api/projects/[projectSlug]/operations/[operationNumber]/logs/[logId]
  * Delete an operation log
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {

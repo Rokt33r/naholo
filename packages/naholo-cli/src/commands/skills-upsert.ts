@@ -5,12 +5,16 @@ import { CliError, withErrorHandling } from '../errors.js'
 
 export const upsertCommand = new Command('upsert')
   .description('Create or update a skill on the server')
-  .argument('<skillSetSlug>', 'slug of the skill set')
+  .argument('<skillLoadoutSlug>', 'slug of the skill loadout')
   .argument('<skillName>', 'name of the skill')
   .argument('<skillPath>', 'path to the skill file')
   .action(
     withErrorHandling(
-      async (skillSetSlug: string, skillName: string, skillPath: string) => {
+      async (
+        skillLoadoutSlug: string,
+        skillName: string,
+        skillPath: string,
+      ) => {
         const { client, projectSlug } = getCliContext()
 
         if (!fs.existsSync(skillPath)) {
@@ -18,12 +22,12 @@ export const upsertCommand = new Command('upsert')
         }
 
         const content = fs.readFileSync(skillPath, 'utf-8')
-        await client.upsertSkill(projectSlug, skillSetSlug, skillName, {
+        await client.upsertSkill(projectSlug, skillLoadoutSlug, skillName, {
           content,
         })
 
         console.log(
-          `Upserted skill '${skillName}' in skill set '${skillSetSlug}'`,
+          `Upserted skill '${skillName}' in skill loadout '${skillLoadoutSlug}'`,
         )
       },
     ),

@@ -1,6 +1,6 @@
 # Naholo
 
-Task/issue management web app for documenting work, managing hierarchical tasks, and keeping logs.
+Operation/objective management web app for documenting work, managing hierarchical objectives, and keeping comms logs.
 
 ## Tech Stack
 
@@ -15,19 +15,19 @@ Task/issue management web app for documenting work, managing hierarchical tasks,
 src/
 ├── app/ # Next.js routes + API handlers
 │ ├── app/ # Authenticated app routes
-│ │ └── projects/[projectId]/issues/[issueId]/
+│ │ └── projects/[projectSlug]/operations/[operationNumber]/
 │ └── api/ # REST API (mirrors app routes)
 ├── components/
-│ ├── tasks/ # Task list, item, note, actions, context
-│ ├── issues/ # Issue page components
-│ ├── logs/ # Log list and editor
-│ ├── notes/ # Note tabs (per-issue documentation)
+│ ├── objectives/ # Objective list, item, note, actions, context
+│ ├── operations/ # Operation page components
+│ ├── operation-logs/ # Comms log list and editor
+│ ├── notes/ # Note tabs (per-operation documentation)
 │ └── ui/ # Shared UI primitives (Radix-based)
-├── hooks/ # React Query hooks (use-tasks, use-issues, etc.)
+├── hooks/ # React Query hooks (use-objectives, use-operations, etc.)
 ├── lib/ # Utilities (fetcher, utils, date-utils)
 └── server/
 ├── db/schema/ # Drizzle table definitions
-└── services/ # Business logic (task, issue, note, log)
+└── services/ # Business logic (objective, operation, note, operation-log)
 
 ## Key Conventions
 
@@ -49,16 +49,32 @@ src/
 
 ## Domain Model
 
-- **Project** → has many **Issues**
-- **Issue** → has many **Tasks** (hierarchical via `parentTaskId`), **Notes** (tabbed docs), **Logs** (activity)
-- **Task** → `name` (single-line), `note` (markdown), `done`, `position`, self-referencing `parentTaskId`
+- **Project** → has many **Operations**
+- **Operation** → has many **Objectives** (hierarchical via `parentObjectiveId`), **Notes** (tabbed docs), **Operation Logs** (comms)
+- **Objective** → `name` (single-line), `note` (markdown), `done`, `position`, self-referencing `parentObjectiveId`
+- **Project** → has many **Operators** (users/bots with access)
+- **Project** → has many **Skill Loadouts** → each has many **Skills**
 
 ## Architecture Patterns
 
-- Task list renders as flat array with depth, not recursive components
-- Task keyboard nav: depth-first traversal with DOM queries for visibility
+- Objective list renders as flat array with depth, not recursive components
+- Objective keyboard nav: depth-first traversal with DOM queries for visibility
 - Animated expand/collapse: CSS grid-rows transition (`grid-rows-[0fr]` ↔ `grid-rows-[1fr]`)
-- Focus management: centralized in task-context.tsx (`focusedTaskId`, `isListFocused`)
+- Focus management: centralized in objective-context.tsx (`focusedObjectiveId`, `isListFocused`)
+
+## Terminology
+
+Old → New mapping (for agents encountering legacy references):
+
+| Old Term         | New Term      | Notes                                        |
+| ---------------- | ------------- | -------------------------------------------- |
+| issue            | operation     | DB table, types, routes, components          |
+| task             | objective     | DB table, types, routes, components          |
+| worker           | operator      | DB table, types, routes, components          |
+| skill set        | skill loadout | Container for skills                         |
+| skill            | skill         | **Unchanged**                                |
+| Logs (tab label) | Comms         | UI label only; code entity is `operationLog` |
+| notes            | notes         | **Unchanged**                                |
 
 ## Plans
 

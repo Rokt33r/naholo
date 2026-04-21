@@ -14,7 +14,7 @@ type RouteContext = {
 }
 
 /**
- * GET /api/projects/[projectSlug]/operations/[operationNumber]/operation-logs
+ * GET /api/projects/[projectSlug]/operations/[operationNumber]/logs
  * List logs for an operation
  */
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -42,7 +42,7 @@ const createOperationLogSchema = z.object({
 })
 
 /**
- * POST /api/projects/[projectSlug]/operations/[operationNumber]/operation-logs
+ * POST /api/projects/[projectSlug]/operations/[operationNumber]/logs
  * Create a new operation log
  */
 export async function POST(request: NextRequest, context: RouteContext) {

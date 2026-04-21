@@ -4,10 +4,6 @@ import path from 'node:path'
 
 interface ClaudeJson {
   mcpServers?: Record<string, unknown>
-  [key: string]: unknown
-}
-
-interface ClaudeSettings {
   permissions?: {
     allow?: string[]
     deny?: string[]
@@ -32,21 +28,7 @@ export function writeGlobalMcpConfig(): void {
   }
   config.mcpServers.naholo = naholoEntry
 
-  fs.writeFileSync(claudeJsonPath, JSON.stringify(config, null, 2) + '\n')
-}
-
-export function writeGlobalClaudePermissions(): void {
-  const claudeDir = path.join(os.homedir(), '.claude')
-  const settingsPath = path.join(claudeDir, 'settings.local.json')
   const naholoPermission = 'mcp__naholo__*'
-
-  let config: ClaudeSettings = {}
-
-  if (fs.existsSync(settingsPath)) {
-    const raw = fs.readFileSync(settingsPath, 'utf-8')
-    config = JSON.parse(raw) as ClaudeSettings
-  }
-
   if (config.permissions == null) {
     config.permissions = {}
   }
@@ -58,6 +40,5 @@ export function writeGlobalClaudePermissions(): void {
     config.permissions.allow.push(naholoPermission)
   }
 
-  fs.mkdirSync(claudeDir, { recursive: true })
-  fs.writeFileSync(settingsPath, JSON.stringify(config, null, 2) + '\n')
+  fs.writeFileSync(claudeJsonPath, JSON.stringify(config, null, 2) + '\n')
 }

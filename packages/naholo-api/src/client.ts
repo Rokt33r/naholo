@@ -343,7 +343,7 @@ export class NaholoClient {
   ): Promise<OperationLog[]> {
     return this.request(
       'GET',
-      this.operationPath(projectSlug, operationNumber, '/operation-logs'),
+      this.operationPath(projectSlug, operationNumber, '/logs'),
     )
   }
 
@@ -354,7 +354,7 @@ export class NaholoClient {
   ): Promise<OperationLog> {
     return this.request(
       'POST',
-      this.operationPath(projectSlug, operationNumber, '/operation-logs'),
+      this.operationPath(projectSlug, operationNumber, '/logs'),
       input,
     )
   }
@@ -366,11 +366,7 @@ export class NaholoClient {
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.operationPath(
-        projectSlug,
-        operationNumber,
-        `/operation-logs/${logId}`,
-      ),
+      this.operationPath(projectSlug, operationNumber, `/logs/${logId}`),
     )
   }
 

@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import type { SyncTaskNode, Task } from 'naholo-api/types'
+import type { SyncObjectiveNode, Objective } from 'naholo-api/types'
 import { z } from 'zod'
 
 export function registerTools(
@@ -9,113 +9,117 @@ export function registerTools(
   projectSlug: string,
 ): void {
   server.registerTool(
-    'create_issue',
+    'create_operation',
     {
-      description: 'Create a new issue',
-      inputSchema: { title: z.string().describe('Issue title') },
+      description: 'Create a new operation',
+      inputSchema: { title: z.string().describe('Operation title') },
     },
     async ({ title }) => {
-      const issue = await client.createIssue(projectSlug, { title })
+      const operation = await client.createOperation(projectSlug, { title })
       return {
-        content: [{ type: 'text', text: JSON.stringify(issue, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(operation, null, 2) }],
       }
     },
   )
 
   server.registerTool(
-    'close_issue',
+    'close_operation',
     {
-      description: 'Close an issue',
+      description: 'Close an operation',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
+          .describe('Operation number (e.g. 3)'),
       },
     },
-    async ({ issueNumber }) => {
-      await client.closeIssue(projectSlug, issueNumber)
-      return { content: [{ type: 'text', text: 'Issue closed.' }] }
+    async ({ operationNumber }) => {
+      await client.closeOperation(projectSlug, operationNumber)
+      return { content: [{ type: 'text', text: 'Operation closed.' }] }
     },
   )
 
   server.registerTool(
-    'create_task',
+    'create_objective',
     {
-      description: 'Create a new task in an issue',
+      description: 'Create a new objective in an operation',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
-        name: z.string().describe('Task name'),
-        note: z.string().optional().describe('Task note (markdown)'),
-        parentTaskId: z
+          .describe('Operation number (e.g. 3)'),
+        name: z.string().describe('Objective name'),
+        note: z.string().optional().describe('Objective note (markdown)'),
+        parentObjectiveId: z
           .string()
           .optional()
-          .describe('Parent task ID for nesting'),
+          .describe('Parent objective ID for nesting'),
         position: z.number().optional().describe('Position index'),
       },
     },
-    async ({ issueNumber, name, note, parentTaskId, position }) => {
-      const task = await client.createTask(projectSlug, issueNumber, {
-        name,
-        note,
-        parentTaskId,
-        position,
-      })
+    async ({ operationNumber, name, note, parentObjectiveId, position }) => {
+      const objective = await client.createObjective(
+        projectSlug,
+        operationNumber,
+        {
+          name,
+          note,
+          parentObjectiveId,
+          position,
+        },
+      )
       return {
-        content: [{ type: 'text', text: JSON.stringify(task, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(objective, null, 2) }],
       }
     },
   )
 
   server.registerTool(
-    'update_task',
+    'update_objective',
     {
-      description: 'Update a task (name, note, or done status)',
+      description: 'Update an objective (name, note, or done status)',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
-        taskId: z.string().describe('Task ID'),
-        name: z.string().optional().describe('New task name'),
-        note: z.string().optional().describe('New task note'),
-        done: z.boolean().optional().describe('Mark task done/undone'),
+          .describe('Operation number (e.g. 3)'),
+        objectiveId: z.string().describe('Objective ID'),
+        name: z.string().optional().describe('New objective name'),
+        note: z.string().optional().describe('New objective note'),
+        done: z.boolean().optional().describe('Mark objective done/undone'),
       },
     },
-    async ({ issueNumber, taskId, name, note, done }) => {
-      await client.updateTask(projectSlug, issueNumber, taskId, {
+    async ({ operationNumber, objectiveId, name, note, done }) => {
+      await client.updateObjective(projectSlug, operationNumber, objectiveId, {
         name,
         note,
         done,
       })
-      return { content: [{ type: 'text', text: 'Task updated.' }] }
+      return { content: [{ type: 'text', text: 'Objective updated.' }] }
     },
   )
 
   server.registerTool(
     'create_note',
     {
-      description: 'Create a note on an issue',
+      description: 'Create a note on an operation',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
+          .describe('Operation number (e.g. 3)'),
         name: z
           .string()
           .describe('Note name (used as identifier and filename)'),
         content: z.string().describe('Note content (markdown)'),
       },
     },
-    async ({ issueNumber, name, content }) => {
-      const note = await client.createNote(projectSlug, issueNumber, {
+    async ({ operationNumber, name, content }) => {
+      const note = await client.createNote(projectSlug, operationNumber, {
         name,
         content,
       })
@@ -128,20 +132,20 @@ export function registerTools(
   server.registerTool(
     'update_note',
     {
-      description: 'Update a note on an issue',
+      description: 'Update a note on an operation',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
+          .describe('Operation number (e.g. 3)'),
         noteName: z.string().describe('Note name'),
         name: z.string().optional().describe('New note name'),
         content: z.string().optional().describe('New note content (markdown)'),
       },
     },
-    async ({ issueNumber, noteName, name, content }) => {
-      await client.updateNote(projectSlug, issueNumber, noteName, {
+    async ({ operationNumber, noteName, name, content }) => {
+      await client.updateNote(projectSlug, operationNumber, noteName, {
         name,
         content,
       })
@@ -150,20 +154,26 @@ export function registerTools(
   )
 
   server.registerTool(
-    'create_log',
+    'create_operation_log',
     {
-      description: 'Create a log entry for an issue',
+      description: 'Create a log entry for an operation',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
+          .describe('Operation number (e.g. 3)'),
         content: z.string().describe('Log content'),
       },
     },
-    async ({ issueNumber, content }) => {
-      const log = await client.createLog(projectSlug, issueNumber, { content })
+    async ({ operationNumber, content }) => {
+      const log = await client.createOperationLog(
+        projectSlug,
+        operationNumber,
+        {
+          content,
+        },
+      )
       return {
         content: [{ type: 'text', text: JSON.stringify(log, null, 2) }],
       }
@@ -171,26 +181,26 @@ export function registerTools(
   )
 
   server.registerTool(
-    'sync_tasks',
+    'sync_objectives',
     {
       description:
-        'Sync the full task tree for an issue from TASKS.md markdown. Parses the markdown into a task tree and sends it to the server. The server resolves positions, creates new tasks, updates existing ones, and preserves orphans.',
+        'Sync the full objective tree for an operation from OBJECTIVES.md markdown. Parses the markdown into an objective tree and sends it to the server. The server resolves positions, creates new objectives, updates existing ones, and preserves orphans.',
       inputSchema: {
-        issueNumber: z
+        operationNumber: z
           .number()
           .int()
           .positive()
-          .describe('Issue number (e.g. 3)'),
-        tasksMarkdown: z
+          .describe('Operation number (e.g. 3)'),
+        objectivesMarkdown: z
           .string()
-          .describe('Raw TASKS.md content (checkbox markdown)'),
+          .describe('Raw OBJECTIVES.md content (checkbox markdown)'),
       },
     },
-    async ({ issueNumber, tasksMarkdown }) => {
-      const tasks = parseTasksMarkdown(tasksMarkdown)
-      const result = await client.syncTasks(projectSlug, issueNumber, {
-        tasks,
-        taskIdsToDelete: [],
+    async ({ operationNumber, objectivesMarkdown }) => {
+      const objectives = parseObjectivesMarkdown(objectivesMarkdown)
+      const result = await client.syncObjectives(projectSlug, operationNumber, {
+        objectives,
+        objectiveIdsToDelete: [],
       })
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
@@ -199,17 +209,17 @@ export function registerTools(
   )
 }
 
-const TASK_LINE_RE =
+const OBJECTIVE_LINE_RE =
   /^(\s*)- \[([ x])\] (.+?)(?:\s+\[ref\]\(naholo:\/\/tasks\/([^)]+)\))?$/
 
-function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
+function parseObjectivesMarkdown(markdown: string): SyncObjectiveNode[] {
   const lines = markdown.split('\n')
-  const root: SyncTaskNode[] = []
+  const root: SyncObjectiveNode[] = []
   // Stack tracks { node, depth } for nesting
-  const stack: { node: SyncTaskNode; depth: number }[] = []
+  const stack: { node: SyncObjectiveNode; depth: number }[] = []
 
   for (const line of lines) {
-    const match = TASK_LINE_RE.exec(line)
+    const match = OBJECTIVE_LINE_RE.exec(line)
     if (match == null) {
       continue
     }
@@ -217,11 +227,11 @@ function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
     const indent = match[1].length
     const done = match[2] === 'x'
     const name = match[3].trim()
-    const taskId = match[4] // undefined if no [ref]
+    const objectiveId = match[4] // undefined if no [ref]
     const depth = Math.floor(indent / 2)
 
-    const node: SyncTaskNode = {
-      ...(taskId != null ? { id: taskId } : {}),
+    const node: SyncObjectiveNode = {
+      ...(objectiveId != null ? { id: objectiveId } : {}),
       name,
       ...(done ? { done: true } : {}),
     }
@@ -237,10 +247,10 @@ function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
     } else {
       // Child of the last item on the stack
       const parent = stack[stack.length - 1].node
-      if (parent.childTasks == null) {
-        parent.childTasks = []
+      if (parent.childObjectives == null) {
+        parent.childObjectives = []
       }
-      parent.childTasks.push(node)
+      parent.childObjectives.push(node)
     }
 
     stack.push({ node, depth })
@@ -249,15 +259,15 @@ function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
   return root
 }
 
-export function formatTasksMarkdown(tasks: Task[]): string {
-  const childrenMap = new Map<string | null, Task[]>()
-  for (const task of tasks) {
-    const key = task.parentTaskId
+export function formatObjectivesMarkdown(objectives: Objective[]): string {
+  const childrenMap = new Map<string | null, Objective[]>()
+  for (const objective of objectives) {
+    const key = objective.parentObjectiveId
     const group = childrenMap.get(key)
     if (group != null) {
-      group.push(task)
+      group.push(objective)
     } else {
-      childrenMap.set(key, [task])
+      childrenMap.set(key, [objective])
     }
   }
 
@@ -273,13 +283,13 @@ export function formatTasksMarkdown(tasks: Task[]): string {
     if (children == null) {
       return
     }
-    for (const task of children) {
+    for (const objective of children) {
       const indent = '  '.repeat(depth)
-      const checkbox = task.done ? '[x]' : '[ ]'
+      const checkbox = objective.done ? '[x]' : '[ ]'
       lines.push(
-        `${indent}- ${checkbox} ${task.name} [ref](naholo://tasks/${task.id})`,
+        `${indent}- ${checkbox} ${objective.name} [ref](naholo://objectives/${objective.id})`,
       )
-      render(task.id, depth + 1)
+      render(objective.id, depth + 1)
     }
   }
 

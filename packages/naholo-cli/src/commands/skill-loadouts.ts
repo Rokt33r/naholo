@@ -4,31 +4,31 @@ import { getCliContext } from '../context.js'
 import { CliError, withErrorHandling } from '../errors.js'
 
 const createCommand = new Command('create')
-  .description('Create a new skill set')
+  .description('Create a new skill loadout')
   .requiredOption('--name <name>', 'display name')
   .requiredOption('--slug <slug>', 'URL-safe identifier')
   .action(
     withErrorHandling(async (options: { name: string; slug: string }) => {
       const { client, projectSlug } = getCliContext()
 
-      await client.createSkillSet(projectSlug, {
+      await client.createSkillLoadout(projectSlug, {
         name: options.name,
         slug: options.slug,
       })
 
-      console.log(`Created skill set '${options.name}' (${options.slug})`)
+      console.log(`Created skill loadout '${options.name}' (${options.slug})`)
     }),
   )
 
 const updateCommand = new Command('update')
-  .description('Update a skill set')
-  .argument('<skillSetSlug>', 'slug of the skill set to update')
+  .description('Update a skill loadout')
+  .argument('<skillLoadoutSlug>', 'slug of the skill loadout to update')
   .option('--name <name>', 'new display name')
   .option('--slug <slug>', 'new slug')
   .action(
     withErrorHandling(
       async (
-        skillSetSlug: string,
+        skillLoadoutSlug: string,
         options: { name?: string; slug?: string },
       ) => {
         if (options.name == null && options.slug == null) {
@@ -45,20 +45,20 @@ const updateCommand = new Command('update')
           input.slug = options.slug
         }
 
-        await client.updateSkillSet(projectSlug, skillSetSlug, input)
+        await client.updateSkillLoadout(projectSlug, skillLoadoutSlug, input)
 
-        console.log(`Updated skill set '${skillSetSlug}'`)
+        console.log(`Updated skill loadout '${skillLoadoutSlug}'`)
       },
     ),
   )
 
 const deleteCommand = new Command('delete')
-  .description('Delete a skill set')
-  .argument('<skillSetSlug>', 'slug of the skill set to delete')
+  .description('Delete a skill loadout')
+  .argument('<skillLoadoutSlug>', 'slug of the skill loadout to delete')
   .action(
-    withErrorHandling(async (skillSetSlug: string) => {
+    withErrorHandling(async (skillLoadoutSlug: string) => {
       const shouldDelete = await confirm({
-        message: `Delete skill set '${skillSetSlug}' and all its skills?`,
+        message: `Delete skill loadout '${skillLoadoutSlug}' and all its skills?`,
         default: false,
       })
 
@@ -69,14 +69,16 @@ const deleteCommand = new Command('delete')
 
       const { client, projectSlug } = getCliContext()
 
-      await client.deleteSkillSet(projectSlug, skillSetSlug)
+      await client.deleteSkillLoadout(projectSlug, skillLoadoutSlug)
 
-      console.log(`Deleted skill set '${skillSetSlug}'`)
+      console.log(`Deleted skill loadout '${skillLoadoutSlug}'`)
     }),
   )
 
-export const setsCommand = new Command('sets').description('Manage skill sets')
+export const loadoutsCommand = new Command('loadouts').description(
+  'Manage skill loadouts',
+)
 
-setsCommand.addCommand(createCommand)
-setsCommand.addCommand(updateCommand)
-setsCommand.addCommand(deleteCommand)
+loadoutsCommand.addCommand(createCommand)
+loadoutsCommand.addCommand(updateCommand)
+loadoutsCommand.addCommand(deleteCommand)

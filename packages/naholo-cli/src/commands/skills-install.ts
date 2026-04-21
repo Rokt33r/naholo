@@ -10,30 +10,32 @@ import { writeSkillFile } from '../skills.js'
 const CLAUDE_SKILLS_DIR = '.claude/skills'
 
 export const installCommand = new Command('install')
-  .description('Install skills from a skill set')
+  .description('Install skills from a skill loadout')
   .action(
     withErrorHandling(async () => {
       const { client, projectSlug } = getCliContext()
 
-      const skillSets = await client.listSkillSets(projectSlug)
-      if (skillSets.length === 0) {
-        console.log('No skill sets found.')
+      const skillLoadouts = await client.listSkillLoadouts(projectSlug)
+      if (skillLoadouts.length === 0) {
+        console.log('No skill loadouts found.')
         return
       }
 
       const selectedSlug = await select({
-        message: 'Select a skill set to install',
-        choices: skillSets.map((s) => ({
+        message: 'Select a skill loadout to install',
+        choices: skillLoadouts.map((s) => ({
           name: `${s.name} (${s.slug})`,
           value: s.slug,
         })),
       })
 
-      const selectedSet = skillSets.find((s) => s.slug === selectedSlug)!
+      const selectedLoadout = skillLoadouts.find(
+        (s) => s.slug === selectedSlug,
+      )!
       const skills = await client.listSkills(projectSlug, selectedSlug)
 
       if (skills.length === 0) {
-        console.log(`No skills in "${selectedSet.name}".`)
+        console.log(`No skills in "${selectedLoadout.name}".`)
         return
       }
 

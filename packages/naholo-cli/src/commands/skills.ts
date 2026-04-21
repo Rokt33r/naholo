@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { installCommand } from './skills-install.js'
 import { upsertCommand } from './skills-upsert.js'
-import { setsCommand } from './skills-sets.js'
+import { loadoutsCommand } from './skill-loadouts.js'
 
 export const skillsCommand = new Command('skills').description(
   'Manage naholo skills',
@@ -9,4 +9,4 @@ export const skillsCommand = new Command('skills').description(
 
 skillsCommand.addCommand(installCommand)
 skillsCommand.addCommand(upsertCommand)
-skillsCommand.addCommand(setsCommand)
+skillsCommand.addCommand(loadoutsCommand)

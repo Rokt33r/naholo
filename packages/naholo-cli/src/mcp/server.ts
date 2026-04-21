@@ -12,9 +12,9 @@ export async function startMcpServer(): Promise<void> {
   })
 
   const ctx = getCliContext()
-  const { client, projectSlug, projectWorkerId } = ctx
+  const { client, projectSlug, projectOperatorId } = ctx
   registerTools(server, client, projectSlug)
-  registerResources(server, client, projectSlug, projectWorkerId)
+  registerResources(server, client, projectSlug, projectOperatorId)
 
   const transport = new StdioServerTransport()
   await server.connect(transport)

@@ -5,13 +5,13 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import { formatTasksMarkdown } from './tools.js'
+import { formatObjectivesMarkdown } from './tools.js'
 
 export function registerResources(
   server: McpServer,
   client: NaholoClient,
   projectSlug: string,
-  projectWorkerId: string,
+  projectOperatorId: string,
 ): void {
   server.registerResource(
     'project',
@@ -32,17 +32,17 @@ export function registerResources(
   )
 
   server.registerResource(
-    'issues',
-    'naholo://issues',
-    { description: 'Issue list for the project' },
+    'operations',
+    'naholo://operations',
+    { description: 'Operation list for the project' },
     async (uri) => {
-      const issues = await client.listIssues(projectSlug)
+      const operations = await client.listOperations(projectSlug)
       return {
         contents: [
           {
             uri: uri.href,
             mimeType: 'application/json',
-            text: JSON.stringify(issues, null, 2),
+            text: JSON.stringify(operations, null, 2),
           },
         ],
       }
@@ -50,18 +50,22 @@ export function registerResources(
   )
 
   server.registerResource(
-    'issue',
-    new ResourceTemplate('naholo://issues/{issueNumber}', { list: undefined }),
-    { description: 'Full issue context (tasks + notes + recent logs)' },
+    'operation',
+    new ResourceTemplate('naholo://operations/{operationNumber}', {
+      list: undefined,
+    }),
+    {
+      description: 'Full operation context (objectives + notes + recent logs)',
+    },
     async (uri, variables) => {
-      const issueNumber = variables.issueNumber as string
-      const [issue, tasks, notes, logs] = await Promise.all([
-        client.getIssue(projectSlug, issueNumber),
-        client.listTasks(projectSlug, issueNumber),
-        client.listNotes(projectSlug, issueNumber),
-        client.listLogs(projectSlug, issueNumber),
+      const operationNumber = variables.operationNumber as string
+      const [operation, objectives, notes, logs] = await Promise.all([
+        client.getOperation(projectSlug, operationNumber),
+        client.listObjectives(projectSlug, operationNumber),
+        client.listNotes(projectSlug, operationNumber),
+        client.listOperationLogs(projectSlug, operationNumber),
       ])
-      const data = { issue, tasks, notes, logs }
+      const data = { operation, objectives, notes, logs }
       return {
         contents: [
           {
@@ -75,20 +79,23 @@ export function registerResources(
   )
 
   server.registerResource(
-    'tasks',
-    new ResourceTemplate('naholo://issues/{issueNumber}/tasks', {
+    'objectives',
+    new ResourceTemplate('naholo://operations/{operationNumber}/objectives', {
       list: undefined,
     }),
-    { description: 'All tasks for an issue' },
+    { description: 'All objectives for an operation' },
     async (uri, variables) => {
-      const issueNumber = variables.issueNumber as string
-      const tasks = await client.listTasks(projectSlug, issueNumber)
+      const operationNumber = variables.operationNumber as string
+      const objectives = await client.listObjectives(
+        projectSlug,
+        operationNumber,
+      )
       return {
         contents: [
           {
             uri: uri.href,
             mimeType: 'text/markdown',
-            text: formatTasksMarkdown(tasks),
+            text: formatObjectivesMarkdown(objectives),
           },
         ],
       }
@@ -96,54 +103,56 @@ export function registerResources(
   )
 
   server.registerResource(
-    'local-issues',
-    'naholo://local/issues',
-    { description: 'List of locally infiled issues' },
+    'local-operations',
+    'naholo://local/operations',
+    { description: 'List of locally infiled operations' },
     async (uri) => {
-      const localIssuesDir = path.resolve('.naholo', 'local', 'issues')
+      const localOperationsDir = path.resolve('.naholo', 'local', 'operations')
       let entries: fs.Dirent[] = []
       try {
-        entries = fs.readdirSync(localIssuesDir, { withFileTypes: true })
+        entries = fs.readdirSync(localOperationsDir, { withFileTypes: true })
       } catch (error) {
         if (
           error instanceof Error &&
           (error as NodeJS.ErrnoException).code === 'ENOENT'
         ) {
-          // Directory doesn't exist — no infiled issues
+          // Directory doesn't exist — no infiled operations
         } else {
           throw error
         }
       }
 
-      const issueNumbers = entries
+      const operationNumbers = entries
         .filter((e) => e.isDirectory() && /^\d+$/.test(e.name))
         .map((e) => Number(e.name))
         .sort((a, b) => a - b)
 
-      if (issueNumbers.length === 0) {
+      if (operationNumbers.length === 0) {
         return {
           contents: [{ uri: uri.href, mimeType: 'text/plain', text: '' }],
         }
       }
 
-      const PLAN_TITLE_RE = /^# PLAN — Issue #\d+:\s*(.+)$/
-      const lines = issueNumbers.map((num) => {
-        const planPath = path.join(
-          localIssuesDir,
+      const OPERATION_TITLE_RE = /^# OPERATION — Operation #\d+:\s*(.+)$/
+      const lines = operationNumbers.map((num) => {
+        const operationPath = path.join(
+          localOperationsDir,
           String(num),
           'notes',
-          'PLAN.md',
+          'OPERATION.md',
         )
-        if (!fs.existsSync(planPath)) {
-          return `#${num} (malformed - PLAN.md doesn't exist)`
+        if (!fs.existsSync(operationPath)) {
+          return `#${num} (malformed - OPERATION.md doesn't exist)`
         }
         try {
-          const firstLine = fs.readFileSync(planPath, 'utf-8').split('\n', 1)[0]
-          const match = PLAN_TITLE_RE.exec(firstLine)
+          const firstLine = fs
+            .readFileSync(operationPath, 'utf-8')
+            .split('\n', 1)[0]
+          const match = OPERATION_TITLE_RE.exec(firstLine)
           if (match != null) {
             return `#${num} ${match[1].trim()}`
           }
-          return `#${num} (malformed - PLAN.md header not recognized)`
+          return `#${num} (malformed - OPERATION.md header not recognized)`
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
           return `#${num} (malformed - ${message})`
@@ -160,13 +169,13 @@ export function registerResources(
 
   server.registerResource(
     'notes',
-    new ResourceTemplate('naholo://issues/{issueNumber}/notes', {
+    new ResourceTemplate('naholo://operations/{operationNumber}/notes', {
       list: undefined,
     }),
-    { description: 'All notes for an issue' },
+    { description: 'All notes for an operation' },
     async (uri, variables) => {
-      const issueNumber = variables.issueNumber as string
-      const notes = await client.listNotes(projectSlug, issueNumber)
+      const operationNumber = variables.operationNumber as string
+      const notes = await client.listNotes(projectSlug, operationNumber)
       return {
         contents: [
           {
@@ -182,15 +191,15 @@ export function registerResources(
   server.registerResource(
     'soul',
     'naholo://soul',
-    { description: 'Personality / soul text for the current bot worker' },
+    { description: 'Personality / soul text for the current bot operator' },
     async (uri) => {
-      const worker = await client.getWorker(projectSlug, projectWorkerId)
+      const operator = await client.getOperator(projectSlug, projectOperatorId)
       return {
         contents: [
           {
             uri: uri.href,
             mimeType: 'text/markdown',
-            text: worker.soul ?? '',
+            text: operator.soul ?? '',
           },
         ],
       }

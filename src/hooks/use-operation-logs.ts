@@ -20,7 +20,7 @@ export function useOperationLogs(projectSlug: string, operationNumber: number) {
     queryKey: ['operationLogs', operationNumber],
     queryFn: () =>
       fetcher<OperationLog[]>(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/operation-logs`,
+        `/api/projects/${projectSlug}/operations/${operationNumber}/logs`,
       ),
     staleTime: 1000 * 60,
   })
@@ -39,7 +39,7 @@ export function useCreateOperationLog(
   return useMutation({
     mutationFn: async (content: string) => {
       const response = await fetch(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/operation-logs`,
+        `/api/projects/${projectSlug}/operations/${operationNumber}/logs`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -145,7 +145,7 @@ export function useUpdateOperationLog(
       content: string
     }) => {
       const response = await fetch(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/operation-logs/${logId}`,
+        `/api/projects/${projectSlug}/operations/${operationNumber}/logs/${logId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -242,7 +242,7 @@ export function useDeleteOperationLog(
   return useMutation({
     mutationFn: async (logId: string) => {
       const response = await fetch(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/operation-logs/${logId}`,
+        `/api/projects/${projectSlug}/operations/${operationNumber}/logs/${logId}`,
         { method: 'DELETE' },
       )
       if (!response.ok) {

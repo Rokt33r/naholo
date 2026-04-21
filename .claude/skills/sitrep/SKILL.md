@@ -1,55 +1,55 @@
 ---
 name: sitrep
-description: Sync local progress to Naholo — push tasks, notes, post summary log. Does not close or clean up.
-argument-hint: '{issueNumber}'
+description: Sync local progress to Naholo — push objectives, notes, post summary log. Does not close or clean up.
+argument-hint: '{operationNumber}'
 model: sonnet
 ---
 
 # Sitrep — Sync Progress
 
-Sync local changes back to Naholo and post a summary log, without closing the issue or cleaning up the local directory. Use this for mid-session checkpoints.
+Sync local changes back to Naholo and post a summary log, without closing the operation or cleaning up the local directory. Use this for mid-session checkpoints.
 
 ## Arguments
 
-The argument is the issue number (e.g., `42`). Required. Find local dir at `.naholo/local/issues/{issueNumber}/`. If that directory doesn't exist, tell the user to run `/infil {issueNumber}` first and stop.
+The argument is the operation number (e.g., `42`). Required. Find local dir at `.naholo/local/operations/{operationNumber}/`. If that directory doesn't exist, tell the user to run `/infil {operationNumber}` first and stop.
 
 ## What to do
 
 0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
 1. **Read local state**:
-   - `.naholo/local/issues/{issueNumber}/TASKS.md`
-   - All files in `.naholo/local/issues/{issueNumber}/notes/`
+   - `.naholo/local/operations/{operationNumber}/OBJECTIVES.md`
+   - All files in `.naholo/local/operations/{operationNumber}/notes/`
 
-2. **Read server state**: Use MCP resource `naholo://issues/{issueNumber}` to get current tasks and notes from the server.
+2. **Read server state**: Use MCP resource `naholo://operations/{operationNumber}` to get current objectives and notes from the server.
 
-3. **Sync tasks**: Read the full content of `TASKS.md` and pass it to the `sync_tasks` MCP tool as `tasksMarkdown`. This syncs the entire task tree in one call — the server resolves positions, creates new tasks, updates existing ones, and preserves orphans.
-   - After the call, the result contains `created: { id, name }[]` for newly created tasks
-   - For each created task, find the matching line in TASKS.md by name and append ` [ref](naholo://tasks/{id})` to it
-   - Write the updated TASKS.md back to disk
+3. **Sync objectives**: Read the full content of `OBJECTIVES.md` and pass it to the `sync_objectives` MCP tool as `objectivesMarkdown`. This syncs the entire objective tree in one call — the server resolves positions, creates new objectives, updates existing ones, and preserves orphans.
+   - After the call, the result contains `created: { id, name }[]` for newly created objectives
+   - For each created objective, find the matching line in OBJECTIVES.md by name and append ` [ref](naholo://objectives/{id})` to it
+   - Write the updated OBJECTIVES.md back to disk
 
 4. **Sync notes**: Compare local notes against server notes:
    - For each `notes/*.md` file, match to server note by `name` (filename without `.md` extension)
    - If content changed → `update_note` with note name and new content
    - If new (no server match) → `create_note` with name and content
 
-5. **Post summary log**: Generate a diff summary and post via `create_log` MCP tool. Include:
-   - Tasks completed (count and names)
-   - Tasks added (count and names)
+5. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
+   - Objectives completed (count and names)
+   - Objectives added (count and names)
    - Notes created or updated
-   - Brief description of code changes (run `git diff --stat` if available, or summarize from SPEC.md/PLAN.md progress)
+   - Brief description of code changes (run `git diff --stat` if available, or summarize from SPEC.md/OPERATION.md progress)
 
-6. **Update PLAN.md Timeline**: Append a timeline entry to `## Timeline` in `notes/PLAN.md`: `- **{date} — sitrep**: Synced {N} tasks, {N} notes. {brief summary}`.
+6. **Update OPERATION.md Timeline**: Append a timeline entry to `## Timeline` in `notes/OPERATION.md`: `- **{date} — sitrep**: Synced {N} objectives, {N} notes. {brief summary}`.
 
-7. **Update `.base/`**: After syncing, overwrite `.base/TASKS.md` and `.base/notes/*.md` with the current server state — this resets the baseline so the next `/infil` re-run diffs correctly.
+7. **Update `.base/`**: After syncing, overwrite `.base/OBJECTIVES.md` and `.base/notes/*.md` with the current server state — this resets the baseline so the next `/infil` re-run diffs correctly.
 
-8. **Print summary**: Output what was synced to chat. Use markdown link syntax for file paths so the user can click to open them (e.g., `[TASKS.md](.naholo/local/issues/{N}/TASKS.md)`, `[SPEC.md](.naholo/local/issues/{N}/notes/SPEC.md)`).
+8. **Print summary**: Output what was synced to chat. Use markdown link syntax for file paths so the user can click to open them (e.g., `[OBJECTIVES.md](.naholo/local/operations/{N}/OBJECTIVES.md)`, `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`).
 
 ## Rules
 
-- **Do NOT close the issue** — sitrep is a checkpoint, not a finish line.
-- **Do NOT clean up the local directory** — leave `.naholo/local/issues/{issueNumber}/` intact for continued work.
+- **Do NOT close the operation** — sitrep is a checkpoint, not a finish line.
+- **Do NOT clean up the local directory** — leave `.naholo/local/operations/{operationNumber}/` intact for continued work.
 - **Do NOT implement any code** — only sync state.
 - **Do NOT modify source files** — sitrep is a sync operation only.
-- **Use `sync_tasks` for task syncing**: Always use the bulk `sync_tasks` MCP tool instead of individual `create_task` / `update_task` calls.
+- **Use `sync_objectives` for objective syncing**: Always use the bulk `sync_objectives` MCP tool instead of individual `create_objective` / `update_objective` calls.
 - **Always post the summary log** — the log is the checkpoint record.
