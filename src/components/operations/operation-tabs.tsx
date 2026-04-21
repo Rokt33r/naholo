@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, StickyNote, Loader2, MessageSquare } from 'lucide-react'
+import { Plus, FileText, Loader2, SatelliteDish } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { useCreateNote } from '@/hooks/use-notes'
@@ -91,7 +91,7 @@ export function OperationTabs({
         variant={isCommsActive ? 'secondary' : 'ghost'}
         onClick={() => onTabChange({ type: 'comms' })}
       >
-        <MessageSquare className='mr-1 h-4 w-4' />
+        <SatelliteDish className='mr-1 size-5' />
         {!isWideScreen ? `Comms (${logsCount})` : 'Comms'}
       </Button>
       {notes.map((note) => {
@@ -122,13 +122,13 @@ export function OperationTabs({
                   !isActive && hasUnsavedChanges ? 'ring-2 ring-blue-500' : ''
                 }`}
               >
-                <StickyNote className='mr-1 h-4 w-4 shrink-0' />
+                <FileText className='mr-1 size-5 shrink-0' />
                 <span className='truncate'>{note.name}</span>
                 {isActive && savingState === 'debouncing' && (
-                  <Loader2 className='ml-1 h-3 w-3 shrink-0 animate-spin text-muted-foreground' />
+                  <Loader2 className='ml-1 size-5 shrink-0 animate-spin text-muted-foreground' />
                 )}
                 {isActive && savingState === 'saving' && (
-                  <Loader2 className='ml-1 h-3 w-3 shrink-0 animate-spin text-blue-500' />
+                  <Loader2 className='ml-1 size-5 shrink-0 animate-spin text-blue-500' />
                 )}
               </Button>
             </ContextMenuTrigger>
@@ -141,7 +141,7 @@ export function OperationTabs({
         onClick={handleAddNote}
         disabled={isCreating}
       >
-        <Plus className='mr-1 h-4 w-4' />
+        <Plus className='mr-1 size-5' />
         {isCreating ? 'Adding...' : 'Add Note'}
       </Button>
 

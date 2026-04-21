@@ -50,7 +50,13 @@ type OperationDetailProps = {
   onTabChange: (tab: ActiveTab) => void
   isWideScreen: boolean
   isMobile: boolean
-  objectivesCount: number
+  objectivesDoneCount: number
+  objectivesTotalCount: number
+}
+
+function formatObjectivesCount(done: number, total: number) {
+  const pct = total === 0 ? 0 : (done / total) * 100
+  return `${done}/${total}`
 }
 
 export function OperationDetail({
@@ -62,7 +68,8 @@ export function OperationDetail({
   onTabChange,
   isWideScreen,
   isMobile,
-  objectivesCount,
+  objectivesDoneCount,
+  objectivesTotalCount,
 }: OperationDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -184,12 +191,12 @@ export function OperationDetail({
               )
             }}
           >
-            <ArrowLeft className='h-4 w-4' />
+            <ArrowLeft className='size-5' />
           </Button>
         ) : (
           collapsed && (
             <Button size='icon' variant='ghost' onClick={toggleOperationsList}>
-              <PanelLeftOpen className='h-4 w-4' />
+              <PanelLeftOpen className='size-5' />
             </Button>
           )
         )}
@@ -214,9 +221,9 @@ export function OperationDetail({
           ) : (
             <div className='flex items-center gap-2'>
               {operation.closed ? (
-                <CircleCheck className='h-5 w-5 shrink-0 text-purple-600' />
+                <CircleCheck className='size-5 shrink-0 text-purple-600' />
               ) : (
-                <CircleDot className='h-5 w-5 shrink-0 text-green-600' />
+                <CircleDot className='size-5 shrink-0 text-green-600' />
               )}
               <h1
                 className='cursor-text text-xl font-semibold'
@@ -228,26 +235,26 @@ export function OperationDetail({
                 </span>
               </h1>
               {isSaving && (
-                <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                <Loader2 className='size-5 animate-spin text-muted-foreground' />
               )}
             </div>
           )}
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-1'>
           {!isWideScreen && (
             <Button
-              size='sm'
               variant={showObjectivesDialog ? 'secondary' : 'ghost'}
               onClick={() => setShowObjectivesDialog(!showObjectivesDialog)}
             >
-              <ListTodo className='mr-1 h-4 w-4' />
-              Objectives ({objectivesCount})
+              <ListTodo className='mr-1 size-5' />(
+              {formatObjectivesCount(objectivesDoneCount, objectivesTotalCount)}
+              )
             </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size='icon' variant='ghost' disabled={isDeleting}>
-                <MoreVertical className='h-4 w-4' />
+                <MoreVertical className='size-5' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
@@ -320,8 +327,13 @@ export function OperationDetail({
           >
             <DialogHeader className='px-4 pt-4'>
               <DialogTitle className='flex items-center gap-1.5'>
-                <ListTodo className='h-4 w-4' />
-                Objectives ({objectivesCount})
+                <ListTodo className='size-5' />
+                Objectives (
+                {formatObjectivesCount(
+                  objectivesDoneCount,
+                  objectivesTotalCount,
+                )}
+                )
               </DialogTitle>
             </DialogHeader>
             <div className='flex-1 overflow-hidden'>

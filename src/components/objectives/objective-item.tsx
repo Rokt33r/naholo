@@ -353,22 +353,22 @@ export function ObjectiveItem({ objective, depth = 0 }: ObjectiveItemProps) {
               </>
             )}
           </div>
-
-          {/* Actions */}
-          <ObjectiveActions
-            isCreating={isCreating}
-            isLoading={isLoading}
-            canIndent={canIndent}
-            canOutdent={canOutdent}
-            hasPreviousSibling={!!previousSibling}
-            onAddSubtask={handleAddSubtask}
-            onDelete={handleDelete}
-            onMoveUp={() => moveUp(objective.id)}
-            onMoveDown={() => moveDown(objective.id)}
-            onIndent={() => indentObjective(objective.id)}
-            onOutdent={() => outdentObjective(objective.id)}
-          />
         </div>
+
+        {/* Actions — absolute overlay */}
+        <ObjectiveActions
+          isCreating={isCreating}
+          isLoading={isLoading}
+          canIndent={canIndent}
+          canOutdent={canOutdent}
+          hasPreviousSibling={!!previousSibling}
+          onAddSubtask={handleAddSubtask}
+          onDelete={handleDelete}
+          onMoveUp={() => moveUp(objective.id)}
+          onMoveDown={() => moveDown(objective.id)}
+          onIndent={() => indentObjective(objective.id)}
+          onOutdent={() => outdentObjective(objective.id)}
+        />
 
         {/* Note section - animated */}
         <ObjectiveNote

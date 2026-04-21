@@ -109,7 +109,7 @@ export function OperationLogsList({
   return (
     <div className='flex h-full flex-col'>
       {/* Messages */}
-      <div className='mx-auto w-full max-w-3xl flex-1 space-y-1 overflow-y-auto p-4'>
+      <div className='w-full flex-1 space-y-1 overflow-y-auto p-4'>
         {operationLogs.length === 0 ? (
           <div className='py-8 text-center text-sm text-zinc-500'>
             No messages yet. Start a discussion below.
@@ -131,7 +131,7 @@ export function OperationLogsList({
       </div>
 
       {/* Input */}
-      <div className='mx-auto w-full max-w-3xl border-t p-2'>
+      <div className='w-full border-t p-2'>
         <div className='relative rounded-md border focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]'>
           <AutoResizeTextarea
             ref={textareaRef}
@@ -150,7 +150,7 @@ export function OperationLogsList({
                 disabled={isReopening}
                 title='Reopen operation'
               >
-                <CircleDot className='h-4 w-4 text-green-600' />
+                <CircleDot className='size-5 text-green-600' />
               </Button>
             ) : (
               <Button
@@ -160,7 +160,7 @@ export function OperationLogsList({
                 disabled={isClosing}
                 title={message.trim() ? 'Close with log' : 'Close operation'}
               >
-                <CircleCheck className='h-4 w-4 text-purple-600' />
+                <CircleCheck className='size-5 text-purple-600' />
               </Button>
             )}
             <Button
@@ -169,7 +169,7 @@ export function OperationLogsList({
               disabled={!message.trim() || createLoading}
               title='Send (Enter)'
             >
-              <CornerDownLeft className='h-4 w-4' />
+              <CornerDownLeft className='size-5' />
             </Button>
           </div>
         </div>

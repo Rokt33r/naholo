@@ -69,14 +69,14 @@ export function OperationsList({
         />
         {showCollapseButton && (
           <Button size='icon' variant='ghost' onClick={toggle}>
-            <PanelLeftClose className='h-4 w-4' />
+            <PanelLeftClose className='size-5' />
           </Button>
         )}
       </div>
 
       <div className='flex items-center gap-2 px-2 py-2'>
         <div className='relative flex-1'>
-          <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+          <Search className='absolute left-2.5 top-2.5 size-5 text-muted-foreground' />
           <Input
             placeholder='Search operations...'
             value={searchQuery}
@@ -106,7 +106,7 @@ export function OperationsList({
           onOperationCreated={refetch}
         >
           <Button size='icon' variant='ghost'>
-            <SquarePen className='h-4 w-4' />
+            <SquarePen className='size-5' />
           </Button>
         </CreateOperationDialog>
       </div>

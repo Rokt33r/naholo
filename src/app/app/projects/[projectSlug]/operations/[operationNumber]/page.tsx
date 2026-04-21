@@ -58,6 +58,14 @@ export default function OperationPage() {
   const { data: notes = [] } = useNotes(projectSlug, operationNumber)
   const { data: objectives = [] } = useObjectives(projectSlug, operationNumber)
 
+  const objectivesDoneCount = objectives.filter((o) => o.done).length
+  const objectivesTotalCount = objectives.length
+  const objectivesPct =
+    objectivesTotalCount === 0
+      ? 0
+      : (objectivesDoneCount / objectivesTotalCount) * 100
+  const objectivesLabel = `${objectivesDoneCount}/${objectivesTotalCount} · ${objectivesPct.toFixed(1)}%`
+
   const activeTab = parseActiveTab(searchParams.get('tab'))
 
   const handleTabChange = (newTab: ActiveTab) => {
@@ -93,7 +101,8 @@ export default function OperationPage() {
               onTabChange={handleTabChange}
               isWideScreen={isWideScreen}
               isMobile={isMobile}
-              objectivesCount={objectives.length}
+              objectivesDoneCount={objectivesDoneCount}
+              objectivesTotalCount={objectivesTotalCount}
             />
           </div>
           {isWideScreen && (
@@ -108,8 +117,8 @@ export default function OperationPage() {
               <div className='flex h-full flex-col'>
                 <div className='flex items-center gap-2 px-3 pt-2'>
                   <h2 className='flex items-center gap-1.5 text-md font-medium h-9'>
-                    <ListTodo className='w-4 h-4' />
-                    Objectives ({objectives.length})
+                    <ListTodo className='size-5' />
+                    Objectives ({objectivesLabel})
                   </h2>
                 </div>
                 <div className='flex-1 overflow-hidden'>

@@ -38,29 +38,29 @@ export function ObjectiveActions({
   onOutdent,
 }: ObjectiveActionsProps) {
   return (
-    <div className='flex shrink-0 items-center gap-1'>
+    <div className='absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1'>
       {isCreating || isLoading ? (
-        <Loader2 className='mx-1 h-4 w-4 animate-spin text-zinc-400' />
+        <Loader2 className='mx-1 size-5 animate-spin text-zinc-400' />
       ) : (
-        <div className='flex items-center gap-1 opacity-0 group-hover/item:opacity-100'>
+        <div className='flex items-center gap-1 pl-6 opacity-0 group-hover/item:opacity-100'>
           <Button
             variant='ghost'
             size='icon'
-            className='h-6 w-6'
+            className='size-7'
             onClick={onAddSubtask}
             tabIndex={-1}
           >
-            <Plus className='h-3 w-3' />
+            <Plus className='size-5' />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant='ghost'
                 size='icon'
-                className='h-6 w-6'
+                className='size-7'
                 tabIndex={-1}
               >
-                <MoreVertical className='h-3 w-3' />
+                <MoreVertical className='size-5' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>

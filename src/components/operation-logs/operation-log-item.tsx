@@ -158,10 +158,10 @@ export function OperationLogItem({
             <Button
               variant='ghost'
               size='icon'
-              className='h-6 w-6 opacity-0 group-hover:opacity-100'
+              className='size-7 opacity-0 group-hover:opacity-100'
               disabled={isLoading}
             >
-              <MoreVertical className='h-3 w-3' />
+              <MoreVertical className='size-5' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
