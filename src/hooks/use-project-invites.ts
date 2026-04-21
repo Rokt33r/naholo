@@ -75,7 +75,7 @@ export function useAcceptProjectInvite(projectSlug: string) {
       if (!response.ok) {
         throw await createResponseError(response, 'Failed to accept invite')
       }
-      return response.json() as Promise<{ projectWorkerId: string }>
+      return response.json() as Promise<{ projectOperatorId: string }>
     },
     onError: (error) => {
       toast.error(
