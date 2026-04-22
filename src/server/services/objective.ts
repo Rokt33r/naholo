@@ -52,6 +52,7 @@ export async function createObjective(data: {
   note?: string | null
   parentObjectiveId?: string | null
   position?: number
+  sourceClientId?: string
 }): Promise<ReturnResult<{ id: string }>> {
   const parentObjectiveId = data.parentObjectiveId ?? null
 
@@ -112,7 +113,11 @@ export async function createObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok({ id: objective.id })
 }
@@ -125,6 +130,7 @@ export async function updateObjective(data: {
   operationId: string
   objectiveId: string
   name: string
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [objective] = await db
     .update(operationObjectives)
@@ -149,7 +155,11 @@ export async function updateObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -162,6 +172,7 @@ export async function setObjectiveDone(data: {
   operationId: string
   objectiveId: string
   done: boolean
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [objective] = await db
     .update(operationObjectives)
@@ -186,7 +197,11 @@ export async function setObjectiveDone(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -199,6 +214,7 @@ export async function updateObjectiveNote(data: {
   operationId: string
   objectiveId: string
   note: string | null
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [objective] = await db
     .update(operationObjectives)
@@ -223,7 +239,11 @@ export async function updateObjectiveNote(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -235,6 +255,7 @@ export async function deleteObjective(data: {
   projectOperatorId: string
   operationId: string
   objectiveId: string
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [objective] = await db
     .delete(operationObjectives)
@@ -255,7 +276,11 @@ export async function deleteObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -269,6 +294,7 @@ export async function moveObjective(data: {
   objectiveId: string
   newParentObjectiveId: string | null
   newPosition: number
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   // Get the current objective
   const currentObjective = await db.query.operationObjectives.findFirst({
@@ -397,7 +423,11 @@ export async function moveObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -428,6 +458,7 @@ export async function syncObjectives(data: {
   operationId: string
   objectives: SyncObjectiveNode[]
   objectiveIdsToDelete: string[]
+  sourceClientId?: string
 }): Promise<ReturnResult<{ created: { id: string; name: string }[] }>> {
   // Mutation 1 — Delete (before read so orphan detection doesn't need deleteSet)
   if (data.objectiveIdsToDelete.length > 0) {
@@ -606,7 +637,11 @@ export async function syncObjectives(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'objectives-changed')
+  publishOperationEvent(
+    data.operationId,
+    'objectives-changed',
+    data.sourceClientId,
+  )
 
   return ok({ created })
 }

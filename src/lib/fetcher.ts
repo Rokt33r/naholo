@@ -1,3 +1,12 @@
+let clientId: string | null = null
+
+export function getClientId(): string {
+  if (clientId == null) {
+    clientId = crypto.randomUUID()
+  }
+  return clientId
+}
+
 export async function fetcher<T>(url: string): Promise<T> {
   const res = await fetch(url)
 
@@ -6,6 +15,19 @@ export async function fetcher<T>(url: string): Promise<T> {
   }
 
   return res.json()
+}
+
+/**
+ * Fetch wrapper for mutations that includes the X-Client-Id header
+ * for self-event filtering in realtime updates.
+ */
+export function mutationFetch(
+  url: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const headers = new Headers(init.headers)
+  headers.set('X-Client-Id', getClientId())
+  return fetch(url, { ...init, headers })
 }
 
 /**

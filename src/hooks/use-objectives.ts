@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetcher, createResponseError } from '@/lib/fetcher'
+import { fetcher, mutationFetch, createResponseError } from '@/lib/fetcher'
 import { updateOperationListCache } from './use-operations'
 
 export type Objective = {
@@ -49,7 +49,7 @@ export function useCreateObjective(
       parentObjectiveId?: string | null
       position?: number
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/objectives`,
         {
           method: 'POST',
@@ -171,7 +171,7 @@ export function useUpdateObjective(
       objectiveId: string
       name: string
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/objectives/${objectiveId}`,
         {
           method: 'PATCH',
@@ -242,7 +242,7 @@ export function useSetObjectiveDone(
       objectiveId: string
       done: boolean
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/objectives/${objectiveId}`,
         {
           method: 'PATCH',
@@ -333,7 +333,7 @@ export function useUpdateObjectiveNote(
       objectiveId: string
       note: string | null
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/objectives/${objectiveId}`,
         {
           method: 'PATCH',
@@ -401,7 +401,7 @@ export function useDeleteObjective(
 
   return useMutation({
     mutationFn: async (objectiveId: string) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/objectives/${objectiveId}`,
         { method: 'DELETE' },
       )
@@ -508,7 +508,7 @@ export function useMoveObjective(projectSlug: string, operationNumber: number) {
       newParentObjectiveId: string | null
       newPosition: number
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/objectives/${objectiveId}/move`,
         {
           method: 'POST',

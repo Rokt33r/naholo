@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetcher, createResponseError } from '@/lib/fetcher'
+import { fetcher, mutationFetch, createResponseError } from '@/lib/fetcher'
 import { generateOperationLogPreview } from '@/lib/operation-utils'
 import { updateOperationListCache } from './use-operations'
 
@@ -38,7 +38,7 @@ export function useCreateOperationLog(
 
   return useMutation({
     mutationFn: async (content: string) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/logs`,
         {
           method: 'POST',
@@ -144,7 +144,7 @@ export function useUpdateOperationLog(
       logId: string
       content: string
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/logs/${logId}`,
         {
           method: 'PATCH',
@@ -241,7 +241,7 @@ export function useDeleteOperationLog(
 
   return useMutation({
     mutationFn: async (logId: string) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/logs/${logId}`,
         { method: 'DELETE' },
       )

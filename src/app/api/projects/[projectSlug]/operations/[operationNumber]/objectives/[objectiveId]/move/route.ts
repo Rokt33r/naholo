@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireOperationObjectiveAccess } from '@/server/auth/permissions'
 import { moveObjective } from '@/server/services/objective'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -47,12 +48,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { newParentObjectiveId, newPosition } = validation.data
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await moveObjective({
       projectOperatorId: projectOperator.id,
       operationId: operation.id,
       objectiveId,
       newParentObjectiveId,
       newPosition,
+      sourceClientId,
     })
 
     if (!result.success) {

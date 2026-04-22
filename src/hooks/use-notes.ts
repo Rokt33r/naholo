@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetcher, createResponseError } from '@/lib/fetcher'
+import { fetcher, mutationFetch, createResponseError } from '@/lib/fetcher'
 
 export type { Note } from 'naholo-api/types'
 
@@ -34,7 +34,7 @@ export function useCreateNote(projectSlug: string, issueNumber: number) {
       name: string
       content: string
     }) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${issueNumber}/notes`,
         {
           method: 'POST',
@@ -114,7 +114,7 @@ export function useUpdateNote(projectSlug: string, issueNumber: number) {
       if (content != null) {
         body.content = content
       }
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
         {
           method: 'PATCH',
@@ -171,7 +171,7 @@ export function useDeleteNote(projectSlug: string, issueNumber: number) {
 
   return useMutation({
     mutationFn: async (noteName: string) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${issueNumber}/notes/${encodeURIComponent(noteName)}`,
         { method: 'DELETE' },
       )

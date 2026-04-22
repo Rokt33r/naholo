@@ -73,6 +73,7 @@ export async function createNote(data: {
   operationId: string
   name: string
   content: string
+  sourceClientId?: string
 }): Promise<ReturnResult<Note>> {
   const result = await db.transaction(async (tx) => {
     // Get the maximum position for notes in this operation
@@ -135,7 +136,7 @@ export async function createNote(data: {
     return { ...note, currentRevisionId }
   })
 
-  publishOperationEvent(data.operationId, 'notes-changed')
+  publishOperationEvent(data.operationId, 'notes-changed', data.sourceClientId)
 
   return ok(result)
 }
@@ -149,6 +150,7 @@ export async function updateNote(data: {
   operationId: string
   name?: string
   content?: string
+  sourceClientId?: string
 }): Promise<ReturnResult<Note>> {
   if (data.name != null && data.name !== data.noteName) {
     // Validate uniqueness of new name within the operation
@@ -226,7 +228,7 @@ export async function updateNote(data: {
     return err(new NotFoundError('Note'))
   }
 
-  publishOperationEvent(data.operationId, 'notes-changed')
+  publishOperationEvent(data.operationId, 'notes-changed', data.sourceClientId)
 
   return ok(result)
 }
@@ -238,6 +240,7 @@ export async function deleteNote(data: {
   projectOperatorId: string
   noteName: string
   operationId: string
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [note] = await db
     .delete(operationNotes)
@@ -259,7 +262,7 @@ export async function deleteNote(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'notes-changed')
+  publishOperationEvent(data.operationId, 'notes-changed', data.sourceClientId)
 
   return ok()
 }

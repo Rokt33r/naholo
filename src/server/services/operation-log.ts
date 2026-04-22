@@ -55,6 +55,7 @@ export async function createOperationLog(data: {
   projectId: string
   operationId: string
   content: string
+  sourceClientId?: string
 }): Promise<
   ReturnResult<{
     id: string
@@ -88,7 +89,7 @@ export async function createOperationLog(data: {
     })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'logs-changed')
+  publishOperationEvent(data.operationId, 'logs-changed', data.sourceClientId)
 
   return ok(log)
 }
@@ -101,6 +102,7 @@ export async function updateOperationLog(data: {
   operationId: string
   logId: string
   content: string
+  sourceClientId?: string
 }): Promise<
   ReturnResult<{
     id: string
@@ -157,7 +159,7 @@ export async function updateOperationLog(data: {
     .set(newValues)
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'logs-changed')
+  publishOperationEvent(data.operationId, 'logs-changed', data.sourceClientId)
 
   return ok(log)
 }
@@ -169,6 +171,7 @@ export async function deleteOperationLog(data: {
   projectOperatorId: string
   operationId: string
   logId: string
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [log] = await db
     .delete(operationLogs)
@@ -211,7 +214,7 @@ export async function deleteOperationLog(data: {
     .set(newValues)
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(data.operationId, 'logs-changed')
+  publishOperationEvent(data.operationId, 'logs-changed', data.sourceClientId)
 
   return ok()
 }

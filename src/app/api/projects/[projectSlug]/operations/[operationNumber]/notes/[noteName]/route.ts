@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireOperationNoteAccess } from '@/server/auth/permissions'
 import { updateNote, deleteNote } from '@/server/services/note'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -46,12 +47,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { name, content } = validation.data
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await updateNote({
       projectOperatorId: projectOperator.id,
       noteName,
       operationId: operation.id,
       name,
       content,
+      sourceClientId,
     })
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
@@ -80,10 +84,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       noteName,
     )
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await deleteNote({
       projectOperatorId: projectOperator.id,
       noteName,
       operationId: operation.id,
+      sourceClientId,
     })
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

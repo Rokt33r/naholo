@@ -144,6 +144,7 @@ export async function updateOperation(data: {
   projectId: string
   operationNumber: number
   title: string
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [operation] = await db
     .update(operations)
@@ -163,7 +164,7 @@ export async function updateOperation(data: {
     return err(new NotFoundError('Operation'))
   }
 
-  publishOperationEvent(operation.id, 'operation-updated')
+  publishOperationEvent(operation.id, 'operation-updated', data.sourceClientId)
 
   return ok()
 }
@@ -174,6 +175,7 @@ export async function updateOperation(data: {
 export async function closeOperation(data: {
   projectId: string
   operationNumber: number
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [operation] = await db
     .update(operations)
@@ -194,7 +196,7 @@ export async function closeOperation(data: {
     return err(new NotFoundError('Operation'))
   }
 
-  publishOperationEvent(operation.id, 'operation-updated')
+  publishOperationEvent(operation.id, 'operation-updated', data.sourceClientId)
 
   return ok()
 }
@@ -205,6 +207,7 @@ export async function closeOperation(data: {
 export async function reopenOperation(data: {
   projectId: string
   operationNumber: number
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [operation] = await db
     .update(operations)
@@ -225,7 +228,7 @@ export async function reopenOperation(data: {
     return err(new NotFoundError('Operation'))
   }
 
-  publishOperationEvent(operation.id, 'operation-updated')
+  publishOperationEvent(operation.id, 'operation-updated', data.sourceClientId)
 
   return ok()
 }
@@ -236,6 +239,7 @@ export async function reopenOperation(data: {
 export async function deleteOperation(data: {
   projectId: string
   operationNumber: number
+  sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
   const [operation] = await db
     .delete(operations)
@@ -251,7 +255,7 @@ export async function deleteOperation(data: {
     return err(new NotFoundError('Operation'))
   }
 
-  publishOperationEvent(operation.id, 'operation-deleted')
+  publishOperationEvent(operation.id, 'operation-deleted', data.sourceClientId)
 
   return ok()
 }

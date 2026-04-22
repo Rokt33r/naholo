@@ -5,6 +5,7 @@ import {
   updateOperationLog,
   deleteOperationLog,
 } from '@/server/services/operation-log'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -48,11 +49,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { content } = validation.data
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await updateOperationLog({
       projectOperatorId: projectOperator.id,
       operationId: operation.id,
       logId,
       content,
+      sourceClientId,
     })
 
     if (!result.success) {
@@ -88,10 +92,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       logId,
     )
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await deleteOperationLog({
       projectOperatorId: projectOperator.id,
       operationId: operation.id,
       logId,
+      sourceClientId,
     })
 
     if (!result.success) {

@@ -7,6 +7,7 @@ import {
   setObjectiveDone,
   deleteObjective,
 } from '@/server/services/objective'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -52,6 +53,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const { name, note, done } = validation.data
+    const sourceClientId = getSourceClientId(request)
 
     // Handle name update
     if (name !== undefined) {
@@ -60,6 +62,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         operationId: operation.id,
         objectiveId,
         name,
+        sourceClientId,
       })
       if (!result.success) {
         return NextResponse.json(
@@ -76,6 +79,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         operationId: operation.id,
         objectiveId,
         note,
+        sourceClientId,
       })
       if (!result.success) {
         return NextResponse.json(
@@ -92,6 +96,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         operationId: operation.id,
         objectiveId,
         done,
+        sourceClientId,
       })
       if (!result.success) {
         return NextResponse.json(
@@ -125,10 +130,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         objectiveId,
       )
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await deleteObjective({
       projectOperatorId: projectOperator.id,
       operationId: operation.id,
       objectiveId,
+      sourceClientId,
     })
 
     if (!result.success) {

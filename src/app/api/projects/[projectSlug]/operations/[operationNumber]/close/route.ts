@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import { closeOperation, reopenOperation } from '@/server/services/operation'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -21,9 +22,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       operationNumber,
     )
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await closeOperation({
       projectId: project.id,
       operationNumber: operation.number,
+      sourceClientId,
     })
 
     if (!result.success) {
@@ -52,9 +56,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       operationNumber,
     )
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await reopenOperation({
       projectId: project.id,
       operationNumber: operation.number,
+      sourceClientId,
     })
 
     if (!result.success) {

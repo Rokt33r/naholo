@@ -5,7 +5,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { fetcher, createResponseError } from '@/lib/fetcher'
+import { fetcher, mutationFetch, createResponseError } from '@/lib/fetcher'
 
 export type OperationListItem = {
   id: string
@@ -97,7 +97,7 @@ export function useUpdateOperationTitle(
 
   return useMutation({
     mutationFn: async (newTitle: string) => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}`,
         {
           method: 'PATCH',
@@ -175,7 +175,7 @@ export function useCloseOperation(
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/close`,
         { method: 'POST' },
       )
@@ -236,7 +236,7 @@ export function useReopenOperation(
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}/close`,
         { method: 'DELETE' },
       )
@@ -295,7 +295,7 @@ export function useDeleteOperation(
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch(
+      const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations/${operationNumber}`,
         { method: 'DELETE' },
       )

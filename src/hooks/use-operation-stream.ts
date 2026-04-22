@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { getClientId } from '@/lib/fetcher'
 
 export function useOperationStream(
   projectSlug: string,
@@ -8,13 +9,20 @@ export function useOperationStream(
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    const url = `/api/projects/${projectSlug}/operations/${operationNumber}/stream`
+    const clientId = getClientId()
+    const url = `/api/projects/${projectSlug}/operations/${operationNumber}/stream?clientId=${clientId}`
     const eventSource = new EventSource(url)
 
-    console.log('config..event stream ')
     eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data) as { type: string }
-      console.log(event.data)
+      const data = JSON.parse(event.data) as {
+        type: string
+        sourceClientId?: string
+      }
+
+      // Skip events that originated from this client (self-event filtering)
+      if (data.sourceClientId === clientId) {
+        return
+      }
 
       switch (data.type) {
         case 'operation-updated':

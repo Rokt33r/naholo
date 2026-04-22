@@ -7,6 +7,7 @@ import {
   syncObjectives,
   type SyncObjectiveNode,
 } from '@/server/services/objective'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -74,6 +75,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { projectOperator, project, operation } =
       await requireOperationAccess(projectSlug, operationNumber)
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await createObjective({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       note,
       parentObjectiveId,
       position,
+      sourceClientId,
     })
 
     if (!result.success) {
@@ -140,12 +144,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { projectOperator, project, operation } =
       await requireOperationAccess(projectSlug, operationNumber)
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await syncObjectives({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
       objectives: objectiveNodes,
       objectiveIdsToDelete: objectiveIdsToDelete ?? [],
+      sourceClientId,
     })
 
     if (!result.success) {

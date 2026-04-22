@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import { listNotes, createNote } from '@/server/services/note'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -67,12 +68,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { projectOperator, project, operation } =
       await requireOperationAccess(projectSlug, operationNumber)
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await createNote({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
       name,
       content,
+      sourceClientId,
     })
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })

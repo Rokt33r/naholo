@@ -5,6 +5,7 @@ import {
   listOperationLogs,
   createOperationLog,
 } from '@/server/services/operation-log'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -69,11 +70,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { projectOperator, project, operation } =
       await requireOperationAccess(projectSlug, operationNumber)
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await createOperationLog({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
       content,
+      sourceClientId,
     })
     if (!result.success) {
       return NextResponse.json({ error: result.error.message }, { status: 404 })
