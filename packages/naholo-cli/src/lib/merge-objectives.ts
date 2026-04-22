@@ -129,7 +129,7 @@ function indexById(tree: LocalObjective[]): Map<string, LocalObjective> {
 }
 
 function renderTree(operationNumber: number, tree: LocalObjective[]): string {
-  const lines: string[] = [`# Objectives — Operation #${operationNumber}`, '']
+  const lines: string[] = [`# OBJECTIVES — OP #${operationNumber}`, '']
 
   function render(nodes: LocalObjective[], depth: number): void {
     for (const node of nodes) {

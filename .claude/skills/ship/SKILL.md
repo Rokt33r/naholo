@@ -8,17 +8,6 @@ argument-hint: '[operationNumber] ["extra instructions in quotes"]'
 
 Implement the elaborated spec for an infiled operation. Work through objectives top-to-bottom, marking progress in `OBJECTIVES.md`.
 
-## Terminology
-
-| Entity    | Acronym | Familiar Term  | Familiar Context                  |
-| --------- | ------- | -------------- | --------------------------------- |
-| Operation | OP      | issue          | GitHub Issues                     |
-| Objective | OBJ     | task           | tasks within an issue             |
-| Operator  | OPR     | project member | GitHub / general PM               |
-| Campaign  | —       | milestone/epic | GitHub Milestones / PM tool epics |
-
-Users may refer to entities by any column — entity name, acronym, or familiar term. For example, "task 1.1" means objective 1.1; "issue #42" means operation #42. Resolve all aliases.
-
 ## Arguments
 
 Optional operation number as first token (e.g., `42`). If provided, use `.naholo/local/operations/42/` directly — if that directory doesn't exist, tell the user to run `/infil 42` first.
@@ -32,6 +21,8 @@ Anything after in quotes is extra instructions. Common patterns:
 ## What to do
 
 0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+
+0.5. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
 1. **Find infiled operation**: If an operation number was provided, use it. Otherwise read the MCP resource `naholo://local/operations` to list infiled operations.
    - If none exist → tell user to run `/infil {operationNumber}` first.
@@ -54,10 +45,11 @@ Anything after in quotes is extra instructions. Common patterns:
    - Run type check: `npx tsc`
    - Fix any issues before moving to the next objective
 
-6. **Update OPERATION.md with progress**: After completing each top-level objective, append to `notes/OPERATION.md`:
-   - Under a `## Progress` heading (create it if it doesn't exist, append if it does): add a bullet with which objective was completed, key files changed, any deviations from the spec.
-   - Under `## Timeline` heading: append `- **{date} — ship**: Completed objectives {range}. {brief summary}`.
-   - This keeps OPERATION.md as the evolving context document for the session.
+6. **Append Timeline entry**: After completing each top-level objective, append a single bullet to the `## Timeline` section of `notes/OPERATION.md`:
+
+   `- **{date} — ship**: Completed objectives {range}. Key files: {paths}. {any deviations from spec}`.
+
+   Do NOT add a `## Progress` section (or any other new section). OPERATION.md has exactly four sections (Pain, Resolution, Open questions, Timeline) — ship progress lives in Timeline bullets only.
 
 7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec to reflect what was actually done. However, never delete implemented objectives — if a sub-objective in SPEC.md corresponds to a checked `[x]` entry in OBJECTIVES.md, use strikethrough (`~~`) on the superseded sub-objective text and append a note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Objective 4`). New objectives can be added freely to SPEC.md and OBJECTIVES.md.
 
@@ -66,7 +58,9 @@ Anything after in quotes is extra instructions. Common patterns:
 - **Follow the spec**: The spec is the source of truth. Don't add features, refactor surrounding code, or make improvements beyond what's described.
 - **OBJECTIVES.md is the only progress tracker**: SPEC.md is a reference spec with no checkboxes. Mark progress exclusively in OBJECTIVES.md.
 - **Mark progress incrementally**: Check off each `- [ ]` → `- [x]` in OBJECTIVES.md immediately after completing it, not in a batch at the end. This lets the user see progress and resume if interrupted.
+- **OPERATION.md stays at four sections**: Pain, Resolution, Open questions, Timeline. No `## Progress`, no other sections. Progress bullets go in Timeline.
 - **Don't improvise**: If an objective can't be implemented as described (API changed, file doesn't exist, unexpected architecture), stop and explain what's blocking. Ask the user what to do.
 - **Don't re-elaborate**: If the spec is missing details, implement your best interpretation. Don't rewrite objective descriptions unless the implementation materially differs.
 - **Respect CLAUDE.md**: Don't edit migration files, don't run `db:generate`, update `routes.ts` when adding/removing routes.
 - **Respect objective range**: If extra instructions specify an objective range, only implement objectives in that range. Objectives before the range are assumed done; objectives after are left for later.
+- Print end-of-session summaries as raw markdown — no surrounding fence.

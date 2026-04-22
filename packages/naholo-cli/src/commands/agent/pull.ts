@@ -84,8 +84,8 @@ function freshPull(
   // Write OBJECTIVES.md
   const objectivesMd =
     serverObjectives.length > 0
-      ? `# Objectives — Operation #${operationNumber}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
-      : `# Objectives — Operation #${operationNumber}\n\n_(no objectives yet)_\n`
+      ? `# OBJECTIVES — OP #${operationNumber}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
+      : `# OBJECTIVES — OP #${operationNumber}\n\n_(no objectives yet)_\n`
 
   fs.writeFileSync(getObjectivesPath(operationNumber), objectivesMd)
   fs.writeFileSync(getBaseObjectivesPath(operationNumber), objectivesMd)
@@ -150,8 +150,8 @@ function mergeAndReport(
   // Also write server state to .base/ for future diffs
   const serverObjectivesMd =
     serverObjectives.length > 0
-      ? `# Objectives — Operation #${operationNumber}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
-      : `# Objectives — Operation #${operationNumber}\n\n_(no objectives yet)_\n`
+      ? `# OBJECTIVES — OP #${operationNumber}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
+      : `# OBJECTIVES — OP #${operationNumber}\n\n_(no objectives yet)_\n`
 
   // --- Merge notes ---
   const noteResults: { name: string; action: string }[] = []
