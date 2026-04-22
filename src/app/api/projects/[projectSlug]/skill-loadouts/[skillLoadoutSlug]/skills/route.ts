@@ -13,7 +13,7 @@ type RouteContext = {
  * GET /api/projects/[projectSlug]/skill-loadouts/[skillLoadoutSlug]/skills
  * List skills in a skill loadout
  */
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, skillLoadoutSlug } = await context.params
     const decodedSlug = decodeURIComponent(skillLoadoutSlug)
@@ -22,7 +22,10 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       decodedSlug,
     )
 
-    const skills = await listSkills(skillLoadout.id)
+    const withParam = request.nextUrl.searchParams.get('with')
+    const withContent = withParam === 'content'
+
+    const skills = await listSkills(skillLoadout.id, { withContent })
 
     return NextResponse.json(skills)
   } catch (error) {

@@ -1,10 +1,13 @@
+import confirm from '@inquirer/confirm'
 import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
+import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { getActiveProfile } from '../profile.js'
 import { writeProjectConfig, writeGitignore } from '../project-config.js'
+import { installSkills } from './skills-install.js'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
@@ -77,5 +80,15 @@ export const initCommand = new Command('init')
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)
       console.log(`Project operator: ${selectedBotOperator.name} (bot)`)
+      console.log()
+
+      // 6. Prompt to install core skill loadout
+      const installCore = await confirm({
+        message: 'Install core skill loadout?',
+        default: true,
+      })
+      if (installCore) {
+        await installSkills(coreSkills)
+      }
     }),
   )

@@ -1,9 +1,11 @@
 import path from 'node:path'
 import checkbox from '@inquirer/checkbox'
+import confirm from '@inquirer/confirm'
 import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
+import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -11,6 +13,7 @@ import {
   removeCovertProjectConfig,
   writeCovertConfig,
 } from '../covert-config.js'
+import { installSkills } from './skills-install.js'
 
 export const covertCommand = new Command('covert').description(
   'Manage covert mode for projects without repo config',
@@ -92,6 +95,16 @@ covertCommand
       console.log()
       console.log('Config stored in ~/.naholo/covert-mode-config.yml')
       console.log('No files written to the project repo.')
+      console.log()
+
+      // Prompt to install core skill loadout
+      const installCore = await confirm({
+        message: 'Install core skill loadout?',
+        default: true,
+      })
+      if (installCore) {
+        await installSkills(coreSkills)
+      }
     }),
   )
 

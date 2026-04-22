@@ -415,10 +415,21 @@ export class NaholoClient {
   listSkills(
     projectSlug: string,
     skillLoadoutSlug: string,
-  ): Promise<SkillSummary[]> {
+    opts: { with: 'content' },
+  ): Promise<Skill[]>
+  listSkills(
+    projectSlug: string,
+    skillLoadoutSlug: string,
+  ): Promise<SkillSummary[]>
+  listSkills(
+    projectSlug: string,
+    skillLoadoutSlug: string,
+    opts?: { with: 'content' },
+  ): Promise<SkillSummary[] | Skill[]> {
+    const qs = opts?.with != null ? `?with=${opts.with}` : ''
     return this.request(
       'GET',
-      this.skillLoadoutPath(projectSlug, skillLoadoutSlug, '/skills'),
+      this.skillLoadoutPath(projectSlug, skillLoadoutSlug, `/skills${qs}`),
     )
   }
 

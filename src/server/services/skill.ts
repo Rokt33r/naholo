@@ -20,15 +20,17 @@ export type Skill = SkillSummary & {
 
 /**
  * List skills for a loadout (ordered by name)
- * Excludes content — use getSkill for full content
+ * When withContent is true, includes the content column and returns Skill[].
  */
 export async function listSkills(
   skillLoadoutId: string,
-): Promise<SkillSummary[]> {
+  opts?: { withContent?: boolean },
+): Promise<SkillSummary[] | Skill[]> {
   return db.query.skills.findMany({
     columns: {
       id: true,
       name: true,
+      content: opts?.withContent === true,
       currentRevisionId: true,
       createdAt: true,
       updatedAt: true,
