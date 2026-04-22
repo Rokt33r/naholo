@@ -5,6 +5,7 @@ import { eq, and, isNull, gt, gte, lt, lte, sql, inArray } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
+import { publishOperationEvent } from '../realtime/publish'
 
 export type Objective = {
   id: string
@@ -111,6 +112,8 @@ export async function createObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
+  publishOperationEvent(data.operationId, 'objectives-changed')
+
   return ok({ id: objective.id })
 }
 
@@ -145,6 +148,8 @@ export async function updateObjective(data: {
     .update(operations)
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
+
+  publishOperationEvent(data.operationId, 'objectives-changed')
 
   return ok()
 }
@@ -181,6 +186,8 @@ export async function setObjectiveDone(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
+  publishOperationEvent(data.operationId, 'objectives-changed')
+
   return ok()
 }
 
@@ -216,6 +223,8 @@ export async function updateObjectiveNote(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
+  publishOperationEvent(data.operationId, 'objectives-changed')
+
   return ok()
 }
 
@@ -245,6 +254,8 @@ export async function deleteObjective(data: {
     .update(operations)
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
+
+  publishOperationEvent(data.operationId, 'objectives-changed')
 
   return ok()
 }
@@ -385,6 +396,8 @@ export async function moveObjective(data: {
     .update(operations)
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
+
+  publishOperationEvent(data.operationId, 'objectives-changed')
 
   return ok()
 }
@@ -592,6 +605,8 @@ export async function syncObjectives(data: {
     .update(operations)
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
+
+  publishOperationEvent(data.operationId, 'objectives-changed')
 
   return ok({ created })
 }

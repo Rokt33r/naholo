@@ -6,6 +6,7 @@ import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
 import { generateOperationLogPreview } from '@/lib/operation-utils'
+import { publishOperationEvent } from '../realtime/publish'
 
 export type OperationLog = {
   id: string
@@ -87,6 +88,8 @@ export async function createOperationLog(data: {
     })
     .where(eq(operations.id, data.operationId))
 
+  publishOperationEvent(data.operationId, 'logs-changed')
+
   return ok(log)
 }
 
@@ -154,6 +157,8 @@ export async function updateOperationLog(data: {
     .set(newValues)
     .where(eq(operations.id, data.operationId))
 
+  publishOperationEvent(data.operationId, 'logs-changed')
+
   return ok(log)
 }
 
@@ -205,6 +210,8 @@ export async function deleteOperationLog(data: {
     .update(operations)
     .set(newValues)
     .where(eq(operations.id, data.operationId))
+
+  publishOperationEvent(data.operationId, 'logs-changed')
 
   return ok()
 }

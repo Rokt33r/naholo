@@ -5,6 +5,7 @@ import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from './errors'
+import { publishOperationEvent } from '../realtime/publish'
 
 export type Operation = {
   id: string
@@ -162,6 +163,8 @@ export async function updateOperation(data: {
     return err(new NotFoundError('Operation'))
   }
 
+  publishOperationEvent(operation.id, 'operation-updated')
+
   return ok()
 }
 
@@ -190,6 +193,8 @@ export async function closeOperation(data: {
   if (!operation) {
     return err(new NotFoundError('Operation'))
   }
+
+  publishOperationEvent(operation.id, 'operation-updated')
 
   return ok()
 }
@@ -220,6 +225,8 @@ export async function reopenOperation(data: {
     return err(new NotFoundError('Operation'))
   }
 
+  publishOperationEvent(operation.id, 'operation-updated')
+
   return ok()
 }
 
@@ -243,6 +250,8 @@ export async function deleteOperation(data: {
   if (!operation) {
     return err(new NotFoundError('Operation'))
   }
+
+  publishOperationEvent(operation.id, 'operation-deleted')
 
   return ok()
 }

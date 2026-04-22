@@ -14,6 +14,7 @@ import { useOperation } from '@/hooks/use-operations'
 import { useOperationLogs } from '@/hooks/use-operation-logs'
 import { useNotes } from '@/hooks/use-notes'
 import { useObjectives } from '@/hooks/use-objectives'
+import { useOperationStream } from '@/hooks/use-operation-stream'
 import { ListTodo } from 'lucide-react'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { OperationDetail } from '@/components/operations/operation-detail'
@@ -57,6 +58,8 @@ export default function OperationPage() {
   )
   const { data: notes = [] } = useNotes(projectSlug, operationNumber)
   const { data: objectives = [] } = useObjectives(projectSlug, operationNumber)
+
+  useOperationStream(projectSlug, operationNumber)
 
   const objectivesDoneCount = objectives.filter((o) => o.done).length
   const objectivesTotalCount = objectives.length
