@@ -39,6 +39,12 @@ export default function PublicLayout({
             >
               Sign In
             </Link>
+            <Link
+              href='/sign-up'
+              className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+            >
+              Sign Up
+            </Link>
           </div>
         </nav>
       </header>
