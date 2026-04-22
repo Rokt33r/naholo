@@ -5,7 +5,7 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import { formatObjectivesMarkdown } from './tools.js'
+import { formatObjectivesMarkdown } from '../lib/objectives-markdown.js'
 
 export function registerResources(
   server: McpServer,

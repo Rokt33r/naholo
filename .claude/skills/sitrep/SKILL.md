@@ -28,33 +28,28 @@ The argument is the operation number (e.g., `42`). Required. Find local dir at `
 
 0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-1. **Read local state**:
+1. **Read local state** (for context when generating the summary log):
    - `.naholo/local/operations/{operationNumber}/OBJECTIVES.md`
-   - All files in `.naholo/local/operations/{operationNumber}/notes/`
+   - `.naholo/local/operations/{operationNumber}/notes/OPERATION.md`
 
-2. **Read server state**: Use MCP resource `naholo://operations/{operationNumber}` to get current objectives and notes from the server.
+2. **Push via CLI**: Run `naholo push {operationNumber}` using the Bash tool. This command:
+   - Reads local `OBJECTIVES.md` and syncs the objective tree to the server
+   - Patches `[ref]` links for newly created objectives back into `OBJECTIVES.md`
+   - Reads all `notes/*.md` files and syncs to the server (creates new, updates changed)
+   - Updates `.base/` with the current local state as the new baseline
+   - Outputs a human-readable report to stdout with sync results
 
-3. **Sync objectives**: Read the full content of `OBJECTIVES.md` and pass it to the `sync_objectives` MCP tool as `objectivesMarkdown`. This syncs the entire objective tree in one call — the server resolves positions, creates new objectives, updates existing ones, and preserves orphans.
-   - After the call, the result contains `created: { id, name }[]` for newly created objectives
-   - For each created objective, find the matching line in OBJECTIVES.md by name and append ` [ref](naholo://objectives/{id})` to it
-   - Write the updated OBJECTIVES.md back to disk
+   Read the CLI output to understand what was synced (objectives created, notes updated/created).
 
-4. **Sync notes**: Compare local notes against server notes:
-   - For each `notes/*.md` file, match to server note by `name` (filename without `.md` extension)
-   - If content changed → `update_note` with note name and new content
-   - If new (no server match) → `create_note` with name and content
-
-5. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
+3. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed (count and names)
    - Objectives added (count and names)
    - Notes created or updated
    - Brief description of code changes (run `git diff --stat` if available, or summarize from SPEC.md/OPERATION.md progress)
 
-6. **Update OPERATION.md Timeline**: Append a timeline entry to `## Timeline` in `notes/OPERATION.md`: `- **{date} — sitrep**: Synced {N} objectives, {N} notes. {brief summary}`.
+4. **Update OPERATION.md Timeline**: Append a timeline entry to `## Timeline` in `notes/OPERATION.md`: `- **{date} — sitrep**: Synced {N} objectives, {N} notes. {brief summary}`.
 
-7. **Update `.base/`**: After syncing, overwrite `.base/OBJECTIVES.md` and `.base/notes/*.md` with the current server state — this resets the baseline so the next `/infil` re-run diffs correctly.
-
-8. **Print summary**: Output what was synced to chat. Use markdown link syntax for file paths so the user can click to open them (e.g., `[OBJECTIVES.md](.naholo/local/operations/{N}/OBJECTIVES.md)`, `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`).
+5. **Print summary**: Output what was synced to chat. Use markdown link syntax for file paths so the user can click to open them (e.g., `[OBJECTIVES.md](.naholo/local/operations/{N}/OBJECTIVES.md)`, `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`).
 
 ## Rules
 
@@ -62,5 +57,5 @@ The argument is the operation number (e.g., `42`). Required. Find local dir at `
 - **Do NOT clean up the local directory** — leave `.naholo/local/operations/{operationNumber}/` intact for continued work.
 - **Do NOT implement any code** — only sync state.
 - **Do NOT modify source files** — sitrep is a sync operation only.
-- **Use `sync_objectives` for objective syncing**: Always use the bulk `sync_objectives` MCP tool instead of individual `create_objective` / `update_objective` calls.
+- **Use `naholo push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
 - **Always post the summary log** — the log is the checkpoint record.

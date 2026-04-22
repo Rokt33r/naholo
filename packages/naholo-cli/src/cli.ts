@@ -4,6 +4,8 @@ import { Command } from 'commander'
 import { initCommand } from './commands/init.js'
 import { loginCommand } from './commands/login.js'
 import { mcpCommand } from './commands/mcp.js'
+import { pullCommand } from './commands/pull.js'
+import { pushCommand } from './commands/push.js'
 import { covertCommand } from './commands/covert.js'
 import { logoutCommand } from './commands/logout.js'
 import { skillsCommand } from './commands/skills.js'
@@ -22,6 +24,8 @@ program.addCommand(initCommand)
 program.addCommand(loginCommand)
 program.addCommand(logoutCommand)
 program.addCommand(mcpCommand)
+program.addCommand(pullCommand)
+program.addCommand(pushCommand)
 program.addCommand(skillsCommand)
 program.addCommand(covertCommand)
 program.addCommand(statusCommand)
