@@ -12,7 +12,7 @@ interface ClaudeJson {
   [key: string]: unknown
 }
 
-export function writeGlobalMcpConfig(): void {
+export function writeGlobalClaudeConfig(): void {
   const claudeJsonPath = path.join(os.homedir(), '.claude.json')
   const naholoEntry = { command: 'naholo', args: ['mcp'] }
 
@@ -28,7 +28,8 @@ export function writeGlobalMcpConfig(): void {
   }
   config.mcpServers.naholo = naholoEntry
 
-  const naholoPermission = 'mcp__naholo__*'
+  const requiredPermissions = ['mcp__naholo__*', 'Bash(naholo agent *)']
+
   if (config.permissions == null) {
     config.permissions = {}
   }
@@ -36,8 +37,10 @@ export function writeGlobalMcpConfig(): void {
     config.permissions.allow = []
   }
 
-  if (!config.permissions.allow.includes(naholoPermission)) {
-    config.permissions.allow.push(naholoPermission)
+  for (const permission of requiredPermissions) {
+    if (!config.permissions.allow.includes(permission)) {
+      config.permissions.allow.push(permission)
+    }
   }
 
   fs.writeFileSync(claudeJsonPath, JSON.stringify(config, null, 2) + '\n')

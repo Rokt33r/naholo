@@ -1,16 +1,16 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
-import { getCliContext } from '../context.js'
-import { CliError, withErrorHandling } from '../errors.js'
-import { parseObjectivesMarkdown } from '../lib/objectives-markdown.js'
+import { getCliContext } from '../../context.js'
+import { CliError, withErrorHandling } from '../../errors.js'
+import { parseObjectivesMarkdown } from '../../lib/objectives-markdown.js'
 import {
   getLocalOperationDir,
   getNotesDir,
   getBaseNotesDir,
   getObjectivesPath,
   getBaseObjectivesPath,
-} from '../lib/local-operations.js'
+} from '../../lib/local-operations.js'
 
 export const pushCommand = new Command('push')
   .description('Push local operation changes to server')
@@ -23,7 +23,7 @@ export const pushCommand = new Command('push')
       const localDir = getLocalOperationDir(opNum)
       if (!fs.existsSync(localDir)) {
         throw new CliError(
-          `No local data for operation #${opNum}. Run "naholo pull ${opNum}" first.`,
+          `No local data for operation #${opNum}. Run "naholo agent pull ${opNum}" first.`,
         )
       }
 

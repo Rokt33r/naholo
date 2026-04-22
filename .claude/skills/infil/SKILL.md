@@ -30,7 +30,7 @@ The argument is the operation number (e.g., `42`). Required.
 
 1. **Read operation context**: Use the MCP resource `naholo://operations/{operationNumber}` to fetch the full operation (objectives, notes, logs).
 
-2. **Pull via CLI**: Run `naholo pull {operationNumber}` using the Bash tool. This command:
+2. **Pull via CLI**: Run `naholo agent pull {operationNumber}` using the Bash tool. This command:
    - Fetches objectives, notes, and logs from the server
    - Creates `.naholo/local/operations/{operationNumber}/` with `OBJECTIVES.md`, `notes/*.md`, and `.base/` copies
    - On re-run: performs 3-way merge for notes (line-level via diff3) and structured merge for objectives (by ID)
@@ -108,7 +108,7 @@ The argument is the operation number (e.g., `42`). Required.
 
 ## Rules
 
-- **Use `naholo pull` for all file I/O** — do not manually create directories, write OBJECTIVES.md, write notes, or manage `.base/` files. The CLI handles all of this.
+- **Use `naholo agent pull` for all file I/O** — do not manually create directories, write OBJECTIVES.md, write notes, or manage `.base/` files. The CLI handles all of this.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.
 - Do NOT elaborate or expand the plan — just capture current state.

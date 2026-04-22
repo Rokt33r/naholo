@@ -1,18 +1,18 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
-import { getCliContext } from '../context.js'
-import { withErrorHandling } from '../errors.js'
-import { mergeObjectives } from '../lib/merge-objectives.js'
-import { formatObjectivesMarkdown } from '../lib/objectives-markdown.js'
-import { threeWayMerge } from '../lib/three-way-merge.js'
+import { getCliContext } from '../../context.js'
+import { withErrorHandling } from '../../errors.js'
+import { mergeObjectives } from '../../lib/merge-objectives.js'
+import { formatObjectivesMarkdown } from '../../lib/objectives-markdown.js'
+import { threeWayMerge } from '../../lib/three-way-merge.js'
 import {
   getLocalOperationDir,
   getNotesDir,
   getBaseNotesDir,
   getObjectivesPath,
   getBaseObjectivesPath,
-} from '../lib/local-operations.js'
+} from '../../lib/local-operations.js'
 
 export const pullCommand = new Command('pull')
   .description('Pull operation context from server to local')
@@ -225,7 +225,7 @@ function mergeAndReport(
  * Three-way merge for a single file.
  * - base == local && server differs → take server ("updated")
  * - base == server && local differs → keep local ("kept-local")
- * - both differ → line-level 3-way merge, "merged" or "conflict"
+ * - both differ �� line-level 3-way merge, "merged" or "conflict"
  * - no local file → write server content ("created")
  * - all same → no-op ("unchanged")
  *

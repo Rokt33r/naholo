@@ -43,30 +43,36 @@ If no instructions given, ask the user whether to close.
    - `.naholo/local/operations/{operationNumber}/OBJECTIVES.md`
    - `.naholo/local/operations/{operationNumber}/notes/OPERATION.md`
 
-3. **Push via CLI**: Run `naholo push {operationNumber}` using the Bash tool. This command:
+3. **Check for remaining objectives**: Check `OBJECTIVES.md` for any unchecked (`- [ ]`) objectives.
+   - If there are incomplete objectives → use `AskUserQuestion` to warn: "Heads up — {count} objectives still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
+     - If the user says **no** → abort exfil. Do not push, close, or clean up. Preserve local data at `.naholo/local/operations/{operationNumber}/`. Print that exfil was aborted and local data is preserved.
+     - If the user says **yes** → continue to step 4.
+   - If all objectives are done → continue to step 4.
+
+4. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool. This command:
    - Reads local `OBJECTIVES.md` and syncs the objective tree to the server
    - Patches `[ref]` links for newly created objectives back into `OBJECTIVES.md`
    - Reads all `notes/*.md` files and syncs to the server (creates new, updates changed)
    - Updates `.base/` with the current local state as the new baseline
    - Outputs a human-readable report to stdout with sync results
 
-   **If `naholo push` fails (non-zero exit code) → STOP. Do NOT proceed to step 4.** Report the error and preserve local data (see step 6 failure path).
+   **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 5.** Report the error and preserve local data (see step 7 failure path).
 
-4. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
+5. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed (count and names)
    - Objectives added (count and names)
    - Notes created or updated
    - Brief description of code changes (summarize from SPEC.md/OPERATION.md progress)
-   - **If `create_operation_log` fails → STOP. Do NOT proceed to step 5.** Report the error and preserve local data (see step 6 failure path).
+   - **If `create_operation_log` fails → STOP. Do NOT proceed to step 6.** Report the error and preserve local data (see step 7 failure path).
 
-5. **Close or ask about closing**:
+6. **Close or ask about closing**:
    - If extra instructions already specify → follow them.
    - If all objectives in OBJECTIVES.md are done → close automatically via `close_operation` MCP tool (no need to ask).
    - Otherwise → use `AskUserQuestion` to ask: "Close operation #{operationNumber}?" Do NOT proceed until they respond.
      - If yes → use `close_operation` MCP tool
      - If no → leave open
 
-6. **Clean up or abort**:
+7. **Clean up or abort**:
    - **If push and summary log completed successfully**: Delete the `.naholo/local/operations/{operationNumber}/` directory.
    - **If any step failed**: Do NOT delete. Instead:
      - Print which step failed and what the error was
@@ -77,5 +83,5 @@ If no instructions given, ask the user whether to close.
 
 - **Do NOT implement any code** — only sync state and clean up.
 - **Do NOT modify source files** — exfil is a sync operation only.
-- **Use `naholo push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
+- **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
 - **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this infil session.

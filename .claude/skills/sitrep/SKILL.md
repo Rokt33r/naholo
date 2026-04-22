@@ -32,7 +32,7 @@ The argument is the operation number (e.g., `42`). Required. Find local dir at `
    - `.naholo/local/operations/{operationNumber}/OBJECTIVES.md`
    - `.naholo/local/operations/{operationNumber}/notes/OPERATION.md`
 
-2. **Push via CLI**: Run `naholo push {operationNumber}` using the Bash tool. This command:
+2. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool. This command:
    - Reads local `OBJECTIVES.md` and syncs the objective tree to the server
    - Patches `[ref]` links for newly created objectives back into `OBJECTIVES.md`
    - Reads all `notes/*.md` files and syncs to the server (creates new, updates changed)
@@ -57,5 +57,5 @@ The argument is the operation number (e.g., `42`). Required. Find local dir at `
 - **Do NOT clean up the local directory** — leave `.naholo/local/operations/{operationNumber}/` intact for continued work.
 - **Do NOT implement any code** — only sync state.
 - **Do NOT modify source files** — sitrep is a sync operation only.
-- **Use `naholo push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
+- **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
 - **Always post the summary log** — the log is the checkpoint record.
