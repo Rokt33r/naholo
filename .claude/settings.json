@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(/.claude/skills/infil/**)",
+      "Edit(/.claude/skills/exfil/**)",
+      "Edit(/.claude/skills/spec/**)",
+      "Edit(/.claude/skills/ship/**)",
+      "Edit(/.claude/skills/sitrep/**)"
+    ]
+  }
+}
