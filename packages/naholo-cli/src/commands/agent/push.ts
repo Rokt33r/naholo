@@ -116,5 +116,6 @@ export const pushCommand = new Command('push')
       if (createdNotes.length > 0) {
         console.log(`    Created: ${createdNotes.join(', ')}`)
       }
+      console.log(`  Local: ${localDir}/`)
     }),
   )
