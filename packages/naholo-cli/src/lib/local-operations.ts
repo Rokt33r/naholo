@@ -1,9 +1,19 @@
 import path from 'node:path'
+import {
+  getCovertOpsDir,
+  readCovertOpsProjectConfig,
+} from '../covert-config.js'
 
-const NAHOLO_LOCAL_DIR = '.naholo/local/operations'
+export function getOperationsRootDir(): string {
+  const covertEntry = readCovertOpsProjectConfig(process.cwd())
+  if (covertEntry != null) {
+    return path.join(getCovertOpsDir(), covertEntry.codeName, 'operations')
+  }
+  return path.resolve('.naholo/local/operations')
+}
 
 export function getLocalOperationDir(operationNumber: number | string): string {
-  return path.resolve(NAHOLO_LOCAL_DIR, String(operationNumber))
+  return path.join(getOperationsRootDir(), String(operationNumber))
 }
 
 export function getBaseDir(operationNumber: number | string): string {

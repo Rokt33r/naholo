@@ -10,6 +10,8 @@ import { CliError, withErrorHandling } from '../errors.js'
 import { getActiveProfile } from '../profile.js'
 import {
   collectExistingCodeNames,
+  getCovertOpsConfigPath,
+  getCovertOpsDir,
   readCovertOpsConfig,
   removeCovertOpsProjectConfig,
   writeCovertOpsConfig,
@@ -93,12 +95,16 @@ covertCommand
       }
       writeCovertOpsConfig(config)
 
+      const covertOpsRoot = path.join(getCovertOpsDir(), codeName)
+
       console.log()
       console.log(`Covert mode registered for: ${cwd}`)
       console.log(`  Project:  ${selectedProject.name}`)
       console.log(`  Operator: ${selectedBotOperator.name} (bot)`)
+      console.log(`  Codename: ${codeName}`)
+      console.log(`  Project dir:  ${covertOpsRoot}`)
       console.log()
-      console.log('Config stored in ~/.naholo/covert-mode-config.yml')
+      console.log(`Config stored in ${getCovertOpsConfigPath()}`)
       console.log('No files written to the project repo.')
       console.log()
 
