@@ -9,16 +9,19 @@ import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { getActiveProfile } from '../profile.js'
 import {
-  readCovertConfig,
-  removeCovertProjectConfig,
-  writeCovertConfig,
+  collectExistingCodeNames,
+  readCovertOpsConfig,
+  removeCovertOpsProjectConfig,
+  writeCovertOpsConfig,
 } from '../covert-config.js'
+import { generateCodeName } from '../lib/codename.js'
 import { installSkills } from './skills-install.js'
 
 export const covertCommand = new Command('covert').description(
   'Manage covert mode for projects without repo config',
 )
 
+// TODO: Split covert commands
 covertCommand
   .command('init')
   .description('Register the current directory for covert mode')
@@ -80,13 +83,15 @@ covertCommand
 
       // 4. Write covert config
       const cwd = process.cwd()
-      const config = readCovertConfig()
+      const config = readCovertOpsConfig()
+      const codeName = generateCodeName(collectExistingCodeNames(config))
       config.projects[cwd] = {
         projectId: selectedProject.id,
         projectSlug: selectedProject.slug,
         projectOperatorId: selectedBotOperatorId,
+        codeName,
       }
-      writeCovertConfig(config)
+      writeCovertOpsConfig(config)
 
       console.log()
       console.log(`Covert mode registered for: ${cwd}`)
@@ -130,7 +135,7 @@ covertCommand
         }
 
         const resolvedPath = path.resolve(pathArg ?? process.cwd())
-        const removed = removeCovertProjectConfig(resolvedPath)
+        const removed = removeCovertOpsProjectConfig(resolvedPath)
 
         if (removed) {
           console.log(`Covert mode removed for: ${resolvedPath}`)
@@ -151,7 +156,7 @@ covertCommand
   )
 
 async function interactiveRemove(): Promise<void> {
-  const config = readCovertConfig()
+  const config = readCovertOpsConfig()
   const paths = Object.keys(config.projects)
 
   if (paths.length === 0) {
@@ -173,7 +178,7 @@ async function interactiveRemove(): Promise<void> {
   }
 
   for (const p of selected) {
-    removeCovertProjectConfig(p)
+    removeCovertOpsProjectConfig(p)
     console.log(`Covert mode removed for: ${p}`)
   }
 }

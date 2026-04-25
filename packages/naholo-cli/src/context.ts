@@ -3,7 +3,7 @@ import { CliError } from './errors.js'
 import { readGlobalConfig, type GlobalConfig } from './global-config.js'
 import { getActiveProfile, type Profile } from './profile.js'
 import { readProjectConfig, type ProjectConfig } from './project-config.js'
-import { getCovertProjectConfig } from './covert-config.js'
+import { readCovertOpsProjectConfig } from './covert-config.js'
 
 export interface CliContext {
   globalConfig: GlobalConfig
@@ -22,7 +22,7 @@ export function getCliContext(): CliContext {
   }
 
   const projectConfig =
-    getCovertProjectConfig(process.cwd()) ?? readProjectConfig()
+    readCovertOpsProjectConfig(process.cwd()) ?? readProjectConfig()
   if (projectConfig == null) {
     throw new CliError(
       'Naholo hasn\'t been initialized in this codebase. Neither .naholo/config.yml detected in this codebase nor CWD has been registered in ~/.naholo/covert-mode-config.yml. Run  "naholo init" or "naholo covert init" to initialize.',
