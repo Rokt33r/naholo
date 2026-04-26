@@ -10,7 +10,7 @@ Implement the elaborated spec for an infiled operation. Work through objectives 
 
 ## Arguments
 
-Optional operation number as first token (e.g., `42`). If provided, use `.naholo/local/operations/42/` directly — if that directory doesn't exist, tell the user to run `/infil 42` first.
+Optional operation number as first token (e.g., `42`). If provided, resolve its local directory via `naholo agent ops path 42`. If the directory does not exist on disk, tell the user to run `/infil 42` first.
 
 Anything after in quotes is extra instructions. Common patterns:
 
@@ -28,30 +28,32 @@ Anything after in quotes is extra instructions. Common patterns:
    - If none exist → tell user to run `/infil {operationNumber}` first.
    - If multiple exist → show the list and ask user which one to use.
 
-2. **Read spec**: Read `.naholo/local/operations/{operationNumber}/notes/SPEC.md`.
+2. **Resolve operation directory**: Run `naholo agent ops path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it (e.g. `{operationDir}/OBJECTIVES.md`, `{operationDir}/notes/SPEC.md`).
+
+3. **Read spec**: Read `{operationDir}/notes/SPEC.md`.
    - If `SPEC.md` does not exist → tell user to run `/spec` first and stop.
 
-3. **Read OBJECTIVES.md**: Read `.naholo/local/operations/{operationNumber}/OBJECTIVES.md` to know current completion state.
+4. **Read OBJECTIVES.md**: Read `{operationDir}/OBJECTIVES.md` to know current completion state.
 
-4. **Implement objectives in order**: For each unchecked objective in OBJECTIVES.md, top to bottom:
-   - Read the corresponding objective description in `notes/SPEC.md` (objectives use hierarchical numbering: `### 1. Title`, sub-objectives `- 1.1. Sub-objective`) — it specifies exact file paths, behavior, and key details
+5. **Implement objectives in order**: For each unchecked objective in OBJECTIVES.md, top to bottom:
+   - Read the corresponding objective description in `{operationDir}/notes/SPEC.md` (objectives use hierarchical numbering: `### 1. Title`, sub-objectives `- 1.1. Sub-objective`) — it specifies exact file paths, behavior, and key details
    - Implement the code changes described
    - After completing a sub-objective, immediately mark the corresponding line in `OBJECTIVES.md` as `- [x]`
    - SPEC.md has no checkboxes — do not add or modify checkboxes there
    - Follow all conventions in `CLAUDE.md`
 
-5. **Verify as you go**: After completing each top-level objective (e.g., all of "Objective 1"):
+6. **Verify as you go**: After completing each top-level objective (e.g., all of "Objective 1"):
    - Run the formatter: `npm run format`
    - Run type check: `npx tsc`
    - Fix any issues before moving to the next objective
 
-6. **Append Timeline entry**: After completing each top-level objective, append a single bullet to the `## Timeline` section of `notes/OPERATION.md`:
+7. **Append Timeline entry**: After completing each top-level objective, append a single bullet to the `## Timeline` section of `{operationDir}/notes/OPERATION.md`:
 
    `- **{date} — ship**: Completed objectives {range}. Key files: {paths}. {any deviations from spec}`.
 
    Do NOT add a `## Progress` section (or any other new section). OPERATION.md has exactly four sections (Pain, Resolution, Open questions, Timeline) — ship progress lives in Timeline bullets only.
 
-7. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec to reflect what was actually done. However, never delete implemented objectives — if a sub-objective in SPEC.md corresponds to a checked `[x]` entry in OBJECTIVES.md, use strikethrough (`~~`) on the superseded sub-objective text and append a note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Objective 4`). New objectives can be added freely to SPEC.md and OBJECTIVES.md.
+8. **Update SPEC.md if implementation deviates**: If the actual implementation differs from the spec (different approach, extra file needed, changed API shape), update the spec to reflect what was actually done. However, never delete implemented objectives — if a sub-objective in SPEC.md corresponds to a checked `[x]` entry in OBJECTIVES.md, use strikethrough (`~~`) on the superseded sub-objective text and append a note pointing to the replacement (e.g., `~~- 1.3. Old approach~~ → Replaced by derived state in Objective 4`). New objectives can be added freely to SPEC.md and OBJECTIVES.md.
 
 ## Rules
 

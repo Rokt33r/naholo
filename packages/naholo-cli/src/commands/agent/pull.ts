@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
+import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
 import { withErrorHandling } from '../../errors.js'
 import { mergeObjectives } from '../../lib/merge-objectives.js'
@@ -13,6 +14,25 @@ import {
   getObjectivesPath,
   getBaseObjectivesPath,
 } from '../../lib/local-operations.js'
+
+type ServerLog = {
+  id: string
+  content: string
+  createdAt: string
+  projectOperator: { id: string; name: string; type: string } | null
+}
+
+function writeLogsYaml(operationNumber: number, serverLogs: ServerLog[]): void {
+  // Server is source of truth — overwrite local LOGS.yml on every pull.
+  const entries = serverLogs.map((log) => ({
+    id: log.id,
+    createdAt: log.createdAt,
+    author: log.projectOperator?.name ?? null,
+    content: log.content,
+  }))
+  const logsPath = path.join(getLocalOperationDir(operationNumber), 'LOGS.yml')
+  fs.writeFileSync(logsPath, yamlStringify(entries))
+}
 
 export const pullCommand = new Command('pull')
   .description('Pull operation context from server to local')
@@ -72,7 +92,7 @@ function freshPull(
     updatedAt: string
   }[],
   serverNotes: { name: string; content: string }[],
-  serverLogs: { id: string; content: string; createdAt: string }[],
+  serverLogs: ServerLog[],
 ): void {
   const notesDir = getNotesDir(operationNumber)
   const baseNotesDir = getBaseNotesDir(operationNumber)
@@ -97,11 +117,12 @@ function freshPull(
     fs.writeFileSync(path.join(baseNotesDir, filename), note.content)
   }
 
+  writeLogsYaml(operationNumber, serverLogs)
+
   // Report
   const doneCount = serverObjectives.filter((o) => o.done).length
-  console.log(
-    `Pulled operation #${operationNumber}: "${serverOperation.title}"`,
-  )
+  console.log(`Pulled operation #${operationNumber}`)
+  console.log(`  Title: ${serverOperation.title}`)
   console.log(
     `  Objectives: ${serverObjectives.length} (${doneCount} done, ${serverObjectives.length - doneCount} remaining)`,
   )
@@ -126,7 +147,7 @@ function mergeAndReport(
     updatedAt: string
   }[],
   serverNotes: { name: string; content: string }[],
-  serverLogs: { id: string; content: string; createdAt: string }[],
+  serverLogs: ServerLog[],
 ): void {
   const notesDir = getNotesDir(operationNumber)
   const baseNotesDir = getBaseNotesDir(operationNumber)
@@ -189,6 +210,8 @@ function mergeAndReport(
       serverNote.content,
     )
   }
+
+  writeLogsYaml(operationNumber, serverLogs)
 
   // Report
   console.log(

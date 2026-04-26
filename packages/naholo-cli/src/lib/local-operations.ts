@@ -4,7 +4,7 @@ import {
   readCovertOpsProjectConfig,
 } from '../covert-config.js'
 
-export function getOperationsRootDir(): string {
+export function getLocalOperationsRootDir(): string {
   const covertEntry = readCovertOpsProjectConfig(process.cwd())
   if (covertEntry != null) {
     return path.join(getCovertOpsDir(), covertEntry.codeName, 'operations')
@@ -13,7 +13,7 @@ export function getOperationsRootDir(): string {
 }
 
 export function getLocalOperationDir(operationNumber: number | string): string {
-  return path.join(getOperationsRootDir(), String(operationNumber))
+  return path.join(getLocalOperationsRootDir(), String(operationNumber))
 }
 
 export function getBaseDir(operationNumber: number | string): string {

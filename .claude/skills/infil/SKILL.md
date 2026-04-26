@@ -21,28 +21,33 @@ The argument is the operation number (e.g., `42`). Required.
 
 0.5. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-1. **Pull via CLI**: Run `naholo agent pull {operationNumber}` using the Bash tool. Read the CLI output to know what happened (fresh pull vs re-run, conflicts, new notes, etc.).
+1. **Pull via CLI**: Run `naholo agent pull {operationNumber}`. Capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
 
-2. **Handle OPERATION.md**:
+2. **Read context**:
+   - **Title**: from the `Title:` line of pull's stdout.
+   - **Logs**: `{operationDir}/LOGS.yml` (YAML array of `{ id, createdAt, author, content }`).
+   - **Notes**: every `*.md` file in `{operationDir}/notes/`.
+
+3. **Handle OPERATION.md** (using the context from step 2):
 
    OPERATION.md is always the evolving context document — it is never the spec.
 
-   **If `notes/OPERATION.md` does not exist locally after pull**:
-   - Write `notes/OPERATION.md` **locally only**, via the `Write` tool. Do NOT push to the server during infil — the user runs `/sitrep` or `/exfil` later to sync upstream.
+   **If `{operationDir}/notes/OPERATION.md` does not exist**:
+   - Write it to `{operationDir}/notes/OPERATION.md` **locally only** via the `Write` tool. Do NOT push during infil — the user runs `/sitrep` or `/exfil` later.
    - Template:
 
      ```markdown
-     # OP #{operationNumber}: {operation title}
+     # OP #{operationNumber}: {title}
 
      ## Pain
 
-     What's wrong or missing. ≤3 sentences extracted from operation title + logs.
-     If not explicitly stated, agent provides assumption marked with "_Agent-generated assumption:_".
+     What's wrong or missing. ≤3 sentences from title + logs + notes.
+     If not stated, mark with "_Agent-generated assumption:_".
 
      ## Resolution
 
-     How we plan to fix it. ≤3 sentences extracted from operation title + logs.
-     If not explicitly stated, agent provides assumption marked with "_Agent-generated assumption:_".
+     How we plan to fix it. ≤3 sentences from title + logs + notes.
+     If not stated, mark with "_Agent-generated assumption:_".
 
      ## Open questions
 
@@ -60,22 +65,20 @@ The argument is the operation number (e.g., `42`). Required.
      - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
      ```
 
-   - **Pain**: extract from operation title, description, and logs. Keep brief — details go in SPEC.
-   - **Resolution**: extract from logs. Keep brief — details go in SPEC.
-   - **Open questions**: generate the top 3 (or fewer) questions that would help the agent most during `/spec`. Each question gets its own `###` heading with `Answer -> ` on the next line so the user can fill in answers directly in the editor.
-   - **Timeline**: chronological summary of all log entries with timestamps and author names. One bullet per log entry.
-   - If other notes exist on the operation, add pointers (e.g., "See `api-design.md` for endpoint specs") in the Pain or Resolution sections where relevant. Fold relevant objective notes into Pain/Resolution context.
+   - **Pain / Resolution**: keep brief — details go in SPEC during `/spec`.
+   - **Open questions**: top 3 (or fewer) questions that deepen understanding of the **pain** and **resolution** — user motivations, hidden constraints, success criteria, scope boundaries, edge cases, prior attempts, stakeholders affected. Do NOT ask about file paths, function names, schema fields, or other implementation details — `/spec` will research those from the codebase. Only ask the user what the user uniquely knows. Each question gets its own `###` heading with `Answer -> ` on the next line.
+   - **Timeline**: one bullet per log entry, using each entry's `createdAt` and `author`.
+   - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") in Pain or Resolution where relevant.
    - Do NOT elaborate or create an implementation plan — just capture current state.
 
-   **If OPERATION.md already exists locally after pull**:
-   - Verify the structured sections exist: `## Pain`, `## Resolution`, `## Open questions`, `## Timeline`. If OPERATION.md uses the old free-form format (no structured sections), migrate it to the new template automatically and note this in the summary.
-   - Compare the OPERATION content against the current logs and notes — look for gaps: new logs posted after the OPERATION was last updated (compare against the last Timeline entry), new notes that aren't referenced, objectives that changed significantly.
-   - If there are no gaps → do nothing, just note "OPERATION.md is up to date" in the summary.
-   - If there are gaps → summarize what new information exists (e.g., "3 new logs since OPERATION was written, new note `research.md` not referenced") and **ask the user** whether to update OPERATION.md with this new context. When updating, append new log entries to the `## Timeline` section. Only update if the user confirms.
-
-3. **Handle conflicts**: If the CLI reported any note conflicts (files with conflict markers), tell the user which notes have conflicts and ask them to resolve manually, then wait for confirmation before continuing.
+   **If OPERATION.md already exists**:
+   - Find what changed since the last `## Timeline` entry: new logs (LOGS.yml entries with `createdAt` later than the last Timeline date) and note changes (created/updated, from pull's CLI report).
+   - If nothing new → note "OPERATION.md is up to date" in the summary.
+   - If something new → summarize it (e.g., "3 new logs, `research.md` updated") and **ask the user** whether to append a Timeline bullet. On confirmation, append one bullet to `## Timeline` summarizing the new logs and note changes.
 
 4. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → OBJECTIVES → SPEC, then other notes alphabetically.
+
+   If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
    Example (printed directly, not fenced):
 
@@ -83,11 +86,15 @@ The argument is the operation number (e.g., `42`). Required.
    - Objectives: 12 (5 done, 7 remaining)
    - Notes: OPERATION [created], api-design, research
    - Logs: 8 entries
-   - Local: [.naholo/local/operations/42/](.naholo/local/operations/42/)
-   - Operation: [OPERATION.md](.naholo/local/operations/42/notes/OPERATION.md)
-   - Spec: [SPEC.md](.naholo/local/operations/42/notes/SPEC.md) (if exists)
+   - Local: [{operationDir}/]({operationDir}/)
+   - Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
+   - Spec: [SPEC.md]({operationDir}/notes/SPEC.md) (if exists)
 
-   Include the CLI output details (objectives updated/inserted, notes merged/conflicted) in the summary.
+   **Conflicts to resolve manually:**
+   - [api-design.md]({operationDir}/notes/api-design.md)
+   - [research.md]({operationDir}/notes/research.md)
+
+   Substitute `{operationDir}` with the absolute path printed on the pull's `Local:` line. Include the CLI output details (objectives updated/inserted, notes merged) in the summary.
 
 ## Rules
 

@@ -10,7 +10,7 @@ Read the local operation state (from `/infil`), research the codebase, and creat
 
 ## Arguments
 
-Optional operation number as first token (e.g., `42`). If provided, use `.naholo/local/operations/42/` directly — if that directory doesn't exist, tell the user to run `/infil 42` first.
+Optional operation number as first token (e.g., `42`). If provided, resolve its local directory via `naholo agent ops path 42`. If the directory does not exist on disk, tell the user to run `/infil 42` first.
 
 Anything after in quotes is extra instructions (e.g., `"Only focus on the API layer"`, `"Ref docs/style.md"`). Parse naturally.
 
@@ -24,21 +24,23 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
    - If none exist → tell user to run `/infil {operationNumber}` first and abort.
    - If multiple exist → show the list and ask user which one to use.
 
-2. **Read local state**: Read the following files:
-   - `.naholo/local/operations/{operationNumber}/OBJECTIVES.md`
-   - `.naholo/local/operations/{operationNumber}/notes/OPERATION.md`
-   - `.naholo/local/operations/{operationNumber}/notes/SPEC.md` (if it exists — for re-runs)
-   - All other notes in `.naholo/local/operations/{operationNumber}/notes/`
+2. **Resolve operation directory**: Run `naholo agent ops path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it (e.g. `{operationDir}/OBJECTIVES.md`, `{operationDir}/notes/OPERATION.md`).
 
-3. **Prune unanswered open questions**: In `notes/OPERATION.md`, under `## Open questions`, remove every `### {question}` block whose `Answer ->` line is empty or whitespace-only. Keep answered questions — their answers may be load-bearing context for the spec. Match with roughly `^### .+\n\s*Answer ->\s*$\n?` (multiline). When in doubt, leave the question in place.
+3. **Read local state**: Read the following files (paths resolved per step 2):
+   - `{operationDir}/OBJECTIVES.md`
+   - `{operationDir}/notes/OPERATION.md`
+   - `{operationDir}/notes/SPEC.md` (if it exists — for re-runs)
+   - All other notes in `{operationDir}/notes/`
 
-4. **Research the codebase**: Investigate thoroughly to understand:
+4. **Prune unanswered open questions**: In `{operationDir}/notes/OPERATION.md`, under `## Open questions`, remove every `### {question}` block whose `Answer ->` line is empty or whitespace-only. Keep answered questions — their answers may be load-bearing context for the spec. Match with roughly `^### .+\n\s*Answer ->\s*$\n?` (multiline). When in doubt, leave the question in place.
+
+5. **Research the codebase**: Investigate thoroughly to understand:
    - Current architecture and patterns relevant to the operation
    - Existing code that will be modified or extended
    - Dependencies, prerequisites, schema fields, type signatures
    - Conventions used in the project (from `CLAUDE.md` and existing code)
 
-5. **Create SPEC.md**: Write the executable spec to `notes/SPEC.md`. The first line MUST be `# SPEC — OP #{operationNumber}: {operation title}`. The file has NO frontmatter — its existence is the gate that signals the spec is ready for `/ship`.
+6. **Create SPEC.md**: Write the executable spec to `{operationDir}/notes/SPEC.md`. The first line MUST be `# SPEC — OP #{operationNumber}: {operation title}`. The file has NO frontmatter — its existence is the gate that signals the spec is ready for `/ship`.
 
    Include:
    - **Goal**: Clear 1-2 sentence description of what this spec achieves and why
@@ -52,15 +54,15 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 
    **Important**: SPEC.md must NOT contain `- [ ]` or `- [x]` checkboxes. Progress tracking belongs exclusively in OBJECTIVES.md.
 
-   Quality bar: "Could another session implement this by reading ONLY SPEC.md and CLAUDE.md?"
+   Quality bar: the spec must be self-contained and executable — another session should be able to implement it by reading ONLY SPEC.md and CLAUDE.md.
 
-6. **Update OPERATION.md**: Append a single bullet to the `## Timeline` section of `notes/OPERATION.md`:
+7. **Update OPERATION.md**: Append a single bullet to the `## Timeline` section of `{operationDir}/notes/OPERATION.md`:
 
    `- **{date} — spec**: Elaborated spec. {N} objectives, {M} sub-objectives. {brief summary of key decisions}`.
 
    Do NOT add a `## Spec` section (or any other new section). OPERATION.md must retain exactly four sections: Pain, Resolution, Open questions, Timeline.
 
-7. **Update OBJECTIVES.md**: OBJECTIVES.md is the canonical objective list and must mirror the spec's objective structure exactly. Update it as follows:
+8. **Update OBJECTIVES.md**: OBJECTIVES.md is the canonical objective list and must mirror the spec's objective structure exactly. Update it as follows:
    - Every numbered objective in the spec (`### 1. Objective title`) → a top-level `- [ ] 1. Objective title` entry in OBJECTIVES.md
    - Every sub-objective bullet in the spec (`- 1.1. Sub-objective`) → an indented `  - [ ] 1.1. Sub-objective` entry under its parent in OBJECTIVES.md
    - Use short objective names (e.g., "1. Add profile selection prompt"), not full descriptions with file paths — those stay in SPEC.md
@@ -68,15 +70,29 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
    - Preserve any existing `[x]` done states
    - No objective in the spec should be missing from OBJECTIVES.md
 
-8. **Print summary and prompt for review**: Show what was elaborated (objective count, new objectives added, files researched). Use markdown link syntax for file paths so the user can click to open them (e.g., `[SPEC.md](.naholo/local/operations/{N}/notes/SPEC.md)`). Print as raw markdown — no surrounding fence. Then ask the user to review SPEC.md:
-   - If it looks good → run `/ship` to implement
-   - If changes needed → edit SPEC.md directly or ask the agent to update it
-   - Optionally → run `/sitrep` to push objectives and spec to the server
+9. **Print summary and prompt for review**: Show what was elaborated (objective count, new objectives added, files researched). Use markdown link syntax with the absolute paths from step 2 so the user can click to open them. Print as raw markdown — no surrounding fence.
+
+   Example (printed directly, not fenced):
+
+   Spec ready for OP #42: "Implement user auth"
+   - Objectives: 5 top-level, 18 sub-objectives (3 new, 2 superseded)
+   - Researched:
+     - [src/auth/](src/auth/)
+     - [src/server/services/operator.ts](src/server/services/operator.ts)
+     - [src/db/schema/operator.ts](src/db/schema/operator.ts)
+   - Spec: [SPEC.md]({operationDir}/notes/SPEC.md)
+   - Objectives: [OBJECTIVES.md]({operationDir}/OBJECTIVES.md)
+
+   Next:
+   - Looks good → run `/ship` to implement
+   - Changes needed → edit SPEC.md directly or tell me what to change
+   - Optionally → `/sitrep` to push objectives and spec to the server
+
+   Substitute `{operationDir}` with the absolute path from step 2.
 
 ## Rules
 
 - **Do NOT implement any code** — only update `SPEC.md`, `OPERATION.md`, and `OBJECTIVES.md`.
-- **Do NOT create new source files** — only modify operation/spec docs.
 - **Preserve existing [ref] links** — don't remove or modify objective IDs from OBJECTIVES.md.
 - **Respect existing done states** — don't uncheck `[x]` items.
 - **OBJECTIVES.md is the canonical objective list** — every objective and sub-objective in the spec MUST have a corresponding entry in OBJECTIVES.md. Do NOT create objectives on the server — the user will run `/sitrep` after reviewing.
@@ -85,5 +101,4 @@ Anything after in quotes is extra instructions (e.g., `"Only focus on the API la
 - **No checkboxes in SPEC.md** — SPEC.md is a spec document, not a progress tracker. Use plain `- ` bullets for sub-objectives, never `- [ ]` or `- [x]`.
 - **OPERATION.md has exactly four sections**: Pain, Resolution, Open questions, Timeline. Do NOT add `## Spec`, `## Progress`, or anything else. Progress entries go in `## Timeline` as dated bullets.
 - **Spec-only until /ship**: After `/spec` completes, all change requests must edit SPEC.md (and OBJECTIVES.md to stay in sync) only — do NOT implement code. The user must give explicit clearance by running `/ship`. After any SPEC change, print the SPEC link and prompt the user to run `/ship` when ready.
-- Follow the same quality bar as `/elaborate-plan`: the spec must be self-contained and executable.
 - Print the summary as raw markdown — no surrounding fence.

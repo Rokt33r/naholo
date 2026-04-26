@@ -5,7 +5,7 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import { getOperationsRootDir } from '../lib/local-operations.js'
+import { getLocalOperationsRootDir } from '../lib/local-operations.js'
 import { formatObjectivesMarkdown } from '../lib/objectives-markdown.js'
 
 export function registerResources(
@@ -108,7 +108,7 @@ export function registerResources(
     'naholo://local/operations',
     { description: 'List of locally infiled operations' },
     async (uri) => {
-      const localOperationsDir = getOperationsRootDir()
+      const localOperationsDir = getLocalOperationsRootDir()
       let entries: fs.Dirent[] = []
       try {
         entries = fs.readdirSync(localOperationsDir, { withFileTypes: true })

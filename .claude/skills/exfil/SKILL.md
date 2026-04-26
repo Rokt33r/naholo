@@ -11,7 +11,7 @@ Sync local changes back to Naholo, post a summary log, and clean up the local wo
 
 ## Arguments
 
-Optional operation number as first token (e.g., `42`). If provided, use `.naholo/local/operations/42/` directly — if that directory doesn't exist, tell the user there's nothing to exfil for that operation.
+Optional operation number as first token (e.g., `42`). If provided, resolve its local directory via `naholo agent ops path 42`. If the directory does not exist on disk, tell the user there's nothing to exfil for that operation.
 
 Anything after in quotes is extra instructions. Common patterns:
 
@@ -30,42 +30,44 @@ If no instructions given, ask the user whether to close.
    - If none exist → tell user there's no infiled operation to exfil.
    - If multiple exist → show the list and ask user which one.
 
-2. **Read local state** (for context when generating the summary log):
-   - `.naholo/local/operations/{operationNumber}/OBJECTIVES.md`
-   - `.naholo/local/operations/{operationNumber}/notes/OPERATION.md`
+2. **Resolve operation directory**: Run `naholo agent ops path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
 
-3. **Check for remaining objectives**: Check `OBJECTIVES.md` for any unchecked (`- [ ]`) objectives.
+3. **Read local state** (for context when generating the summary log):
+   - `{operationDir}/OBJECTIVES.md`
+   - `{operationDir}/notes/OPERATION.md`
+
+4. **Check for remaining objectives**: Check `OBJECTIVES.md` for any unchecked (`- [ ]`) objectives.
    - If there are incomplete objectives → use `AskUserQuestion` to warn: "Heads up — {count} objectives still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
-     - If the user says **no** → abort exfil. Do not push, close, or clean up. Preserve local data at `.naholo/local/operations/{operationNumber}/`. Print that exfil was aborted and local data is preserved.
-     - If the user says **yes** → continue to step 4.
-   - If all objectives are done → continue to step 4.
+     - If the user says **no** → abort exfil. Do not push, close, or clean up. Preserve local data at `{operationDir}`. Print that exfil was aborted and local data is preserved.
+     - If the user says **yes** → continue to step 5.
+   - If all objectives are done → continue to step 5.
 
-4. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool.
+5. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool.
 
-   **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 5.** Report the error and preserve local data (see step 7 failure path).
+   **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 6.** Print the error and preserve local data (see step 8 failure path).
 
-5. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
+6. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed (count and names)
    - Objectives added (count and names)
    - Notes created or updated
    - Brief description of code changes (summarize from SPEC.md/OPERATION.md progress)
-   - **If `create_operation_log` fails → STOP. Do NOT proceed to step 6.** Report the error and preserve local data (see step 7 failure path).
+   - **If `create_operation_log` fails → STOP. Do NOT proceed to step 7.** Report the error and preserve local data (see step 8 failure path).
 
-6. **Close or ask about closing**:
+7. **Close or ask about closing**:
    - If extra instructions already specify → follow them.
    - If all objectives in OBJECTIVES.md are done → close automatically via `close_operation` MCP tool (no need to ask).
    - Otherwise → use `AskUserQuestion` to ask: "Close operation #{operationNumber}?" Do NOT proceed until they respond.
      - If yes → use `close_operation` MCP tool
      - If no → leave open
 
-7. **Clean up or abort**:
-   - **If push and summary log completed successfully**: Delete the `.naholo/local/operations/{operationNumber}/` directory.
+8. **Clean up or abort**:
+   - **If push and summary log completed successfully**: Delete the `{operationDir}` directory.
    - **If any step failed**: Do NOT delete. Instead:
      - Print which step failed and what the error was
-     - Confirm that local data at `.naholo/local/operations/{operationNumber}/` is preserved
+     - Confirm that local data at `{operationDir}` is preserved
      - Suggest the user retry with `/exfil`
 
-8. **Print summary**: Print the exfil report as raw markdown — no surrounding fence. Report what was pushed, whether the operation closed, and whether the local dir was deleted or preserved.
+9. **Print summary**: Print the exfil report as raw markdown — no surrounding fence. Report what was pushed, whether the operation closed, and whether the local dir was deleted or preserved. When linking to files, use the absolute paths from step 2.
 
 ## Rules
 
