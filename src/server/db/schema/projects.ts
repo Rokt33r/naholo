@@ -9,6 +9,7 @@ import {
 import { relations } from 'drizzle-orm'
 import { projectOperators } from './project-operators'
 import { skillLoadouts } from './skill-loadouts'
+import { projectSubscriptions } from './project-subscriptions'
 
 export const projects = pgTable(
   'projects',
@@ -24,7 +25,8 @@ export const projects = pgTable(
   (table) => [uniqueIndex('projects_slug_idx').on(table.slug)],
 )
 
-export const projectsRelations = relations(projects, ({ many }) => ({
+export const projectsRelations = relations(projects, ({ one, many }) => ({
   projectOperators: many(projectOperators),
   skillLoadouts: many(skillLoadouts),
+  projectSubscription: one(projectSubscriptions),
 }))
