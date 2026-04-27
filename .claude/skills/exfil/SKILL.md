@@ -11,7 +11,7 @@ Sync local changes back to Naholo, post a summary log, and clean up the local wo
 
 ## Arguments
 
-Optional operation number as first token (e.g., `42`). If provided, resolve its local directory via `naholo agent ops path 42`. If the directory does not exist on disk, tell the user there's nothing to exfil for that operation.
+Optional operation number as first token (e.g., `42`). If omitted, the skill picks the infiled operation via `naholo agent op-list` (or asks if multiple).
 
 Anything after in quotes is extra instructions. Common patterns:
 
@@ -26,11 +26,11 @@ If no instructions given, ask the user whether to close.
 
 0.5. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-1. **Find infiled operation**: If an operation number was provided, use it. Otherwise read the MCP resource `naholo://local/operations` to list infiled operations.
+1. **Find infiled operation**: If an operation number was provided, use it. Otherwise run `naholo agent op-list` to list infiled operations.
    - If none exist → tell user there's no infiled operation to exfil.
    - If multiple exist → show the list and ask user which one.
 
-2. **Resolve operation directory**: Run `naholo agent ops path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
+2. **Resolve operation directory**: Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it. If `{operationDir}` does not exist on disk, tell the user there's nothing to exfil for that operation and stop.
 
 3. **Read local state** (for context when generating the summary log):
    - `{operationDir}/OBJECTIVES.md`

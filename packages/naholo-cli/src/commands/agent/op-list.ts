@@ -1,12 +1,9 @@
 import fs from 'node:fs'
 import { Command } from 'commander'
 import { withErrorHandling } from '../../errors.js'
-import {
-  getLocalOperationsRootDir,
-  getLocalOperationDir,
-} from '../../lib/local-operations.js'
+import { getLocalOperationsRootDir } from '../../lib/local-operations.js'
 
-export const opsListCommand = new Command('list')
+export const opListCommand = new Command('op-list')
   .description('List local operations for the current project')
   .action(
     withErrorHandling(async () => {
@@ -27,19 +24,3 @@ export const opsListCommand = new Command('list')
       }
     }),
   )
-
-export const opsPathCommand = new Command('path')
-  .description('Print the absolute local directory for an operation')
-  .argument('<operationNumber>', 'Operation number')
-  .action(
-    withErrorHandling(async (operationNumber: string) => {
-      console.log(getLocalOperationDir(operationNumber))
-    }),
-  )
-
-export const opsCommand = new Command('ops').description(
-  'Commands for local operations',
-)
-
-opsCommand.addCommand(opsListCommand)
-opsCommand.addCommand(opsPathCommand)

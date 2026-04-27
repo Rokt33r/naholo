@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { withErrorHandling } from '../../errors.js'
 import { getLocalOperationDir } from '../../lib/local-operations.js'
 
-export const opsPathCommand = new Command('path')
+export const opPathCommand = new Command('op-path')
   .description('Print the absolute local directory for an operation')
   .argument('<operationNumber>', 'Operation number')
   .action(
