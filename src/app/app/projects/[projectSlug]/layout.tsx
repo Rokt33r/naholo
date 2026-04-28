@@ -6,6 +6,7 @@ import { ProjectContext } from '@/components/app/project-context'
 import { QueryProvider } from '@/components/query-provider'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useProjects } from '@/hooks/use-projects'
+import { ProjectSubscriptionWall } from '@/components/billing/project-subscription-wall'
 
 function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
   const { projectSlug } = useParams<{ projectSlug: string }>()
@@ -36,7 +37,9 @@ function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
             currentMode={currentMode}
           />
         )}
-        <div className='flex-1 overflow-hidden'>{children}</div>
+        <div className='flex-1 overflow-hidden'>
+          <ProjectSubscriptionWall>{children}</ProjectSubscriptionWall>
+        </div>
       </div>
     </ProjectContext>
   )
