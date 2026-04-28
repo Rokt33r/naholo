@@ -16,6 +16,7 @@ import {
   deleteProject,
 } from '@/server/services/project'
 import { createProjectOperator } from '@/server/services/project-operator'
+import { createIncompleteSubscription } from '@/server/services/project-subscription'
 import { createOperation } from '@/server/services/operation'
 import { createOperationLog } from '@/server/services/operation-log'
 import {
@@ -79,6 +80,10 @@ export async function createProjectAction(
 
   const result = await createProject({ name, slug, description })
   if (result.success) {
+    await createIncompleteSubscription({
+      projectId: result.data.id,
+      billingUserId: user.id,
+    })
     await createProjectOperator({
       projectId: result.data.id,
       userId: user.id,

@@ -3,6 +3,7 @@ import { eq, and, isNull } from 'drizzle-orm'
 import { db } from '../db'
 import { projectInvites } from '../db/schema'
 import { createProjectOperator } from './project-operator'
+import { assertSeatAvailable } from './project-subscription'
 import { ok } from '@/lib/return-result'
 import type { SuccessResult } from '@/lib/return-result'
 import { ConflictError } from './errors'
@@ -195,6 +196,11 @@ export async function acceptProjectInvite(
   projectId: string,
   claimerUser: { id: string; name: string },
 ): Promise<{ projectOperatorId: string }> {
+  const seatCheck = await assertSeatAvailable(projectId)
+  if (!seatCheck.success) {
+    throw seatCheck.error
+  }
+
   const [updated] = await db
     .update(projectInvites)
     .set({ status: 'accepted', updatedAt: new Date() })

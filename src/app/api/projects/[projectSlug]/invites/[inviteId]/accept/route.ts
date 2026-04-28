@@ -5,6 +5,10 @@ import {
   acceptProjectInvite,
 } from '@/server/services/project-invite'
 import { sendInviteAcceptedEmail } from '@/server/services/invite-email'
+import {
+  SeatLimitExceededError,
+  SubscriptionNotReadyError,
+} from '@/server/services/errors'
 
 export async function POST(
   _request: NextRequest,
@@ -46,6 +50,18 @@ export async function POST(
 
     return NextResponse.json(result)
   } catch (error) {
+    if (error instanceof SeatLimitExceededError) {
+      return NextResponse.json(
+        { error: 'seat_limit_exceeded', message: error.message },
+        { status: 402 },
+      )
+    }
+    if (error instanceof SubscriptionNotReadyError) {
+      return NextResponse.json(
+        { error: 'subscription_not_ready', message: error.message },
+        { status: 402 },
+      )
+    }
     console.error(error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
