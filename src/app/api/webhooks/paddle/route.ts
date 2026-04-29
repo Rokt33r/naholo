@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { EventName, Webhooks } from '@paddle/paddle-node-sdk'
 import { upsertFromPaddleEvent } from '@/server/services/project-subscription'
-import '@/server/billing/paddle-webhooks'
+import '@/server/billing/paddle'
 
 export async function POST(request: NextRequest) {
   const secret = process.env.PADDLE_WEBHOOK_SECRET

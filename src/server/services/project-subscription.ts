@@ -5,6 +5,7 @@ import { and, count, eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { SeatLimitExceededError, SubscriptionNotReadyError } from './errors'
+import { paddleServerClient } from '@/server/billing/paddle'
 
 export type SubscriptionStatus =
   | 'incomplete'
@@ -155,25 +156,9 @@ export type PaddleWebhookEvent =
       data: PaddleTransactionEventData
     }
 
-export async function upsertFromPaddleEvent(
-  event: PaddleWebhookEvent,
-): Promise<void> {
-  switch (event.eventType) {
-    case 'subscription.activated':
-    case 'subscription.canceled':
-    case 'subscription.created':
-    case 'subscription.imported':
-    case 'subscription.past_due':
-    case 'subscription.paused':
-    case 'subscription.resumed':
-    case 'subscription.trialing':
-    case 'subscription.updated':
-      break
-    default:
-      return
-  }
-
-  const data = event.data
+function buildSubscriptionUpdates(
+  data: PaddleSubscriptionEventData,
+): Partial<typeof projectSubscriptions.$inferInsert> {
   const seatQuantity =
     data.items != null &&
     data.items.length > 0 &&
@@ -221,6 +206,30 @@ export async function upsertFromPaddleEvent(
     updates.cancelAt = scheduledCancelAt
   }
 
+  return updates
+}
+
+export async function upsertFromPaddleEvent(
+  event: PaddleWebhookEvent,
+): Promise<void> {
+  switch (event.eventType) {
+    case 'subscription.activated':
+    case 'subscription.canceled':
+    case 'subscription.created':
+    case 'subscription.imported':
+    case 'subscription.past_due':
+    case 'subscription.paused':
+    case 'subscription.resumed':
+    case 'subscription.trialing':
+    case 'subscription.updated':
+      break
+    default:
+      return
+  }
+
+  const data = event.data
+  const updates = buildSubscriptionUpdates(data)
+
   const existingByPaddleId = await db.query.projectSubscriptions.findFirst({
     where: (t, { eq }) => eq(t.paddleSubscriptionId, data.id),
   })
@@ -247,6 +256,87 @@ export async function upsertFromPaddleEvent(
     .update(projectSubscriptions)
     .set(updates)
     .where(eq(projectSubscriptions.id, existingByProject.id))
+}
+
+export async function finalizeCheckoutFromTransaction(input: {
+  projectId: string
+  transactionId: string
+}): Promise<ReturnResult<ProjectSubscription>> {
+  const existing = await getProjectSubscription(input.projectId)
+  if (existing == null) {
+    return err(new SubscriptionNotReadyError())
+  }
+
+  // Idempotency: this endpoint is one-shot per project lifecycle. Once the
+  // project has a Paddle subscription id attached, it has been finalized —
+  // do NOT hit Paddle's API again. Subsequent state changes (renewal,
+  // cancel, past_due, plan change) come exclusively from the webhook.
+  // This also blocks malicious replays from making us spam Paddle.
+  if (existing.paddleSubscriptionId != null) {
+    return ok(existing)
+  }
+
+  const transaction = await paddleServerClient.transactions.get(
+    input.transactionId,
+  )
+
+  const subscriptionId = transaction.subscriptionId
+  if (subscriptionId == null) {
+    return err(new SubscriptionNotReadyError())
+  }
+
+  const txCustomData = transaction.customData as
+    | { projectId?: string }
+    | null
+    | undefined
+  if (txCustomData?.projectId !== input.projectId) {
+    return err(new SubscriptionNotReadyError())
+  }
+
+  const subscription =
+    await paddleServerClient.subscriptions.get(subscriptionId)
+
+  const normalized: PaddleSubscriptionEventData = {
+    id: subscription.id,
+    customerId: subscription.customerId,
+    status: subscription.status,
+    items: subscription.items.map((item) => ({ quantity: item.quantity })),
+    currentBillingPeriod:
+      subscription.currentBillingPeriod == null
+        ? null
+        : {
+            startsAt: subscription.currentBillingPeriod.startsAt,
+            endsAt: subscription.currentBillingPeriod.endsAt,
+          },
+    nextBilledAt: subscription.nextBilledAt,
+    canceledAt: subscription.canceledAt,
+    scheduledChange:
+      subscription.scheduledChange == null
+        ? null
+        : {
+            effectiveAt: subscription.scheduledChange.effectiveAt,
+            action: subscription.scheduledChange.action,
+          },
+    customData:
+      (subscription.customData as { projectId?: string } | null) ?? null,
+    trialDates:
+      subscription.items[0]?.trialDates == null
+        ? null
+        : { endsAt: subscription.items[0].trialDates.endsAt },
+  }
+
+  const updates = buildSubscriptionUpdates(normalized)
+
+  await db
+    .update(projectSubscriptions)
+    .set(updates)
+    .where(eq(projectSubscriptions.id, existing.id))
+
+  const refreshed = await getProjectSubscription(input.projectId)
+  if (refreshed == null) {
+    return err(new SubscriptionNotReadyError())
+  }
+  return ok(refreshed)
 }
 
 export async function countActiveHumanOperators(
