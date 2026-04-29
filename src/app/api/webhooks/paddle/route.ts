@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { EventName, Webhooks } from '@paddle/paddle-node-sdk'
 import { upsertFromPaddleEvent } from '@/server/services/project-subscription'
-
-export const runtime = 'nodejs'
+import '@/server/billing/paddle-webhooks'
 
 export async function POST(request: NextRequest) {
   const secret = process.env.PADDLE_WEBHOOK_SECRET
@@ -32,11 +31,15 @@ export async function POST(request: NextRequest) {
 
   try {
     switch (event.eventType) {
-      case EventName.SubscriptionCreated:
-      case EventName.SubscriptionUpdated:
+      case EventName.SubscriptionActivated:
       case EventName.SubscriptionCanceled:
+      case EventName.SubscriptionCreated:
+      case EventName.SubscriptionImported:
       case EventName.SubscriptionPastDue:
-      case EventName.SubscriptionPaused: {
+      case EventName.SubscriptionPaused:
+      case EventName.SubscriptionResumed:
+      case EventName.SubscriptionTrialing:
+      case EventName.SubscriptionUpdated: {
         const data = event.data
         await upsertFromPaddleEvent({
           eventType: event.eventType,

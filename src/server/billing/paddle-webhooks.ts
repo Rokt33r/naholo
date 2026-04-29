@@ -1,4 +1,10 @@
-import { Webhooks } from '@paddle/paddle-node-sdk'
+import { Paddle, Webhooks } from '@paddle/paddle-node-sdk'
+
+// Instantiating Paddle registers the SDK's crypto runtime via NodeRuntime.initialize().
+// Without this, `Webhooks#isSignatureValid` returns false unconditionally because
+// RuntimeProvider has no crypto backend. Real API key wiring comes in a follow-up op;
+// the placeholder is sufficient for webhook-only use today.
+new Paddle(process.env.PADDLE_API_KEY ?? 'placeholder-webhooks-only')
 
 export async function verifyPaddleSignature(
   rawBody: string,

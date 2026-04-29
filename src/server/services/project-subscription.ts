@@ -139,11 +139,15 @@ type PaddleTransactionEventData = {
 export type PaddleWebhookEvent =
   | {
       eventType:
-        | 'subscription.created'
-        | 'subscription.updated'
+        | 'subscription.activated'
         | 'subscription.canceled'
+        | 'subscription.created'
+        | 'subscription.imported'
         | 'subscription.past_due'
         | 'subscription.paused'
+        | 'subscription.resumed'
+        | 'subscription.trialing'
+        | 'subscription.updated'
       data: PaddleSubscriptionEventData
     }
   | {
@@ -155,11 +159,15 @@ export async function upsertFromPaddleEvent(
   event: PaddleWebhookEvent,
 ): Promise<void> {
   switch (event.eventType) {
-    case 'subscription.created':
-    case 'subscription.updated':
+    case 'subscription.activated':
     case 'subscription.canceled':
+    case 'subscription.created':
+    case 'subscription.imported':
     case 'subscription.past_due':
     case 'subscription.paused':
+    case 'subscription.resumed':
+    case 'subscription.trialing':
+    case 'subscription.updated':
       break
     default:
       return
