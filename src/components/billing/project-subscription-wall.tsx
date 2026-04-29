@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { CheckoutButton } from '@/components/billing/checkout-button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
@@ -12,8 +13,16 @@ type ProjectSubscriptionWallProps = {
 export function ProjectSubscriptionWall({
   children,
 }: ProjectSubscriptionWallProps) {
-  const { projectId, projectSlug } = useProjectContext()
+  const { projectId, projectSlug, currentOperator } = useProjectContext()
   const { data, isLoading } = useProjectSubscription(projectSlug)
+  const pathname = usePathname()
+
+  const isAdmin = currentOperator.role === 'admin'
+  const isOnSubscriptionPage = pathname?.endsWith('/subscription') ?? false
+
+  if (isAdmin && isOnSubscriptionPage) {
+    return <>{children}</>
+  }
 
   if (isLoading || data == null) {
     return <>{children}</>
