@@ -53,6 +53,12 @@ function mapRow(
   }
 }
 
+export function isActiveSubscriptionStatus(
+  status: SubscriptionStatus,
+): boolean {
+  return status === 'active' || status === 'trialing'
+}
+
 export async function getProjectSubscription(
   projectId: string,
 ): Promise<ProjectSubscription | null> {

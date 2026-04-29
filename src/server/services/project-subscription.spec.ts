@@ -27,6 +27,7 @@ import {
   assertSeatAvailable,
   countActiveHumanOperators,
   createIncompleteSubscription,
+  isActiveSubscriptionStatus,
   upsertFromPaddleEvent,
   type PaddleWebhookEvent,
 } from './project-subscription'
@@ -202,6 +203,23 @@ describe('assertSeatAvailable', () => {
     const result = await assertSeatAvailable(projectId)
 
     expect(result.success).toBe(true)
+  })
+})
+
+describe('isActiveSubscriptionStatus', () => {
+  it('returns true for active', () => {
+    expect(isActiveSubscriptionStatus('active')).toBe(true)
+  })
+
+  it('returns true for trialing', () => {
+    expect(isActiveSubscriptionStatus('trialing')).toBe(true)
+  })
+
+  it('returns false for incomplete, past_due, paused, canceled', () => {
+    expect(isActiveSubscriptionStatus('incomplete')).toBe(false)
+    expect(isActiveSubscriptionStatus('past_due')).toBe(false)
+    expect(isActiveSubscriptionStatus('paused')).toBe(false)
+    expect(isActiveSubscriptionStatus('canceled')).toBe(false)
   })
 })
 

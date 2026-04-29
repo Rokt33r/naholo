@@ -16,9 +16,23 @@ import {
   resolveUserByApiToken,
   touchUserApiToken,
 } from '../services/user-api-token'
-import { NotFoundError } from '../services/errors'
+import { NotFoundError, SubscriptionInactiveError } from '../services/errors'
+import {
+  isActiveSubscriptionStatus,
+  type SubscriptionStatus,
+} from '../services/project-subscription'
 
 export type { ProjectOperator } from '../services/project-operator'
+
+export type RequireProjectOperatorOptions = {
+  skipSubscriptionCheck?: boolean
+}
+
+export type ProjectOperatorContext = {
+  projectOperator: ProjectOperator
+  project: { id: string; slug: string }
+  subscription: { status: SubscriptionStatus } | null
+}
 
 type AuthMethod = 'session' | 'user-api-token'
 
@@ -148,15 +162,14 @@ export async function requireAppAdmin(): Promise<{
  */
 export async function requireAdminProjectOperator(
   projectSlug: string,
-): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-}> {
-  const { projectOperator, project } = await requireProjectOperator(projectSlug)
+  options?: RequireProjectOperatorOptions,
+): Promise<ProjectOperatorContext> {
+  const { projectOperator, project, subscription } =
+    await requireProjectOperator(projectSlug, options)
   if (projectOperator.role !== 'admin') {
     throw new Error('Forbidden')
   }
-  return { projectOperator, project }
+  return { projectOperator, project, subscription }
 }
 
 /**
@@ -164,43 +177,67 @@ export async function requireAdminProjectOperator(
  * Checks Bearer token first, then falls back to session auth.
  * Throws if not authenticated or not an operator in the project.
  */
-export async function requireProjectOperator(projectSlug: string): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-}> {
+export async function requireProjectOperator(
+  projectSlug: string,
+  options?: RequireProjectOperatorOptions,
+): Promise<ProjectOperatorContext> {
   // TODO: Handle api token or session first before resolving projectId. It probably better to make require*ByToken and require*BySession accept projectSlug and resolve it internally.
-  const project = await db.query.projects.findFirst({
+  const projectRow = await db.query.projects.findFirst({
     columns: { id: true, slug: true },
+    with: { projectSubscription: { columns: { status: true } } },
     where: (t, { eq }) => eq(t.slug, projectSlug),
   })
-  if (project == null) {
+  if (projectRow == null) {
     throw new NotFoundError('Project')
   }
 
-  // Try Bearer token auth first
+  const project = { id: projectRow.id, slug: projectRow.slug }
+  const subscription =
+    projectRow.projectSubscription == null
+      ? null
+      : { status: projectRow.projectSubscription.status as SubscriptionStatus }
+
+  const projectOperator = await resolveProjectOperator(project.id)
+
+  if (options?.skipSubscriptionCheck !== true) {
+    if (
+      subscription == null ||
+      !isActiveSubscriptionStatus(subscription.status)
+    ) {
+      throw new SubscriptionInactiveError(
+        subscription?.status ?? 'missing',
+        project.slug,
+      )
+    }
+  }
+
+  return { projectOperator, project, subscription }
+}
+
+async function resolveProjectOperator(
+  projectId: string,
+): Promise<ProjectOperator> {
   const headersList = await headers()
   const authorization = headersList.get('authorization')
   if (authorization?.startsWith('Bearer naholo_user_')) {
     const token = authorization.slice('Bearer '.length)
     const { projectOperator } = await requireProjectOperatorByUserApiToken(
-      project.id,
+      projectId,
       token,
       headersList,
     )
-    return { projectOperator, project }
+    return projectOperator
   }
   if (authorization?.startsWith('Bearer naholo_')) {
     const token = authorization.slice('Bearer '.length)
     const { projectOperator } = await requireProjectOperatorByApiToken(
-      project.id,
+      projectId,
       token,
     )
-    return { projectOperator, project }
+    return projectOperator
   }
-
-  // Fall back to session-based auth
-  const { projectOperator } = await requireProjectOperatorBySession(project.id)
-  return { projectOperator, project }
+  const { projectOperator } = await requireProjectOperatorBySession(projectId)
+  return projectOperator
 }
 
 async function requireProjectOperatorByApiToken(
@@ -287,12 +324,14 @@ async function requireProjectOperatorBySession(
 export async function requireSkillLoadoutAccess(
   projectSlug: string,
   slug: string,
-): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-  skillLoadout: { id: string }
-}> {
-  const { projectOperator, project } = await requireProjectOperator(projectSlug)
+  options?: RequireProjectOperatorOptions,
+): Promise<
+  ProjectOperatorContext & {
+    skillLoadout: { id: string }
+  }
+> {
+  const { projectOperator, project, subscription } =
+    await requireProjectOperator(projectSlug, options)
 
   const skillLoadout = await db.query.skillLoadouts.findFirst({
     columns: { id: true },
@@ -304,7 +343,7 @@ export async function requireSkillLoadoutAccess(
     throw new NotFoundError('Skill Loadout')
   }
 
-  return { projectOperator, project, skillLoadout }
+  return { projectOperator, project, subscription, skillLoadout }
 }
 
 /**
@@ -314,12 +353,14 @@ export async function requireSkillLoadoutAccess(
 export async function requireOperationAccess(
   projectSlug: string,
   operationNumber: number | string,
-): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-  operation: { id: string; number: number }
-}> {
-  const { projectOperator, project } = await requireProjectOperator(projectSlug)
+  options?: RequireProjectOperatorOptions,
+): Promise<
+  ProjectOperatorContext & {
+    operation: { id: string; number: number }
+  }
+> {
+  const { projectOperator, project, subscription } =
+    await requireProjectOperator(projectSlug, options)
 
   const parsed = Number(operationNumber)
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -336,7 +377,7 @@ export async function requireOperationAccess(
     throw new NotFoundError('Operation')
   }
 
-  return { projectOperator, project, operation }
+  return { projectOperator, project, subscription, operation }
 }
 
 /**
@@ -346,16 +387,15 @@ export async function requireOperationLogAccess(
   projectSlug: string,
   operationNumber: number | string,
   logId: string,
-): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-  operation: { id: string; number: number }
-  log: { id: string }
-}> {
-  const { projectOperator, project, operation } = await requireOperationAccess(
-    projectSlug,
-    operationNumber,
-  )
+  options?: RequireProjectOperatorOptions,
+): Promise<
+  ProjectOperatorContext & {
+    operation: { id: string; number: number }
+    log: { id: string }
+  }
+> {
+  const { projectOperator, project, subscription, operation } =
+    await requireOperationAccess(projectSlug, operationNumber, options)
 
   const log = await db.query.operationLogs.findFirst({
     columns: { id: true },
@@ -367,7 +407,7 @@ export async function requireOperationLogAccess(
     throw new NotFoundError('OperationLog')
   }
 
-  return { projectOperator, project, operation, log }
+  return { projectOperator, project, subscription, operation, log }
 }
 
 /**
@@ -377,16 +417,15 @@ export async function requireOperationNoteAccess(
   projectSlug: string,
   operationNumber: number | string,
   noteName: string,
-): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-  operation: { id: string; number: number }
-  note: { id: string; name: string }
-}> {
-  const { projectOperator, project, operation } = await requireOperationAccess(
-    projectSlug,
-    operationNumber,
-  )
+  options?: RequireProjectOperatorOptions,
+): Promise<
+  ProjectOperatorContext & {
+    operation: { id: string; number: number }
+    note: { id: string; name: string }
+  }
+> {
+  const { projectOperator, project, subscription, operation } =
+    await requireOperationAccess(projectSlug, operationNumber, options)
 
   const note = await db.query.operationNotes.findFirst({
     columns: { id: true, name: true },
@@ -398,7 +437,7 @@ export async function requireOperationNoteAccess(
     throw new NotFoundError('Note')
   }
 
-  return { projectOperator, project, operation, note }
+  return { projectOperator, project, subscription, operation, note }
 }
 
 /**
@@ -408,16 +447,15 @@ export async function requireOperationObjectiveAccess(
   projectSlug: string,
   operationNumber: number | string,
   objectiveId: string,
-): Promise<{
-  projectOperator: ProjectOperator
-  project: { id: string; slug: string }
-  operation: { id: string; number: number }
-  objective: { id: string }
-}> {
-  const { projectOperator, project, operation } = await requireOperationAccess(
-    projectSlug,
-    operationNumber,
-  )
+  options?: RequireProjectOperatorOptions,
+): Promise<
+  ProjectOperatorContext & {
+    operation: { id: string; number: number }
+    objective: { id: string }
+  }
+> {
+  const { projectOperator, project, subscription, operation } =
+    await requireOperationAccess(projectSlug, operationNumber, options)
 
   const objective = await db.query.operationObjectives.findFirst({
     columns: { id: true },
@@ -429,5 +467,5 @@ export async function requireOperationObjectiveAccess(
     throw new NotFoundError('Objective')
   }
 
-  return { projectOperator, project, operation, objective }
+  return { projectOperator, project, subscription, operation, objective }
 }

@@ -1,3 +1,5 @@
+import type { SubscriptionStatus } from './project-subscription'
+
 export class ServiceError extends Error {
   constructor(message: string) {
     super(message)
@@ -28,6 +30,22 @@ export class SubscriptionNotReadyError extends ServiceError {
   ) {
     super(message)
     this.name = 'SubscriptionNotReadyError'
+  }
+}
+
+export class SubscriptionInactiveError extends ServiceError {
+  readonly status: SubscriptionStatus | 'missing'
+  readonly projectSlug: string
+
+  constructor(
+    status: SubscriptionStatus | 'missing',
+    projectSlug: string,
+    message = 'Project subscription is inactive.',
+  ) {
+    super(message)
+    this.name = 'SubscriptionInactiveError'
+    this.status = status
+    this.projectSlug = projectSlug
   }
 }
 
