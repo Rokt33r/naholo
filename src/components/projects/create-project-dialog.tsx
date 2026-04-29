@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckoutEventNames } from '@paddle/paddle-js'
 import {
   Dialog,
   DialogContent,
@@ -17,10 +16,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAction } from '@/lib/use-action'
 import { createProjectAction } from '@/app/app/actions'
-import {
-  initializePaddle,
-  subscribePaddleEvents,
-} from '@/lib/billing/paddle-browser'
 
 type CreateProjectDialogProps = {
   children: React.ReactNode
@@ -53,51 +48,12 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
       return
     }
 
-    const projectId = result.data.id
     const projectSlug = result.data.slug
     setOpen(false)
     setName('')
     setSlug('')
     setDescription('')
-
-    try {
-      const priceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID
-      if (priceId == null || priceId === '') {
-        throw new Error('NEXT_PUBLIC_PADDLE_PRICE_ID is not set')
-      }
-
-      const paddle = await initializePaddle()
-      if (paddle == null) {
-        throw new Error('Paddle failed to initialize')
-      }
-
-      let redirected = false
-      const redirect = () => {
-        if (redirected) {
-          return
-        }
-        redirected = true
-        router.push(`/app/projects/${projectSlug}`)
-      }
-
-      const unsubscribe = subscribePaddleEvents((event) => {
-        if (
-          event.name === CheckoutEventNames.CHECKOUT_COMPLETED ||
-          event.name === CheckoutEventNames.CHECKOUT_CLOSED
-        ) {
-          unsubscribe()
-          redirect()
-        }
-      })
-
-      paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customData: { projectId },
-      })
-    } catch (error) {
-      console.error(error)
-      router.push(`/app/projects/${projectSlug}`)
-    }
+    router.push(`/app/projects/${projectSlug}`)
   }
 
   return (

@@ -1,6 +1,7 @@
 'use client'
 
-import { CheckoutButton } from '@/components/billing/checkout-button'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
 import { useProjectSubscription } from '@/hooks/use-project-subscription'
@@ -16,8 +17,12 @@ function formatDate(value: string | null): string {
   return d.toLocaleDateString()
 }
 
-export function BillingTab() {
-  const { projectId, projectSlug } = useProjectContext()
+type BillingTabProps = {
+  onClose: () => void
+}
+
+export function BillingTab({ onClose }: BillingTabProps) {
+  const { projectSlug } = useProjectContext()
   const { data, isLoading, error } = useProjectSubscription(projectSlug)
 
   if (isLoading) {
@@ -68,18 +73,17 @@ export function BillingTab() {
         </div>
       </div>
 
-      {!data.hasPaddleSubscription && (
-        <div className='flex flex-col gap-3 rounded-lg border p-4'>
-          <p className='text-sm'>
-            Start your subscription to invite human operators to this project.
-          </p>
-          <CheckoutButton projectId={projectId} projectSlug={projectSlug} />
-        </div>
-      )}
+      <Button asChild className='self-start'>
+        <Link
+          href={`/app/projects/${projectSlug}/subscription`}
+          onClick={onClose}
+        >
+          Manage subscription
+        </Link>
+      </Button>
 
       <p className='text-muted-foreground text-xs'>
-        To change seats, update your card, or cancel — open the &ldquo;Manage
-        subscription&rdquo; link in your latest Paddle billing email.
+        Seats and cancellation are managed on the subscription page.
       </p>
     </div>
   )

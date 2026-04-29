@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CheckoutButton } from '@/components/billing/checkout-button'
+import { Button } from '@/components/ui/button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
 import { useProjectSubscription } from '@/hooks/use-project-subscription'
@@ -13,8 +14,8 @@ type ProjectSubscriptionWallProps = {
 export function ProjectSubscriptionWall({
   children,
 }: ProjectSubscriptionWallProps) {
-  const { projectId, projectSlug, currentOperator } = useProjectContext()
-  const { data, isLoading } = useProjectSubscription(projectSlug)
+  const { projectSlug, currentOperator } = useProjectContext()
+  const { data, isLoading, error } = useProjectSubscription(projectSlug)
   const pathname = usePathname()
 
   const isAdmin = currentOperator.role === 'admin'
@@ -24,28 +25,46 @@ export function ProjectSubscriptionWall({
     return <>{children}</>
   }
 
+  if (error != null) {
+    return (
+      <div className='flex h-full items-center justify-center p-6'>
+        <div className='flex max-w-md flex-col items-center gap-3 rounded-lg border p-6 text-center'>
+          <h2 className='text-lg font-semibold'>Subscription unavailable</h2>
+          <p className='text-muted-foreground text-sm'>
+            We couldn&rsquo;t load this project&rsquo;s subscription status.
+            Refresh to try again, or contact support if the problem persists.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading || data == null) {
     return <>{children}</>
   }
 
   if (data.status === 'incomplete') {
-    if (data.isBillingUser) {
+    if (isAdmin) {
       return (
         <div className='flex h-full items-center justify-center'>
           <div className='flex max-w-md flex-col items-center gap-4 rounded-lg border p-6 text-center'>
             <h2 className='text-lg font-semibold'>Finish payment setup</h2>
-            <p className='text-sm text-muted-foreground'>
+            <p className='text-muted-foreground text-sm'>
               Complete checkout to unlock this project.
             </p>
-            <CheckoutButton projectId={projectId} projectSlug={projectSlug} />
+            <Button asChild>
+              <Link href={`/app/projects/${projectSlug}/subscription`}>
+                Go to subscription page
+              </Link>
+            </Button>
           </div>
         </div>
       )
     }
     return (
       <div className='flex h-full items-center justify-center'>
-        <p className='max-w-md text-center text-sm text-muted-foreground'>
-          The project owner needs to complete payment setup before this project
+        <p className='text-muted-foreground max-w-md text-center text-sm'>
+          Ask a project admin to set up the subscription before this project
           becomes available.
         </p>
       </div>
@@ -65,6 +84,14 @@ export function ProjectSubscriptionWall({
             Update billing via the &ldquo;Manage subscription&rdquo; link in
             your latest Paddle email to restore write access.
           </span>
+          {isAdmin && (
+            <Link
+              href={`/app/projects/${projectSlug}/subscription`}
+              className='ml-auto underline'
+            >
+              Manage subscription
+            </Link>
+          )}
         </div>
         <div className='flex-1 overflow-hidden'>{children}</div>
       </div>
