@@ -267,11 +267,14 @@ export async function upsertFromPaddleEvent(
 export async function finalizeCheckoutFromTransaction(input: {
   projectId: string
   transactionId: string
+  billingUserId: string
 }): Promise<ReturnResult<ProjectSubscription>> {
-  const existing = await getProjectSubscription(input.projectId)
-  if (existing == null) {
-    return err(new SubscriptionNotReadyError())
-  }
+  const existing =
+    (await getProjectSubscription(input.projectId)) ??
+    (await createIncompleteSubscription({
+      projectId: input.projectId,
+      billingUserId: input.billingUserId,
+    }))
 
   // Idempotency: this endpoint is one-shot per project lifecycle. Once the
   // project has a Paddle subscription id attached, it has been finalized —

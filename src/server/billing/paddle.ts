@@ -1,4 +1,4 @@
-import { Paddle, Webhooks } from '@paddle/paddle-node-sdk'
+import { Environment, Paddle, Webhooks } from '@paddle/paddle-node-sdk'
 
 // Shared server-side Paddle module. Used for both webhook crypto
 // (`Webhooks#isSignatureValid`) and outbound API calls
@@ -11,7 +11,12 @@ if (apiKey == null || apiKey === '') {
   throw new Error('PADDLE_API_KEY is not set')
 }
 
-export const paddleServerClient = new Paddle(apiKey)
+const environment =
+  process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === 'sandbox'
+    ? Environment.sandbox
+    : Environment.production
+
+export const paddleServerClient = new Paddle(apiKey, { environment })
 
 export async function verifyPaddleSignature(
   rawBody: string,
