@@ -39,7 +39,7 @@ export async function POST(
 
     const result = await finalizeCheckoutFromTransaction({
       projectId: project.id,
-      transactionId: parsed.data.transactionId,
+      paddleTransactionId: parsed.data.transactionId,
       billingUserId: projectOperator.userId,
     })
 

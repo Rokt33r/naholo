@@ -266,7 +266,7 @@ export async function upsertFromPaddleEvent(
 
 export async function finalizeCheckoutFromTransaction(input: {
   projectId: string
-  transactionId: string
+  paddleTransactionId: string
   billingUserId: string
 }): Promise<ReturnResult<ProjectSubscription>> {
   const existing =
@@ -286,11 +286,11 @@ export async function finalizeCheckoutFromTransaction(input: {
   }
 
   const transaction = await paddleServerClient.transactions.get(
-    input.transactionId,
+    input.paddleTransactionId,
   )
 
-  const subscriptionId = transaction.subscriptionId
-  if (subscriptionId == null) {
+  const paddleSubscriptionId = transaction.subscriptionId
+  if (paddleSubscriptionId == null) {
     return err(new SubscriptionNotReadyError())
   }
 
@@ -302,36 +302,38 @@ export async function finalizeCheckoutFromTransaction(input: {
     return err(new SubscriptionNotReadyError())
   }
 
-  const subscription =
-    await paddleServerClient.subscriptions.get(subscriptionId)
+  const paddleSubscription =
+    await paddleServerClient.subscriptions.get(paddleSubscriptionId)
 
   const normalized: PaddleSubscriptionEventData = {
-    id: subscription.id,
-    customerId: subscription.customerId,
-    status: subscription.status,
-    items: subscription.items.map((item) => ({ quantity: item.quantity })),
+    id: paddleSubscription.id,
+    customerId: paddleSubscription.customerId,
+    status: paddleSubscription.status,
+    items: paddleSubscription.items.map((item) => ({
+      quantity: item.quantity,
+    })),
     currentBillingPeriod:
-      subscription.currentBillingPeriod == null
+      paddleSubscription.currentBillingPeriod == null
         ? null
         : {
-            startsAt: subscription.currentBillingPeriod.startsAt,
-            endsAt: subscription.currentBillingPeriod.endsAt,
+            startsAt: paddleSubscription.currentBillingPeriod.startsAt,
+            endsAt: paddleSubscription.currentBillingPeriod.endsAt,
           },
-    nextBilledAt: subscription.nextBilledAt,
-    canceledAt: subscription.canceledAt,
+    nextBilledAt: paddleSubscription.nextBilledAt,
+    canceledAt: paddleSubscription.canceledAt,
     scheduledChange:
-      subscription.scheduledChange == null
+      paddleSubscription.scheduledChange == null
         ? null
         : {
-            effectiveAt: subscription.scheduledChange.effectiveAt,
-            action: subscription.scheduledChange.action,
+            effectiveAt: paddleSubscription.scheduledChange.effectiveAt,
+            action: paddleSubscription.scheduledChange.action,
           },
     customData:
-      (subscription.customData as { projectId?: string } | null) ?? null,
+      (paddleSubscription.customData as { projectId?: string } | null) ?? null,
     trialDates:
-      subscription.items[0]?.trialDates == null
+      paddleSubscription.items[0]?.trialDates == null
         ? null
-        : { endsAt: subscription.items[0].trialDates.endsAt },
+        : { endsAt: paddleSubscription.items[0].trialDates.endsAt },
   }
 
   const updates = buildSubscriptionUpdates(normalized)
