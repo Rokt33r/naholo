@@ -4,7 +4,7 @@ import { operationLogs, operations } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { NotFoundError } from './errors'
+import { NotFoundError } from '../errors'
 import { generateOperationLogPreview } from '@/lib/operation-utils'
 import { publishOperationEvent } from '../realtime/publish'
 

@@ -42,7 +42,7 @@ vi.mock('./auth', () => ({
 }))
 
 import { requireProjectOperator } from './permissions'
-import { SubscriptionInactiveError, NotFoundError } from '../services/errors'
+import { SubscriptionInactiveError, NotFoundError } from '../errors'
 import { createIncompleteSubscription } from '../services/project-subscription'
 
 let pool: Pool

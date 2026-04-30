@@ -5,7 +5,7 @@ import { userApiTokens } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { SuccessResult, ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { NotFoundError } from './errors'
+import { NotFoundError } from '../errors'
 
 export type UserApiToken = {
   id: string

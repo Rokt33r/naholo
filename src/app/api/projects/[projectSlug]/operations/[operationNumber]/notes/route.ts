@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import { listNotes, createNote } from '@/server/services/note'
 import { getSourceClientId } from '@/server/realtime/publish'
@@ -27,11 +28,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(notes)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }
 
@@ -84,10 +81,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(result.data, { status: 201 })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

@@ -4,7 +4,7 @@ import { projectSubscriptions, projectOperators } from '../db/schema'
 import { and, count, eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { SeatLimitExceededError, SubscriptionNotReadyError } from './errors'
+import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
 import { paddleServerClient } from '@/server/billing/paddle'
 
 export type SubscriptionStatus =

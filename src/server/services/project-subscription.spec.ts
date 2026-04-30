@@ -31,7 +31,7 @@ import {
   upsertFromPaddleEvent,
   type PaddleWebhookEvent,
 } from './project-subscription'
-import { SeatLimitExceededError, SubscriptionNotReadyError } from './errors'
+import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
 
 let pool: Pool
 let client: PoolClient

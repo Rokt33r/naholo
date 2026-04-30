@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import {
   listSkillLoadouts,
   createSkillLoadout,
 } from '@/server/services/skill-loadout'
-import { ConflictError } from '@/server/services/errors'
 
 type RouteContext = {
   params: Promise<{
@@ -26,11 +26,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(skillLoadouts)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }
 
@@ -70,21 +66,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await createSkillLoadout(project.id, { name, slug })
     if (!result.success) {
-      if (result.error instanceof ConflictError) {
-        return NextResponse.json(
-          { error: result.error.message },
-          { status: 409 },
-        )
-      }
-      return NextResponse.json({ error: result.error.message }, { status: 500 })
+      throw result.error
     }
 
     return NextResponse.json(result.data, { status: 201 })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

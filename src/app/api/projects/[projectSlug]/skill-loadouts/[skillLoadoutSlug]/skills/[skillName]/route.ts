@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { mapApiError } from '@/server/errors'
 import { requireSkillLoadoutAccess } from '@/server/auth/permissions'
 import { getSkill, upsertSkill, deleteSkill } from '@/server/services/skill'
 
@@ -32,11 +33,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(skill)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }
 
@@ -83,11 +80,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(result.data)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }
 
@@ -112,10 +105,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

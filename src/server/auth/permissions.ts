@@ -16,7 +16,7 @@ import {
   resolveUserByApiToken,
   touchUserApiToken,
 } from '../services/user-api-token'
-import { NotFoundError, SubscriptionInactiveError } from '../services/errors'
+import { NotFoundError, SubscriptionInactiveError } from '../errors'
 import {
   isActiveSubscriptionStatus,
   type SubscriptionStatus,

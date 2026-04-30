@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { mapApiError } from '@/server/errors'
 import { requireAdminProjectOperator } from '@/server/auth/permissions'
 import {
   countActiveHumanOperators,
   getProjectSubscription,
   finalizeCheckoutFromTransaction,
 } from '@/server/services/project-subscription'
-import { SubscriptionNotReadyError } from '@/server/services/errors'
 import type { ProjectSubscriptionView } from '../route'
 
 export async function POST(
@@ -15,8 +15,10 @@ export async function POST(
 ) {
   try {
     const { projectSlug } = await params
-    const { project, projectOperator } =
-      await requireAdminProjectOperator(projectSlug)
+    const { project, projectOperator } = await requireAdminProjectOperator(
+      projectSlug,
+      { skipSubscriptionCheck: true },
+    )
 
     const FinalizeCheckoutBodySchema = z.object({
       transactionId: z.string().min(1),
@@ -28,32 +30,21 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
     }
 
+    if (projectOperator.userId == null) {
+      return NextResponse.json(
+        { error: 'Bot operators cannot finalize checkout' },
+        { status: 403 },
+      )
+    }
+
     const result = await finalizeCheckoutFromTransaction({
       projectId: project.id,
       transactionId: parsed.data.transactionId,
+      billingUserId: projectOperator.userId,
     })
 
     if (!result.success) {
-      if (result.error instanceof SubscriptionNotReadyError) {
-        console.warn('Finalize checkout not ready:', {
-          projectSlug,
-          transactionId: parsed.data.transactionId,
-          message: result.error.message,
-        })
-        return NextResponse.json(
-          { error: 'Subscription not ready' },
-          { status: 409 },
-        )
-      }
-      console.error('Finalize checkout failed:', {
-        projectSlug,
-        transactionId: parsed.data.transactionId,
-        error: result.error,
-      })
-      return NextResponse.json(
-        { error: 'Internal Server Error' },
-        { status: 500 },
-      )
+      throw result.error
     }
 
     const subscription = await getProjectSubscription(project.id)
@@ -79,10 +70,6 @@ export async function POST(
 
     return NextResponse.json(view)
   } catch (error) {
-    console.error('Finalize checkout route error:', error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

@@ -4,7 +4,7 @@ import { projects } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { NotFoundError, ConflictError } from './errors'
+import { NotFoundError, ConflictError } from '../errors'
 
 export type Project = {
   id: string

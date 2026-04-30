@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { mapApiError } from '@/server/errors'
 import { requireOperationNoteAccess } from '@/server/auth/permissions'
 import { updateNote, deleteNote } from '@/server/services/note'
 import { getSourceClientId } from '@/server/realtime/publish'
@@ -63,11 +64,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(result.data)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }
 
@@ -98,10 +95,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

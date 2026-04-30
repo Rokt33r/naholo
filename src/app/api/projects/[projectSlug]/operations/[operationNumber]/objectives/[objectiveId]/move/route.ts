@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { mapApiError } from '@/server/errors'
 import { requireOperationObjectiveAccess } from '@/server/auth/permissions'
 import { moveObjective } from '@/server/services/objective'
 import { getSourceClientId } from '@/server/realtime/publish'
@@ -65,10 +66,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

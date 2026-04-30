@@ -6,7 +6,7 @@ import { createProjectOperator } from './project-operator'
 import { assertSeatAvailable } from './project-subscription'
 import { ok } from '@/lib/return-result'
 import type { SuccessResult } from '@/lib/return-result'
-import { ConflictError } from './errors'
+import { ConflictError } from '../errors'
 
 export type ProjectInvite = {
   id: string

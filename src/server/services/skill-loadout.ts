@@ -4,7 +4,7 @@ import { skillLoadouts } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { ConflictError } from './errors'
+import { ConflictError } from '../errors'
 
 export type SkillLoadoutSummary = {
   id: string

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import { realtimeBroker } from '@/server/realtime'
 
@@ -88,10 +89,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
       },
     })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

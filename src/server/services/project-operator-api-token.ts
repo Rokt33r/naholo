@@ -5,7 +5,7 @@ import { projectOperatorApiTokens } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { SuccessResult, ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { NotFoundError } from './errors'
+import { NotFoundError } from '../errors'
 import type { ProjectOperator } from './project-operator'
 
 export type ApiToken = {

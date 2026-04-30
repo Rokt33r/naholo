@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import { getProjectOperator } from '@/server/services/project-operator'
 import { revokeProjectOperatorApiToken } from '@/server/services/project-operator-api-token'
@@ -29,10 +30,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }

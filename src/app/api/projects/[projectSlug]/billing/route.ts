@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import {
   countActiveHumanOperators,
@@ -32,8 +33,10 @@ export async function GET(
 ) {
   try {
     const { projectSlug } = await params
-    const { project, projectOperator } =
-      await requireProjectOperator(projectSlug)
+    const { project, projectOperator } = await requireProjectOperator(
+      projectSlug,
+      { skipSubscriptionCheck: true },
+    )
 
     const subscription = await getProjectSubscription(project.id)
     const usedSeats = await countActiveHumanOperators(project.id)
@@ -58,10 +61,6 @@ export async function GET(
 
     return NextResponse.json(view)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    )
+    return mapApiError(error)
   }
 }
