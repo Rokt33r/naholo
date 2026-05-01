@@ -18,8 +18,8 @@ Users may refer to entities by any column — entity name, acronym, or familiar 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
 1. **`/infil {n}`** — Input: operation number on server. Output: `.naholo/local/operations/{n}/` populated with `OBJECTIVES.md`, `notes/*.md`, and `.base/` copies. Generates `notes/OPERATION.md` locally if missing. Never pushes.
-2. **`/spec [{n}] ["extra"]`** — Input: infiled operation. Output: `notes/SPEC.md` (executable spec) and an updated `OBJECTIVES.md` mirroring the spec's structure. Prunes unanswered open questions from OPERATION.md.
-3. **`/ship [{n}] ["range"]`** — Input: elaborated SPEC.md. Output: code changes, checkboxes flipped in OBJECTIVES.md, Timeline entries appended to OPERATION.md.
+2. **`/spec [{n}] ["extra"]`** — Input: infiled operation. Two-phase: Phase 1 writes a rough `notes/SPEC.md` with a transient `## TODO - drafting` checklist (one entry per top-level `### N.` objective, all unchecked) and gates on user approval; Phase 2 fills `- N.M.` sub-bullets per section, ticking each TODO box in turn, and deletes the `## TODO - drafting` section once the last box ticks. Output: fully-elaborated `notes/SPEC.md` and an updated `OBJECTIVES.md` mirroring the spec's structure. Prunes unanswered open questions from OPERATION.md.
+3. **`/ship [{n}] ["range"]`** — Input: elaborated SPEC.md (refuses if `## TODO - drafting` is still present — that's the elaboration gate). Output: code changes, checkboxes flipped in OBJECTIVES.md, Timeline entries appended to OPERATION.md.
 4. **`/sitrep [{n}]`** — Input: local dir with progress. Output: server synced (objectives + notes), summary log posted. Does not close.
 5. **`/exfil [{n}] ["close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
 
@@ -52,13 +52,20 @@ The canonical checklist. The only file with checkboxes.
 
 ### SPEC.md
 
-The executable spec. No checkboxes anywhere.
+The executable spec. No checkboxes anywhere — except the transient `## TODO - drafting` section described below.
 
 - **Heading**: `# SPEC — OP #{n}: {title}`
 - Recommended sections: `## Goal`, `## Prerequisites`, `## Architecture Decisions`, `## Objectives`, `## Notes`.
 - Objectives use hierarchical numbering: `### {n}. {title}` for top-level, indented plain bullets `- {n}.{m}. {title}` for sub-objectives.
-- Never `- [ ]` / `- [x]` — progress tracking lives exclusively in OBJECTIVES.md.
+- Never `- [ ]` / `- [x]` in `## Objectives` — progress tracking lives exclusively in OBJECTIVES.md.
 - Superseded sub-objectives are struck through with `~~` and get a replacement pointer; never deleted.
+
+**Transient `## TODO - drafting` section.** While `/spec` is in its rough-plan phase or partially through elaboration, SPEC.md carries one extra top-level section, `## TODO - drafting`, positioned immediately before `## Objectives`. It is the only top-level SPEC.md section beyond Goal / Prerequisites / Architecture Decisions / Objectives / Notes, and it exists only while drafting.
+
+- Body is a flat checklist mirroring each top-level `### N. Title` entry: `- [ ] N. Title` or `- [x] N. Title` (same `N. Title` text as the heading).
+- **Lifecycle**: `/spec` Phase 1 creates it with all boxes unchecked; each box flips to `[x]` immediately after that section's `- N.M.` sub-bullets are written; the entire section (heading + list) is deleted in the same edit that ticks the last box. From that point on, SPEC.md is fully elaborated.
+- **`/ship` gate**: `/ship` refuses to run while `## TODO - drafting` is present.
+- The skill manages this section — the agent writes/updates/deletes it only at the documented transitions. Manual user edits to the list are treated as authoritative on re-entry (a manually-ticked box means that section is treated as drafted; a manually-unticked box on an already-populated section means redraft).
 
 ### Listing order
 

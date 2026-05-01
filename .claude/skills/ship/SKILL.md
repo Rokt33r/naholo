@@ -32,6 +32,7 @@ Anything after in quotes is extra instructions. Common patterns:
 
 3. **Read spec**: Read `{operationDir}/notes/SPEC.md`.
    - If `SPEC.md` does not exist → tell user to run `/spec` first and stop.
+   - Grep for the line `^## TODO - drafting$`. If found, the spec is still being drafted — print: "Spec is still being drafted — `## TODO - drafting` is present in [SPEC.md]({operationDir}/notes/SPEC.md). Run `/spec` to finish elaboration before shipping. Unchecked sections: {comma-separated list of `- [ ] N. Title` entries from the TODO list}." and stop.
 
 4. **Read OBJECTIVES.md**: Read `{operationDir}/OBJECTIVES.md` to know current completion state.
 
@@ -57,6 +58,7 @@ Anything after in quotes is extra instructions. Common patterns:
 
 ## Rules
 
+- **Refuse drafts**: never implement against a SPEC.md that contains `## TODO - drafting`. The drafting list is the elaboration gate; redirect the user to `/spec`.
 - **Follow the spec**: The spec is the source of truth. Don't add features, refactor surrounding code, or make improvements beyond what's described.
 - **OBJECTIVES.md is the only progress tracker**: SPEC.md is a reference spec with no checkboxes. Mark progress exclusively in OBJECTIVES.md.
 - **Mark progress incrementally**: Check off each `- [ ]` → `- [x]` in OBJECTIVES.md immediately after completing it, not in a batch at the end. This lets the user see progress and resume if interrupted.

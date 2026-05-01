@@ -30,28 +30,47 @@ Fetch the issue locally for offline-first work.
 
 ### Phase 3: Spec (`/spec`)
 
-Research the codebase and create an executable specification.
+Research the codebase and create an executable specification in two phases.
 
-- Creates `notes/SPEC.md` with:
+**Phase 1 — Rough plan**: high-level review before diving into detail.
+
+- Researches the codebase, drafts a reviewable-but-not-yet-detailed `notes/SPEC.md` with:
   - **Goal** — what this spec achieves and why
   - **Prerequisites** — what must exist before implementation
   - **Architecture Decisions** — key technical choices with reasoning
-  - **Tasks** — numbered tasks in dependency order with subtasks specifying exact file paths and behavior
+  - **Affected files** — list of files to create or modify
+  - Optional **Workflow diagrams** / **Wireframes** (ASCII) for non-trivial flows or UI changes
+  - **`## TODO - drafting`** — transient checklist (one entry per top-level objective) that gates elaboration. Lives immediately before `## Objectives` and is deleted once every section is filled in.
+  - **Objectives** — `### N. Title` headings each with 1–3 sentence descriptions. **No `- N.M.` sub-bullets yet.**
   - **Notes** — edge cases, gotchas, deferred decisions
-- Updates `TASKS.md` to mirror the spec's task structure
-- Appends a Timeline entry to PLAN.md
+- Surfaces SPEC.md via a clickable markdown link in chat so the user can review in their editor.
+- Asks for approval via `AskUserQuestion` (Approve / Request changes). "Request changes" loops on free-form feedback until the rough plan is approved.
+
+**Phase 2 — Elaboration**: fill in `- N.M.` sub-bullets under each `### N.`. Mode chosen via `AskUserQuestion`:
+
+- **Elaborate all** — fills every section in one batched edit, ticks all TODO boxes, deletes the `## TODO - drafting` section.
+- **Elaborate per section** — loops unchecked sections (resume support), drafts sub-bullets per section, asks Approve / Request-changes per section before moving on. Deletes `## TODO - drafting` when the last box ticks.
+- **Edit / add context** — escape hatch for free-form edits anywhere in SPEC.md (rough sections, already-elaborated sub-bullets, Notes, anything). Loops on user input until they signal resume, then returns to the elaboration menu.
+
+After full elaboration:
+
+- Mirrors every `- N.M.` sub-bullet from SPEC.md into `OBJECTIVES.md` as `  - [ ] N.M. Title` under its parent.
+- Appends a Timeline entry to OPERATION.md.
 - Quality bar: "Could another session implement this by reading ONLY SPEC.md and CLAUDE.md?"
+
+Re-running `/spec` while `## TODO - drafting` is present jumps straight to the Phase 2 menu by default. Extra instructions classify as `rough-edit` (partial revision via the Phase 1 review loop) or `rough-rewrite` (overwrite from scratch).
 
 ### Phase 4: Ship (`/ship`)
 
-Implement the spec, task by task.
+Implement the elaborated spec, objective by objective.
 
-- Works through unchecked tasks in TASKS.md top-to-bottom
-- Reads task details from SPEC.md, implements code changes
-- Marks subtasks `[x]` in TASKS.md immediately after completing each one
-- Runs formatter and type checker after each top-level task
-- Appends progress entries and Timeline entries to PLAN.md
-- Updates SPEC.md if implementation deviates (strikethrough on superseded subtasks, never deletes)
+- **Drafting gate**: `/ship` reads SPEC.md and refuses if `## TODO - drafting` is still present, redirecting the user back to `/spec` to finish elaboration.
+- Works through unchecked objectives in OBJECTIVES.md top-to-bottom
+- Reads objective details from SPEC.md, implements code changes
+- Marks sub-objectives `[x]` in OBJECTIVES.md immediately after completing each one
+- Runs formatter and type checker after each top-level objective
+- Appends Timeline entries to OPERATION.md
+- Updates SPEC.md if implementation deviates (strikethrough on superseded sub-objectives, never deletes)
 
 ### Phase 5: Sync & Close
 
