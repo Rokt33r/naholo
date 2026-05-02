@@ -3,7 +3,7 @@ import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import {
   countActiveHumanOperators,
-  getProjectSubscription,
+  resolveProjectSubscription,
 } from '@/server/services/project-subscription'
 
 export type ProjectSubscriptionView = {
@@ -38,25 +38,27 @@ export async function GET(
       { skipSubscriptionCheck: true },
     )
 
-    const subscription = await getProjectSubscription(project.id)
+    const subscription = await resolveProjectSubscription({
+      projectId: project.id,
+      billingUserId: projectOperator.userId ?? '',
+    })
     const usedSeats = await countActiveHumanOperators(project.id)
 
     const view: ProjectSubscriptionView = {
       projectId: project.id,
-      status: subscription?.status ?? null,
-      seatQuantity: subscription?.seatQuantity ?? 0,
+      status: subscription.status,
+      seatQuantity: subscription.seatQuantity,
       usedSeats,
-      hasPaddleSubscription: subscription?.paddleSubscriptionId != null,
+      hasPaddleSubscription: subscription.paddleSubscriptionId != null,
       isBillingUser:
-        subscription != null &&
         projectOperator.userId != null &&
         subscription.billingUserId === projectOperator.userId,
-      trialEndsAt: subscription?.trialEndsAt?.toISOString() ?? null,
+      trialEndsAt: subscription.trialEndsAt?.toISOString() ?? null,
       currentPeriodStart:
-        subscription?.currentPeriodStart?.toISOString() ?? null,
-      currentPeriodEnd: subscription?.currentPeriodEnd?.toISOString() ?? null,
-      cancelAt: subscription?.cancelAt?.toISOString() ?? null,
-      canceledAt: subscription?.canceledAt?.toISOString() ?? null,
+        subscription.currentPeriodStart?.toISOString() ?? null,
+      currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+      cancelAt: subscription.cancelAt?.toISOString() ?? null,
+      canceledAt: subscription.canceledAt?.toISOString() ?? null,
     }
 
     return NextResponse.json(view)

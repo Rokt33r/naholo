@@ -43,7 +43,7 @@ vi.mock('./auth', () => ({
 
 import { requireProjectOperator } from './permissions'
 import { SubscriptionInactiveError, NotFoundError } from '../errors'
-import { createIncompleteSubscription } from '../services/project-subscription'
+import { resolveProjectSubscription } from '../services/project-subscription'
 
 let pool: Pool
 let client: PoolClient
@@ -123,7 +123,7 @@ describe('requireProjectOperator subscription gate', () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
-    await createIncompleteSubscription({
+    await resolveProjectSubscription({
       projectId: project.id,
       billingUserId: userId,
     })
@@ -140,7 +140,7 @@ describe('requireProjectOperator subscription gate', () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
-    await createIncompleteSubscription({
+    await resolveProjectSubscription({
       projectId: project.id,
       billingUserId: userId,
     })
@@ -156,7 +156,7 @@ describe('requireProjectOperator subscription gate', () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
-    await createIncompleteSubscription({
+    await resolveProjectSubscription({
       projectId: project.id,
       billingUserId: userId,
     })
@@ -172,7 +172,7 @@ describe('requireProjectOperator subscription gate', () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
-    await createIncompleteSubscription({
+    await resolveProjectSubscription({
       projectId: project.id,
       billingUserId: userId,
     })
@@ -206,7 +206,7 @@ describe('requireProjectOperator subscription gate', () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
-    await createIncompleteSubscription({
+    await resolveProjectSubscription({
       projectId: project.id,
       billingUserId: userId,
     })

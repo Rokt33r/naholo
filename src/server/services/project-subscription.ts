@@ -59,28 +59,18 @@ export function isActiveSubscriptionStatus(
   return status === 'active' || status === 'trialing'
 }
 
-export async function getProjectSubscription(
-  projectId: string,
-): Promise<ProjectSubscription | null> {
-  const row = await db.query.projectSubscriptions.findFirst({
-    where: (t, { eq }) => eq(t.projectId, projectId),
-  })
-  if (row == null) {
-    return null
-  }
-  return mapRow(row)
-}
-
-export async function createIncompleteSubscription(input: {
+export async function resolveProjectSubscription(input: {
   projectId: string
   billingUserId: string
 }): Promise<ProjectSubscription> {
-  const existing = await getProjectSubscription(input.projectId)
+  const existing = await db.query.projectSubscriptions.findFirst({
+    where: (t, { eq }) => eq(t.projectId, input.projectId),
+  })
   if (existing != null) {
-    return existing
+    return mapRow(existing)
   }
 
-  const [row] = await db
+  const [inserted] = await db
     .insert(projectSubscriptions)
     .values({
       projectId: input.projectId,
@@ -88,9 +78,19 @@ export async function createIncompleteSubscription(input: {
       status: 'incomplete',
       seatQuantity: 1,
     })
+    .onConflictDoNothing({ target: projectSubscriptions.projectId })
     .returning()
+  if (inserted != null) {
+    return mapRow(inserted)
+  }
 
-  return mapRow(row)
+  const winner = await db.query.projectSubscriptions.findFirst({
+    where: (t, { eq }) => eq(t.projectId, input.projectId),
+  })
+  if (winner == null) {
+    throw new Error('resolveProjectSubscription: row vanished after conflict')
+  }
+  return mapRow(winner)
 }
 
 function mapPaddleStatus(
@@ -131,7 +131,7 @@ type PaddleSubscriptionEventData = {
   nextBilledAt?: string | null
   canceledAt?: string | null
   scheduledChange?: { effectiveAt?: string | null; action?: string } | null
-  customData?: { projectId?: string } | null
+  customData?: { projectId?: string; subscriptionId?: string } | null
   trialDates?: { endsAt?: string | null } | null
 }
 
@@ -140,7 +140,7 @@ type PaddleTransactionEventData = {
   subscriptionId?: string | null
   customerId?: string | null
   status?: string
-  customData?: { projectId?: string } | null
+  customData?: { projectId?: string; subscriptionId?: string } | null
 }
 
 export type PaddleWebhookEvent =
@@ -248,20 +248,22 @@ export async function upsertFromPaddleEvent(
     return
   }
 
-  const projectId = data.customData?.projectId
-  if (projectId == null) {
+  const subscriptionId = data.customData?.subscriptionId
+  if (subscriptionId == null) {
     return
   }
 
-  const existingByProject = await getProjectSubscription(projectId)
-  if (existingByProject == null) {
+  const existingById = await db.query.projectSubscriptions.findFirst({
+    where: (t, { eq }) => eq(t.id, subscriptionId),
+  })
+  if (existingById == null) {
     return
   }
 
   await db
     .update(projectSubscriptions)
     .set(updates)
-    .where(eq(projectSubscriptions.id, existingByProject.id))
+    .where(eq(projectSubscriptions.id, existingById.id))
 }
 
 export async function finalizeCheckoutFromTransaction(input: {
@@ -269,12 +271,10 @@ export async function finalizeCheckoutFromTransaction(input: {
   paddleTransactionId: string
   billingUserId: string
 }): Promise<ReturnResult<ProjectSubscription>> {
-  const existing =
-    (await getProjectSubscription(input.projectId)) ??
-    (await createIncompleteSubscription({
-      projectId: input.projectId,
-      billingUserId: input.billingUserId,
-    }))
+  const existing = await resolveProjectSubscription({
+    projectId: input.projectId,
+    billingUserId: input.billingUserId,
+  })
 
   // Idempotency: this endpoint is one-shot per project lifecycle. Once the
   // project has a Paddle subscription id attached, it has been finalized —
@@ -343,11 +343,13 @@ export async function finalizeCheckoutFromTransaction(input: {
     .set(updates)
     .where(eq(projectSubscriptions.id, existing.id))
 
-  const refreshed = await getProjectSubscription(input.projectId)
+  const refreshed = await db.query.projectSubscriptions.findFirst({
+    where: (t, { eq }) => eq(t.id, existing.id),
+  })
   if (refreshed == null) {
     return err(new SubscriptionNotReadyError())
   }
-  return ok(refreshed)
+  return ok(mapRow(refreshed))
 }
 
 export async function countActiveHumanOperators(
@@ -367,11 +369,12 @@ export async function countActiveHumanOperators(
 
 export async function assertSeatAvailable(
   projectId: string,
+  billingUserId: string,
 ): Promise<ReturnResult<undefined>> {
-  const subscription = await getProjectSubscription(projectId)
-  if (subscription == null) {
-    return err(new SubscriptionNotReadyError())
-  }
+  const subscription = await resolveProjectSubscription({
+    projectId,
+    billingUserId,
+  })
   if (subscription.status !== 'trialing' && subscription.status !== 'active') {
     return err(new SubscriptionNotReadyError())
   }

@@ -26,7 +26,7 @@ vi.mock('../db', () => ({
 import {
   assertSeatAvailable,
   countActiveHumanOperators,
-  createIncompleteSubscription,
+  resolveProjectSubscription,
   isActiveSubscriptionStatus,
   upsertFromPaddleEvent,
   type PaddleWebhookEvent,
@@ -130,21 +130,9 @@ describe('assertSeatAvailable', () => {
   it('returns SubscriptionNotReadyError when status is incomplete', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
 
-    const result = await assertSeatAvailable(projectId)
-
-    expect(result.success).toBe(false)
-    if (result.success) {
-      return
-    }
-    expect(result.error).toBeInstanceOf(SubscriptionNotReadyError)
-  })
-
-  it('returns SubscriptionNotReadyError when no subscription row exists', async () => {
-    const projectId = await seedProject()
-
-    const result = await assertSeatAvailable(projectId)
+    const result = await assertSeatAvailable(projectId, userId)
 
     expect(result.success).toBe(false)
     if (result.success) {
@@ -156,11 +144,11 @@ describe('assertSeatAvailable', () => {
   it('returns SeatLimitExceededError when trialing and human count == seatQuantity', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
     await setSubscriptionStatus(projectId, 'trialing', 1)
     await seedHumanOperator(projectId, userId)
 
-    const result = await assertSeatAvailable(projectId)
+    const result = await assertSeatAvailable(projectId, userId)
 
     expect(result.success).toBe(false)
     if (result.success) {
@@ -172,11 +160,11 @@ describe('assertSeatAvailable', () => {
   it('returns Ok when trialing and human count < seatQuantity', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
     await setSubscriptionStatus(projectId, 'trialing', 2)
     await seedHumanOperator(projectId, userId)
 
-    const result = await assertSeatAvailable(projectId)
+    const result = await assertSeatAvailable(projectId, userId)
 
     expect(result.success).toBe(true)
   })
@@ -184,10 +172,10 @@ describe('assertSeatAvailable', () => {
   it('returns Ok when active and seats available', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
     await setSubscriptionStatus(projectId, 'active', 3)
 
-    const result = await assertSeatAvailable(projectId)
+    const result = await assertSeatAvailable(projectId, userId)
 
     expect(result.success).toBe(true)
   })
@@ -195,12 +183,12 @@ describe('assertSeatAvailable', () => {
   it('ignores bot operators when counting seats', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
     await setSubscriptionStatus(projectId, 'trialing', 1)
     await seedBotOperator(projectId)
     await seedBotOperator(projectId)
 
-    const result = await assertSeatAvailable(projectId)
+    const result = await assertSeatAvailable(projectId, userId)
 
     expect(result.success).toBe(true)
   })
@@ -246,10 +234,13 @@ describe('countActiveHumanOperators', () => {
 })
 
 describe('upsertFromPaddleEvent', () => {
-  it('transitions incomplete -> trialing on subscription.created via customData.projectId', async () => {
+  it('transitions incomplete -> trialing on subscription.created via customData.subscriptionId', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    const subscription = await resolveProjectSubscription({
+      projectId,
+      billingUserId: userId,
+    })
 
     const event: PaddleWebhookEvent = {
       eventType: 'subscription.created',
@@ -258,7 +249,7 @@ describe('upsertFromPaddleEvent', () => {
         customerId: 'cus_123',
         status: 'trialing',
         items: [{ quantity: 1 }],
-        customData: { projectId },
+        customData: { projectId, subscriptionId: subscription.id },
       },
     }
 
@@ -273,7 +264,7 @@ describe('upsertFromPaddleEvent', () => {
   it('transitions trialing -> active on subscription.updated', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
     await testDb
       .update(schema.projectSubscriptions)
       .set({ status: 'trialing', paddleSubscriptionId: 'sub_456' })
@@ -297,7 +288,7 @@ describe('upsertFromPaddleEvent', () => {
   it('updates seatQuantity from subscription.updated', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    await resolveProjectSubscription({ projectId, billingUserId: userId })
     await testDb
       .update(schema.projectSubscriptions)
       .set({
@@ -325,7 +316,10 @@ describe('upsertFromPaddleEvent', () => {
   it('is idempotent — second subscription.created with same paddle id does not error', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await createIncompleteSubscription({ projectId, billingUserId: userId })
+    const subscription = await resolveProjectSubscription({
+      projectId,
+      billingUserId: userId,
+    })
 
     const event: PaddleWebhookEvent = {
       eventType: 'subscription.created',
@@ -334,7 +328,7 @@ describe('upsertFromPaddleEvent', () => {
         customerId: 'cus_dup',
         status: 'trialing',
         items: [{ quantity: 1 }],
-        customData: { projectId },
+        customData: { projectId, subscriptionId: subscription.id },
       },
     }
 

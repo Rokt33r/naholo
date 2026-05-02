@@ -196,7 +196,7 @@ export async function acceptProjectInvite(
   projectId: string,
   claimerUser: { id: string; name: string },
 ): Promise<{ projectOperatorId: string }> {
-  const seatCheck = await assertSeatAvailable(projectId)
+  const seatCheck = await assertSeatAvailable(projectId, claimerUser.id)
   if (!seatCheck.success) {
     throw seatCheck.error
   }

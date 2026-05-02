@@ -4,7 +4,7 @@ import { mapApiError } from '@/server/errors'
 import { requireAdminProjectOperator } from '@/server/auth/permissions'
 import {
   countActiveHumanOperators,
-  getProjectSubscription,
+  resolveProjectSubscription,
   finalizeCheckoutFromTransaction,
 } from '@/server/services/project-subscription'
 import type { ProjectSubscriptionView } from '../route'
@@ -47,25 +47,25 @@ export async function POST(
       throw result.error
     }
 
-    const subscription = await getProjectSubscription(project.id)
+    const subscription = await resolveProjectSubscription({
+      projectId: project.id,
+      billingUserId: projectOperator.userId,
+    })
     const usedSeats = await countActiveHumanOperators(project.id)
 
     const view: ProjectSubscriptionView = {
       projectId: project.id,
-      status: subscription?.status ?? null,
-      seatQuantity: subscription?.seatQuantity ?? 0,
+      status: subscription.status,
+      seatQuantity: subscription.seatQuantity,
       usedSeats,
-      hasPaddleSubscription: subscription?.paddleSubscriptionId != null,
-      isBillingUser:
-        subscription != null &&
-        projectOperator.userId != null &&
-        subscription.billingUserId === projectOperator.userId,
-      trialEndsAt: subscription?.trialEndsAt?.toISOString() ?? null,
+      hasPaddleSubscription: subscription.paddleSubscriptionId != null,
+      isBillingUser: subscription.billingUserId === projectOperator.userId,
+      trialEndsAt: subscription.trialEndsAt?.toISOString() ?? null,
       currentPeriodStart:
-        subscription?.currentPeriodStart?.toISOString() ?? null,
-      currentPeriodEnd: subscription?.currentPeriodEnd?.toISOString() ?? null,
-      cancelAt: subscription?.cancelAt?.toISOString() ?? null,
-      canceledAt: subscription?.canceledAt?.toISOString() ?? null,
+        subscription.currentPeriodStart?.toISOString() ?? null,
+      currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+      cancelAt: subscription.cancelAt?.toISOString() ?? null,
+      canceledAt: subscription.canceledAt?.toISOString() ?? null,
     }
 
     return NextResponse.json(view)
