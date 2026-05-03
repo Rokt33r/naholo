@@ -4,7 +4,12 @@ import { projectSubscriptions, projectOperators } from '../db/schema'
 import { and, count, eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
+import {
+  PaddleTransactionNotReadyError,
+  PaddleTransactionTamperedError,
+  SeatLimitExceededError,
+  SubscriptionNotReadyError,
+} from '../errors'
 import { paddleServerClient } from '@/server/billing/paddle'
 
 export type SubscriptionStatus =
@@ -291,7 +296,7 @@ export async function finalizeCheckoutFromTransaction(input: {
 
   const paddleSubscriptionId = transaction.subscriptionId
   if (paddleSubscriptionId == null) {
-    return err(new SubscriptionNotReadyError())
+    return err(new PaddleTransactionNotReadyError())
   }
 
   const txCustomData = transaction.customData as
@@ -299,7 +304,7 @@ export async function finalizeCheckoutFromTransaction(input: {
     | null
     | undefined
   if (txCustomData?.projectId !== input.projectId) {
-    return err(new SubscriptionNotReadyError())
+    return err(new PaddleTransactionTamperedError())
   }
 
   const paddleSubscription =
@@ -347,7 +352,9 @@ export async function finalizeCheckoutFromTransaction(input: {
     where: (t, { eq }) => eq(t.id, existing.id),
   })
   if (refreshed == null) {
-    return err(new SubscriptionNotReadyError())
+    throw new Error(
+      'finalizeCheckoutFromTransaction: row vanished after update',
+    )
   }
   return ok(mapRow(refreshed))
 }

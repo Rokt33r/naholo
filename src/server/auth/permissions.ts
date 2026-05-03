@@ -16,7 +16,7 @@ import {
   resolveUserByApiToken,
   touchUserApiToken,
 } from '../services/user-api-token'
-import { NotFoundError, SubscriptionInactiveError } from '../errors'
+import { NotFoundError, SubscriptionNotReadyError } from '../errors'
 import {
   isActiveSubscriptionStatus,
   type SubscriptionStatus,
@@ -204,10 +204,7 @@ export async function requireProjectOperator(
       subscription == null ||
       !isActiveSubscriptionStatus(subscription.status)
     ) {
-      throw new SubscriptionInactiveError(
-        subscription?.status ?? 'missing',
-        project.slug,
-      )
+      throw new SubscriptionNotReadyError()
     }
   }
 

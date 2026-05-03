@@ -42,7 +42,7 @@ vi.mock('./auth', () => ({
 }))
 
 import { requireProjectOperator } from './permissions'
-import { SubscriptionInactiveError, NotFoundError } from '../errors'
+import { SubscriptionNotReadyError, NotFoundError } from '../errors'
 import { resolveProjectSubscription } from '../services/project-subscription'
 
 let pool: Pool
@@ -152,7 +152,7 @@ describe('requireProjectOperator subscription gate', () => {
     expect(ctx.subscription?.status).toBe('trialing')
   })
 
-  it('throws SubscriptionInactiveError on past_due', async () => {
+  it('throws SubscriptionNotReadyError on past_due', async () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
@@ -164,11 +164,11 @@ describe('requireProjectOperator subscription gate', () => {
     mockUserId = userId
 
     await expect(requireProjectOperator(project.slug)).rejects.toBeInstanceOf(
-      SubscriptionInactiveError,
+      SubscriptionNotReadyError,
     )
   })
 
-  it('throws SubscriptionInactiveError on canceled', async () => {
+  it('throws SubscriptionNotReadyError on canceled', async () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
@@ -180,26 +180,19 @@ describe('requireProjectOperator subscription gate', () => {
     mockUserId = userId
 
     await expect(requireProjectOperator(project.slug)).rejects.toBeInstanceOf(
-      SubscriptionInactiveError,
+      SubscriptionNotReadyError,
     )
   })
 
-  it('throws SubscriptionInactiveError with status="missing" when no row exists', async () => {
+  it('throws SubscriptionNotReadyError when no row exists', async () => {
     const userId = await seedUser()
     const project = await seedProject()
     await seedOperator(project.id, userId)
     mockUserId = userId
 
-    try {
-      await requireProjectOperator(project.slug)
-      expect.fail('expected throw')
-    } catch (error) {
-      expect(error).toBeInstanceOf(SubscriptionInactiveError)
-      expect((error as SubscriptionInactiveError).status).toBe('missing')
-      expect((error as SubscriptionInactiveError).projectSlug).toBe(
-        project.slug,
-      )
-    }
+    await expect(requireProjectOperator(project.slug)).rejects.toBeInstanceOf(
+      SubscriptionNotReadyError,
+    )
   })
 
   it('skipSubscriptionCheck=true resolves regardless of status', async () => {

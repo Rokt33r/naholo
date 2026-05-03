@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import type { SubscriptionStatus } from './services/project-subscription'
 
 export class ServiceError extends Error {
   constructor(message: string) {
@@ -27,26 +26,28 @@ export class ConflictError extends ServiceError {
 
 export class SubscriptionNotReadyError extends ServiceError {
   constructor(
-    message = 'Project subscription is not active. Complete payment setup to add operators.',
+    message = 'Project subscription requires attention from a project admin.',
   ) {
     super(message)
     this.name = 'SubscriptionNotReadyError'
   }
 }
 
-export class SubscriptionInactiveError extends ServiceError {
-  readonly status: SubscriptionStatus | 'missing'
-  readonly projectSlug: string
-
+export class PaddleTransactionNotReadyError extends ServiceError {
   constructor(
-    status: SubscriptionStatus | 'missing',
-    projectSlug: string,
-    message = 'Project subscription is inactive.',
+    message = 'Paddle transaction is not yet ready. Try again in a moment.',
   ) {
     super(message)
-    this.name = 'SubscriptionInactiveError'
-    this.status = status
-    this.projectSlug = projectSlug
+    this.name = 'PaddleTransactionNotReadyError'
+  }
+}
+
+export class PaddleTransactionTamperedError extends ServiceError {
+  constructor(
+    message = 'Checkout payload did not match the authenticated project.',
+  ) {
+    super(message)
+    this.name = 'PaddleTransactionTamperedError'
   }
 }
 
@@ -60,13 +61,9 @@ export class SeatLimitExceededError extends ServiceError {
 }
 
 export function mapApiError(error: unknown): NextResponse {
-  if (error instanceof SubscriptionInactiveError) {
+  if (error instanceof SubscriptionNotReadyError) {
     return NextResponse.json(
-      {
-        error: 'subscription_inactive',
-        status: error.status,
-        projectSlug: error.projectSlug,
-      },
+      { error: 'subscription_not_ready', message: error.message },
       { status: 402 },
     )
   }
@@ -76,10 +73,16 @@ export function mapApiError(error: unknown): NextResponse {
       { status: 402 },
     )
   }
-  if (error instanceof SubscriptionNotReadyError) {
+  if (error instanceof PaddleTransactionNotReadyError) {
     return NextResponse.json(
-      { error: 'subscription_not_ready', message: error.message },
+      { error: 'paddle_transaction_not_ready', message: error.message },
       { status: 409 },
+    )
+  }
+  if (error instanceof PaddleTransactionTamperedError) {
+    return NextResponse.json(
+      { error: 'paddle_transaction_tampered', message: error.message },
+      { status: 422 },
     )
   }
   if (error instanceof ConflictError) {
