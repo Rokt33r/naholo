@@ -8,6 +8,7 @@ import {
 
 export type ProjectSubscriptionView = {
   projectId: string
+  subscriptionId: string
   status:
     | 'incomplete'
     | 'trialing'
@@ -46,6 +47,7 @@ export async function GET(
 
     const view: ProjectSubscriptionView = {
       projectId: project.id,
+      subscriptionId: subscription.id,
       status: subscription.status,
       seatQuantity: subscription.seatQuantity,
       usedSeats,

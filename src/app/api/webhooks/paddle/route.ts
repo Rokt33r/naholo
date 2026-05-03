@@ -69,6 +69,9 @@ export async function POST(request: NextRequest) {
                 ? null
                 : {
                     projectId: data.customData.projectId as string | undefined,
+                    subscriptionId: data.customData.subscriptionId as
+                      | string
+                      | undefined,
                   },
             trialDates:
               data.items[0]?.trialDates == null

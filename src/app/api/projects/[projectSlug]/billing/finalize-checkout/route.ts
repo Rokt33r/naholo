@@ -55,6 +55,7 @@ export async function POST(
 
     const view: ProjectSubscriptionView = {
       projectId: project.id,
+      subscriptionId: subscription.id,
       status: subscription.status,
       seatQuantity: subscription.seatQuantity,
       usedSeats,

@@ -142,7 +142,7 @@ export default function ProjectSubscriptionPage() {
         }
         paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
-          customData: { projectId },
+          customData: { projectId, subscriptionId: data!.subscriptionId },
           settings: {
             displayMode: 'inline',
             frameTarget: FRAME_CLASS,
@@ -165,7 +165,13 @@ export default function ProjectSubscriptionPage() {
       cancelled = true
       unsubscribe()
     }
-  }, [shouldMountCheckout, projectId, projectSlug, queryClient])
+  }, [
+    shouldMountCheckout,
+    projectId,
+    projectSlug,
+    queryClient,
+    data?.subscriptionId,
+  ])
 
   if (isLoading || data == null) {
     return <div className='text-muted-foreground p-8 text-sm'>Loading…</div>
