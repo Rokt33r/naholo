@@ -8,8 +8,8 @@ argument-hint: '[operationNumber] ["extra instructions in quotes"]'
 
 Two-phase flow:
 
-- **Phase 1 — Rough plan**: research the codebase, draft a reviewable-but-not-yet-detailed SPEC.md (Goal / Prerequisites / Architecture Decisions / Affected files / optional diagrams / `## TODO - drafting` checklist / `## Objectives` with `### N. Title` headings + descriptions only / Notes), surface it via a clickable link, and gate on user approval via `AskUserQuestion`.
-- **Phase 2 — Elaboration**: ask the user how to elaborate via `AskUserQuestion` (Elaborate all / Per section / Edit-add-context). Each branch fills `- N.M.` sub-bullets under `### N.` headings and ticks the matching `## TODO - drafting` checkbox. The whole `## TODO - drafting` section is deleted in the same edit that ticks the last box.
+- **Phase 1 — Rough plan**: research the codebase, draft a reviewable-but-not-yet-detailed SPEC.md (Goal / Prerequisites / Architecture Decisions / Affected files / optional diagrams / `## TODO - drafting` checklist / `## Objectives` with `### N. Title` headings + descriptions only / Notes), and surface it via a clickable link.
+- **Phase 2 — Elaboration**: ask the user how to elaborate via `AskUserQuestion` (Elaborate all / Elaborate per section). Each branch fills `- N.M.` sub-bullets under `### N.` headings and ticks the matching `## TODO - drafting` checkbox. After the last box ticks, a `Finalize` gate asks Squash-and-finalize / Finalize-as-is; the `## TODO - drafting` section is deleted only when the user picks one of those finalize options.
 
 The presence of `## TODO - drafting` is the elaboration gate — `/ship` refuses while it exists.
 
@@ -74,7 +74,7 @@ Layout when fully elaborated: identical, minus the `## TODO - drafting` section.
 - **Body**: a flat checklist whose entries mirror, in order, each top-level `### N. Title` in `## Objectives`. Format: `- [ ] N. Title` or `- [x] N. Title` — the same `N. Title` text as the heading.
 - **Created**: by Phase 1 with all boxes unchecked.
 - **Updated**: each box flips `[ ]` → `[x]` immediately after that section's `- N.M.` sub-bullets are written under its `### N.`.
-- **Deleted**: the entire section (heading + list) is removed in the same edit that ticks the last box. From that point on, SPEC.md is fully elaborated.
+- **Deleted**: the entire section is removed only as part of the Finalize gate's Squash or As-is branch (step 7's final approval gate), after the user explicitly chooses one. Ticking the last box does NOT delete the section — the gate does.
 - **Skill manages it** — the agent writes/updates/deletes `## TODO - drafting` only at the documented transitions. Treat manual user edits to the list as authoritative on re-entry (a manually-ticked box means that section is treated as drafted; a manually-unticked box on an already-populated section means redraft that section).
 
 ## Arguments
@@ -119,7 +119,7 @@ Anything after in quotes is extra instructions. The skill classifies the **inten
    Then scan SPEC.md state and branch:
    - **SPEC.md missing** → enter Phase 1 fresh.
    - **SPEC.md exists with `## TODO - drafting`**:
-     - rough-edit → re-enter Phase 1's review loop on the existing SPEC.md, applying the user's described edits as the first revision pass. No overwrite.
+     - rough-edit → apply the described edits to the existing SPEC.md (rough-plan sections), append a `- **{date} — spec (rough revised)**` Timeline bullet, then proceed to step 7 (Phase 2 entry menu). No overwrite.
      - rough-rewrite → overwrite SPEC.md with a fresh Phase 1 draft. No confirmation prompt.
      - none → jump straight to Phase 2 menu (step 7). The TODO list is the resume signal.
    - **SPEC.md exists without `## TODO - drafting`** (fully elaborated):
@@ -133,29 +133,46 @@ Anything after in quotes is extra instructions. The skill classifies the **inten
    - Print a prominent clickable markdown link to SPEC.md in chat (e.g. "Rough plan ready — review at [SPEC.md]({operationDir}/notes/SPEC.md)") so the user can open the file in their editor with one click before answering the approval prompt.
    - Append a Timeline bullet to `{operationDir}/notes/OPERATION.md`: `- **{date} — spec (rough)**: Rough plan written. {brief summary}`.
 
-   Then enter the **review loop** via `AskUserQuestion`, header `Rough plan?`, options:
-   - "Approve" — proceed to Phase 2 menu (step 7).
-   - "Request changes" — prompt the user (in chat) for free-form feedback, apply edits to the rough SPEC.md (Goal / Architecture Decisions / Affected files / diagrams / `### N.` titles + descriptions; if titles were added/removed/renamed, update the `## TODO - drafting` list to match in the same edit), then re-call this `AskUserQuestion`. Append a Timeline bullet `- **{date} — spec (rough revised)**: {summary}` per revision.
+   After writing SPEC.md and surfacing the link, proceed directly to step 7 (Phase 2 entry menu) — there is no separate rough-plan approval gate. Rough-plan revisions are handled via step 7's "Other" branch (see objective 2).
 
-7. **Phase 2 — Elaboration**. Call `AskUserQuestion`, header `Elaborate?`, options:
+7. **Phase 2 — Elaboration**. Call `AskUserQuestion`, header `Elaborate`, question stem `"Start elaboration — all at once, or per section?"` followed by the standard escape-hatch hint suffix (see objective 5 / rule below), options:
    - "Elaborate all" — Fill every sub-objective in one batched edit.
-   - "Elaborate per section" — Loop unchecked sections, approve/revise each.
-   - "Edit / add context" — Escape hatch for free-form edits anywhere in SPEC.md.
+   - "Elaborate per section" — Loop unchecked sections, checkpoint after each.
 
-   **Branch: Elaborate all.** Loop through each `### N.` section in order. For each section: draft the `- N.M. ...` sub-bullets, append them under that section, and in the same edit flip that section's `## TODO - drafting` box to `[x]`. After elaborating the **last** unchecked entry, delete the entire `## TODO - drafting` section (heading + list) in that edit instead of flipping its box. Proceed to step 8.
+   **Branch: Elaborate all.** Loop through each `### N.` section in order. For each section: draft the `- N.M. ...` sub-bullets, append them under that section, and in the same edit flip that section's `## TODO - drafting` box to `[x]`. When the last entry ticks, leave `## TODO - drafting` in place and proceed to the final-approval gate (objective 4 / Final approval gate sub-section below).
 
    **Branch: Elaborate per section.** Loop entries in `## TODO - drafting`, top to bottom, **skipping any already-checked entry** (resume support). For each unchecked entry:
    - Draft sub-bullets for `### N.`.
    - Append the `- N.M. ...` bullets under `### N.` in SPEC.md (same edit also flips that entry to `[x]`).
-   - Call `AskUserQuestion`, header `Section {N}`, options: "Approve", "Request changes". On "Request changes", prompt the user in chat for free-form feedback, redraft the bullets, replace them in SPEC.md (the box stays `[x]` — we're revising the same approved-in-position section, not re-opening it), then re-ask.
-   - On "Approve", continue to the next unchecked entry.
-   - When the last entry ticks, delete the `## TODO - drafting` section entirely in the next edit. Proceed to step 8.
+   - Call `AskUserQuestion`, header `Elaborate`, question stem `"Continue elaboration?"` followed by the standard escape-hatch hint suffix (see objective 5 / rule below), two declared options: "Next section" and "Finish all remaining". The three branches:
+     ```
+     // 1. "Next section" → continue the loop on the next unchecked TODO entry (top-to-bottom).
+     // 2. "Finish all remaining" → switch to elaborate-all behavior for every remaining unchecked entry (no further per-section checkpoints), then proceed to the final-approval gate (objective 4 / Final approval gate sub-section below).
+     // 3. "Other" with free-text → apply revisions anywhere in SPEC.md (same logic as the Phase 2 entry-menu's Other branch — rough-plan vs post-rough Timeline-bullet selection per the Other branch's step 4); already-`[x]` boxes stay `[x]`; if titles changed, update `## TODO - drafting` in the same edit; re-ask the same checkpoint.
+     ```
+   - When the last entry ticks, leave `## TODO - drafting` in place and proceed to the final-approval gate (objective 4 / new step 7 sub-section).
 
-   **Branch: Edit / add context (escape hatch).** This branch is intentionally general — the user might want to provide extra context, revise the rough plan, edit already-elaborated sub-bullets, fix a typo in Notes, anything. The agent does NOT pre-restrict scope. Loop:
-   - Prompt the user in chat for free-form input (no `AskUserQuestion` here — input is unstructured).
-   - Comply with whatever the user describes. Apply the edit to SPEC.md wherever the user points: rough sections (Goal / Architecture Decisions / Affected files / diagrams / `### N.` titles or descriptions), already-populated sub-bullets under any `### N.`, Notes, etc.
+   **Final approval gate.** Runs after both elaborate branches finish (the last TODO box has just been ticked) but before step 8. Body:
 
-8. **Sync OBJECTIVES.md and OPERATION.md** (runs only after `## TODO - drafting` has been deleted):
+   ```
+   // 1. The last box has just been ticked; `## TODO - drafting` stays in place.
+   // 2. Call `AskUserQuestion`: header `Finalize`, two declared options — "Squash spec timeline and finalize" and "Finalize as-is". Question stem: `"Finalize spec — squash the spec session's timeline bullets into one finalized entry, or keep them as-is for downstream context?"` Append the standard escape-hatch hint suffix (see objective 5 / rule below).
+   // 3. Squash branch: in one edit — (a) collapse every `- **{date} — spec (rough)**` / `- **{date} — spec (rough revised)**` / `- **{date} — spec (revised)**` bullet accumulated during this spec session into a single `- **{date} — spec (finalized)**: {one-line summary}` bullet at the end of OPERATION.md Timeline, (b) delete the `## TODO - drafting` section, (c) run the step 8 sync — mirror sub-bullets into OBJECTIVES.md but DO NOT append a separate elaborated bullet (the finalized bullet already covers it).
+   // 4. As-is branch: in one edit — (a) delete the `## TODO - drafting` section, (b) run the step 8 sync untouched (mirror sub-bullets, append `- **{date} — spec (elaborated)**: ...`).
+   // 5. Other branch: apply revisions anywhere in SPEC.md, append `- **{date} — spec (revised)**: {summary}`, re-ask the same Finalize question.
+   ```
+
+   **Branch: Other (auto-appended free-text).** "Other" is auto-injected by `AskUserQuestion`; the user typed freeform feedback in that slot. Single-pass body:
+
+   ```
+   // 1. Identify whether the typed feedback targets rough-plan content (Goal / Architecture Decisions / Affected files / diagrams / `### N.` titles or descriptions) or post-rough content (Notes / already-populated `- N.M.` sub-bullets).
+   // 2. Apply the edits in SPEC.md.
+   // 3. If `### N.` titles were added/removed/renamed, update `## TODO - drafting` in the same edit so its entries match the new heading list (preserve `[x]` flips on still-present sections).
+   // 4. Append a Timeline bullet to OPERATION.md: rough-plan content → `- **{date} — spec (rough revised)**: {summary}`; post-rough content → `- **{date} — spec (revised)**: {summary}`.
+   // 5. Re-call the same Phase 2 entry-menu `AskUserQuestion`.
+   ```
+
+8. **Sync OBJECTIVES.md and OPERATION.md** (runs as part of the Finalize gate's Squash or As-is branch — see step 7's final approval gate. The branch determines whether the session's iterative Timeline bullets are squashed into one `- **{date} — spec (finalized)**` entry or preserved alongside an appended `- **{date} — spec (elaborated)**` entry):
    - Mirror every `- N.M.` sub-bullet from SPEC.md into OBJECTIVES.md as `  - [ ] {n}.{m}. {title}` under its parent (preserving the top-level entries inserted in step 6). Preserve `[ref]` links and `[x]` done states.
    - Append a Timeline bullet to OPERATION.md: `- **{date} — spec (elaborated)**: Elaborated spec via {mode}. {N} objectives, {M} sub-objectives.` where `{mode}` is "elaborate all" or "per-section".
 
@@ -183,8 +200,10 @@ Anything after in quotes is extra instructions. The skill classifies the **inten
 
 ## Rules
 
-- **Two-phase flow**: rough plan first (no plan mode — write SPEC.md, surface via clickable link, ask approval via `AskUserQuestion`), then elaboration. SPEC.md is fully elaborated only when `## TODO - drafting` has been deleted.
-- **Skill manages the drafting list** — the agent writes/updates/deletes `## TODO - drafting` only at the documented transitions (Phase 1 write → boxes flipped during Phase 2 → section deleted on full elaboration → updated by Edit/add-context if titles change). Treat manual user edits to the list as authoritative on re-entry.
+- **Two-phase flow**: rough plan first (no plan mode — write SPEC.md, surface via clickable link), then elaboration. SPEC.md is fully elaborated only when `## TODO - drafting` has been deleted.
+- **Skill manages the drafting list** — the agent writes/updates/deletes `## TODO - drafting` only at the documented transitions (Phase 1 write → boxes flipped during Phase 2 → section deleted as part of the Finalize gate's Squash or As-is branch → updated by an Other-branch edit if titles change). Treat manual user edits to the list as authoritative on re-entry.
+- **Standard escape-hatch hint suffix** — every `AskUserQuestion` `question` field in this skill ends with the verbatim suffix: `"Or pick Other (or escape this dialog) and type freeform feedback to revise the previous changes or any other part of SPEC.md."` Append it to each stage-specific stem (Phase 2 entry, per-section checkpoint, Finalize gate). The hint is constant across every question so users learn it once.
+- **Every `AskUserQuestion` documents an "Other" branch** — "Other" is auto-appended by the UI (free-text input). The skill must specify what that branch does — typically: apply freeform revisions anywhere in SPEC.md, append the appropriate Timeline bullet (`spec (rough revised)` for rough-plan content, `spec (revised)` for post-rough), then re-ask the same question. Never write `AskUserQuestion` invocations that ignore "Other" or treat it as an error.
 - **Spec-only until /ship**: `/ship` only runs against fully-elaborated specs (specs without `## TODO - drafting`). After any SPEC change, print the SPEC link and prompt the user appropriately.
 - **Do NOT implement any code** — only update `SPEC.md`, `OPERATION.md`, and `OBJECTIVES.md`.
 - **Preserve existing [ref] links** — don't remove or modify objective IDs from OBJECTIVES.md.

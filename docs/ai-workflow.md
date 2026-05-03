@@ -6,26 +6,26 @@ Naholo connects idea capture (in the web app) to plan execution (in local repos 
 
 ### Phase 1: Capture Ideas (Web App)
 
-Create an issue in Naholo and collect context:
+Create an operation in Naholo and collect context:
 
 - **Logs**: Quick thoughts, requirements, questions — dropped as messenger-style messages. Low friction, append-only.
 - **Notes**: Structured reference material — specs, API designs, research. Tabbed markdown documents with autosave.
 
-This is the brainstorming phase. The issue accumulates everything needed to start work.
+This is the brainstorming phase. The operation accumulates everything needed to start work.
 
 ### Phase 2: Infil (`/infil {N}`)
 
-Fetch the issue locally for offline-first work.
+Fetch the operation locally for offline-first work.
 
-- Pulls tasks, notes, and logs from Naholo via MCP
-- Creates `.naholo/local/issues/{N}/` with:
-  - `TASKS.md` — checkbox task list mirroring server state
-  - `notes/PLAN.md` — structured context document with:
+- Pulls objectives, notes, and logs from Naholo via the `naholo agent pull` CLI
+- Creates `.naholo/local/operations/{N}/` with:
+  - `OBJECTIVES.md` — checkbox objective list mirroring server state
+  - `notes/OPERATION.md` — structured context document with exactly four sections:
     - `## Pain` — what's wrong or missing (≤3 sentences)
     - `## Resolution` — how we plan to fix it (≤3 sentences)
     - `## Open questions` — questions for the user to answer before `/spec`
     - `## Timeline` — chronological log summary, appended to by every subsequent skill
-  - `notes/*.md` — any other notes from the issue
+  - `notes/*.md` — any other notes from the operation
 - On re-run, performs 3-way merge (local vs server vs baseline) — never silently overwrites local changes
 
 ### Phase 3: Spec (`/spec`)
@@ -40,25 +40,32 @@ Research the codebase and create an executable specification in two phases.
   - **Architecture Decisions** — key technical choices with reasoning
   - **Affected files** — list of files to create or modify
   - Optional **Workflow diagrams** / **Wireframes** (ASCII) for non-trivial flows or UI changes
-  - **`## TODO - drafting`** — transient checklist (one entry per top-level objective) that gates elaboration. Lives immediately before `## Objectives` and is deleted once every section is filled in.
+  - **`## TODO - drafting`** — transient checklist (one entry per top-level objective) that gates elaboration. Lives immediately before `## Objectives` and is deleted only at the Finalize gate.
   - **Objectives** — `### N. Title` headings each with 1–3 sentence descriptions. **No `- N.M.` sub-bullets yet.**
   - **Notes** — edge cases, gotchas, deferred decisions
 - Surfaces SPEC.md via a clickable markdown link in chat so the user can review in their editor.
-- Asks for approval via `AskUserQuestion` (Approve / Request changes). "Request changes" loops on free-form feedback until the rough plan is approved.
+- Rough plan is written; SPEC.md link surfaced; skill proceeds directly to the Phase 2 entry menu — no separate approval gate.
 
-**Phase 2 — Elaboration**: fill in `- N.M.` sub-bullets under each `### N.`. Mode chosen via `AskUserQuestion`:
+**Phase 2 — Elaboration**: fill in `- N.M.` sub-bullets under each `### N.`. Mode chosen via `AskUserQuestion` (header `Elaborate`) with two declared options:
 
-- **Elaborate all** — fills every section in one batched edit, ticks all TODO boxes, deletes the `## TODO - drafting` section.
-- **Elaborate per section** — loops unchecked sections (resume support), drafts sub-bullets per section, asks Approve / Request-changes per section before moving on. Deletes `## TODO - drafting` when the last box ticks.
-- **Edit / add context** — escape hatch for free-form edits anywhere in SPEC.md (rough sections, already-elaborated sub-bullets, Notes, anything). Loops on user input until they signal resume, then returns to the elaboration menu.
+- **Elaborate all** — fills every section in one batched edit, ticks all TODO boxes, then proceeds to the Finalize gate.
+- **Elaborate per section** — loops unchecked sections (resume support), drafts sub-bullets per section, then asks a `Continue?` checkpoint with two declared options ("Next section" / "Finish all remaining") before moving on.
 
-After full elaboration:
+A third "Other" branch is auto-appended on every `AskUserQuestion`. On the Phase 2 entry menu and per-section checkpoint, "Other" + free-text covers rough-plan revisions (Goal / Architecture Decisions / Affected files / `### N.` titles + descriptions) and freeform edits anywhere in SPEC.md, then re-asks the same question. Every question's text ends with the standard escape-hatch hint so the "Other" path is discoverable.
+
+**Finalize gate**: after the last box ticks, a `Finalize` `AskUserQuestion` offers "Squash spec timeline and finalize" or "Finalize as-is"; the `## TODO - drafting` section is deleted only when the user picks one of those finalize options.
+
+- The squash branch collapses the session's iterative `(rough)` / `(rough revised)` / `(revised)` Timeline bullets into a single `(finalized)` bullet — cuts token cost, prevents downstream agents from reading superseded design as live.
+- The as-is branch preserves the deviation history alongside an appended `(elaborated)` bullet — useful when downstream reviewers benefit from seeing the iteration trail.
+- "Other" with free-text routes to freeform spec revisions, then re-asks the same Finalize question.
+
+After the Finalize gate runs:
 
 - Mirrors every `- N.M.` sub-bullet from SPEC.md into `OBJECTIVES.md` as `  - [ ] N.M. Title` under its parent.
-- Appends a Timeline entry to OPERATION.md.
+- Appends the Timeline entry (squashed or as-is) to OPERATION.md.
 - Quality bar: "Could another session implement this by reading ONLY SPEC.md and CLAUDE.md?"
 
-Re-running `/spec` while `## TODO - drafting` is present jumps straight to the Phase 2 menu by default. Extra instructions classify as `rough-edit` (partial revision via the Phase 1 review loop) or `rough-rewrite` (overwrite from scratch).
+Re-running `/spec` while `## TODO - drafting` is present jumps straight to the Phase 2 menu by default. Extra instructions classify as `rough-edit` (apply the described edits to the existing SPEC.md and proceed to the Phase 2 entry menu — no review-loop) or `rough-rewrite` (overwrite from scratch).
 
 ### Phase 4: Ship (`/ship`)
 
@@ -78,34 +85,32 @@ Two skills for different stages:
 
 **`/sitrep {N}`** — mid-session checkpoint:
 
-- Syncs tasks and notes to server via `sync_tasks` and `create_note`/`update_note`
-- Posts a summary log entry
-- Appends Timeline entry to PLAN.md
+- Syncs objectives and notes to server via `naholo agent push`
+- Posts a summary log entry via `create_operation_log`
+- Appends Timeline entry to OPERATION.md
 - Leaves local directory intact for continued work
 
 **`/exfil {N}`** — final sync and cleanup:
 
 - Same sync as sitrep
-- Posts final summary log
-- Appends Timeline entry to PLAN.md
-- Optionally closes the issue
-- Deletes the local `.naholo/local/issues/{N}/` directory
+- Posts final summary log via `create_operation_log`
+- Appends Timeline entry to OPERATION.md
+- Optionally closes the operation via `close_operation`
+- Deletes the local `.naholo/local/operations/{N}/` directory
 
 ## Key Files
 
-| File       | Role                                                                   | Owned by                               |
-| ---------- | ---------------------------------------------------------------------- | -------------------------------------- |
-| `PLAN.md`  | Evolving context: Pain, Resolution, Open Questions, Timeline, Progress | `/infil` creates, all skills append    |
-| `SPEC.md`  | Executable specification: Goal, Architecture, Tasks with file paths    | `/spec` creates, `/ship` may update    |
-| `TASKS.md` | Progress tracker: checkbox list mirroring spec tasks                   | `/spec` structures, `/ship` checks off |
+| File            | Role                                                                                 | Owned by                               |
+| --------------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| `OPERATION.md`  | Evolving context — exactly four sections: Pain, Resolution, Open Questions, Timeline | `/infil` creates, all skills append    |
+| `SPEC.md`       | Executable specification: Goal, Architecture, Objectives with file paths             | `/spec` creates, `/ship` may update    |
+| `OBJECTIVES.md` | Progress tracker: checkbox list mirroring spec objectives                            | `/spec` structures, `/ship` checks off |
 
 ## MCP Integration
 
-| Tool / Resource                    | Used by                       | Purpose                                 |
-| ---------------------------------- | ----------------------------- | --------------------------------------- |
-| `naholo://issues/{N}` (resource)   | `/infil`, `/sitrep`, `/exfil` | Read issue context (tasks, notes, logs) |
-| `naholo://local/issues` (resource) | `/spec`, `/ship`, `/exfil`    | List locally infiled issues             |
-| `sync_tasks`                       | `/sitrep`, `/exfil`           | Bulk sync task tree from TASKS.md       |
-| `create_note` / `update_note`      | `/infil`, `/sitrep`, `/exfil` | Create or update issue notes            |
-| `create_log`                       | `/sitrep`, `/exfil`           | Post summary log entries                |
-| `close_issue`                      | `/exfil`                      | Close a completed issue                 |
+| Tool                   | Used by             | Purpose                     |
+| ---------------------- | ------------------- | --------------------------- |
+| `create_operation_log` | `/sitrep`, `/exfil` | Post summary log entries    |
+| `close_operation`      | `/exfil`            | Close a completed operation |
+
+Objective and note syncing flows through the `naholo agent pull` / `naholo agent push` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand.
