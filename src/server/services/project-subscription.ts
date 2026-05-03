@@ -4,13 +4,8 @@ import { projectSubscriptions, projectOperators } from '../db/schema'
 import { and, count, eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
-import {
-  PaddleTransactionNotReadyError,
-  PaddleTransactionTamperedError,
-  SeatLimitExceededError,
-  SubscriptionNotReadyError,
-} from '../errors'
-import { paddleServerClient } from '@/server/billing/paddle'
+import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
+import type { Subscription } from '@paddle/paddle-node-sdk'
 
 export type SubscriptionStatus =
   | 'incomplete'
@@ -271,92 +266,65 @@ export async function upsertFromPaddleEvent(
     .where(eq(projectSubscriptions.id, existingById.id))
 }
 
-export async function finalizeCheckoutFromTransaction(input: {
-  projectId: string
-  paddleTransactionId: string
-  billingUserId: string
-}): Promise<ReturnResult<ProjectSubscription>> {
-  const existing = await resolveProjectSubscription({
-    projectId: input.projectId,
-    billingUserId: input.billingUserId,
-  })
+export async function applyPaddleSubscriptionToProject(input: {
+  subscriptionId: string
+  paddleSubscription: Subscription
+}): Promise<ProjectSubscription> {
+  const raw = input.paddleSubscription
+  const mappedStatus = mapPaddleStatus(raw.status)
+  const seatQuantity = raw.items[0]?.quantity
 
-  // Idempotency: this endpoint is one-shot per project lifecycle. Once the
-  // project has a Paddle subscription id attached, it has been finalized —
-  // do NOT hit Paddle's API again. Subsequent state changes (renewal,
-  // cancel, past_due, plan change) come exclusively from the webhook.
-  // This also blocks malicious replays from making us spam Paddle.
-  if (existing.paddleSubscriptionId != null) {
-    return ok(existing)
+  const updates: Partial<typeof projectSubscriptions.$inferInsert> = {
+    paddleSubscriptionId: raw.id,
+    updatedAt: new Date(),
   }
-
-  const transaction = await paddleServerClient.transactions.get(
-    input.paddleTransactionId,
-  )
-
-  const paddleSubscriptionId = transaction.subscriptionId
-  if (paddleSubscriptionId == null) {
-    return err(new PaddleTransactionNotReadyError())
+  if (raw.customerId != null) {
+    updates.paddleCustomerId = raw.customerId
   }
-
-  const txCustomData = transaction.customData as
-    | { projectId?: string }
-    | null
-    | undefined
-  if (txCustomData?.projectId !== input.projectId) {
-    return err(new PaddleTransactionTamperedError())
+  if (mappedStatus != null) {
+    updates.status = mappedStatus
   }
-
-  const paddleSubscription =
-    await paddleServerClient.subscriptions.get(paddleSubscriptionId)
-
-  const normalized: PaddleSubscriptionEventData = {
-    id: paddleSubscription.id,
-    customerId: paddleSubscription.customerId,
-    status: paddleSubscription.status,
-    items: paddleSubscription.items.map((item) => ({
-      quantity: item.quantity,
-    })),
-    currentBillingPeriod:
-      paddleSubscription.currentBillingPeriod == null
-        ? null
-        : {
-            startsAt: paddleSubscription.currentBillingPeriod.startsAt,
-            endsAt: paddleSubscription.currentBillingPeriod.endsAt,
-          },
-    nextBilledAt: paddleSubscription.nextBilledAt,
-    canceledAt: paddleSubscription.canceledAt,
-    scheduledChange:
-      paddleSubscription.scheduledChange == null
-        ? null
-        : {
-            effectiveAt: paddleSubscription.scheduledChange.effectiveAt,
-            action: paddleSubscription.scheduledChange.action,
-          },
-    customData:
-      (paddleSubscription.customData as { projectId?: string } | null) ?? null,
-    trialDates:
-      paddleSubscription.items[0]?.trialDates == null
-        ? null
-        : { endsAt: paddleSubscription.items[0].trialDates.endsAt },
+  if (seatQuantity != null) {
+    updates.seatQuantity = seatQuantity
   }
-
-  const updates = buildSubscriptionUpdates(normalized)
+  const periodStart = parseDate(raw.currentBillingPeriod?.startsAt)
+  if (periodStart != null) {
+    updates.currentPeriodStart = periodStart
+  }
+  const periodEnd = parseDate(raw.currentBillingPeriod?.endsAt)
+  if (periodEnd != null) {
+    updates.currentPeriodEnd = periodEnd
+  }
+  const trialEnd = parseDate(raw.items[0]?.trialDates?.endsAt)
+  if (trialEnd != null) {
+    updates.trialEndsAt = trialEnd
+  }
+  const canceledAt = parseDate(raw.canceledAt)
+  if (canceledAt != null) {
+    updates.canceledAt = canceledAt
+  }
+  const scheduledCancelAt =
+    raw.scheduledChange?.action === 'cancel'
+      ? parseDate(raw.scheduledChange.effectiveAt)
+      : null
+  if (scheduledCancelAt != null) {
+    updates.cancelAt = scheduledCancelAt
+  }
 
   await db
     .update(projectSubscriptions)
     .set(updates)
-    .where(eq(projectSubscriptions.id, existing.id))
+    .where(eq(projectSubscriptions.id, input.subscriptionId))
 
   const refreshed = await db.query.projectSubscriptions.findFirst({
-    where: (t, { eq }) => eq(t.id, existing.id),
+    where: (t, { eq }) => eq(t.id, input.subscriptionId),
   })
   if (refreshed == null) {
     throw new Error(
-      'finalizeCheckoutFromTransaction: row vanished after update',
+      'applyPaddleSubscriptionToProject: row vanished after update',
     )
   }
-  return ok(mapRow(refreshed))
+  return mapRow(refreshed)
 }
 
 export async function countActiveHumanOperators(

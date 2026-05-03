@@ -24,6 +24,7 @@ vi.mock('../db', () => ({
 }))
 
 import {
+  applyPaddleSubscriptionToProject,
   assertSeatAvailable,
   countActiveHumanOperators,
   resolveProjectSubscription,
@@ -32,6 +33,7 @@ import {
   type PaddleWebhookEvent,
 } from './project-subscription'
 import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
+import type { Subscription } from '@paddle/paddle-node-sdk'
 
 let pool: Pool
 let client: PoolClient
@@ -230,6 +232,53 @@ describe('countActiveHumanOperators', () => {
     const projectId = await seedProject()
     const total = await countActiveHumanOperators(projectId)
     expect(total).toBe(0)
+  })
+})
+
+describe('applyPaddleSubscriptionToProject', () => {
+  it('updates the row with normalized paddle data and returns the refreshed subscription', async () => {
+    const userId = await seedUser()
+    const projectId = await seedProject()
+    const subscription = await resolveProjectSubscription({
+      projectId,
+      billingUserId: userId,
+    })
+
+    const updated = await applyPaddleSubscriptionToProject({
+      subscriptionId: subscription.id,
+      paddleSubscription: {
+        id: 'sub_apply_1',
+        customerId: 'cus_apply_1',
+        status: 'active',
+        items: [{ quantity: 3 }],
+        currentBillingPeriod: {
+          startsAt: '2026-05-01T00:00:00.000Z',
+          endsAt: '2026-06-01T00:00:00.000Z',
+        },
+      } as unknown as Subscription,
+    })
+
+    expect(updated.paddleSubscriptionId).toBe('sub_apply_1')
+    expect(updated.paddleCustomerId).toBe('cus_apply_1')
+    expect(updated.status).toBe('active')
+    expect(updated.seatQuantity).toBe(3)
+
+    const row = await getSubscription(projectId)
+    expect(row?.paddleSubscriptionId).toBe('sub_apply_1')
+    expect(row?.status).toBe('active')
+  })
+
+  it('throws when the subscription row does not exist', async () => {
+    await expect(
+      applyPaddleSubscriptionToProject({
+        subscriptionId: '00000000-0000-0000-0000-000000000000',
+        paddleSubscription: {
+          id: 'sub_missing',
+          status: 'active',
+          items: [{ quantity: 1 }],
+        } as unknown as Subscription,
+      }),
+    ).rejects.toThrow('row vanished after update')
   })
 })
 
