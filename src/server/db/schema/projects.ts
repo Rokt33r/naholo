@@ -5,6 +5,7 @@ import {
   timestamp,
   integer,
   uniqueIndex,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 import { projectOperators } from './project-operators'
@@ -19,6 +20,11 @@ export const projects = pgTable(
     description: text('description'),
     slug: text('slug').notNull(),
     operationCounter: integer('operation_counter').notNull().default(0),
+    activeProjectSubscriptionId: uuid(
+      'active_project_subscription_id',
+    ).references((): AnyPgColumn => projectSubscriptions.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -28,5 +34,8 @@ export const projects = pgTable(
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   projectOperators: many(projectOperators),
   skillLoadouts: many(skillLoadouts),
-  projectSubscription: one(projectSubscriptions),
+  activeProjectSubscription: one(projectSubscriptions, {
+    fields: [projects.activeProjectSubscriptionId],
+    references: [projectSubscriptions.id],
+  }),
 }))

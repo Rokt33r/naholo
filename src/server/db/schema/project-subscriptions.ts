@@ -1,14 +1,8 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  integer,
-  uniqueIndex,
-} from 'drizzle-orm/pg-core'
-import { relations, sql } from 'drizzle-orm'
+import { pgTable, uuid, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { projects } from './projects'
-import { users } from './users'
+import { paddleSubscriptions } from './paddle-subscriptions'
+import { projectOperators } from './project-operators'
 
 export const projectSubscriptions = pgTable(
   'project_subscriptions',
@@ -17,26 +11,20 @@ export const projectSubscriptions = pgTable(
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
-    billingUserId: uuid('billing_user_id')
+    paddleSubscriptionId: uuid('paddle_subscription_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
-    paddleCustomerId: text('paddle_customer_id'),
-    paddleSubscriptionId: text('paddle_subscription_id'),
-    status: text('status').notNull().default('incomplete'),
-    seatQuantity: integer('seat_quantity').notNull().default(1),
-    currentPeriodStart: timestamp('current_period_start'),
-    currentPeriodEnd: timestamp('current_period_end'),
-    trialEndsAt: timestamp('trial_ends_at'),
-    cancelAt: timestamp('cancel_at'),
-    canceledAt: timestamp('canceled_at'),
+      .references(() => paddleSubscriptions.id, { onDelete: 'cascade' }),
+    createdByOperatorId: uuid('created_by_operator_id').references(
+      () => projectOperators.id,
+      { onDelete: 'set null' },
+    ),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('project_subscriptions_project_id_idx').on(table.projectId),
-    uniqueIndex('project_subscriptions_paddle_subscription_id_idx')
-      .on(table.paddleSubscriptionId)
-      .where(sql`${table.paddleSubscriptionId} is not null`),
+    uniqueIndex('project_subscriptions_paddle_subscription_id_idx').on(
+      table.paddleSubscriptionId,
+    ),
   ],
 )
 
@@ -47,9 +35,13 @@ export const projectSubscriptionsRelations = relations(
       fields: [projectSubscriptions.projectId],
       references: [projects.id],
     }),
-    billingUser: one(users, {
-      fields: [projectSubscriptions.billingUserId],
-      references: [users.id],
+    paddleSubscription: one(paddleSubscriptions, {
+      fields: [projectSubscriptions.paddleSubscriptionId],
+      references: [paddleSubscriptions.id],
+    }),
+    createdByOperator: one(projectOperators, {
+      fields: [projectSubscriptions.createdByOperatorId],
+      references: [projectOperators.id],
     }),
   }),
 )
