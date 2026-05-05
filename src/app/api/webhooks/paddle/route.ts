@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { EventName, Webhooks } from '@paddle/paddle-node-sdk'
 import { upsertFromPaddleEvent } from '@/server/services/project-subscription'
+import { config } from '@/server/config'
 import '@/server/billing/paddle'
 
 export async function POST(request: NextRequest) {
-  const secret = process.env.PADDLE_WEBHOOK_SECRET
-  if (secret == null || secret === '') {
-    console.error('PADDLE_WEBHOOK_SECRET is not set')
-    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
-  }
-
   const signature = request.headers.get('Paddle-Signature')
   if (signature == null) {
     return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
@@ -19,7 +14,11 @@ export async function POST(request: NextRequest) {
 
   let event
   try {
-    event = await new Webhooks().unmarshal(rawBody, secret, signature)
+    event = await new Webhooks().unmarshal(
+      rawBody,
+      config.paddle.webhookSecret,
+      signature,
+    )
   } catch (error) {
     console.error('Paddle webhook signature/parse failure:', error)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })

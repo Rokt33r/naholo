@@ -58,4 +58,11 @@ export const config = {
     redirectUri: getOptionalEnv('GOOGLE_OAUTH_REDIRECT_URI'),
     stateSecret: getRequiredEnv('GOOGLE_OAUTH_STATE_SECRET'),
   },
+
+  paddle: {
+    apiKey: getRequiredEnv('PADDLE_API_KEY'),
+    webhookSecret: getRequiredEnv('PADDLE_WEBHOOK_SECRET'),
+    projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
+    environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
+  },
 } as const
