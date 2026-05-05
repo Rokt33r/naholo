@@ -6,3 +6,4 @@
 - Use explicit null checks: `== null` / `!= null`, not truthy/falsy (`!value` / `if (value)`)
 - Always place Zod schemas right above their first usage, not at the top of the file
 - Icon size: use `size-5` for all icons. Use `size-7` for square icon buttons (`size='icon'`)
+- Drizzle queries: prefer `db.query.{table}.findMany(...)` / `findFirst(...)` over `db.select().from(...)`. The relational query API supports `where`, `orderBy`, `limit`, `offset`, and `with` for relations — reach for `db.select()` only when relational queries genuinely cannot express what you need (e.g., aggregate-only selects). For counts, prefer `db.$count(table, where)` over `db.select({ count: count() })`.
