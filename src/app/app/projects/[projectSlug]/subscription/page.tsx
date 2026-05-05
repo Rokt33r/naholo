@@ -10,37 +10,41 @@ import { Button } from '@/components/ui/button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
 import {
-  useProjectSubscription,
-  type ProjectSubscriptionView,
-} from '@/hooks/use-project-subscription'
+  useActiveProjectSubscription,
+  type ActiveProjectSubscriptionResponse,
+} from '@/hooks/use-active-project-subscription'
 import {
   initializePaddle,
   subscribePaddleEvents,
 } from '@/lib/billing/paddle-browser'
-import { mutationFetch } from '@/lib/fetcher'
 
 const FRAME_CLASS = 'paddle-checkout-frame'
-const FINALIZE_RETRY_DELAYS_MS = [500, 1000, 1500, 2000, 2500, 3000]
 
 export default function ProjectSubscriptionPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>()
   const { projectId, currentOperator } = useProjectContext()
   const isAdmin = currentOperator.role === 'admin'
-  const { data, isLoading } = useProjectSubscription(projectSlug)
+  const [awaitingWebhook, setAwaitingWebhook] = useState(false)
+  const { data, isLoading } = useActiveProjectSubscription(projectSlug, {
+    awaitingWebhook,
+  })
   const queryClient = useQueryClient()
   const frameRef = useRef<HTMLDivElement>(null)
-  const [finalizing, setFinalizing] = useState(false)
-  const [finalizeError, setFinalizeError] = useState<string | null>(null)
-  const [finalized, setFinalized] = useState(false)
 
-  const status = data?.status ?? null
+  const status = data?.subscription?.paddleSubscription.status ?? null
   const isActive =
     status === 'active' ||
     status === 'trialing' ||
     status === 'past_due' ||
     status === 'paused'
 
-  const shouldMountCheckout = isAdmin && data != null && !isActive && !finalized
+  useEffect(() => {
+    if (isActive && awaitingWebhook) {
+      setAwaitingWebhook(false)
+    }
+  }, [isActive, awaitingWebhook])
+
+  const shouldMountCheckout = isAdmin && data != null && !isActive
 
   useEffect(() => {
     if (!shouldMountCheckout) {
@@ -52,77 +56,14 @@ export default function ProjectSubscriptionPage() {
 
     let cancelled = false
 
-    const finalize = async (transactionId: string) => {
-      if (cancelled) {
-        return
-      }
-      setFinalizing(true)
-      setFinalizeError(null)
-      let attempt = 0
-      while (!cancelled) {
-        try {
-          const res = await mutationFetch(
-            `/api/projects/${projectSlug}/billing/finalize-checkout`,
-            {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ transactionId }),
-            },
-          )
-          if (res.ok) {
-            await queryClient.invalidateQueries({
-              queryKey: ['project-subscription', projectSlug],
-            })
-            if (!cancelled) {
-              setFinalized(true)
-              setFinalizing(false)
-            }
-            return
-          }
-          if (res.status === 409 && attempt < FINALIZE_RETRY_DELAYS_MS.length) {
-            const delay = FINALIZE_RETRY_DELAYS_MS[attempt]
-            attempt++
-            await new Promise((resolve) => setTimeout(resolve, delay))
-            continue
-          }
-          await queryClient.invalidateQueries({
-            queryKey: ['project-subscription', projectSlug],
-          })
-          if (!cancelled) {
-            setFinalizing(false)
-            setFinalizeError(
-              'Subscription is taking longer than expected to confirm. It will appear here shortly.',
-            )
-          }
-          return
-        } catch (error) {
-          console.error('finalize-checkout request failed', error)
-          if (!cancelled) {
-            setFinalizing(false)
-            setFinalizeError(
-              error instanceof Error
-                ? error.message
-                : 'Failed to finalize checkout',
-            )
-          }
-          return
-        }
-      }
-    }
-
     const handlePaddleEvent = (event: PaddleEventData) => {
       if (event.name !== CheckoutEventNames.CHECKOUT_COMPLETED) {
         return
       }
-      const transactionId = event.data?.transaction_id
-      if (transactionId == null || transactionId === '') {
-        console.error('checkout.completed event had no transaction_id', event)
-        setFinalizeError(
-          'Checkout completed but no transaction id was returned.',
-        )
-        return
-      }
-      void finalize(transactionId)
+      setAwaitingWebhook(true)
+      queryClient.invalidateQueries({
+        queryKey: ['active-project-subscription', projectSlug],
+      })
     }
 
     const unsubscribe = subscribePaddleEvents(handlePaddleEvent)
@@ -142,7 +83,7 @@ export default function ProjectSubscriptionPage() {
         }
         paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
-          customData: { projectId, subscriptionId: data!.subscriptionId },
+          customData: { projectId },
           settings: {
             displayMode: 'inline',
             frameTarget: FRAME_CLASS,
@@ -153,11 +94,6 @@ export default function ProjectSubscriptionPage() {
         })
       } catch (error) {
         console.error('Failed to open inline checkout', error)
-        if (!cancelled) {
-          setFinalizeError(
-            error instanceof Error ? error.message : 'Failed to open checkout',
-          )
-        }
       }
     })()
 
@@ -165,13 +101,7 @@ export default function ProjectSubscriptionPage() {
       cancelled = true
       unsubscribe()
     }
-  }, [
-    shouldMountCheckout,
-    projectId,
-    projectSlug,
-    queryClient,
-    data?.subscriptionId,
-  ])
+  }, [shouldMountCheckout, projectId, projectSlug, queryClient])
 
   if (isLoading || data == null) {
     return <div className='text-muted-foreground p-8 text-sm'>Loading…</div>
@@ -217,9 +147,7 @@ export default function ProjectSubscriptionPage() {
   return (
     <div className='mx-auto flex w-full max-w-3xl flex-col gap-6 p-6'>
       <div className='flex flex-col gap-2'>
-        <h1 className='text-xl font-semibold'>
-          {finalized ? 'Subscription started' : 'Start your subscription'}
-        </h1>
+        <h1 className='text-xl font-semibold'>Start your subscription</h1>
         <p className='text-muted-foreground text-sm'>
           $5 per human operator per month + VAT. Bots are always free.
         </p>
@@ -227,61 +155,52 @@ export default function ProjectSubscriptionPage() {
 
       <SubscriptionReadout data={data} />
 
-      {finalized ? (
-        <div className='flex flex-col gap-3 rounded-lg border p-4'>
-          <p className='text-sm'>
-            Your subscription is set up. You can now invite human operators to
-            this project.
-          </p>
-          <Button asChild className='self-start'>
-            <Link href={`/app/projects/${projectSlug}`}>Go to project</Link>
-          </Button>
+      {awaitingWebhook && (
+        <div className='text-muted-foreground text-sm'>
+          Finalizing subscription…
         </div>
-      ) : (
-        <>
-          {finalizeError != null && (
-            <div className='rounded-lg border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200'>
-              {finalizeError}
-            </div>
-          )}
-          {finalizing && (
-            <div className='text-muted-foreground text-sm'>
-              Finalizing subscription…
-            </div>
-          )}
-          <div ref={frameRef} className={`${FRAME_CLASS} min-h-[600px]`} />
-        </>
       )}
+      <div ref={frameRef} className={`${FRAME_CLASS} min-h-[600px]`} />
     </div>
   )
 }
 
-function SubscriptionReadout({ data }: { data: ProjectSubscriptionView }) {
+function SubscriptionReadout({
+  data,
+}: {
+  data: ActiveProjectSubscriptionResponse
+}) {
+  const sub = data.subscription
+  const paddle = sub?.paddleSubscription ?? null
+  const status = paddle?.status ?? null
+  const seatQuantity = paddle?.seatQuantity ?? 0
   return (
     <div className='space-y-3 rounded-lg border p-4'>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Status</span>
-        <SubscriptionStatusBadge status={data.status} />
+        <SubscriptionStatusBadge status={status} />
       </div>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Seats</span>
         <span className='font-medium'>
-          {data.usedSeats} / {data.seatQuantity} used
+          {data.usedSeats} / {seatQuantity} used
         </span>
       </div>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Trial ends</span>
-        <span className='font-medium'>{formatDate(data.trialEndsAt)}</span>
+        <span className='font-medium'>{formatDate(paddle?.trialEndsAt)}</span>
       </div>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Next billing</span>
-        <span className='font-medium'>{formatDate(data.currentPeriodEnd)}</span>
+        <span className='font-medium'>
+          {formatDate(paddle?.currentPeriodEnd)}
+        </span>
       </div>
     </div>
   )
 }
 
-function formatDate(value: string | null): string {
+function formatDate(value: string | null | undefined): string {
   if (value == null) {
     return '—'
   }

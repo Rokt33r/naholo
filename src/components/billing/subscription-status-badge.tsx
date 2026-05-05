@@ -1,7 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { ProjectSubscriptionView } from '@/hooks/use-project-subscription'
-
-type SubscriptionStatus = NonNullable<ProjectSubscriptionView['status']>
+import type { SubscriptionStatus } from '@/server/services/project-subscription'
 
 const STATUS_STYLES: Record<SubscriptionStatus | 'none', string> = {
   none: 'bg-muted text-muted-foreground',

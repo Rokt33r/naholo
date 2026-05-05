@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
-import { useProjectSubscription } from '@/hooks/use-project-subscription'
+import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 
-function formatDate(value: string | null): string {
+function formatDate(value: string | null | undefined): string {
   if (value == null) {
     return '—'
   }
@@ -23,7 +23,7 @@ type BillingTabProps = {
 
 export function BillingTab({ onClose }: BillingTabProps) {
   const { projectSlug } = useProjectContext()
-  const { data, isLoading, error } = useProjectSubscription(projectSlug)
+  const { data, isLoading, error } = useActiveProjectSubscription(projectSlug)
 
   if (isLoading) {
     return (
@@ -53,22 +53,27 @@ export function BillingTab({ onClose }: BillingTabProps) {
       <div className='space-y-3 rounded-lg border p-4'>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Status</span>
-          <SubscriptionStatusBadge status={data.status} />
+          <SubscriptionStatusBadge
+            status={data.subscription?.paddleSubscription.status ?? null}
+          />
         </div>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Seats</span>
           <span className='font-medium'>
-            {data.usedSeats} / {data.seatQuantity} used
+            {data.usedSeats} /{' '}
+            {data.subscription?.paddleSubscription.seatQuantity ?? 0} used
           </span>
         </div>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Trial ends</span>
-          <span className='font-medium'>{formatDate(data.trialEndsAt)}</span>
+          <span className='font-medium'>
+            {formatDate(data.subscription?.paddleSubscription.trialEndsAt)}
+          </span>
         </div>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Next billing</span>
           <span className='font-medium'>
-            {formatDate(data.currentPeriodEnd)}
+            {formatDate(data.subscription?.paddleSubscription.currentPeriodEnd)}
           </span>
         </div>
       </div>

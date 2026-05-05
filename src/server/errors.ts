@@ -33,24 +33,6 @@ export class SubscriptionNotReadyError extends ServiceError {
   }
 }
 
-export class PaddleTransactionNotReadyError extends ServiceError {
-  constructor(
-    message = 'Paddle transaction is not yet ready. Try again in a moment.',
-  ) {
-    super(message)
-    this.name = 'PaddleTransactionNotReadyError'
-  }
-}
-
-export class PaddleTransactionTamperedError extends ServiceError {
-  constructor(
-    message = 'Checkout payload did not match the authenticated project.',
-  ) {
-    super(message)
-    this.name = 'PaddleTransactionTamperedError'
-  }
-}
-
 export class SeatLimitExceededError extends ServiceError {
   constructor(
     message = 'Seat limit reached. Open the "Manage subscription" link in your latest Paddle billing email to add more seats.',
@@ -71,18 +53,6 @@ export function mapApiError(error: unknown): NextResponse {
     return NextResponse.json(
       { error: 'seat_limit_exceeded', message: error.message },
       { status: 402 },
-    )
-  }
-  if (error instanceof PaddleTransactionNotReadyError) {
-    return NextResponse.json(
-      { error: 'paddle_transaction_not_ready', message: error.message },
-      { status: 409 },
-    )
-  }
-  if (error instanceof PaddleTransactionTamperedError) {
-    return NextResponse.json(
-      { error: 'paddle_transaction_tampered', message: error.message },
-      { status: 422 },
     )
   }
   if (error instanceof ConflictError) {

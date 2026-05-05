@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
-import { useProjectSubscription } from '@/hooks/use-project-subscription'
+import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 
 type ProjectSubscriptionWallProps = {
   children: React.ReactNode
@@ -15,7 +15,8 @@ export function ProjectSubscriptionWall({
   children,
 }: ProjectSubscriptionWallProps) {
   const { projectSlug, currentOperator } = useProjectContext()
-  const { data, isLoading, error } = useProjectSubscription(projectSlug)
+  const { data, isLoading, error, refetch, isFetching } =
+    useActiveProjectSubscription(projectSlug)
   const pathname = usePathname()
 
   const isAdmin = currentOperator.role === 'admin'
@@ -45,7 +46,8 @@ export function ProjectSubscriptionWall({
     return <div className='h-full w-full' aria-busy='true' />
   }
 
-  const isActive = data.status === 'active' || data.status === 'trialing'
+  const status = data.subscription?.paddleSubscription.status ?? null
+  const isActive = status === 'active' || status === 'trialing'
 
   if (isActive) {
     return <>{children}</>
@@ -55,24 +57,31 @@ export function ProjectSubscriptionWall({
     return (
       <div className='flex h-full items-center justify-center'>
         <div className='flex max-w-md flex-col items-center gap-4 rounded-lg border p-6 text-center'>
-          {data.status != null && (
-            <SubscriptionStatusBadge status={data.status} />
-          )}
+          {status != null && <SubscriptionStatusBadge status={status} />}
           <h2 className='text-lg font-semibold'>
-            {data.status === 'incomplete' || data.status == null
+            {status === 'incomplete' || status == null
               ? 'Finish payment setup'
               : 'Subscription inactive'}
           </h2>
           <p className='text-muted-foreground text-sm'>
-            {data.status === 'incomplete' || data.status == null
+            {status === 'incomplete' || status == null
               ? 'Complete checkout to unlock this project.'
               : 'Update billing to restore access to this project.'}
           </p>
-          <Button asChild>
-            <Link href={`/app/projects/${projectSlug}/subscription`}>
-              Go to subscription page
-            </Link>
-          </Button>
+          <div className='flex flex-col gap-2 self-stretch'>
+            <Button asChild>
+              <Link href={`/app/projects/${projectSlug}/subscription`}>
+                Go to subscription page
+              </Link>
+            </Button>
+            <Button
+              variant='outline'
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              {isFetching ? 'Refreshing…' : 'Refresh status'}
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -80,10 +89,19 @@ export function ProjectSubscriptionWall({
 
   return (
     <div className='flex h-full items-center justify-center'>
-      <p className='text-muted-foreground max-w-md text-center text-sm'>
-        Ask a project admin to set up the subscription before this project
-        becomes available.
-      </p>
+      <div className='flex max-w-md flex-col items-center gap-3 rounded-lg border p-6 text-center'>
+        <p className='text-muted-foreground text-sm'>
+          Ask a project admin to set up the subscription before this project
+          becomes available.
+        </p>
+        <Button
+          variant='outline'
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          {isFetching ? 'Refreshing…' : 'Refresh status'}
+        </Button>
+      </div>
     </div>
   )
 }
