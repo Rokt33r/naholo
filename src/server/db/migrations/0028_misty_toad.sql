@@ -1,0 +1,1 @@
+ALTER TABLE "paddle_webhook_events" DROP COLUMN "processed_at";

@@ -18,7 +18,6 @@ export const paddleWebhookEvents = pgTable(
     paddleTransactionId: text('paddle_transaction_id'),
     paddleSubscriptionId: text('paddle_subscription_id'),
     payload: jsonb('payload').notNull(),
-    processedAt: timestamp('processed_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [
