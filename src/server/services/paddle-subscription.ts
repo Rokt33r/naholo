@@ -5,7 +5,10 @@ import {
   type PaddleSubscriptionStatus,
 } from '../db/schema'
 import { eq } from 'drizzle-orm'
-import type { SubscriptionNotification } from '@paddle/paddle-node-sdk'
+import type {
+  Subscription,
+  SubscriptionNotification,
+} from '@paddle/paddle-node-sdk'
 
 export type PaddleSubscriptionRow = typeof paddleSubscriptions.$inferSelect
 
@@ -19,7 +22,7 @@ const KNOWN_STATUSES: ReadonlyArray<PaddleSubscriptionStatus> = [
 ]
 
 export async function upsertPaddleSubscriptionFromEvent(input: {
-  data: SubscriptionNotification
+  data: Subscription | SubscriptionNotification
   occurredAt: Date
 }): Promise<{ row: PaddleSubscriptionRow; applied: boolean }> {
   const { data, occurredAt } = input
