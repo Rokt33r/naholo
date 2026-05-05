@@ -64,5 +64,6 @@ export const config = {
     webhookSecret: getRequiredEnv('PADDLE_WEBHOOK_SECRET'),
     projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
     environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
+    manageUrl: process.env.PADDLE_MANAGE_URL ?? null,
   },
 } as const

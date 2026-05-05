@@ -31,7 +31,6 @@ export type RequireProjectOperatorOptions = {
 export type ProjectOperatorContext = {
   projectOperator: ProjectOperator
   project: { id: string; slug: string }
-  subscription: { status: SubscriptionStatus } | null
 }
 
 type AuthMethod = 'session' | 'user-api-token'
@@ -164,12 +163,14 @@ export async function requireAdminProjectOperator(
   projectSlug: string,
   options?: RequireProjectOperatorOptions,
 ): Promise<ProjectOperatorContext> {
-  const { projectOperator, project, subscription } =
-    await requireProjectOperator(projectSlug, options)
+  const { projectOperator, project } = await requireProjectOperator(
+    projectSlug,
+    options,
+  )
   if (projectOperator.role !== 'admin') {
     throw new Error('Forbidden')
   }
-  return { projectOperator, project, subscription }
+  return { projectOperator, project }
 }
 
 /**
@@ -184,7 +185,11 @@ export async function requireProjectOperator(
   // TODO: Handle api token or session first before resolving projectId. It probably better to make require*ByToken and require*BySession accept projectSlug and resolve it internally.
   const projectRow = await db.query.projects.findFirst({
     columns: { id: true, slug: true },
-    with: { projectSubscription: { columns: { status: true } } },
+    with: {
+      activeProjectSubscription: {
+        with: { paddleSubscription: { columns: { status: true } } },
+      },
+    },
     where: (t, { eq }) => eq(t.slug, projectSlug),
   })
   if (projectRow == null) {
@@ -192,14 +197,16 @@ export async function requireProjectOperator(
   }
 
   const project = { id: projectRow.id, slug: projectRow.slug }
-  const subscription =
-    projectRow.projectSubscription == null
-      ? null
-      : { status: projectRow.projectSubscription.status as SubscriptionStatus }
 
   const projectOperator = await resolveProjectOperator(project.id)
 
   if (options?.skipSubscriptionCheck !== true) {
+    const projectSubscriptionStatus =
+      projectRow.activeProjectSubscription?.paddleSubscription?.status ?? null
+    const subscription =
+      projectSubscriptionStatus == null
+        ? null
+        : { status: projectSubscriptionStatus as SubscriptionStatus }
     if (
       subscription == null ||
       !isActiveSubscriptionStatus(subscription.status)
@@ -208,7 +215,7 @@ export async function requireProjectOperator(
     }
   }
 
-  return { projectOperator, project, subscription }
+  return { projectOperator, project }
 }
 
 async function resolveProjectOperator(
@@ -327,8 +334,10 @@ export async function requireSkillLoadoutAccess(
     skillLoadout: { id: string }
   }
 > {
-  const { projectOperator, project, subscription } =
-    await requireProjectOperator(projectSlug, options)
+  const { projectOperator, project } = await requireProjectOperator(
+    projectSlug,
+    options,
+  )
 
   const skillLoadout = await db.query.skillLoadouts.findFirst({
     columns: { id: true },
@@ -340,7 +349,7 @@ export async function requireSkillLoadoutAccess(
     throw new NotFoundError('Skill Loadout')
   }
 
-  return { projectOperator, project, subscription, skillLoadout }
+  return { projectOperator, project, skillLoadout }
 }
 
 /**
@@ -356,8 +365,10 @@ export async function requireOperationAccess(
     operation: { id: string; number: number }
   }
 > {
-  const { projectOperator, project, subscription } =
-    await requireProjectOperator(projectSlug, options)
+  const { projectOperator, project } = await requireProjectOperator(
+    projectSlug,
+    options,
+  )
 
   const parsed = Number(operationNumber)
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -374,7 +385,7 @@ export async function requireOperationAccess(
     throw new NotFoundError('Operation')
   }
 
-  return { projectOperator, project, subscription, operation }
+  return { projectOperator, project, operation }
 }
 
 /**
@@ -391,8 +402,11 @@ export async function requireOperationLogAccess(
     log: { id: string }
   }
 > {
-  const { projectOperator, project, subscription, operation } =
-    await requireOperationAccess(projectSlug, operationNumber, options)
+  const { projectOperator, project, operation } = await requireOperationAccess(
+    projectSlug,
+    operationNumber,
+    options,
+  )
 
   const log = await db.query.operationLogs.findFirst({
     columns: { id: true },
@@ -404,7 +418,7 @@ export async function requireOperationLogAccess(
     throw new NotFoundError('OperationLog')
   }
 
-  return { projectOperator, project, subscription, operation, log }
+  return { projectOperator, project, operation, log }
 }
 
 /**
@@ -421,8 +435,11 @@ export async function requireOperationNoteAccess(
     note: { id: string; name: string }
   }
 > {
-  const { projectOperator, project, subscription, operation } =
-    await requireOperationAccess(projectSlug, operationNumber, options)
+  const { projectOperator, project, operation } = await requireOperationAccess(
+    projectSlug,
+    operationNumber,
+    options,
+  )
 
   const note = await db.query.operationNotes.findFirst({
     columns: { id: true, name: true },
@@ -434,7 +451,7 @@ export async function requireOperationNoteAccess(
     throw new NotFoundError('Note')
   }
 
-  return { projectOperator, project, subscription, operation, note }
+  return { projectOperator, project, operation, note }
 }
 
 /**
@@ -451,8 +468,11 @@ export async function requireOperationObjectiveAccess(
     objective: { id: string }
   }
 > {
-  const { projectOperator, project, subscription, operation } =
-    await requireOperationAccess(projectSlug, operationNumber, options)
+  const { projectOperator, project, operation } = await requireOperationAccess(
+    projectSlug,
+    operationNumber,
+    options,
+  )
 
   const objective = await db.query.operationObjectives.findFirst({
     columns: { id: true },
@@ -464,5 +484,5 @@ export async function requireOperationObjectiveAccess(
     throw new NotFoundError('Objective')
   }
 
-  return { projectOperator, project, subscription, operation, objective }
+  return { projectOperator, project, operation, objective }
 }

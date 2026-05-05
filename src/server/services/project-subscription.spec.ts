@@ -24,16 +24,13 @@ vi.mock('../db', () => ({
 }))
 
 import {
-  applyPaddleSubscriptionToProject,
   assertSeatAvailable,
   countActiveHumanOperators,
-  resolveProjectSubscription,
+  getActiveProjectSubscription,
   isActiveSubscriptionStatus,
-  upsertFromPaddleEvent,
-  type PaddleWebhookEvent,
+  type SubscriptionStatus,
 } from './project-subscription'
 import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
-import type { Subscription } from '@paddle/paddle-node-sdk'
 
 let pool: Pool
 let client: PoolClient
@@ -82,25 +79,39 @@ async function seedBotOperator(projectId: string) {
   return operator.id
 }
 
-async function getSubscription(projectId: string) {
-  return testDb.query.projectSubscriptions.findFirst({
-    where: (t, { eq }) => eq(t.projectId, projectId),
-  })
-}
+async function seedActiveSubscription(input: {
+  projectId: string
+  status: SubscriptionStatus
+  seatQuantity: number
+  createdByOperatorId?: string | null
+}) {
+  const paddleSubId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  const [paddle] = await testDb
+    .insert(schema.paddleSubscriptions)
+    .values({
+      paddleSubscriptionId: paddleSubId,
+      paddleCustomerId: `cus_${paddleSubId}`,
+      billingEmail: 'billing@example.com',
+      status: input.status,
+      seatQuantity: input.seatQuantity,
+    })
+    .returning({ id: schema.paddleSubscriptions.id })
 
-async function setSubscriptionStatus(
-  projectId: string,
-  status: string,
-  seatQuantity?: number,
-) {
-  const updates: Record<string, unknown> = { status }
-  if (seatQuantity != null) {
-    updates.seatQuantity = seatQuantity
-  }
+  const [link] = await testDb
+    .insert(schema.projectSubscriptions)
+    .values({
+      projectId: input.projectId,
+      paddleSubscriptionId: paddle.id,
+      createdByOperatorId: input.createdByOperatorId ?? null,
+    })
+    .returning({ id: schema.projectSubscriptions.id })
+
   await testDb
-    .update(schema.projectSubscriptions)
-    .set(updates)
-    .where(eq(schema.projectSubscriptions.projectId, projectId))
+    .update(schema.projects)
+    .set({ activeProjectSubscriptionId: link.id })
+    .where(eq(schema.projects.id, input.projectId))
+
+  return { paddleId: paddle.id, linkId: link.id }
 }
 
 beforeAll(async () => {
@@ -128,13 +139,34 @@ afterAll(async () => {
   await pool.end()
 })
 
-describe('assertSeatAvailable', () => {
-  it('returns SubscriptionNotReadyError when status is incomplete', async () => {
-    const userId = await seedUser()
+describe('getActiveProjectSubscription', () => {
+  it('returns null when project has no active subscription', async () => {
     const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
+    const result = await getActiveProjectSubscription(projectId)
+    expect(result).toBeNull()
+  })
 
-    const result = await assertSeatAvailable(projectId, userId)
+  it('returns the joined active subscription when present', async () => {
+    const projectId = await seedProject()
+    await seedActiveSubscription({
+      projectId,
+      status: 'active',
+      seatQuantity: 3,
+    })
+
+    const result = await getActiveProjectSubscription(projectId)
+    expect(result).not.toBeNull()
+    expect(result?.projectId).toBe(projectId)
+    expect(result?.paddleSubscription.status).toBe('active')
+    expect(result?.paddleSubscription.seatQuantity).toBe(3)
+    expect(result?.paddleSubscription.billingEmail).toBe('billing@example.com')
+  })
+})
+
+describe('assertSeatAvailable', () => {
+  it('returns SubscriptionNotReadyError when no active subscription', async () => {
+    const projectId = await seedProject()
+    const result = await assertSeatAvailable(projectId)
 
     expect(result.success).toBe(false)
     if (result.success) {
@@ -143,14 +175,34 @@ describe('assertSeatAvailable', () => {
     expect(result.error).toBeInstanceOf(SubscriptionNotReadyError)
   })
 
-  it('returns SeatLimitExceededError when trialing and human count == seatQuantity', async () => {
+  it('returns SubscriptionNotReadyError when status is incomplete', async () => {
+    const projectId = await seedProject()
+    await seedActiveSubscription({
+      projectId,
+      status: 'incomplete',
+      seatQuantity: 1,
+    })
+
+    const result = await assertSeatAvailable(projectId)
+
+    expect(result.success).toBe(false)
+    if (result.success) {
+      return
+    }
+    expect(result.error).toBeInstanceOf(SubscriptionNotReadyError)
+  })
+
+  it('returns SeatLimitExceededError when human count >= seatQuantity', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
-    await setSubscriptionStatus(projectId, 'trialing', 1)
+    await seedActiveSubscription({
+      projectId,
+      status: 'trialing',
+      seatQuantity: 1,
+    })
     await seedHumanOperator(projectId, userId)
 
-    const result = await assertSeatAvailable(projectId, userId)
+    const result = await assertSeatAvailable(projectId)
 
     expect(result.success).toBe(false)
     if (result.success) {
@@ -159,38 +211,45 @@ describe('assertSeatAvailable', () => {
     expect(result.error).toBeInstanceOf(SeatLimitExceededError)
   })
 
-  it('returns Ok when trialing and human count < seatQuantity', async () => {
+  it('returns Ok when trialing and seats available', async () => {
     const userId = await seedUser()
     const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
-    await setSubscriptionStatus(projectId, 'trialing', 2)
+    await seedActiveSubscription({
+      projectId,
+      status: 'trialing',
+      seatQuantity: 2,
+    })
     await seedHumanOperator(projectId, userId)
 
-    const result = await assertSeatAvailable(projectId, userId)
+    const result = await assertSeatAvailable(projectId)
 
     expect(result.success).toBe(true)
   })
 
   it('returns Ok when active and seats available', async () => {
-    const userId = await seedUser()
     const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
-    await setSubscriptionStatus(projectId, 'active', 3)
+    await seedActiveSubscription({
+      projectId,
+      status: 'active',
+      seatQuantity: 3,
+    })
 
-    const result = await assertSeatAvailable(projectId, userId)
+    const result = await assertSeatAvailable(projectId)
 
     expect(result.success).toBe(true)
   })
 
   it('ignores bot operators when counting seats', async () => {
-    const userId = await seedUser()
     const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
-    await setSubscriptionStatus(projectId, 'trialing', 1)
+    await seedActiveSubscription({
+      projectId,
+      status: 'trialing',
+      seatQuantity: 1,
+    })
     await seedBotOperator(projectId)
     await seedBotOperator(projectId)
 
-    const result = await assertSeatAvailable(projectId, userId)
+    const result = await assertSeatAvailable(projectId)
 
     expect(result.success).toBe(true)
   })
@@ -232,160 +291,5 @@ describe('countActiveHumanOperators', () => {
     const projectId = await seedProject()
     const total = await countActiveHumanOperators(projectId)
     expect(total).toBe(0)
-  })
-})
-
-describe('applyPaddleSubscriptionToProject', () => {
-  it('updates the row with normalized paddle data and returns the refreshed subscription', async () => {
-    const userId = await seedUser()
-    const projectId = await seedProject()
-    const subscription = await resolveProjectSubscription({
-      projectId,
-      billingUserId: userId,
-    })
-
-    const updated = await applyPaddleSubscriptionToProject({
-      subscriptionId: subscription.id,
-      paddleSubscription: {
-        id: 'sub_apply_1',
-        customerId: 'cus_apply_1',
-        status: 'active',
-        items: [{ quantity: 3 }],
-        currentBillingPeriod: {
-          startsAt: '2026-05-01T00:00:00.000Z',
-          endsAt: '2026-06-01T00:00:00.000Z',
-        },
-      } as unknown as Subscription,
-    })
-
-    expect(updated.paddleSubscriptionId).toBe('sub_apply_1')
-    expect(updated.paddleCustomerId).toBe('cus_apply_1')
-    expect(updated.status).toBe('active')
-    expect(updated.seatQuantity).toBe(3)
-
-    const row = await getSubscription(projectId)
-    expect(row?.paddleSubscriptionId).toBe('sub_apply_1')
-    expect(row?.status).toBe('active')
-  })
-
-  it('throws when the subscription row does not exist', async () => {
-    await expect(
-      applyPaddleSubscriptionToProject({
-        subscriptionId: '00000000-0000-0000-0000-000000000000',
-        paddleSubscription: {
-          id: 'sub_missing',
-          status: 'active',
-          items: [{ quantity: 1 }],
-        } as unknown as Subscription,
-      }),
-    ).rejects.toThrow('row vanished after update')
-  })
-})
-
-describe('upsertFromPaddleEvent', () => {
-  it('transitions incomplete -> trialing on subscription.created via customData.subscriptionId', async () => {
-    const userId = await seedUser()
-    const projectId = await seedProject()
-    const subscription = await resolveProjectSubscription({
-      projectId,
-      billingUserId: userId,
-    })
-
-    const event: PaddleWebhookEvent = {
-      eventType: 'subscription.created',
-      data: {
-        id: 'sub_123',
-        customerId: 'cus_123',
-        status: 'trialing',
-        items: [{ quantity: 1 }],
-        customData: { projectId, subscriptionId: subscription.id },
-      },
-    }
-
-    await upsertFromPaddleEvent(event)
-
-    const row = await getSubscription(projectId)
-    expect(row?.status).toBe('trialing')
-    expect(row?.paddleSubscriptionId).toBe('sub_123')
-    expect(row?.paddleCustomerId).toBe('cus_123')
-  })
-
-  it('transitions trialing -> active on subscription.updated', async () => {
-    const userId = await seedUser()
-    const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
-    await testDb
-      .update(schema.projectSubscriptions)
-      .set({ status: 'trialing', paddleSubscriptionId: 'sub_456' })
-      .where(eq(schema.projectSubscriptions.projectId, projectId))
-
-    const event: PaddleWebhookEvent = {
-      eventType: 'subscription.updated',
-      data: {
-        id: 'sub_456',
-        status: 'active',
-        items: [{ quantity: 1 }],
-      },
-    }
-
-    await upsertFromPaddleEvent(event)
-
-    const row = await getSubscription(projectId)
-    expect(row?.status).toBe('active')
-  })
-
-  it('updates seatQuantity from subscription.updated', async () => {
-    const userId = await seedUser()
-    const projectId = await seedProject()
-    await resolveProjectSubscription({ projectId, billingUserId: userId })
-    await testDb
-      .update(schema.projectSubscriptions)
-      .set({
-        status: 'active',
-        paddleSubscriptionId: 'sub_789',
-        seatQuantity: 1,
-      })
-      .where(eq(schema.projectSubscriptions.projectId, projectId))
-
-    const event: PaddleWebhookEvent = {
-      eventType: 'subscription.updated',
-      data: {
-        id: 'sub_789',
-        status: 'active',
-        items: [{ quantity: 5 }],
-      },
-    }
-
-    await upsertFromPaddleEvent(event)
-
-    const row = await getSubscription(projectId)
-    expect(row?.seatQuantity).toBe(5)
-  })
-
-  it('is idempotent — second subscription.created with same paddle id does not error', async () => {
-    const userId = await seedUser()
-    const projectId = await seedProject()
-    const subscription = await resolveProjectSubscription({
-      projectId,
-      billingUserId: userId,
-    })
-
-    const event: PaddleWebhookEvent = {
-      eventType: 'subscription.created',
-      data: {
-        id: 'sub_dup',
-        customerId: 'cus_dup',
-        status: 'trialing',
-        items: [{ quantity: 1 }],
-        customData: { projectId, subscriptionId: subscription.id },
-      },
-    }
-
-    await upsertFromPaddleEvent(event)
-    await upsertFromPaddleEvent(event)
-
-    const row = await getSubscription(projectId)
-    expect(row?.paddleSubscriptionId).toBe('sub_dup')
-    expect(row?.status).toBe('trialing')
   })
 })
