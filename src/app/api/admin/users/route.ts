@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAppAdmin } from '@/server/auth/permissions'
-import { listAllUsers } from '@/server/services/admin'
+import { listAllUsers } from '@/server/admin/user'
 
 export async function GET() {
   try {

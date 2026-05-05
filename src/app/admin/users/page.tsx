@@ -1,4 +1,4 @@
-import { listAllUsers } from '@/server/services/admin'
+import { listAllUsers } from '@/server/admin/user'
 import { format } from 'date-fns'
 
 export default async function AdminUsersPage() {
