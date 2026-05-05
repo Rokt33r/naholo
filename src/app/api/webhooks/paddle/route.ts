@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { EventName, Webhooks } from '@paddle/paddle-node-sdk'
-import { upsertFromPaddleEvent } from '@/server/services/project-subscription'
+import {
+  EventName,
+  Webhooks,
+  type SubscriptionNotification,
+  type CustomerNotification,
+} from '@paddle/paddle-node-sdk'
+import { recordPaddleWebhookEvent } from '@/server/services/paddle-webhook-event'
+import {
+  upsertPaddleSubscriptionFromEvent,
+  patchPaddleSubscriptionBillingEmail,
+} from '@/server/services/paddle-subscription'
+import { claimProjectSubscriptionFromEvent } from '@/server/services/project-subscription'
 import { config } from '@/server/config'
 import '@/server/billing/paddle'
 
@@ -28,55 +38,78 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
+  const eventType = event.eventType
+  const occurredAt = new Date(event.occurredAt)
+
+  const data = event.data as { id?: string; subscriptionId?: string | null }
+  const isSubEvent = isSubscriptionEvent(eventType)
+  const isTxEvent = isTransactionEvent(eventType)
+  const paddleSubscriptionId = isSubEvent
+    ? (data.id ?? null)
+    : isTxEvent
+      ? (data.subscriptionId ?? null)
+      : null
+  const paddleTransactionId = isTxEvent ? (data.id ?? null) : null
+
+  let recorded
   try {
-    switch (event.eventType) {
+    recorded = await recordPaddleWebhookEvent({
+      eventId: event.eventId,
+      eventType,
+      occurredAt,
+      paddleTransactionId,
+      paddleSubscriptionId,
+      payload: event,
+    })
+  } catch (error) {
+    console.error('Paddle webhook event record failure:', error)
+    return NextResponse.json({ error: 'Handler error' }, { status: 500 })
+  }
+
+  if (!recorded.inserted) {
+    return NextResponse.json({ ok: true, duplicate: true })
+  }
+
+  try {
+    switch (eventType) {
+      case EventName.SubscriptionCreated: {
+        const subscriptionData = event.data as SubscriptionNotification
+        const { row } = await upsertPaddleSubscriptionFromEvent({
+          data: subscriptionData,
+          occurredAt,
+        })
+        const claim = await claimProjectSubscriptionFromEvent({
+          paddleSubscriptionRow: row,
+          customData: subscriptionData.customData,
+        })
+        if (!claim.claimed) {
+          console.warn(
+            `Paddle subscription.created not claimed: reason=${claim.reason} paddleSubscriptionId=${row.paddleSubscriptionId}`,
+          )
+        }
+        break
+      }
       case EventName.SubscriptionActivated:
       case EventName.SubscriptionCanceled:
-      case EventName.SubscriptionCreated:
       case EventName.SubscriptionImported:
       case EventName.SubscriptionPastDue:
       case EventName.SubscriptionPaused:
       case EventName.SubscriptionResumed:
       case EventName.SubscriptionTrialing:
       case EventName.SubscriptionUpdated: {
-        const data = event.data
-        await upsertFromPaddleEvent({
-          eventType: event.eventType,
-          data: {
-            id: data.id,
-            customerId: data.customerId,
-            status: data.status,
-            items: data.items.map((item) => ({ quantity: item.quantity })),
-            currentBillingPeriod:
-              data.currentBillingPeriod == null
-                ? null
-                : {
-                    startsAt: data.currentBillingPeriod.startsAt,
-                    endsAt: data.currentBillingPeriod.endsAt,
-                  },
-            nextBilledAt: data.nextBilledAt,
-            canceledAt: data.canceledAt,
-            scheduledChange:
-              data.scheduledChange == null
-                ? null
-                : {
-                    effectiveAt: data.scheduledChange.effectiveAt,
-                    action: data.scheduledChange.action,
-                  },
-            customData:
-              data.customData == null
-                ? null
-                : {
-                    projectId: data.customData.projectId as string | undefined,
-                    subscriptionId: data.customData.subscriptionId as
-                      | string
-                      | undefined,
-                  },
-            trialDates:
-              data.items[0]?.trialDates == null
-                ? null
-                : { endsAt: data.items[0].trialDates.endsAt },
-          },
+        await upsertPaddleSubscriptionFromEvent({
+          data: event.data as SubscriptionNotification,
+          occurredAt,
+        })
+        break
+      }
+      case EventName.CustomerCreated:
+      case EventName.CustomerUpdated:
+      case EventName.CustomerImported: {
+        const customerData = event.data as CustomerNotification
+        await patchPaddleSubscriptionBillingEmail({
+          paddleCustomerId: customerData.id,
+          billingEmail: customerData.email,
         })
         break
       }
@@ -89,4 +122,38 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true })
+}
+
+function isSubscriptionEvent(eventType: string): boolean {
+  switch (eventType) {
+    case EventName.SubscriptionActivated:
+    case EventName.SubscriptionCanceled:
+    case EventName.SubscriptionCreated:
+    case EventName.SubscriptionImported:
+    case EventName.SubscriptionPastDue:
+    case EventName.SubscriptionPaused:
+    case EventName.SubscriptionResumed:
+    case EventName.SubscriptionTrialing:
+    case EventName.SubscriptionUpdated:
+      return true
+    default:
+      return false
+  }
+}
+
+function isTransactionEvent(eventType: string): boolean {
+  switch (eventType) {
+    case EventName.TransactionBilled:
+    case EventName.TransactionCanceled:
+    case EventName.TransactionCompleted:
+    case EventName.TransactionCreated:
+    case EventName.TransactionPaid:
+    case EventName.TransactionPastDue:
+    case EventName.TransactionPaymentFailed:
+    case EventName.TransactionReady:
+    case EventName.TransactionUpdated:
+      return true
+    default:
+      return false
+  }
 }
