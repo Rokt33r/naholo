@@ -24,6 +24,24 @@ function getOptionalEnv(key: string, defaultValue?: string): string {
   return process.env[key] || defaultValue || ''
 }
 
+export type PaddleConfig = {
+  apiKey: string
+  webhookSecret: string
+  projectTokenSecret: string
+  environment: string
+}
+
+const billingEnabled = process.env.BILLING === 'true'
+
+const paddleConfig: PaddleConfig | null = billingEnabled
+  ? {
+      apiKey: getRequiredEnv('PADDLE_API_KEY'),
+      webhookSecret: getRequiredEnv('PADDLE_WEBHOOK_SECRET'),
+      projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
+      environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
+    }
+  : null
+
 export const config = {
   // Application
   baseUrl: getRequiredEnv('BASE_URL'),
@@ -59,11 +77,16 @@ export const config = {
     stateSecret: getRequiredEnv('GOOGLE_OAUTH_STATE_SECRET'),
   },
 
-  paddle: {
-    apiKey: getRequiredEnv('PADDLE_API_KEY'),
-    webhookSecret: getRequiredEnv('PADDLE_WEBHOOK_SECRET'),
-    projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
-    environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
-    manageUrl: process.env.PADDLE_MANAGE_URL ?? null,
-  },
+  billing: billingEnabled,
+
+  paddle: paddleConfig,
 } as const
+
+export function requirePaddleConfig(): PaddleConfig {
+  if (config.paddle == null) {
+    throw new Error(
+      'Paddle config is not loaded — set BILLING=true to enable billing',
+    )
+  }
+  return config.paddle
+}

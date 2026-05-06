@@ -16,6 +16,7 @@ import {
   resolveUserByApiToken,
   touchUserApiToken,
 } from '../services/user-api-token'
+import { config } from '../config'
 import { NotFoundError, SubscriptionNotReadyError } from '../errors'
 import {
   isActiveSubscriptionStatus,
@@ -200,7 +201,7 @@ export async function requireProjectOperator(
 
   const projectOperator = await resolveProjectOperator(project.id)
 
-  if (options?.skipSubscriptionCheck !== true) {
+  if (config.billing && options?.skipSubscriptionCheck !== true) {
     const projectSubscriptionStatus =
       projectRow.activeProjectSubscription?.paddleSubscription?.status ?? null
     const subscription =

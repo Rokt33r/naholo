@@ -8,7 +8,7 @@ import {
   type PaddleSubscriptionStatus,
 } from '../db/schema'
 import type { PaddleWebhookEventListItem } from './paddle-webhook-event'
-import { paddleServerClient } from '../billing/paddle'
+import { getPaddleServerClient } from '../billing/paddle'
 import { upsertPaddleSubscriptionFromEvent } from '../services/paddle-subscription'
 
 export const PADDLE_SUBSCRIPTION_PAGE_SIZE = 50
@@ -161,7 +161,9 @@ export async function refetchPaddleSubscriptionFromPaddle(
 
   let data
   try {
-    data = await paddleServerClient.subscriptions.get(row.paddleSubscriptionId)
+    data = await getPaddleServerClient().subscriptions.get(
+      row.paddleSubscriptionId,
+    )
   } catch (error) {
     return {
       ok: false,

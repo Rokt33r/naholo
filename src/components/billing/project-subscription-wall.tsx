@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
+import { publicConfig } from '@/lib/publicConfig'
 
 type ProjectSubscriptionWallProps = {
   children: React.ReactNode
@@ -14,6 +15,9 @@ type ProjectSubscriptionWallProps = {
 export function ProjectSubscriptionWall({
   children,
 }: ProjectSubscriptionWallProps) {
+  if (!publicConfig.billing) {
+    return <>{children}</>
+  }
   const { projectSlug, currentOperator } = useProjectContext()
   const { data, isLoading, error, refetch, isFetching } =
     useActiveProjectSubscription(projectSlug)

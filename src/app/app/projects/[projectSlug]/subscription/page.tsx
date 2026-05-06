@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, redirect } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { CheckoutEventNames } from '@paddle/paddle-js'
 import type { Paddle, PaddleEventData } from '@paddle/paddle-js'
@@ -19,6 +19,7 @@ import {
   subscribePaddleEvents,
 } from '@/lib/billing/paddle-browser'
 import { fetchProjectSubscriptionCheckoutToken } from '@/lib/billing/checkout-token-client'
+import { publicConfig, requirePaddlePublicConfig } from '@/lib/publicConfig'
 
 const FRAME_CLASS = 'paddle-checkout-frame'
 const AWAITING_WEBHOOK_BANNER_MS = 5 * 60 * 1000
@@ -47,6 +48,9 @@ function humanizeTokenError(error: unknown): string {
 
 export default function ProjectSubscriptionPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>()
+  if (!publicConfig.billing) {
+    redirect(`/app/projects/${projectSlug}`)
+  }
   const { projectId, currentOperator } = useProjectContext()
   const isAdmin = currentOperator.role === 'admin'
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
@@ -146,10 +150,7 @@ export default function ProjectSubscriptionPage() {
     }
 
     try {
-      const priceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID
-      if (priceId == null || priceId === '') {
-        throw new Error('NEXT_PUBLIC_PADDLE_PRICE_ID is not set')
-      }
+      const { priceId } = requirePaddlePublicConfig()
       const paddle = await initializePaddle()
       if (paddle == null) {
         throw new Error('Paddle failed to initialize')

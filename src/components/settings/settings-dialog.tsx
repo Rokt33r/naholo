@@ -8,6 +8,7 @@ import { ProjectSettingsTab } from '@/components/settings/project-settings-tab'
 import { UserSettingsTab } from '@/components/settings/user-settings-tab'
 import { CliInstallTab } from '@/components/settings/cli-install-tab'
 import { BillingTab } from '@/components/settings/billing-tab'
+import { publicConfig } from '@/lib/publicConfig'
 
 type SettingsDialogProps = {
   open: boolean
@@ -35,7 +36,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 Project
               </TabsTrigger>
             )}
-            {isAdmin && (
+            {isAdmin && publicConfig.billing && (
               <TabsTrigger value='billing'>
                 <CreditCard className='size-4' />
                 Billing
@@ -56,7 +57,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <ProjectSettingsTab onClose={() => onOpenChange(false)} />
             </TabsContent>
           )}
-          {isAdmin && (
+          {isAdmin && publicConfig.billing && (
             <TabsContent value='billing' className='overflow-y-auto'>
               <BillingTab onClose={() => onOpenChange(false)} />
             </TabsContent>

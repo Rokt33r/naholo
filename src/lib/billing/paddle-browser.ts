@@ -1,5 +1,6 @@
 import { initializePaddle as initializePaddleSdk } from '@paddle/paddle-js'
 import type { Paddle, PaddleEventData } from '@paddle/paddle-js'
+import { requirePaddlePublicConfig } from '@/lib/publicConfig'
 
 let paddlePromise: Promise<Paddle | undefined> | null = null
 const listeners = new Set<(event: PaddleEventData) => void>()
@@ -8,18 +9,9 @@ export function initializePaddle(): Promise<Paddle | undefined> {
   if (paddlePromise != null) {
     return paddlePromise
   }
-  const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
-  const environment = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT
-  if (token == null || token === '') {
-    throw new Error('NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not set')
-  }
-  if (environment !== 'sandbox' && environment !== 'production') {
-    throw new Error(
-      'NEXT_PUBLIC_PADDLE_ENVIRONMENT must be "sandbox" or "production"',
-    )
-  }
+  const { clientToken, environment } = requirePaddlePublicConfig()
   paddlePromise = initializePaddleSdk({
-    token,
+    token: clientToken,
     environment,
     eventCallback: (event) => {
       for (const listener of listeners) {

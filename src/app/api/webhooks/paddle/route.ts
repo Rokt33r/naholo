@@ -11,8 +11,8 @@ import {
   patchPaddleSubscriptionBillingEmail,
 } from '@/server/services/paddle-subscription'
 import { claimProjectSubscriptionFromEvent } from '@/server/services/project-subscription'
-import { config } from '@/server/config'
-import '@/server/billing/paddle'
+import { requirePaddleConfig } from '@/server/config'
+import { getPaddleServerClient } from '@/server/billing/paddle'
 
 export async function POST(request: NextRequest) {
   const signature = request.headers.get('Paddle-Signature')
@@ -22,11 +22,14 @@ export async function POST(request: NextRequest) {
 
   const rawBody = await request.text()
 
+  // Ensure Paddle SDK crypto runtime is initialized before signature checks.
+  getPaddleServerClient()
+
   let event
   try {
     event = await new Webhooks().unmarshal(
       rawBody,
-      config.paddle.webhookSecret,
+      requirePaddleConfig().webhookSecret,
       signature,
     )
   } catch (error) {

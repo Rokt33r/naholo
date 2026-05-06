@@ -13,12 +13,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { publicConfig } from '@/lib/publicConfig'
 
 const items = [
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/paddle-webhook-events', label: 'Paddle Webhook Events' },
-  { href: '/admin/paddle-subscriptions', label: 'Paddle Subscriptions' },
-  { href: '/admin/project-subscriptions', label: 'Project Subscriptions' },
+  { href: '/admin/users', label: 'Users', billingOnly: false },
+  {
+    href: '/admin/paddle-webhook-events',
+    label: 'Paddle Webhook Events',
+    billingOnly: true,
+  },
+  {
+    href: '/admin/paddle-subscriptions',
+    label: 'Paddle Subscriptions',
+    billingOnly: true,
+  },
+  {
+    href: '/admin/project-subscriptions',
+    label: 'Project Subscriptions',
+    billingOnly: true,
+  },
 ]
 
 export function AdminSidebar() {
@@ -35,17 +48,20 @@ export function AdminSidebar() {
           <SidebarGroupLabel>Sections</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => {
-                const isActive =
-                  pathname === item.href || pathname.startsWith(item.href + '/')
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.href}>{item.label}</Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {items
+                .filter((item) => publicConfig.billing || !item.billingOnly)
+                .map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    pathname.startsWith(item.href + '/')
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={isActive}>
+                        <Link href={item.href}>{item.label}</Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

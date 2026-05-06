@@ -7,8 +7,6 @@ import {
   type ActiveProjectSubscription,
   type SubscriptionStatus,
 } from '@/server/services/project-subscription'
-import { config } from '@/server/config'
-
 export type ActiveProjectSubscriptionResponse = {
   subscription: {
     id: string
@@ -31,7 +29,6 @@ export type ActiveProjectSubscriptionResponse = {
     updatedAt: string
   } | null
   usedSeats: number
-  paddleManageUrl: string | null
 }
 
 function serializeDates(
@@ -76,7 +73,6 @@ export async function GET(
     const body: ActiveProjectSubscriptionResponse = {
       subscription: subscription == null ? null : serializeDates(subscription),
       usedSeats,
-      paddleManageUrl: config.paddle.manageUrl,
     }
     return NextResponse.json(body)
   } catch (error) {

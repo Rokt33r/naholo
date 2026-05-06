@@ -1,11 +1,20 @@
 import { SignJWT, jwtVerify, errors } from 'jose'
-import { config } from '@/server/config'
+import { requirePaddleConfig } from '@/server/config'
 
 const ISSUER = 'naholo'
 const AUDIENCE = 'paddle-checkout'
 const EXPIRY_MS = 60 * 60 * 1000
 
-const secretKey = new TextEncoder().encode(config.paddle.projectTokenSecret)
+let cachedSecretKey: Uint8Array | null = null
+
+function getSecretKey(): Uint8Array {
+  if (cachedSecretKey == null) {
+    cachedSecretKey = new TextEncoder().encode(
+      requirePaddleConfig().projectTokenSecret,
+    )
+  }
+  return cachedSecretKey
+}
 
 export async function signProjectSubscriptionCheckoutToken(input: {
   projectId: string
@@ -22,7 +31,7 @@ export async function signProjectSubscriptionCheckoutToken(input: {
     .setJti(crypto.randomUUID())
     .setIssuedAt()
     .setExpirationTime(expiresAt)
-    .sign(secretKey)
+    .sign(getSecretKey())
   return { token, expiresAt }
 }
 
@@ -44,7 +53,7 @@ export async function verifyProjectSubscriptionCheckoutToken(
   token: string,
 ): Promise<VerifyTokenResult> {
   try {
-    const { payload } = await jwtVerify(token, secretKey, {
+    const { payload } = await jwtVerify(token, getSecretKey(), {
       issuer: ISSUER,
       audience: AUDIENCE,
       algorithms: ['HS256'],

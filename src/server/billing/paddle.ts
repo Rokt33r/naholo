@@ -1,5 +1,5 @@
 import { Environment, Paddle, Webhooks } from '@paddle/paddle-node-sdk'
-import { config } from '@/server/config'
+import { requirePaddleConfig } from '@/server/config'
 
 // Shared server-side Paddle module. Used for both webhook crypto
 // (`Webhooks#isSignatureValid`) and outbound API calls
@@ -7,14 +7,29 @@ import { config } from '@/server/config'
 // Instantiating Paddle also registers the SDK's crypto runtime via
 // NodeRuntime.initialize() — without it, signature verification returns
 // false unconditionally because RuntimeProvider has no crypto backend.
-const environment =
-  config.paddle.environment === 'sandbox'
-    ? Environment.sandbox
-    : Environment.production
+let cachedClient: Paddle | null = null
+let cachedEnvironment: Environment | null = null
 
-export const paddleServerClient = new Paddle(config.paddle.apiKey, {
-  environment,
-})
+export function getPaddleServerClient(): Paddle {
+  if (cachedClient == null) {
+    const paddle = requirePaddleConfig()
+    cachedClient = new Paddle(paddle.apiKey, {
+      environment: getPaddleEnvironment(),
+    })
+  }
+  return cachedClient
+}
+
+export function getPaddleEnvironment(): Environment {
+  if (cachedEnvironment == null) {
+    const paddle = requirePaddleConfig()
+    cachedEnvironment =
+      paddle.environment === 'sandbox'
+        ? Environment.sandbox
+        : Environment.production
+  }
+  return cachedEnvironment
+}
 
 export async function verifyPaddleSignature(
   rawBody: string,
@@ -23,9 +38,11 @@ export async function verifyPaddleSignature(
   if (signatureHeader == null) {
     return false
   }
+  // Ensure Paddle SDK crypto runtime is initialized before signature checks.
+  getPaddleServerClient()
   return new Webhooks().isSignatureValid(
     rawBody,
-    config.paddle.webhookSecret,
+    requirePaddleConfig().webhookSecret,
     signatureHeader,
   )
 }
