@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   deploymentId: process.env.DEPLOYMENT_ID,
   pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
 }
 
 const withMDX = createMDX({})
