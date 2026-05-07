@@ -41,10 +41,10 @@ src/
 
 ## Build & Test
 
-- `npm run dev` — dev server
-- `npm run build` — production build (do NOT run for verification)
+- `pnpm run dev` — dev server
+- `pnpm run build` — production build (do NOT run for verification)
 - `npx tsc` — type check (use this for verification)
-- Pre-commit: `npx pretty-quick --staged`
+- `pnpm format` - format code with prettier, run this after editing is done.
 - **Do NOT run `db:generate` or `db:migrate`** — leave DB migrations to the user
 
 ## Domain Model
@@ -75,7 +75,3 @@ Old → New mapping (for agents encountering legacy references):
 | skill            | skill         | **Unchanged**                                |
 | Logs (tab label) | Comms         | UI label only; code entity is `operationLog` |
 | notes            | notes         | **Unchanged**                                |
-
-## Plans
-
-See `docs/plans/` for implementation plans.
