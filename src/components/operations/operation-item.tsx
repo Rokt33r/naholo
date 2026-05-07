@@ -21,9 +21,10 @@ export function OperationItem({
   const searchParams = useSearchParams()
 
   const handleClick = () => {
-    const query = searchParams.toString()
+    const filter = searchParams.get('filter')
+    const query = filter ? `?filter=${encodeURIComponent(filter)}` : ''
     router.push(
-      `/app/projects/${projectSlug}/operations/${operation.number}${query ? `?${query}` : ''}`,
+      `/app/projects/${projectSlug}/operations/${operation.number}${query}`,
     )
   }
 
