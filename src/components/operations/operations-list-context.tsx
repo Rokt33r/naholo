@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext } from 'react'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useSessionStorage } from '@/hooks/use-session-storage'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +25,7 @@ export function OperationsListProvider({
   hasSelectedOperation: boolean
 }) {
   const isMobile = useIsMobile()
-  const [preferCollapsed, setPreferCollapsed] = useLocalStorage(
+  const [preferCollapsed, setPreferCollapsed] = useSessionStorage(
     'operations-list-collapsed',
     false,
   )
