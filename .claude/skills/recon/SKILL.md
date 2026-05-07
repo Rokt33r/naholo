@@ -91,27 +91,7 @@ Inspect the current state of OPERATION.md MISSION + EXECUTION and any freeform a
 One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section MUST contain:
 
 - A goal paragraph (1–3 sentences) immediately under the heading. State the success criterion concretely — `/splash` uses this to decide when the OBJ is done.
-- `#### Target files` — bullet list of files to create or modify, with a nested sub-list of per-symbol or per-change notes underneath each file. Format:
-
-  ```
-  - {path}
-    - `symbolOrSection`: brief description of the change. Can span more than one sentence if needed, but stay terse.
-    - another change in the same file.
-  ```
-
-  Example:
-
-  ```
-  - src/server/services/operator.ts
-    - `createOperator()`: add `loadoutId` arg; default to active loadout when omitted.
-    - `upsertOperator()`: delete — replaced by `createOperator` + new `updateOperator`.
-  - src/components/operations/operation-page.tsx
-    - thread the new `loadoutId` through props; no UI change.
-  ```
-
-  Include all files you can predict; `/splash` may add files in its AAR if it discovers more. Per-change notes are NOT sub-objectives — they're file-local annotations to scope the splash work.
-
-- `#### Flow / UI` (optional but **required** when the OBJ introduces or modifies control flow, request lifecycle, or UI layout). An ASCII diagram so the reviewer can grasp the change at a glance:
+- `#### Scheme of Maneuver` (optional but **required** when the OBJ introduces or modifies control flow, request lifecycle, or UI layout). An ASCII diagram so the reviewer can grasp the change at a glance:
   - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches.
   - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions.
   - **Linear / trivially simple flow**: a numbered list is acceptable instead of a diagram.
@@ -139,6 +119,26 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section MUST co
   ```
 
   Skip this section entirely if the OBJ is a pure data/logic change with no flow or UI implications.
+
+- `#### Target files` — bullet list of files to create or modify, with a nested sub-list of per-symbol or per-change notes underneath each file. Format:
+
+  ```
+  - {path}
+    - `symbolOrSection`: brief description of the change. Can span more than one sentence if needed, but stay terse.
+    - another change in the same file.
+  ```
+
+  Example:
+
+  ```
+  - src/server/services/operator.ts
+    - `createOperator()`: add `loadoutId` arg; default to active loadout when omitted.
+    - `upsertOperator()`: delete — replaced by `createOperator` + new `updateOperator`.
+  - src/components/operations/operation-page.tsx
+    - thread the new `loadoutId` through props; no UI change.
+  ```
+
+  Include all files you can predict; `/splash` may add files in its AAR if it discovers more. Per-change notes are NOT sub-objectives — they're file-local annotations to scope the splash work.
 
 - `#### After-Action Report` — leave this heading present and the body empty. `/splash` fills it.
 

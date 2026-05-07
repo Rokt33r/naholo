@@ -45,8 +45,8 @@ The single live document per OP. Replaces the old four-section format and the se
   - `## MISSION` — plan. Subsections (in order): `### Goal` (what we will do — free-form prose, lists welcome), `### Rationale` (how the goal resolves SITUATION.Pain), `### Prerequisites`, `### Architecture Decisions`. Written by `/recon`.
   - `## EXECUTION` — per-OBJ workspace. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
     - A short goal paragraph (1–3 sentences) immediately under the heading. This is the success criterion `/splash` uses to know when the OBJ is done.
+    - `#### Scheme of Maneuver` (optional, **required when the OBJ introduces or modifies control flow or UI**) — ASCII diagram of the new flow or wireframe of the UI. A numbered list is acceptable for trivially linear flows.
     - `#### Target files` — bullet list of files, each with a nested sub-list of per-symbol / per-change notes (terse, may span more than one sentence if needed). Per-change notes are file-local annotations, not sub-objectives.
-    - `#### Flow / UI` (optional, **required when the OBJ introduces or modifies control flow or UI**) — ASCII diagram of the new flow or wireframe of the UI. A numbered list is acceptable for trivially linear flows.
     - `#### After-Action Report` — initially empty. Filled by `/splash` after the OBJ ships. Updated in place if the OBJ is re-shipped or revised. Records what actually happened, deviations from plan, key files touched.
 
 - **No other top-level sections**: only the three above are allowed — do not invent new `##` headings. Open questions, when present, live under SITUATION as a transient `/recon`-owned subsection. Timeline lives in TIMELINE.md. Per-OBJ progress lives in EXECUTION's AARs.

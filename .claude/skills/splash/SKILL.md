@@ -66,6 +66,7 @@ If the targeted OBJ already has a non-empty `#### After-Action Report`, this is 
 From OPERATION.md `### OBJ N — Title`:
 
 - The goal paragraph (success criterion).
+- `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI; treat as authoritative shape for the splash.
 - `#### Target files` — the planned file list.
 - Anything in `#### After-Action Report` if present (revision splash only).
 
