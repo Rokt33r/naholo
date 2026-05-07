@@ -6,7 +6,7 @@ argument-hint: '["freeform FRAGO instructions"]'
 
 # Recon — Define the Mission
 
-Single-phase planning skill. Researches the codebase, fills `## MISSION` (Concept / Prerequisites / Architecture Decisions) and `## EXECUTION` (one `### OBJ N — Title` per ORP) in `OPERATION.md`, and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list.
+Single-phase planning skill. Researches the codebase, fills `## MISSION` (Goal / Rationale / Prerequisites / Architecture Decisions) and `## EXECUTION` (one `### OBJ N — Title` per ORP) in `OPERATION.md`, and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list.
 
 There is no rough/elaboration split. Each OBJ is sized for one reviewable `/splash`; sub-objectives are deliberately not used. The bar is "could a fresh `/splash` session ship one OBJ by reading only that OBJ's section in OPERATION.md and the project conventions?"
 
@@ -70,18 +70,19 @@ The goal is enough context to (a) write Architecture Decisions with real reasoni
 
 Inspect the current state of OPERATION.md MISSION + EXECUTION and any freeform args. Branch:
 
-- **MISSION + EXECUTION both empty (or `_(empty …)_` placeholders), no args** → fresh write. Populate MISSION (Concept, Prerequisites, Architecture Decisions) and EXECUTION (one `### OBJ N — Title` per ORP). Append `- **{YYYY-MM-DD HH:MM} — recon**: Drafted N OBJs.` to TIMELINE.md.
+- **MISSION + EXECUTION both empty (or `_(empty …)_` placeholders), no args** → fresh write. Populate MISSION (Goal, Rationale, Prerequisites, Architecture Decisions) and EXECUTION (one `### OBJ N — Title` per ORP). Append `- **{YYYY-MM-DD HH:MM} — recon**: Drafted N OBJs.` to TIMELINE.md.
 - **MISSION + EXECUTION partially populated, no args** → resume. Continue from where the previous run left off — add missing subsections, complete partial OBJs. Append `- **{YYYY-MM-DD HH:MM} — recon (resumed)**: …` to TIMELINE.md.
 - **Args provided, classify intent**:
-  - **Targeted edit** — args describe partial changes to MISSION (Architecture Decisions, Concept, Prerequisites) or to specific unfinished OBJs. Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — recon (revised)**: {summary}` to TIMELINE.md.
+  - **Targeted edit** — args describe partial changes to MISSION (Goal, Rationale, Prerequisites, Architecture Decisions) or to specific unfinished OBJs. Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — recon (revised)**: {summary}` to TIMELINE.md.
   - **FRAGO** — args describe inserting new OBJs or removing/rewriting unfinished OBJs. Insert new `### OBJ N — Title` sections (renumber subsequent unfinished OBJs as needed). Mark removals by deleting the OBJ section entirely **only if the OBJ is unfinished**; never delete or rewrite an OBJ whose AAR is non-empty. Append `- **{YYYY-MM-DD HH:MM} — recon (FRAGO)**: {summary}` to TIMELINE.md.
   - **Full restart** — args explicitly say start over (e.g., "rewrite from scratch"). Replace MISSION + unfinished EXECUTION sections wholesale; preserve completed OBJs (those with non-empty AAR) at the top of EXECUTION. Append `- **{YYYY-MM-DD HH:MM} — recon (restart)**: {summary}` to TIMELINE.md.
 
 ### 7. Write OPERATION.md MISSION
 
-`## MISSION` has exactly three subsections (in order):
+`## MISSION` has exactly four subsections (in order):
 
-- `### Concept` — 2–4 sentences on the high-level approach. What's the load-bearing idea?
+- `### Goal` — what we will do. Free-form prose stating the change; bulleted lists are welcome where they help readability (e.g., when the goal enumerates several mechanical edits). This is the _only_ place Goal lives in OPERATION.md — `/infil` no longer seeds a SITUATION.Goal.
+- `### Rationale` — how the goal resolves SITUATION.Pain. Connects each load-bearing piece of the goal back to the friction it removes; surfaces the ship-order reasoning when relevant.
 - `### Prerequisites` — bullet list of things that must exist or be true before any OBJ can ship.
 - `### Architecture Decisions` — numbered or bulleted entries, each with a short title and the **reasoning** behind the choice. This is where alternatives go ("considered B but chose A because…"). Decisions belong here, not inside individual OBJs.
 
