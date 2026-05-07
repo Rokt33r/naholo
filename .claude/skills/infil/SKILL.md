@@ -45,24 +45,17 @@ The argument is the operation number (e.g., `42`). Required.
      What's wrong or missing. ≤3 sentences from title + logs + notes.
      If not stated, mark with "_Agent-generated assumption:_".
 
-     ### Goal
-
-     What success looks like at a high level. ≤3 sentences.
-     If not stated, ask the user (rough is fine; final shape is decided in `/recon`).
-
      ### Suggested solution
 
-     A first-pass idea if logs/notes hint at one. Otherwise: `N/A`.
+     (only when logs/notes hint at a solution — otherwise omit this heading entirely)
 
-     ### Open questions
+     A first-pass idea, in the user's words where possible. ≤3 sentences.
 
-     ### {Question text}
+     ### Notes
 
-     Answer ->
+     (only when there's at least one supplementary point worth surfacing — otherwise omit this heading entirely)
 
-     ### {Another question}
-
-     Answer ->
+     - One-line summary of a non-blocking constraint, related operation, stakeholder mention, or prior-art pointer. Point at `notes/*.md` or `LOGS.yml` for detail.
 
      ## MISSION
 
@@ -73,8 +66,10 @@ The argument is the operation number (e.g., `42`). Required.
      _(empty — populated by `/recon`)_
      ```
 
-   - **Pain / Goal / Suggested solution**: keep brief — details land in MISSION during `/recon`.
-   - **Open questions**: top 3 (or fewer) questions that deepen understanding of the **pain** or **goal** — user motivations, hidden constraints, success criteria, scope boundaries, edge cases, prior attempts, stakeholders affected. Do NOT ask about file paths, function names, schema fields, or other implementation details — `/recon` will research those from the codebase. Only ask the user what the user uniquely knows. Each question gets its own `###` heading with `Answer -> ` on the next line. If you have no questions, omit the `### Open questions` block entirely.
+   - **Pain**: keep brief — ≤3 sentences. Details land in MISSION during `/recon`.
+   - **Suggested solution**: include only if logs/notes hint at a solution; otherwise omit the heading entirely. No `N/A` filler.
+   - **Notes**: include only if logs/notes surface info worth flagging that doesn't fit Pain or Suggested solution (non-blocking constraints, related operations, stakeholder mentions, prior-art pointers); one-line bullets, no nested detail; otherwise omit the heading entirely.
+   - **Open questions**: do NOT seed `### Open questions` from `/infil`. Questions are a `/recon`-owned artifact — `/recon` may add them during research and prunes unanswered ones during `/plan`.
    - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") inside SITUATION subsections where relevant.
    - Do NOT populate MISSION or EXECUTION — `/recon` does that.
 

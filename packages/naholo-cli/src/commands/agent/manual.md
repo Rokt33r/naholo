@@ -41,7 +41,7 @@ The single live document per OP. Replaces the old four-section format and the se
 
 - **Heading**: `# OP #{n}: {title}`
 - **Allowed sections (exactly these three, in this order)**:
-  - `## SITUATION` — context. Subsections (in order): `### Pain`, `### Goal`, `### Suggested solution`. Optional transient `### Open questions` block (one `### {question}` per question, followed by `Answer ->` on the next line — `/recon` prunes any question whose `Answer ->` is still empty). `/infil` writes Pain/Goal/Suggested solution from logs/notes; if any is missing, marks with `_Agent-generated assumption:_` or asks the user.
+  - `## SITUATION` — context. Subsections (in fixed order): `### Pain` (mandatory — always present), `### Suggested solution` (optional — emit only when logs/notes hint at one; no `N/A` filler), `### Notes` (optional — brief bullet list of supplementary info that doesn't fit Pain or Suggested solution; one-line summaries pointing at `notes/*.md` or `LOGS.yml` for detail; omit the heading entirely when there are no bullets). `/infil` writes Pain from logs/notes; if Pain is missing, marks with `_Agent-generated assumption:_` or asks the user. Goal is **not** part of SITUATION — it lives under MISSION and is written during `/recon`. Open questions are **not** seeded by `/infil`; they are a transient `/recon`-owned block (`### Open questions` with one `### {question}` per question, followed by `Answer ->` on the next line) that `/recon` may add during research and that gets pruned later.
   - `## MISSION` — plan. Subsections (in order): `### Concept`, `### Prerequisites`, `### Architecture Decisions`. Written by `/recon`.
   - `## EXECUTION` — per-OBJ workspace. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
     - A short goal paragraph (1–3 sentences) immediately under the heading. This is the success criterion `/splash` uses to know when the OBJ is done.
@@ -49,7 +49,7 @@ The single live document per OP. Replaces the old four-section format and the se
     - `#### Flow / UI` (optional, **required when the OBJ introduces or modifies control flow or UI**) — ASCII diagram of the new flow or wireframe of the UI. A numbered list is acceptable for trivially linear flows.
     - `#### After-Action Report` — initially empty. Filled by `/splash` after the OBJ ships. Updated in place if the OBJ is re-shipped or revised. Records what actually happened, deviations from plan, key files touched.
 
-- **Forbidden sections**: `## Pain`, `## Resolution`, `## Timeline`, `## Spec`, or any other top-level section. Open questions live under SITUATION as a transient subsection. Timeline lives in TIMELINE.md. Per-OBJ progress lives in EXECUTION's AARs.
+- **No other top-level sections**: only the three above are allowed — do not invent new `##` headings. Open questions, when present, live under SITUATION as a transient `/recon`-owned subsection. Timeline lives in TIMELINE.md. Per-OBJ progress lives in EXECUTION's AARs.
 - **Completed-OBJ rule**: an OBJ with a non-empty AAR is immutable to `/recon`. FRAGO inserts new `### OBJ N` sections (after the last existing OBJ, renumbered as needed) rather than rewriting completed OBJs.
 
 ### OBJECTIVES.md
