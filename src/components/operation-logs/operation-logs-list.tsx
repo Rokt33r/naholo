@@ -139,7 +139,7 @@ export function OperationLogsList({
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder='Type a message... (Shift+Enter for new line)'
-            className='min-h-[80px] w-full resize-none bg-transparent px-3 py-2 pb-10 text-sm outline-none'
+            className='min-h-[80px] max-h-[60vh] w-full resize-none overflow-y-auto bg-transparent px-3 py-2 pb-10 text-sm outline-none'
           />
           <div className='absolute right-2 bottom-2 flex gap-1'>
             {isClosed ? (

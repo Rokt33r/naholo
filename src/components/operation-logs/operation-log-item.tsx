@@ -125,7 +125,7 @@ export function OperationLogItem({
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
-            className='w-full resize-none rounded-lg border bg-card p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+            className='max-h-80 w-full resize-none overflow-y-auto rounded-lg border bg-card p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
             autoFocus
           />
         </div>
