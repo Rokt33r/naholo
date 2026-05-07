@@ -229,10 +229,10 @@ export function OperationDetail({
                 className='cursor-text text-xl font-semibold'
                 onClick={() => setIsEditingTitle(true)}
               >
-                {operation.title}{' '}
-                <span className='text-muted-foreground font-normal'>
+                <span className='font-mono text-muted-foreground'>
                   #{operation.number}
-                </span>
+                </span>{' '}
+                {operation.title}
               </h1>
               {isSaving && (
                 <Loader2 className='size-5 animate-spin text-muted-foreground' />

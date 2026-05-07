@@ -61,7 +61,7 @@ export function OperationItem({
 
       {/* Row 2: Content preview and date */}
       <div className='mt-1 flex items-center justify-between gap-1 text-xs text-muted-foreground'>
-        <span className='text-muted-foreground font-normal shrink-0'>
+        <span className='shrink-0 font-mono font-bold text-muted-foreground'>
           #{operation.number}
         </span>
         <div className='flex-1 truncate'>
