@@ -25,26 +25,26 @@ Anything in quotes after is freeform context for the splash. Common patterns:
 
 ## What to do
 
-### 0. Load personality
+### 1. Load personality
 
 If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-### 0.5. Load manual
+### 2. Load manual
 
 If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-### 1. Find infiled operation
+### 3. Find infiled operation
 
 Run `naholo agent op-list`.
 
 - If none exist → tell user to run `/infil {operationNumber}` first and stop.
 - If multiple exist → show the list and ask user which one.
 
-### 2. Resolve operation directory
+### 4. Resolve operation directory
 
 Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. If `{operationDir}` does not exist on disk, tell the user to run `/infil {operationNumber}` first and stop.
 
-### 3. Read state
+### 5. Read state
 
 Read if you haven't read:
 
@@ -54,14 +54,14 @@ Read if you haven't read:
 
 Validate: `## EXECUTION` must contain at least one `### OBJ N — Title` section. If EXECUTION is empty or shows the `_(empty …)_` placeholder, tell the user to run `/plan` first (and `/recon` first if MISSION is also empty) and stop.
 
-### 4. Pick the target OBJ
+### 6. Pick the target OBJ
 
 - If `N` was provided → target OBJ N. If no matching `### OBJ N` section exists, stop and tell the user.
 - Otherwise → target the first unchecked OBJ in OBJECTIVES.md, top to bottom. If all are `[x]`, tell the user there's nothing left and suggest `/exfil`.
 
-If the targeted OBJ already has a non-empty `#### After-Action Report`, this is a **revision splash** — see step 7 (AAR update path).
+If the targeted OBJ already has a non-empty `#### After-Action Report`, this is a **revision splash** — see step 9 (AAR update path).
 
-### 5. Read the OBJ contract
+### 7. Read the OBJ contract
 
 From OPERATION.md `### OBJ N — Title`:
 
@@ -77,7 +77,7 @@ If freeform args are provided, treat them as additional context to weigh during 
 
 Wait for the user to choose before continuing.
 
-### 6. Implement (fresh splash path)
+### 8. Implement (fresh splash path)
 
 Implement the code changes that satisfy the OBJ goal:
 
@@ -92,7 +92,7 @@ After the changes are written:
 - Run the type checker: `npx tsc` (or the project's equivalent).
 - Fix anything that breaks before proceeding.
 
-### 7. Write the AAR (or update it for revision splashes)
+### 9. Write the AAR (or update it for revision splashes)
 
 Replace the body of `#### After-Action Report` inside the OBJ's section with a concise report. Four labels in fixed order:
 
@@ -103,11 +103,11 @@ Replace the body of `#### After-Action Report` inside the OBJ's section with a c
 
 For a **revision splash** (the OBJ's AAR was already non-empty when picked), overwrite the AAR in place — do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading. The AAR is the canonical record of what's currently true on disk for that OBJ; revision history lives in TIMELINE.md.
 
-### 8. Flip the checkbox
+### 10. Flip the checkbox
 
 In `OBJECTIVES.md`, flip `- [ ] N. Title` → `- [x] N. Title` for the OBJ that just shipped. For revision splashes, the box is already `[x]` — leave it.
 
-### 9. Append a TIMELINE bullet
+### 11. Append a TIMELINE bullet
 
 Append one bullet to `{operationDir}/notes/TIMELINE.md`:
 
@@ -116,7 +116,7 @@ Append one bullet to `{operationDir}/notes/TIMELINE.md`:
 
 Use local time in `YYYY-MM-DD HH:MM` format (matches the format `/infil` seeded TIMELINE.md with).
 
-### 10. Print summary
+### 12. Print summary
 
 Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md. Do not add a `- Key files:` bullet (Splashed files inside the AAR is the canonical list) and do not add a `- AAR: [link]` bullet (the AAR is already inline).
 

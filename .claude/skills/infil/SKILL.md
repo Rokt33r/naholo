@@ -16,18 +16,18 @@ The argument is the operation number (e.g., `42`). Required.
 
 ## What to do
 
-0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+1. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-0.5. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-1. **Pull via CLI**: Run `naholo agent pull {operationNumber}`. Capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
+3. **Pull via CLI**: Run `naholo agent pull {operationNumber}`. Capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
 
-2. **Read context**:
+4. **Read context**:
    - **Title**: from the `Title:` line of pull's stdout.
    - **Logs**: `{operationDir}/LOGS.yml` (YAML array of `{ id, createdAt, author, content }`).
    - **Notes**: every `*.md` file in `{operationDir}/notes/`.
 
-3. **Handle OPERATION.md** (using the context from step 2):
+5. **Handle OPERATION.md** (using the context from step 4):
 
    OPERATION.md is the single live document for the OP. It is structured as SITUATION / MISSION / EXECUTION (see manual).
 
@@ -78,7 +78,7 @@ The argument is the operation number (e.g., `42`). Required.
    - If nothing new → note "OPERATION.md is up to date" in the summary.
    - If something new → summarize it (e.g., "3 new logs, `research.md` updated") and **ask the user** whether to append a TIMELINE bullet. On confirmation, append one bullet to `TIMELINE.md` summarizing the new logs and note changes.
 
-4. **Handle TIMELINE.md** (sibling of OPERATION.md):
+6. **Handle TIMELINE.md** (sibling of OPERATION.md):
 
    **If `{operationDir}/notes/TIMELINE.md` does not exist**:
    - Write it locally via `Write`. Template:
@@ -94,7 +94,7 @@ The argument is the operation number (e.g., `42`). Required.
 
    **If TIMELINE.md already exists**: leave it alone (re-runs of infil are handled via the OPERATION.md "what changed" branch above).
 
-5. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → OBJECTIVES → TIMELINE, then other notes alphabetically.
+7. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → OBJECTIVES → TIMELINE, then other notes alphabetically.
 
    If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 

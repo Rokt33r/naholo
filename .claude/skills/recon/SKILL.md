@@ -14,7 +14,7 @@ The skill name is the unambiguous "where are we" signal: re-running `/recon` is 
 
 No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple).
 
-Anything passed as an argument is treated as **freeform instructions** describing how to revise MISSION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 5 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise MISSION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 7 (re-run dispatch). Common patterns:
 
 - `/recon` (no args) — first run, or resume a partial MISSION draft.
 - `/recon "rework architecture decisions about plan mode"` — targeted edit.
@@ -24,26 +24,26 @@ EXECUTION-shaped instructions (insert/remove/revise OBJs) belong to `/plan`, not
 
 ## What to do
 
-### 0. Load personality
+### 1. Load personality
 
 If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-### 0.5. Load manual
+### 2. Load manual
 
 If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-### 1. Find infiled operation
+### 3. Find infiled operation
 
 Run `naholo agent op-list`.
 
 - If none exist → tell user to run `/infil {operationNumber}` first and abort.
 - If multiple exist → show the list and ask user which one to use.
 
-### 2. Resolve operation directory
+### 4. Resolve operation directory
 
 Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it. If `{operationDir}` does not exist on disk, tell the user to run `/infil {operationNumber}` first and stop.
 
-### 3. Read local state
+### 5. Read local state
 
 Read if you haven't read:
 
@@ -51,7 +51,7 @@ Read if you haven't read:
 - `{operationDir}/notes/OPERATION.md`
 - `{operationDir}/notes/TIMELINE.md`
 
-### 4. Research the codebase
+### 6. Research the codebase
 
 Investigate thoroughly to understand:
 
@@ -64,7 +64,7 @@ The goal is enough context to write a Goal that names the chosen path, a Rationa
 
 If research surfaces questions that need a human answer before MISSION can commit, `/recon` may add an `### Open questions` block under `## SITUATION` (one `### {question}` per question, followed by `Answer ->` on the next line). Pruning unanswered questions is `/plan`'s job — leaving them in place between `/recon` and `/plan` is fine.
 
-### 5. Re-run dispatch + write MISSION
+### 7. Re-run dispatch + write MISSION
 
 Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
 
@@ -74,7 +74,7 @@ Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
   - **Targeted edit** — args describe partial changes to MISSION (Goal, Rationale, Prerequisites, Architecture Decisions). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — recon (revised)**: {summary}` to TIMELINE.md.
   - **Full restart** — args explicitly say start over (e.g., "rewrite the mission from scratch"). Replace MISSION wholesale. If `## EXECUTION` already has content, use `AskUserQuestion` to ask whether to **keep EXECUTION** (let `/plan` reconcile it against the new MISSION later) or **flush EXECUTION** (delete every OBJ section — including shipped ones — and leave EXECUTION empty for `/plan` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Append `- **{YYYY-MM-DD HH:MM} — recon (restart)**: {summary, including kept/flushed EXECUTION}` to TIMELINE.md.
 
-### 6. Write OPERATION.md MISSION
+### 8. Write OPERATION.md MISSION
 
 `## MISSION` has exactly four subsections (in order):
 
@@ -83,7 +83,7 @@ Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
 - `### Prerequisites` — bullet list of things that must exist or be true before any OBJ can ship.
 - `### Architecture Decisions` — one `####`-headed entry per decision; body is one short paragraph (or a few lines) covering the load-bearing reasoning and rejected alternatives only — no restatement of context the reader already has from MISSION. Decisions belong here, not inside individual OBJs.
 
-### 7. Print summary
+### 9. Print summary
 
 Show the recon state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
 

@@ -22,56 +22,56 @@ If no instructions given, ask the user whether to close.
 
 ## What to do
 
-0. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+1. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-0.5. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-1. **Find infiled operation**: Run `naholo agent op-list`.
+3. **Find infiled operation**: Run `naholo agent op-list`.
    - If none exist → tell user there's no infiled operation to exfil.
    - If multiple exist → show the list and ask user which one.
 
-2. **Resolve operation directory**: Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. If `{operationDir}` does not exist on disk, tell the user there's nothing to exfil for that operation and stop.
+4. **Resolve operation directory**: Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. If `{operationDir}` does not exist on disk, tell the user there's nothing to exfil for that operation and stop.
 
-3. **Read local state** (for context when generating the summary log):
+5. **Read local state** (for context when generating the summary log):
    - `{operationDir}/OBJECTIVES.md`
    - `{operationDir}/notes/OPERATION.md`
    - `{operationDir}/notes/TIMELINE.md`
 
-4. **Check for remaining objectives**: Check `OBJECTIVES.md` for any unchecked (`- [ ]`) objectives.
+6. **Check for remaining objectives**: Check `OBJECTIVES.md` for any unchecked (`- [ ]`) objectives.
    - If there are incomplete objectives → use `AskUserQuestion` to warn: "Heads up — {count} objectives still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
      - If the user says **no** → abort exfil. Do not push, close, or clean up. Preserve local data at `{operationDir}`. Print that exfil was aborted and local data is preserved.
-     - If the user says **yes** → continue to step 5.
-   - If all objectives are done → continue to step 5.
+     - If the user says **yes** → continue to step 7.
+   - If all objectives are done → continue to step 7.
 
-5. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool. The push includes `TIMELINE.md` as just-another-note.
+7. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool. The push includes `TIMELINE.md` as just-another-note.
 
-   **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 6.** Print the error and preserve local data (see step 9 failure path).
+   **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 8.** Print the error and preserve local data (see step 11 failure path).
 
-6. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
+8. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed (names)
    - Notes created or updated
    - Brief description of code changes (summarize from OPERATION.md AARs)
    - Any freeform context the user provided
 
-   **If `create_operation_log` fails → STOP. Do NOT proceed to step 7.** Report the error and preserve local data (see step 9 failure path).
+   **If `create_operation_log` fails → STOP. Do NOT proceed to step 9.** Report the error and preserve local data (see step 11 failure path).
 
-7. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — exfil**: Final sync — {brief summary}.` Do NOT append to OPERATION.md.
+9. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — exfil**: Final sync — {brief summary}.` Do NOT append to OPERATION.md.
 
-8. **Close or ask about closing**:
-   - If extra instructions already specify → follow them.
-   - If all objectives in OBJECTIVES.md are done → close automatically via `close_operation` MCP tool (no need to ask).
-   - Otherwise → use `AskUserQuestion` to ask: "Close operation #{operationNumber}?" Do NOT proceed until they respond.
-     - If yes → use `close_operation` MCP tool
-     - If no → leave open
+10. **Close or ask about closing**:
+    - If extra instructions already specify → follow them.
+    - If all objectives in OBJECTIVES.md are done → close automatically via `close_operation` MCP tool (no need to ask).
+    - Otherwise → use `AskUserQuestion` to ask: "Close operation #{operationNumber}?" Do NOT proceed until they respond.
+      - If yes → use `close_operation` MCP tool
+      - If no → leave open
 
-9. **Clean up or abort**:
-   - **If push and summary log completed successfully**: Delete the `{operationDir}` directory.
-   - **If any step failed**: Do NOT delete. Instead:
-     - Print which step failed and what the error was
-     - Confirm that local data at `{operationDir}` is preserved
-     - Suggest the user retry with `/exfil`
+11. **Clean up or abort**:
+    - **If push and summary log completed successfully**: Delete the `{operationDir}` directory.
+    - **If any step failed**: Do NOT delete. Instead:
+      - Print which step failed and what the error was
+      - Confirm that local data at `{operationDir}` is preserved
+      - Suggest the user retry with `/exfil`
 
-10. **Print summary**: Print the exfil report as raw markdown — no surrounding fence. Report what was pushed, whether the operation closed, and whether the local dir was deleted or preserved. When linking to files, use the absolute paths from step 2.
+12. **Print summary**: Print the exfil report as raw markdown — no surrounding fence. Report what was pushed, whether the operation closed, and whether the local dir was deleted or preserved. When linking to files, use the absolute paths from step 4.
 
 ## Rules
 

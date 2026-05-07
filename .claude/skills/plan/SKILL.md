@@ -16,7 +16,7 @@ Each OBJ is sized for one reviewable `/splash`; sub-objectives are deliberately 
 
 No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple).
 
-Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 5 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 8 (re-run dispatch). Common patterns:
 
 - `/plan` (no args) — first run after `/recon`, or resume a partial EXECUTION draft.
 - `/plan "drop OBJ 7, add a new OBJ for the migration script"` — FRAGO mid-cycle.
@@ -27,26 +27,26 @@ MISSION-shaped instructions (Goal rewrite, AD changes, new Prerequisites) belong
 
 ## What to do
 
-### 0. Load personality
+### 1. Load personality
 
 If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-### 0.5. Load manual
+### 2. Load manual
 
 If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-### 1. Find infiled operation
+### 3. Find infiled operation
 
 Run `naholo agent op-list`.
 
 - If none exist → tell user to run `/infil {operationNumber}` first and abort.
 - If multiple exist → show the list and ask user which one to use.
 
-### 2. Resolve operation directory
+### 4. Resolve operation directory
 
 Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it. If `{operationDir}` does not exist on disk, tell the user to run `/infil {operationNumber}` first and stop.
 
-### 3. Read local state
+### 5. Read local state
 
 Read if you haven't read:
 
@@ -54,26 +54,26 @@ Read if you haven't read:
 - `{operationDir}/notes/OPERATION.md`
 - `{operationDir}/notes/TIMELINE.md`
 
-### 4. Validate MISSION
+### 6. Validate MISSION
 
 `## MISSION` must already be populated. If MISSION is empty, shows the `_(empty …)_` placeholder, or is missing any of the four required subsections (`### Goal`, `### Rationale`, `### Prerequisites`, `### Architecture Decisions`), stop and tell the user to run `/recon` first. `/plan` is the OPORD pass — without a WARNORD it has nothing to cut.
 
-### 5. Prune unanswered open questions
+### 7. Prune unanswered open questions
 
 Under `## SITUATION` → `### Open questions` (if present), remove every `### {question}` block whose `Answer ->` line is empty or whitespace-only. Keep answered questions — their answers may be load-bearing context that the OBJs reference. If the entire `### Open questions` block becomes empty, remove the block heading too. Match with roughly `^### .+\n\s*Answer ->\s*$\n?` (multiline). When in doubt, leave the question in place.
 
-### 6. Re-run dispatch + write EXECUTION
+### 8. Re-run dispatch + write EXECUTION
 
 Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
-- **EXECUTION empty (or `_(empty …)_` placeholder), no args** → fresh write. Cut MISSION into ORP-sized OBJs and populate EXECUTION (one `### OBJ N — Title` per OBJ). Mirror to `OBJECTIVES.md` (step 8). Append `- **{YYYY-MM-DD HH:MM} — plan**: Drafted N OBJs.` to TIMELINE.md.
+- **EXECUTION empty (or `_(empty …)_` placeholder), no args** → fresh write. Cut MISSION into ORP-sized OBJs and populate EXECUTION (one `### OBJ N — Title` per OBJ). Mirror to `OBJECTIVES.md` (step 10). Append `- **{YYYY-MM-DD HH:MM} — plan**: Drafted N OBJs.` to TIMELINE.md.
 - **EXECUTION partially populated, no args** → resume. Continue from where the previous run left off — finish partial OBJs, fill missing subsections. Append `- **{YYYY-MM-DD HH:MM} — plan (resumed)**: …` to TIMELINE.md.
 - **Args provided, classify intent**:
   - **Targeted edit** — args describe partial changes to specific unfinished OBJs (split, merge, retitle, swap target files). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — plan (revised)**: {summary}` to TIMELINE.md.
   - **FRAGO** — args describe inserting new OBJs or removing/rewriting unfinished OBJs. Insert new `### OBJ N — Title` sections (renumber subsequent unfinished OBJs as needed). Mark removals by deleting the OBJ section entirely **only if the OBJ is unfinished**; never delete or rewrite an OBJ whose AAR is non-empty. Append `- **{YYYY-MM-DD HH:MM} — plan (FRAGO)**: {summary}` to TIMELINE.md.
   - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Replace unfinished OBJs wholesale; preserve completed OBJs (those with non-empty AAR) at the top of EXECUTION. Append `- **{YYYY-MM-DD HH:MM} — plan (restart)**: {summary}` to TIMELINE.md.
 
-### 7. Write OPERATION.md EXECUTION
+### 9. Write OPERATION.md EXECUTION
 
 One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section MUST contain:
 
@@ -121,7 +121,7 @@ ORP sizing rules:
 - OBJs are ordered for shipping — top-to-bottom is the default `/splash` order.
 - A goal that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Architecture Decisions (or ask `/recon` to add the decision if it's missing).
 
-### 8. Mirror to OBJECTIVES.md
+### 10. Mirror to OBJECTIVES.md
 
 Sync `OBJECTIVES.md` to match the EXECUTION OBJ list:
 
@@ -131,7 +131,7 @@ Sync `OBJECTIVES.md` to match the EXECUTION OBJ list:
 - Add new OBJs as `- [ ]`. Remove deleted OBJs (only if their AAR was empty — never remove a shipped OBJ).
 - Renumber as needed; keep titles synced with the OBJ headings.
 
-### 9. Print summary
+### 11. Print summary
 
 Show the plan state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
 
