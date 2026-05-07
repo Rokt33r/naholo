@@ -72,7 +72,7 @@ The chronological event log. Separate note (was previously `## Timeline` inside 
 - **Heading**: `# TIMELINE — OP #{n}`
 - Body is a single chronological bullet list. Format: `- **{YYYY-MM-DD HH:MM} — {stage-or-author}**: {summary}`.
 - `/infil` seeds it with one bullet per existing server log entry.
-- `/recon`, `/splash`, `/sitrep`, `/exfil` each append their own bullets here. Stage labels: `recon`, `splash`, `sitrep`, `exfil`.
+- `/recon`, `/plan`, `/splash`, `/sitrep`, `/exfil` each append their own bullets here. Stage labels: `recon`, `plan`, `splash`, `sitrep`, `exfil`.
 - Pushed to the server as just-another-note by `/sitrep` and `/exfil`.
 
 ### Listing order
