@@ -2,14 +2,13 @@
 name: infil
 description: Infil a Naholo operation — fetch objectives, notes, and logs locally for offline-first workflow.
 argument-hint: '{operationNumber}'
-model: sonnet
 ---
 
 # Infil — Infil Operation
 
-Fetch an operation's full context from Naholo and set up a local working directory for the `/spec` → `/ship` → `/sitrep` (mid-session) → `/exfil` (done) workflow. Use `/sitrep` between `/ship` sessions to sync progress without closing.
+Fetch an operation's full context from Naholo and set up a local working directory for the `/recon` → `/splash` → `/sitrep` (mid-session) → `/exfil` (done) workflow.
 
-Infil is a one-way bring-down from server to local. It never pushes. If OPERATION.md needs to be created, it is written locally only — the user runs `/sitrep` or `/exfil` later to sync upstream.
+Infil is a one-way bring-down from server to local. It never pushes. If `OPERATION.md` or `TIMELINE.md` need to be created, they are written locally only — the user runs `/sitrep` or `/exfil` later to sync upstream.
 
 ## Arguments
 
@@ -30,26 +29,32 @@ The argument is the operation number (e.g., `42`). Required.
 
 3. **Handle OPERATION.md** (using the context from step 2):
 
-   OPERATION.md is always the evolving context document — it is never the spec.
+   OPERATION.md is the single live document for the OP. It is structured as SITUATION / MISSION / EXECUTION (see manual).
 
    **If `{operationDir}/notes/OPERATION.md` does not exist**:
-   - Write it to `{operationDir}/notes/OPERATION.md` **locally only** via the `Write` tool. Do NOT push during infil — the user runs `/sitrep` or `/exfil` later.
+   - Write it locally via the `Write` tool. Do NOT push during infil.
    - Template:
 
      ```markdown
      # OP #{operationNumber}: {title}
 
-     ## Pain
+     ## SITUATION
+
+     ### Pain
 
      What's wrong or missing. ≤3 sentences from title + logs + notes.
      If not stated, mark with "_Agent-generated assumption:_".
 
-     ## Resolution
+     ### Goal
 
-     How we plan to fix it. ≤3 sentences from title + logs + notes.
-     If not stated, mark with "_Agent-generated assumption:_".
+     What success looks like at a high level. ≤3 sentences.
+     If not stated, ask the user (rough is fine; final shape is decided in `/recon`).
 
-     ## Open questions
+     ### Suggested solution
+
+     A first-pass idea if logs/notes hint at one. Otherwise: `N/A`.
+
+     ### Open questions
 
      ### {Question text}
 
@@ -59,49 +64,63 @@ The argument is the operation number (e.g., `42`). Required.
 
      Answer ->
 
-     ## Timeline
+     ## MISSION
+
+     _(empty — populated by `/recon`)_
+
+     ## EXECUTION
+
+     _(empty — populated by `/recon`)_
+     ```
+
+   - **Pain / Goal / Suggested solution**: keep brief — details land in MISSION during `/recon`.
+   - **Open questions**: top 3 (or fewer) questions that deepen understanding of the **pain** or **goal** — user motivations, hidden constraints, success criteria, scope boundaries, edge cases, prior attempts, stakeholders affected. Do NOT ask about file paths, function names, schema fields, or other implementation details — `/recon` will research those from the codebase. Only ask the user what the user uniquely knows. Each question gets its own `###` heading with `Answer -> ` on the next line. If you have no questions, omit the `### Open questions` block entirely.
+   - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") inside SITUATION subsections where relevant.
+   - Do NOT populate MISSION or EXECUTION — `/recon` does that.
+
+   **If OPERATION.md already exists**:
+   - Find what changed since the last TIMELINE bullet: new logs (LOGS.yml entries with `createdAt` later than the last TIMELINE date) and note changes (created/updated, from pull's CLI report).
+   - If nothing new → note "OPERATION.md is up to date" in the summary.
+   - If something new → summarize it (e.g., "3 new logs, `research.md` updated") and **ask the user** whether to append a TIMELINE bullet. On confirmation, append one bullet to `TIMELINE.md` summarizing the new logs and note changes.
+
+4. **Handle TIMELINE.md** (sibling of OPERATION.md):
+
+   **If `{operationDir}/notes/TIMELINE.md` does not exist**:
+   - Write it locally via `Write`. Template:
+
+     ```markdown
+     # TIMELINE — OP #{operationNumber}
 
      - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
      - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
      ```
 
-   - **Pain / Resolution**: keep brief — details go in SPEC during `/spec`.
-   - **Open questions**: top 3 (or fewer) questions that deepen understanding of the **pain** and **resolution** — user motivations, hidden constraints, success criteria, scope boundaries, edge cases, prior attempts, stakeholders affected. Do NOT ask about file paths, function names, schema fields, or other implementation details — `/spec` will research those from the codebase. Only ask the user what the user uniquely knows. Each question gets its own `###` heading with `Answer -> ` on the next line.
-   - **Timeline**: one bullet per log entry, using each entry's `createdAt` and `author`.
-   - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") in Pain or Resolution where relevant.
-   - Do NOT elaborate or create an implementation plan — just capture current state.
+   - One bullet per LOGS.yml entry, using each entry's `createdAt` and `author`. Summarize content in one line.
 
-   **If OPERATION.md already exists**:
-   - Find what changed since the last `## Timeline` entry: new logs (LOGS.yml entries with `createdAt` later than the last Timeline date) and note changes (created/updated, from pull's CLI report).
-   - If nothing new → note "OPERATION.md is up to date" in the summary.
-   - If something new → summarize it (e.g., "3 new logs, `research.md` updated") and **ask the user** whether to append a Timeline bullet. On confirmation, append one bullet to `## Timeline` summarizing the new logs and note changes.
+   **If TIMELINE.md already exists**: leave it alone (re-runs of infil are handled via the OPERATION.md "what changed" branch above).
 
-4. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → OBJECTIVES → SPEC, then other notes alphabetically.
+5. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → OBJECTIVES → TIMELINE, then other notes alphabetically.
 
    If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
    Example (printed directly, not fenced):
 
    Infiled operation #42: "Implement user auth"
-   - Objectives: 12 (5 done, 7 remaining)
-   - Notes: OPERATION [created], api-design, research
+   - Objectives: 0 (none yet — to be defined in `/recon`)
+   - Notes: OPERATION [created], TIMELINE [created], api-design, research
    - Logs: 8 entries
    - Local: [{operationDir}/]({operationDir}/)
    - Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
-   - Spec: [SPEC.md]({operationDir}/notes/SPEC.md) (if exists)
-
-   **Conflicts to resolve manually:**
-   - [api-design.md]({operationDir}/notes/api-design.md)
-   - [research.md]({operationDir}/notes/research.md)
+   - Timeline: [TIMELINE.md]({operationDir}/notes/TIMELINE.md)
 
    Substitute `{operationDir}` with the absolute path printed on the pull's `Local:` line. Include the CLI output details (objectives updated/inserted, notes merged) in the summary.
 
 ## Rules
 
 - **Use `naholo agent pull` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync objectives/notes. The CLI handles all of that.
-- **Infil never pushes**. If OPERATION.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
+- **Infil never pushes**. If OPERATION.md or TIMELINE.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.
-- Do NOT elaborate or expand the plan — just capture current state.
-- Objective notes from the server should be folded into OPERATION.md context, NOT written to OBJECTIVES.md (OBJECTIVES.md is a pure checklist).
+- Do NOT populate MISSION or EXECUTION — `/recon` does that.
+- Objective notes from the server should be folded into OPERATION.md SITUATION context, NOT written to OBJECTIVES.md (OBJECTIVES.md is a pure checklist, populated by `/recon`).
 - Print the summary as raw markdown — no surrounding fence.
