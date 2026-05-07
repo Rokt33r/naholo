@@ -94,11 +94,12 @@ After the changes are written:
 
 ### 7. Write the AAR (or update it for revision splashes)
 
-Replace the body of `#### After-Action Report` inside the OBJ's section with a concise report:
+Replace the body of `#### After-Action Report` inside the OBJ's section with a concise report. Four labels in fixed order:
 
 - **What shipped**: 1–3 sentences on the actual change.
-- **Deviations**: anything that differs from the planned Target files or goal — extra files, alternate approach, scope adjustments. Empty bullet list if none.
-- **Notes for review**: anything the reviewer should know — known follow-ups, risks, things deferred to a later OBJ.
+- **Deviations**: anything that differs from the planned Target files or goal — extra files, alternate approach, scope adjustments. When there are none, write `none` inline on the same line as the label — no bullet list, no explanation.
+- **Notes**: anything the reviewer should know — known follow-ups, risks, things deferred to a later OBJ. Omit the heading entirely when there's nothing worth flagging.
+- **Splashed files**: the canonical list of files touched this splash. Bullet list of paths, no per-file explanations. Glob patterns are OK when many files changed for the same reason (e.g. `.claude/skills/*/SKILL.md`). This is the canonical record — do not duplicate the file list elsewhere in the AAR or in the chat summary.
 
 For a **revision splash** (the OBJ's AAR was already non-empty when picked), overwrite the AAR in place — do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading. The AAR is the canonical record of what's currently true on disk for that OBJ; revision history lives in TIMELINE.md.
 
@@ -117,17 +118,24 @@ Use local time in `YYYY-MM-DD HH:MM` format (matches the format `/infil` seeded 
 
 ### 10. Print summary
 
-Print as raw markdown — no surrounding fence. Show what was shipped, the key files, and the next OBJ.
+Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md. Do not add a `- Key files:` bullet (Splashed files inside the AAR is the canonical list) and do not add a `- AAR: [link]` bullet (the AAR is already inline).
 
 Example:
 
 OBJ 3 shipped: "Add /splash skill spec"
 
-- Goal hit: yes
-- Key files:
-  - [docs/skills/SPLASH.md](docs/skills/SPLASH.md)
-- Deviations: none
-- AAR: [OPERATION.md → OBJ 3]({operationDir}/notes/OPERATION.md)
+**What shipped**: Wrote the splash skill spec describing the one-OBJ-per-invocation contract, the AAR format, and the OBJECTIVES.md flip rule.
+
+**Deviations**: none
+
+**Notes**: ...
+
+**Splashed files**
+
+- [docs/skills/SPLASH.md](docs/skills/SPLASH.md)
+
+---
+
 - Progress: 3/8 OBJs done
 - Next: `/splash` to ship OBJ 4 ("/sitrep skill rewrite")
 
