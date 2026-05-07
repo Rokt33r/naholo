@@ -46,7 +46,7 @@ Run `naholo agent op-path {operationNumber}` to get the absolute operation direc
 
 ### 3. Read state
 
-Read:
+Read if you haven't read:
 
 - `{operationDir}/OBJECTIVES.md`
 - `{operationDir}/notes/OPERATION.md`
