@@ -35,7 +35,7 @@ Anything in quotes is optional freeform context that informs the summary log (e.
 
 5. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed since last sitrep (count and names — pull from new TIMELINE bullets)
-   - Objectives added or revised (from `/recon` activity)
+   - Objectives added or revised (from `/recon` MISSION edits or `/plan` EXECUTION edits)
    - Notes created or updated
    - Brief description of code changes (run `git diff --stat` if available, or summarize from OPERATION.md AARs)
    - Any freeform context the user provided
