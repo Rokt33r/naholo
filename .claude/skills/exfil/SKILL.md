@@ -2,6 +2,7 @@
 name: exfil
 description: Sync local operation changes back to Naholo — push objectives and notes (including TIMELINE.md), post summary log, optionally close.
 argument-hint: '["close"|"don\'t close"|"freeform"]'
+model: sonnet
 ---
 
 # Exfil — Sync Back and Clean Up

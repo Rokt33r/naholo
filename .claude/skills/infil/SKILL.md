@@ -2,6 +2,7 @@
 name: infil
 description: Infil a Naholo operation — fetch objectives, notes, and logs locally for offline-first workflow.
 argument-hint: '{operationNumber}'
+model: sonnet
 ---
 
 # Infil — Infil Operation

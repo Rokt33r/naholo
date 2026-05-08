@@ -2,6 +2,7 @@
 name: sitrep
 description: Sync local progress to Naholo — push objectives and notes (including TIMELINE.md), post summary log. Does not close.
 argument-hint: '["freeform"]'
+model: sonnet
 ---
 
 # Sitrep — Sync Progress
