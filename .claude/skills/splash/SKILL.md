@@ -52,7 +52,7 @@ Read if you haven't read:
 - `{operationDir}/notes/OPERATION.md`
 - `{operationDir}/notes/TIMELINE.md`
 
-Validate: `## EXECUTION` must exist and contain at least one `### OBJ N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### OBJ N` sections under it, tell the user to run `/plan` first (and `/recon` first if `## MISSION` is also absent) and stop.
+Validate: `## EXECUTION` must exist and contain at least one `### OBJ N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### OBJ N` sections under it, tell the user to run `/objs` first (and `/recon` first if `## MISSION` is also absent) and stop.
 
 ### 6. Pick the target OBJ
 
@@ -72,7 +72,7 @@ From OPERATION.md `### OBJ N — Title`:
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the OBJ goal specifies — if they ask for more than, or different from, what the OBJ goal covers, **stop before implementing** and surface two options to the user:
 
-1. **Run `/plan` first** — modify the undone OBJ to absorb the new scope, or create a new OBJ for it (FRAGO). Pick this when the change is large enough to deserve its own review checkpoint, or when it should be a separate splash.
+1. **Run `/objs` first** — modify the undone OBJ to absorb the new scope, or create a new OBJ for it (FRAGO). Pick this when the change is large enough to deserve its own review checkpoint, or when it should be a separate splash.
 2. **Splash anyway, capture in AAR** — proceed with the expanded scope this run, and document the deviation explicitly in the `#### After-Action Report` (what was added beyond the original goal, why, and any follow-up implications). Pick this when the change is small and naturally lives with the current OBJ.
 
 Wait for the user to choose before continuing.
@@ -155,6 +155,6 @@ If the user should review before the next splash, mention it. If all OBJs are no
 - **OBJECTIVES.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next OBJ.
 - **TIMELINE.md gets exactly one bullet per splash invocation**.
 - **OPERATION.md sections stay at SITUATION / MISSION / EXECUTION**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
-- **Don't re-elaborate the OBJ**: if the goal or Target files are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the OBJ goal — that's `/plan`'s job (or `/recon`, if MISSION itself needs to change).
+- **Don't re-elaborate the OBJ**: if the goal or Target files are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the OBJ goal — that's `/objs`'s job (or `/recon`, if MISSION itself needs to change).
 - **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
 - Print the summary as raw markdown — no surrounding fence.

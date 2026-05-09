@@ -1,14 +1,14 @@
 ---
-name: plan
+name: objs
 description: Cut a recon'd Naholo operation's MISSION into ORP-sized OBJs — write EXECUTION in OPERATION.md, mirror to OBJECTIVES.md.
 argument-hint: '["freeform FRAGO instructions"]'
 ---
 
-# Plan — Cut the Mission into OBJs
+# Objs — Cut the Mission into OBJs
 
 OPORD-style detail-cutter. Reads `## MISSION` (must already be populated by `/recon`), prunes unanswered open questions, cuts the mission into ORP-sized OBJs, **appends `## EXECUTION`** to `OPERATION.md` when absent (revises in place when present), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list.
 
-The skill name is the unambiguous "where are we" signal: re-running `/plan` is for plan adjustment (insert / remove / revise unfinished OBJs). Direction changes — Concept of Operations rewrites, Warning Order revisions, new Prerequisites — belong to `/recon`, not `/plan`.
+The skill name is the unambiguous "where are we" signal: re-running `/objs` is for plan adjustment (insert / remove / revise unfinished OBJs). Direction changes — Concept of Operations rewrites, Warning Order revisions, new Prerequisites — belong to `/recon`, not `/objs`.
 
 Each OBJ is sized for one reviewable `/splash`; sub-objectives are deliberately not used. The bar is "could a fresh `/splash` session ship one OBJ by reading only that OBJ's section in OPERATION.md and the project conventions?"
 
@@ -18,12 +18,12 @@ No operation number — the skill resolves the active operation via `naholo agen
 
 Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 8 (re-run dispatch). Common patterns:
 
-- `/plan` (no args) — first run after `/recon`, or resume a partial EXECUTION draft.
-- `/plan "drop OBJ 7, add a new OBJ for the migration script"` — FRAGO mid-cycle.
-- `/plan "split OBJ 3 into two — one for the schema, one for the migration"` — targeted edit.
-- `/plan "rewrite EXECUTION from scratch"` — full restart of unfinished OBJs.
+- `/objs` (no args) — first run after `/recon`, or resume a partial EXECUTION draft.
+- `/objs "drop OBJ 7, add a new OBJ for the migration script"` — FRAGO mid-cycle.
+- `/objs "split OBJ 3 into two — one for the schema, one for the migration"` — targeted edit.
+- `/objs "rewrite EXECUTION from scratch"` — full restart of unfinished OBJs.
 
-MISSION-shaped instructions (Concept of Operations rewrite, Warning Order changes, new Prerequisites) belong to `/recon`, not `/plan`.
+MISSION-shaped instructions (Concept of Operations rewrite, Warning Order changes, new Prerequisites) belong to `/recon`, not `/objs`.
 
 ## What to do
 
@@ -56,7 +56,7 @@ Read if you haven't read:
 
 ### 6. Validate MISSION
 
-`## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the three required subsections (`### Concept of Operations`, `### Prerequisites`, `### Warning Orders`), stop and tell the user to run `/recon` first. `/plan` is the OPORD pass — without a populated MISSION it has nothing to cut.
+`## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the three required subsections (`### Concept of Operations`, `### Prerequisites`, `### Warning Orders`), stop and tell the user to run `/recon` first. `/objs` is the OPORD pass — without a populated MISSION it has nothing to cut.
 
 ### 7. Prune unanswered open questions
 
@@ -66,7 +66,7 @@ Under `## SITUATION` → `### Open questions` (if present), remove every `### {q
 
 Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
-- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized OBJs and populate EXECUTION (one `### OBJ N — Title` per OBJ). Mirror to `OBJECTIVES.md` (step 10). Append `- **{YYYY-MM-DD HH:MM} — plan**: Drafted N OBJs.` to TIMELINE.md.
+- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized OBJs and populate EXECUTION (one `### OBJ N — Title` per OBJ). Mirror to `OBJECTIVES.md` (step 10). Append `- **{YYYY-MM-DD HH:MM} — objs**: Drafted N OBJs.` to TIMELINE.md.
 - **EXECUTION present but partially populated, no args** → resume in place. Continue from where the previous run left off — finish partial OBJs, fill missing subsections. Append `- **{YYYY-MM-DD HH:MM} — plan (resumed)**: …` to TIMELINE.md.
 - **Args provided, classify intent**:
   - **Targeted edit** — args describe partial changes to specific unfinished OBJs (split, merge, retitle, swap target files). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — plan (revised)**: {summary}` to TIMELINE.md.
@@ -112,7 +112,7 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section MUST co
 
   Include all files you can predict; `/splash` may add files in its AAR if it discovers more. Per-change notes are NOT sub-objectives — they're file-local annotations to scope the splash work.
 
-`/plan`'s per-OBJ template ends at `#### Target files`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the OBJ.
+`/objs`'s per-OBJ template ends at `#### Target files`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the OBJ.
 
 ORP sizing rules:
 
@@ -146,13 +146,13 @@ Plan complete for OP #42: "Implement user auth"
 Next:
 
 - Looks good → run `/splash` to ship OBJ 1
-- Plan adjustment → re-run `/plan "freeform instructions"` or edit EXECUTION directly
+- Plan adjustment → re-run `/objs "freeform instructions"` or edit EXECUTION directly
 - Direction change → re-run `/recon "freeform instructions"` to revise MISSION
 - Optionally → `/sitrep` to push current plan to the server
 
 ## Rules
 
-- **EXECUTION-only**: `/plan` writes (or revises) `## EXECUTION` and mirrors to `OBJECTIVES.md`. It does NOT touch `## MISSION` — direction changes belong to `/recon`.
+- **EXECUTION-only**: `/objs` writes (or revises) `## EXECUTION` and mirrors to `OBJECTIVES.md`. It does NOT touch `## MISSION` — direction changes belong to `/recon`.
 - **MISSION must exist**: abort with a "run `/recon` first" message if MISSION is absent or missing required subsections.
 - **No sub-objectives**: every OBJ is flat. If you feel the urge to sub-bullet, split into two OBJs.
 - **Completed OBJs are immutable**: an OBJ with a `#### After-Action Report` heading MUST NOT be edited, renumbered, or removed. New OBJs from FRAGO are appended after the last existing OBJ.

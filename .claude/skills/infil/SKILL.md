@@ -30,7 +30,7 @@ The argument is the operation number (e.g., `42`). Required.
 
 5. **Handle OPERATION.md** (using the context from step 4):
 
-   OPERATION.md is the single live document for the OP (see manual for the full schema). `/infil` only seeds `## SITUATION` when generating from scratch; `## MISSION` is appended later by `/recon`, `## EXECUTION` by `/plan`.
+   OPERATION.md is the single live document for the OP (see manual for the full schema). `/infil` only seeds `## SITUATION` when generating from scratch; `## MISSION` is appended later by `/recon`, `## EXECUTION` by `/objs`.
 
    **If `{operationDir}/notes/OPERATION.md` does not exist**:
    - Write it locally via the `Write` tool. Do NOT push during infil.
@@ -63,7 +63,7 @@ The argument is the operation number (e.g., `42`). Required.
    - **Suggested solution**: include only if logs/notes hint at a solution; otherwise omit the heading entirely. No `N/A` filler.
    - **Notes**: include only if logs/notes surface info worth flagging that doesn't fit Pain or Suggested solution (non-blocking constraints, related operations, stakeholder mentions, prior-art pointers); one-line bullets, no nested detail; otherwise omit the heading entirely.
    - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") inside SITUATION subsections where relevant.
-   - Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` and `/plan` append those when they run.
+   - Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` and `/objs` append those when they run.
 
    **If OPERATION.md already exists**:
    - Find what changed since the last TIMELINE bullet: new logs (LOGS.yml entries with `createdAt` later than the last TIMELINE date) and note changes (created/updated, from pull's CLI report).
@@ -108,6 +108,6 @@ The argument is the operation number (e.g., `42`). Required.
 - **Infil never pushes**. If OPERATION.md or TIMELINE.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.
-- Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` appends MISSION, `/plan` appends EXECUTION.
+- Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` appends MISSION, `/objs` appends EXECUTION.
 - Objective notes from the server should be folded into OPERATION.md SITUATION context, NOT written to OBJECTIVES.md (OBJECTIVES.md is a pure checklist, populated by `/recon`).
 - Print the summary as raw markdown — no surrounding fence.

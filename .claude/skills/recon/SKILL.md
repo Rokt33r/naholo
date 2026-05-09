@@ -1,14 +1,14 @@
 ---
 name: recon
-description: Plan an infiled Naholo operation — research the codebase, fill MISSION (Concept of Operations, Prerequisites, Warning Orders) in OPERATION.md. EXECUTION is owned by `/plan`.
+description: Plan an infiled Naholo operation — research the codebase, fill MISSION (Concept of Operations, Prerequisites, Warning Orders) in OPERATION.md. EXECUTION is owned by `/objs`.
 argument-hint: '["freeform MISSION instructions"]'
 ---
 
 # Recon — Define the Mission
 
-The MISSION-writing skill. Researches the codebase and writes `## MISSION` (Concept of Operations / Prerequisites / Warning Orders) into `OPERATION.md` — appending the section when absent, revising in place when it already exists. Stops there. `/recon` does **not** write `## EXECUTION`, does **not** mirror to `OBJECTIVES.md`, and does **not** prune open questions — those are owned by `/plan`.
+The MISSION-writing skill. Researches the codebase and writes `## MISSION` (Concept of Operations / Prerequisites / Warning Orders) into `OPERATION.md` — appending the section when absent, revising in place when it already exists. Stops there. `/recon` does **not** write `## EXECUTION`, does **not** mirror to `OBJECTIVES.md`, and does **not** prune open questions — those are owned by `/objs`.
 
-The skill name is the unambiguous "where are we" signal: re-running `/recon` is for direction changes (Concept of Operations rewrite, Warning Order revision, Prerequisites change). Once MISSION is settled, the user runs `/plan` to cut it into ORP-sized OBJs.
+The skill name is the unambiguous "where are we" signal: re-running `/recon` is for direction changes (Concept of Operations rewrite, Warning Order revision, Prerequisites change). Once MISSION is settled, the user runs `/objs` to cut it into ORP-sized OBJs.
 
 ## Arguments
 
@@ -20,7 +20,7 @@ Anything passed as an argument is treated as **freeform instructions** describin
 - `/recon "rework architecture decisions about plan mode"` — targeted edit.
 - `/recon "rewrite the mission from scratch"` — full restart.
 
-EXECUTION-shaped instructions (insert/remove/revise OBJs) belong to `/plan`, not `/recon`.
+EXECUTION-shaped instructions (insert/remove/revise OBJs) belong to `/objs`, not `/recon`.
 
 ## What to do
 
@@ -60,9 +60,9 @@ Investigate thoroughly to understand:
 - Dependencies, prerequisites, schema fields, type signatures
 - Conventions used in the project (from `CLAUDE.md` and existing code)
 
-The goal is enough context to write a Concept of Operations that names the chosen path and connects to SITUATION.Pain, Prerequisites that are real, and Warning Orders with load-bearing reasoning. `/plan` will use the MISSION to cut EXECUTION later — recon's job is to make the planning brief crisp.
+The goal is enough context to write a Concept of Operations that names the chosen path and connects to SITUATION.Pain, Prerequisites that are real, and Warning Orders that name each decision. `/objs` will use the MISSION to cut EXECUTION later — recon's job is to make the planning brief crisp.
 
-If research surfaces questions that need a human answer before MISSION can commit, `/recon` may add an `### Open questions` block under `## SITUATION` (one `### {question}` per question, followed by `Answer ->` on the next line). Pruning unanswered questions is `/plan`'s job — leaving them in place between `/recon` and `/plan` is fine.
+If research surfaces questions that need a human answer before MISSION can commit, `/recon` may add an `### Open questions` block under `## SITUATION` (one `### {question}` per question, followed by `Answer ->` on the next line). Pruning unanswered questions is `/objs`'s job — leaving them in place between `/recon` and `/objs` is fine.
 
 ### 7. Re-run dispatch + write MISSION
 
@@ -72,15 +72,28 @@ Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
 - **MISSION present but partially populated, no args** → resume in place. Add missing subsections, complete partial ones. Append `- **{YYYY-MM-DD HH:MM} — recon (resumed)**: …` to TIMELINE.md.
 - **Args provided, classify intent**:
   - **Targeted edit** — args describe partial changes to MISSION (Concept of Operations, Prerequisites, Warning Orders). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — recon (revised)**: {summary}` to TIMELINE.md.
-  - **Full restart** — args explicitly say start over (e.g., "rewrite the mission from scratch"). Replace MISSION wholesale. If `## EXECUTION` already has content, use `AskUserQuestion` to ask whether to **keep EXECUTION** (let `/plan` reconcile it against the new MISSION later) or **flush EXECUTION** (delete every OBJ section — including shipped ones — and leave EXECUTION empty for `/plan` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Append `- **{YYYY-MM-DD HH:MM} — recon (restart)**: {summary, including kept/flushed EXECUTION}` to TIMELINE.md.
+  - **Full restart** — args explicitly say start over (e.g., "rewrite the mission from scratch"). Replace MISSION wholesale. If `## EXECUTION` already has content, use `AskUserQuestion` to ask whether to **keep EXECUTION** (let `/objs` reconcile it against the new MISSION later) or **flush EXECUTION** (delete every OBJ section — including shipped ones — and leave EXECUTION empty for `/objs` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Append `- **{YYYY-MM-DD HH:MM} — recon (restart)**: {summary, including kept/flushed EXECUTION}` to TIMELINE.md.
 
 ### 8. Write OPERATION.md MISSION
 
 `## MISSION` has exactly three subsections in order(Add if missing any):
 
-- `### Concept of Operations` — free-form prose overview of what we will do and how it resolves `SITUATION.Pain`. Bulleted lists are welcome where they help readability (e.g., when the overview enumerates several mechanical edits). One paragraph that names the chosen path and connects it back to the friction being removed; surfaces ship-order reasoning when relevant.
+- `### Concept of Operations` — **two or three sentences max**. Names the chosen approach and connects it to `SITUATION.Pain`. Concept-level only — do **not** enumerate files, edit steps, or build commands here; those belong in Warning Orders or are derived later in EXECUTION.
 - `### Prerequisites` — bullet list of things that must exist or be true before any OBJ can ship.
-- `### Warning Orders` — one `####`-headed entry per decision; body is a reasoning paragraph (load-bearing reasoning only — no restatement of context the reader already has from Concept of Operations). When relevant, follow the body with a separate `Rejected:` paragraph naming alternatives the user picked against. **The `Rejected:` paragraph is conditional, not mandatory**: include it only when (a) the agent surfaced one or more alternatives the user picked against, OR (b) the user explicitly named an alternative as rejected. Omit it entirely otherwise — do **not** invent strawman rejections. When present, it is one concise sentence (or one sentence with `;`-separated clauses for multiple rejections), and it does **not** include a reason for the rejection unless the user gave one. Decisions belong here, not inside individual OBJs.
+- `### Warning Orders` — a flat bullet list of decisions. One bullet per decision. Each bullet starts with a **bold one-line label** stating the decision, then `: ` and a single sentence of reasoning. Keep the bold label short — avoid long code spans, file paths, or multi-clause titles inside the bold (put those in the reasoning half after the colon). No `####` headings, no prose paragraphs. Use a sub-bullet only when one sentence genuinely cannot carry the decision (e.g., the decision has two or three concrete items the reader needs to see); keep sub-bullets to one short clause each and avoid them whenever possible. Rejected alternatives, when present, go on a `- Rejected: …` sub-bullet under the decision they apply to — only include this when the user explicitly named the rejected option or the agent surfaced and the user dismissed it; do not invent strawman rejections. Decisions belong here, not inside individual OBJs.
+
+Example:
+
+```
+### Warning Orders
+
+- **Use `git mv` to rename the directory**: preserves blame across the rename.
+- **No legacy references in live doc surfaces**: read as if the new name had always been the name.
+- **`docs/ai-workflow.md` needs a structural pass**: textual substitution alone won't fix it
+  - currently lists only five skills (omits the OPORD skill)
+  - describes the wrong skill as the EXECUTION-cutter
+  - Rejected: leaving the file as-is with a one-line addendum.
+```
 
 ### 9. Print summary
 
@@ -91,7 +104,7 @@ Example (printed directly, not fenced):
 Recon complete for OP #42: "Implement user auth"
 
 - Mission: Concept of Operations + Prerequisites + 4 Warning Orders
-- Open questions: 2 (awaiting answer before `/plan`)
+- Open questions: 2 (awaiting answer before `/objs`)
 - Researched:
   - [src/auth/](src/auth/)
   - [src/server/services/operator.ts](src/server/services/operator.ts)
@@ -99,13 +112,13 @@ Recon complete for OP #42: "Implement user auth"
 
 Next:
 
-- Looks good → run `/plan` to cut MISSION into OBJs
+- Looks good → run `/objs` to cut MISSION into OBJs
 - Direction change → re-run `/recon "freeform instructions"` or edit MISSION directly
 - Optionally → `/sitrep` to push current MISSION to the server
 
 ## Rules
 
-- **MISSION-only**: `/recon` appends `## MISSION` (heading + subsections) when absent and revises it in place when present. It does NOT write `## EXECUTION`, does NOT mirror to `OBJECTIVES.md`, and does NOT prune open questions. Those are `/plan`'s job.
+- **MISSION-only**: `/recon` appends `## MISSION` (heading + subsections) when absent and revises it in place when present. It does NOT write `## EXECUTION`, does NOT mirror to `OBJECTIVES.md`, and does NOT prune open questions. Those are `/objs`'s job.
 - **Decisions commit to one path**: every Warning Order and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. No anything else. Open questions live under SITUATION; per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TIMELINE.md`.

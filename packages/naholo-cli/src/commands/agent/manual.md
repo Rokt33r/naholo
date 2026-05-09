@@ -17,23 +17,23 @@ Operational vocabulary used by the skills:
 
 - **ORP** — Operation Rally Point. The unit of work for a single OBJ: scoped, reviewable, ships in one `/splash`.
 - **AAR** — After-Action Report. The on-disk record of what actually happened during a `/splash`. Lives inside each OBJ's section.
-- **CONOPS** — Concept of Operations. The prose overview that opens MISSION: a concise paragraph naming what we will do and how it resolves `SITUATION.Pain`, written before the per-decision detail in Warning Orders.
-- **WARNORD** — Warning Order. One entry inside MISSION's `### Warning Orders` subsection; an architecture-load-bearing decision in this project's usage.
-- **OPORD** — Operation Order. The detail-cutting brief: the MISSION broken into ordered, ship-sized tasks with concrete target files. `/plan` writes the OPORD into `## EXECUTION` (one `### OBJ N — Title` per ORP) and mirrors the OBJ list to `OBJECTIVES.md`.
-- **FRAGO** — Fragmentary Order. Mid-cycle changes to remaining (unfinished) OBJs via re-running `/plan` with freeform instructions.
+- **CONOPS** — Concept of Operations. The two-or-three-sentence overview that opens MISSION: names the chosen approach and ties it back to `SITUATION.Pain`. Concept-level only — file lists and edit steps belong in Warning Orders, not here.
+- **WARNORD** — Warning Order. One bulleted decision inside MISSION's `### Warning Orders` subsection — one sentence per decision.
+- **OPORD** — Operation Order. The detail-cutting brief: the MISSION broken into ordered, ship-sized tasks with concrete target files. `/objs` writes the OPORD into `## EXECUTION` (one `### OBJ N — Title` per ORP) and mirrors the OBJ list to `OBJECTIVES.md`.
+- **FRAGO** — Fragmentary Order. Mid-cycle changes to remaining (unfinished) OBJs via re-running `/objs` with freeform instructions.
 
 ## Workflow
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
 1. **`/infil {n}`** — Input: operation number on server. `naholo agent pull {n}` creates the local operation directory, pulls `OBJECTIVES.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. The agent then generates the workflow notes if missing: `notes/OPERATION.md` (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills) and `notes/TIMELINE.md` (one bullet per existing log entry). `OBJECTIVES.md` stays as pulled (empty list, ready for `/recon`). Never pushes.
-2. **`/recon ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Prerequisites / Warning Orders) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `OBJECTIVES.md`, and does NOT prune open questions — those are `/plan`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, etc.); EXECUTION-shaped instructions belong to `/plan`. Stops with a "next: `/plan`" pointer.
-3. **`/plan ["freeform"]`** — Input: recon-completed operation (MISSION populated). OPORD-style detail-cutter. Prunes unanswered open questions, cuts MISSION into ORP-sized OBJs, **appends `## EXECUTION`** (one `### OBJ N — Title` per OBJ with goal + `#### Scheme of Maneuver` when applicable + `#### Target files`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the OBJ), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list. Re-runs handle EXECUTION FRAGOs: edit unfinished OBJs only; never touch completed OBJs (those with a populated AAR).
-4. **`/splash [N] ["freeform"]`** — Input: plan-completed operation with at least one unchecked OBJ. With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`. Reads the OBJ's goal + Target files from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target OBJ section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in OBJECTIVES.md, appends a TIMELINE.md bullet. Stops after one OBJ.
+2. **`/recon ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Prerequisites / Warning Orders) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `OBJECTIVES.md`, and does NOT prune open questions — those are `/objs`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, etc.); EXECUTION-shaped instructions belong to `/objs`. Stops with a "next: `/objs`" pointer.
+3. **`/objs ["freeform"]`** — Input: recon-completed operation (MISSION populated). OPORD-style detail-cutter. Prunes unanswered open questions, cuts MISSION into ORP-sized OBJs, **appends `## EXECUTION`** (one `### OBJ N — Title` per OBJ with goal + `#### Scheme of Maneuver` when applicable + `#### Target files`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the OBJ), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list. Re-runs handle EXECUTION FRAGOs: edit unfinished OBJs only; never touch completed OBJs (those with a populated AAR).
+4. **`/splash [N] ["freeform"]`** — Input: objs-completed operation with at least one unchecked OBJ. With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`. Reads the OBJ's goal + Target files from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target OBJ section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in OBJECTIVES.md, appends a TIMELINE.md bullet. Stops after one OBJ.
 5. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (objectives + all notes including TIMELINE.md), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
 6. **`/exfil ["close"|"don't close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
 
-The canonical happy-path cycle: `/infil → /recon → /plan → /splash → (user reviews AAR) → /splash → … → /exfil`. FRAGO loop: `/plan "freeform"` between splashes inserts or revises unfinished OBJs; re-run `/recon` for direction (MISSION) changes.
+The canonical happy-path cycle: `/infil → /recon → /objs → /splash → (user reviews AAR) → /splash → … → /exfil`. FRAGO loop: `/objs "freeform"` between splashes inserts or revises unfinished OBJs; re-run `/recon` for direction (MISSION) changes.
 
 ## Notes
 
@@ -41,20 +41,20 @@ Three workflow notes have a fixed contract. All other notes are free-form.
 
 ### OPERATION.md
 
-The single live document per OP. `/infil` writes SITUATION, `/recon` appends MISSION, `/plan` appends EXECUTION, `/splash` adds each OBJ's AAR when it ships. Layout:
+The single live document per OP. `/infil` writes SITUATION, `/recon` appends MISSION, `/objs` appends EXECUTION, `/splash` adds each OBJ's AAR when it ships. Layout:
 
 - **Heading**: `# OP #{n}: {title}`
-- **Sections (in fixed order when present; only `## SITUATION` is mandatory)**: top-level sections appear only when their owning skill has written them. After `/infil` only `## SITUATION` exists; `## MISSION` is appended by `/recon`; `## EXECUTION` is appended by `/plan`. No empty section headers, no placeholder bodies — if a section is absent, the skill that owns it hasn't run yet.
+- **Sections (in fixed order when present; only `## SITUATION` is mandatory)**: top-level sections appear only when their owning skill has written them. After `/infil` only `## SITUATION` exists; `## MISSION` is appended by `/recon`; `## EXECUTION` is appended by `/objs`. No empty section headers, no placeholder bodies — if a section is absent, the skill that owns it hasn't run yet.
   - `## SITUATION` — context. Subsections:
     - `### Pain` — the problem statement.
     - `### Suggested solution` — first-pass idea; may be absent.
     - `### Notes` — supplementary one-line bullets pointing at `notes/*.md` or `LOGS.yml`; may be absent.
-    - `### Open questions` — transient block present between `/recon` research and `/plan` pruning; each question is a `### {question}` followed by `Answer ->` on the next line. May be absent.
+    - `### Open questions` — transient block present between `/recon` research and `/objs` pruning; each question is a `### {question}` followed by `Answer ->` on the next line. May be absent.
   - `## MISSION` — plan. Appended by `/recon`. Three subsections (in order):
-    - `### Concept of Operations` — prose overview.
+    - `### Concept of Operations` — two-or-three-sentence overview.
     - `### Prerequisites` — bullet list.
-    - `### Warning Orders` — one `####`-headed entry per decision; body is a reasoning paragraph, optionally followed by a separate `Rejected:` paragraph naming alternatives the user picked against.
-  - `## EXECUTION` — per-OBJ workspace. Appended by `/plan`. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
+    - `### Warning Orders` — flat bullet list, one decision per bullet, one sentence each. Optional `- Rejected: …` sub-bullet under a decision when the user explicitly named a rejected alternative.
+  - `## EXECUTION` — per-OBJ workspace. Appended by `/objs`. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
     - A goal paragraph immediately under the heading — the success criterion `/splash` uses to know when the OBJ is done.
     - `#### Scheme of Maneuver` (optional) — ASCII diagram of the new flow or wireframe of the UI. A numbered list is acceptable for trivially linear flows.
     - `#### Target files` — bullet list of files, each with a nested sub-list of per-symbol / per-change notes. Per-change notes are file-local annotations, not sub-objectives.
@@ -77,7 +77,7 @@ The chronological event log. Separate note (was previously `## Timeline` inside 
 
 - **Heading**: `# TIMELINE — OP #{n}`
 - Body is a single chronological bullet list. Format: `- **{YYYY-MM-DD HH:MM} — {stage-or-author}**: {summary}`.
-- Stage labels used by skills: `recon`, `plan`, `splash`, `sitrep`, `exfil`. Other authors (server log entries seeded at infil) appear by name.
+- Stage labels used by skills: `recon`, `objs`, `splash`, `sitrep`, `exfil`. Other authors (server log entries seeded at infil) appear by name.
 
 ### Listing order
 
