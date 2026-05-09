@@ -101,8 +101,12 @@ Two paths:
 
 In both paths the body has four labels in fixed order:
 
-- **What shipped**: 1–3 sentences on the actual change.
-- **Deviations**: anything that differs from the planned Target files or goal — extra files, alternate approach, scope adjustments. When there are none, write `none` inline on the same line as the label — no bullet list, no explanation.
+- **What shipped**: 1–3 sentences on the actual change. Fewer is better. No motivational framing, no "why this matters", no recap of the OBJ goal — only what changed. Per-file detail belongs in the code (and is implicit in `**Splashed files**`), not here.
+- **Deviations**: anything that differs from the planned Target files or goal — extra files, alternate approach, scope adjustments. One concise bullet per deviation. Attribution rules:
+  - **Agent-initiated** (you chose to deviate during implementation): state the deviation and a brief reason — you already have the reasoning from your thought process, so commit it to the AAR.
+  - **User-initiated** (the user's freeform args expanded or redirected scope): state the deviation only. If the user gave a reason, quote/paraphrase it in one short clause; if they didn't, do **not** invent one — just record the change.
+  - Either way, keep each entry to one sentence.
+  - When there are no deviations, write `none` inline on the same line as the label — no bullet list, no explanation.
 - **Notes**: anything the reviewer should know — known follow-ups, risks, things deferred to a later OBJ. Omit the heading entirely when there's nothing worth flagging.
 - **Splashed files**: the canonical list of files touched this splash. Bullet list of paths, no per-file explanations. Glob patterns are OK when many files changed for the same reason (e.g. `.claude/skills/*/SKILL.md`). This is the canonical record — do not duplicate the file list elsewhere in the AAR or in the chat summary.
 
