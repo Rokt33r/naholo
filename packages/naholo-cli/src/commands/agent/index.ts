@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import { manCommand } from './man.js'
 import { opListCommand } from './op-list.js'
 import { opPathCommand } from './op-path.js'
+import { opUrlCommand } from './op-url.js'
 import { pullCommand } from './pull.js'
 import { pushCommand } from './push.js'
 
@@ -14,3 +15,4 @@ agentCommand.addCommand(pushCommand)
 agentCommand.addCommand(manCommand)
 agentCommand.addCommand(opListCommand)
 agentCommand.addCommand(opPathCommand)
+agentCommand.addCommand(opUrlCommand)

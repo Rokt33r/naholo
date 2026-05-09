@@ -11,7 +11,7 @@ Sync local changes back to Naholo, post a summary log, and clean up the local wo
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple).
+No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple), the local dir via `naholo agent op-path`, and the web-app URL via `naholo agent op-url`.
 
 Anything in quotes is optional freeform context. Common patterns:
 
@@ -48,11 +48,17 @@ If no instructions given, ask the user whether to close.
 
    **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 8.** Print the error and preserve local data (see step 11 failure path).
 
-8. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
-   - Objectives completed (names)
-   - Notes created or updated
-   - Brief description of code changes (summarize from OPERATION.md AARs)
-   - Any freeform context the user provided
+8. **Post summary log**: Post via `create_operation_log` MCP tool. Format is **header line + one short bullet per OBJ (≤1 sentence each)**, paraphrased from each OBJ's `**What shipped**` AAR sentence in `{operationDir}/notes/OPERATION.md`. Don't re-narrate; compress aggressively. If the user gave freeform context, append it after the bullets.
+
+   Example for a 3-OBJ operation:
+
+   ```
+   Exfil — OP #128 shipped, 3 OBJs squashed.
+
+   - Renamed `.claude/skills/plan/` → `.claude/skills/objs/` via `git mv`, patched the settings allowlist.
+   - Swept every `/plan` mention to `/objs` across the five SKILL.md files + `manual.md` (final grep is clean).
+   - Restructured `docs/ai-workflow.md` to a six-skill chain with a new Phase 4 for `/objs`.
+   ```
 
    **If `create_operation_log` fails → STOP. Do NOT proceed to step 9.** Report the error and preserve local data (see step 11 failure path).
 
@@ -72,7 +78,15 @@ If no instructions given, ask the user whether to close.
       - Confirm that local data at `{operationDir}` is preserved
       - Suggest the user retry with `/exfil`
 
-12. **Print summary**: Print the exfil report as raw markdown — no surrounding fence. Report what was pushed, whether the operation closed, and whether the local dir was deleted or preserved. When linking to files, use the absolute paths from step 4.
+12. **Print summary**: Run `naholo agent op-url {operationNumber}` via Bash to capture `{url}`, then print the exfil report as raw markdown — no surrounding fence. Format:
+
+    ```
+    Exfil complete — [OP #{operationNumber}: "{title}"]({url})
+
+    {N} OBJs shipped · {closed|left open}
+    ```
+
+    Don't print log id, "Local dir deleted: …", or note-push enumeration on success — silence is fine. The failure path in step 11 is where preserved local data gets surfaced.
 
 ## Rules
 
@@ -80,4 +94,5 @@ If no instructions given, ask the user whether to close.
 - **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
 - **TIMELINE.md is the only file that gets the new bullet** — OPERATION.md keeps SITUATION / MISSION / EXECUTION only.
 - **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this infil session.
+- **Summary log = header line + one short bullet per OBJ (≤1 sentence each).** Paraphrase from each AAR's `**What shipped**` sentence; don't re-narrate the OBJ. Short and forgettable beats comprehensive.
 - Print the summary as raw markdown — no surrounding fence.
