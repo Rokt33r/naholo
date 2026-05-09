@@ -17,18 +17,19 @@ Operational vocabulary used by the skills:
 
 - **ORP** — Operation Rally Point. The unit of work for a single OBJ: scoped, reviewable, ships in one `/splash`.
 - **AAR** — After-Action Report. The on-disk record of what actually happened during a `/splash`. Lives inside each OBJ's section.
-- **WARNORD** — Warning Order. The direction-setting brief: who, why, and the chosen approach, _without_ a per-step task list. `/recon` writes the WARNORD into `## MISSION` (Goal / Rationale / Prerequisites / Architecture Decisions).
-- **OPORD** — Operation Order. The detail-cutting brief: the WARNORD broken into ordered, ship-sized tasks with concrete target files. `/plan` writes the OPORD into `## EXECUTION` (one `### OBJ N — Title` per ORP) and mirrors the OBJ list to `OBJECTIVES.md`.
+- **CONOPS** — Concept of Operations. The prose overview that opens MISSION: a concise paragraph naming what we will do and how it resolves `SITUATION.Pain`, written before the per-decision detail in Warning Orders.
+- **WARNORD** — Warning Order. One entry inside MISSION's `### Warning Orders` subsection; an architecture-load-bearing decision in this project's usage.
+- **OPORD** — Operation Order. The detail-cutting brief: the MISSION broken into ordered, ship-sized tasks with concrete target files. `/plan` writes the OPORD into `## EXECUTION` (one `### OBJ N — Title` per ORP) and mirrors the OBJ list to `OBJECTIVES.md`.
 - **FRAGO** — Fragmentary Order. Mid-cycle changes to remaining (unfinished) OBJs via re-running `/plan` with freeform instructions.
 
 ## Workflow
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
-1. **`/infil {n}`** — Input: operation number on server. `naholo agent pull {n}` creates the local operation directory, pulls `OBJECTIVES.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. The agent then generates the workflow notes if missing: `notes/OPERATION.md` (with `## SITUATION` filled from logs/notes; `## MISSION` and `## EXECUTION` left as empty section headers) and `notes/TIMELINE.md` (one bullet per existing log entry). `OBJECTIVES.md` stays as pulled (empty list, ready for `/recon`). Never pushes.
-2. **`/recon ["freeform"]`** — Input: infiled operation. WARNORD-style direction-setter. Researches the codebase and fills `## MISSION` (Goal / Rationale / Prerequisites / Architecture Decisions) only. Does NOT touch `## EXECUTION` or `OBJECTIVES.md`, and does NOT prune open questions — those are `/plan`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Goal, swap Architecture Decisions, etc.); EXECUTION-shaped instructions belong to `/plan`. Stops with a "next: `/plan`" pointer.
-3. **`/plan ["freeform"]`** — Input: recon-completed operation (MISSION populated). OPORD-style detail-cutter. Prunes unanswered open questions, cuts MISSION into ORP-sized OBJs, writes `## EXECUTION` (one `### OBJ N — Title` per OBJ with goal + `#### Scheme of Maneuver` when applicable + `#### Target files`; AAR empty), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list. Re-runs handle EXECUTION FRAGOs: edit unfinished OBJs only; never touch completed OBJs (those with non-empty AAR).
-4. **`/splash [N] ["freeform"]`** — Input: plan-completed operation with at least one unchecked OBJ. With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`. Reads the OBJ's goal + Target files from OPERATION.md, implements code, runs format + typecheck, writes the AAR into the same `### OBJ N` section, flips `- [ ]` → `- [x]` in OBJECTIVES.md, appends a TIMELINE.md bullet. Stops after one OBJ. Re-running on a shipped OBJ updates the AAR in place.
+1. **`/infil {n}`** — Input: operation number on server. `naholo agent pull {n}` creates the local operation directory, pulls `OBJECTIVES.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. The agent then generates the workflow notes if missing: `notes/OPERATION.md` (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills) and `notes/TIMELINE.md` (one bullet per existing log entry). `OBJECTIVES.md` stays as pulled (empty list, ready for `/recon`). Never pushes.
+2. **`/recon ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Prerequisites / Warning Orders) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `OBJECTIVES.md`, and does NOT prune open questions — those are `/plan`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, etc.); EXECUTION-shaped instructions belong to `/plan`. Stops with a "next: `/plan`" pointer.
+3. **`/plan ["freeform"]`** — Input: recon-completed operation (MISSION populated). OPORD-style detail-cutter. Prunes unanswered open questions, cuts MISSION into ORP-sized OBJs, **appends `## EXECUTION`** (one `### OBJ N — Title` per OBJ with goal + `#### Scheme of Maneuver` when applicable + `#### Target files`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the OBJ), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list. Re-runs handle EXECUTION FRAGOs: edit unfinished OBJs only; never touch completed OBJs (those with a populated AAR).
+4. **`/splash [N] ["freeform"]`** — Input: plan-completed operation with at least one unchecked OBJ. With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`. Reads the OBJ's goal + Target files from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target OBJ section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in OBJECTIVES.md, appends a TIMELINE.md bullet. Stops after one OBJ.
 5. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (objectives + all notes including TIMELINE.md), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
 6. **`/exfil ["close"|"don't close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
 
@@ -40,20 +41,27 @@ Three workflow notes have a fixed contract. All other notes are free-form.
 
 ### OPERATION.md
 
-The single live document per OP. Seeded by `/infil` (SITUATION), MISSION written by `/recon`, EXECUTION written by `/plan`, AARs written by `/splash`. Layout:
+The single live document per OP. `/infil` writes SITUATION, `/recon` appends MISSION, `/plan` appends EXECUTION, `/splash` adds each OBJ's AAR when it ships. Layout:
 
 - **Heading**: `# OP #{n}: {title}`
-- **Allowed sections (exactly these three, in this order)**:
-  - `## SITUATION` — context. Subsections (in fixed order): `### Pain` (mandatory — always present), `### Suggested solution` (optional — emit only when logs/notes hint at one; no `N/A` filler), `### Notes` (optional — brief bullet list of supplementary info that doesn't fit Pain or Suggested solution; one-line summaries pointing at `notes/*.md` or `LOGS.yml` for detail; omit the heading entirely when there are no bullets). `/infil` writes Pain from logs/notes; if Pain is missing, marks with `_Agent-generated assumption:_` or asks the user. Goal is **not** part of SITUATION — it lives under MISSION and is written during `/recon`. Open questions are **not** seeded by `/infil`; they are a transient `/recon`-owned block (`### Open questions` with one `### {question}` per question, followed by `Answer ->` on the next line) that `/recon` may add during research and that gets pruned later.
-  - `## MISSION` — plan. Subsections (in order): `### Goal` (what we will do — free-form prose, lists welcome), `### Rationale` (how the goal resolves SITUATION.Pain), `### Prerequisites`, `### Architecture Decisions` (one `####`-headed entry per decision; brief body covering load-bearing reasoning and rejected alternatives only). Written by `/recon`.
-  - `## EXECUTION` — per-OBJ workspace. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
-    - A short goal paragraph (1–3 sentences) immediately under the heading. This is the success criterion `/splash` uses to know when the OBJ is done.
-    - `#### Scheme of Maneuver` (optional, **required when the OBJ introduces or modifies control flow or UI**) — ASCII diagram of the new flow or wireframe of the UI. A numbered list is acceptable for trivially linear flows.
-    - `#### Target files` — bullet list of files, each with a nested sub-list of per-symbol / per-change notes (terse, may span more than one sentence if needed). Per-change notes are file-local annotations, not sub-objectives.
-    - `#### After-Action Report` — initially empty. Filled by `/splash` after the OBJ ships. Updated in place if the OBJ is re-shipped or revised. Four labels in fixed order: `**What shipped**` (1–3 sentences), `**Deviations**` (write `none` inline when there are none — no bullet list), `**Notes**` (omit the heading entirely when there's nothing to flag), `**Splashed files**` (canonical list of files touched this splash — bullet list of paths, no per-file explanations, glob patterns OK; not duplicated elsewhere in the AAR or in the chat summary). Splash spec owns the detailed format contract.
+- **Sections (in fixed order when present; only `## SITUATION` is mandatory)**: top-level sections appear only when their owning skill has written them. After `/infil` only `## SITUATION` exists; `## MISSION` is appended by `/recon`; `## EXECUTION` is appended by `/plan`. No empty section headers, no placeholder bodies — if a section is absent, the skill that owns it hasn't run yet.
+  - `## SITUATION` — context. Subsections:
+    - `### Pain` — the problem statement.
+    - `### Suggested solution` — first-pass idea; may be absent.
+    - `### Notes` — supplementary one-line bullets pointing at `notes/*.md` or `LOGS.yml`; may be absent.
+    - `### Open questions` — transient block present between `/recon` research and `/plan` pruning; each question is a `### {question}` followed by `Answer ->` on the next line. May be absent.
+  - `## MISSION` — plan. Appended by `/recon`. Three subsections (in order):
+    - `### Concept of Operations` — prose overview.
+    - `### Prerequisites` — bullet list.
+    - `### Warning Orders` — one `####`-headed entry per decision; body is a reasoning paragraph, optionally followed by a separate `Rejected:` paragraph naming alternatives the user picked against.
+  - `## EXECUTION` — per-OBJ workspace. Appended by `/plan`. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
+    - A goal paragraph immediately under the heading — the success criterion `/splash` uses to know when the OBJ is done.
+    - `#### Scheme of Maneuver` (optional) — ASCII diagram of the new flow or wireframe of the UI. A numbered list is acceptable for trivially linear flows.
+    - `#### Target files` — bullet list of files, each with a nested sub-list of per-symbol / per-change notes. Per-change notes are file-local annotations, not sub-objectives.
+    - `#### After-Action Report` — added by `/splash` when the OBJ ships (and overwritten in place on revision splashes). Its presence is the "shipped" signal. Format contract is owned by the splash skill.
 
 - **No other top-level sections**: only the three above are allowed — do not invent new `##` headings. Open questions, when present, live under SITUATION as a transient `/recon`-owned subsection. Timeline lives in TIMELINE.md. Per-OBJ progress lives in EXECUTION's AARs.
-- **Completed-OBJ rule**: an OBJ with a non-empty AAR is immutable to `/plan`. FRAGO inserts new `### OBJ N` sections (after the last existing OBJ, renumbered as needed) rather than rewriting completed OBJs.
+- **Shipped signal**: the presence of `#### After-Action Report` under an OBJ section means that OBJ has shipped. Absence means it is still open.
 
 ### OBJECTIVES.md
 
@@ -61,9 +69,7 @@ The canonical checklist. The only file with checkboxes. Flat — no sub-objectiv
 
 - **Heading**: `# OBJECTIVES — OP #{n}`
 - Every OBJ is `- [ ] {n}. {short title}` (e.g., `- [ ] 1. Add man command`). No indentation, no sub-bullets.
-- `[ref](naholo://objectives/{id})` links are appended by `naholo agent push` for newly created objectives — preserve them.
-- Checkboxes flip `[ ]` → `[x]` only; never uncheck.
-- `/splash` flips the box for OBJ N immediately after the OBJ is shipped.
+- `[ref](naholo://objectives/{id})` links point at the server-side objective record; `naholo agent push` appends them for newly created objectives.
 
 ### TIMELINE.md
 
@@ -71,9 +77,7 @@ The chronological event log. Separate note (was previously `## Timeline` inside 
 
 - **Heading**: `# TIMELINE — OP #{n}`
 - Body is a single chronological bullet list. Format: `- **{YYYY-MM-DD HH:MM} — {stage-or-author}**: {summary}`.
-- `/infil` seeds it with one bullet per existing server log entry.
-- `/recon`, `/plan`, `/splash`, `/sitrep`, `/exfil` each append their own bullets here. Stage labels: `recon`, `plan`, `splash`, `sitrep`, `exfil`.
-- Pushed to the server as just-another-note by `/sitrep` and `/exfil`.
+- Stage labels used by skills: `recon`, `plan`, `splash`, `sitrep`, `exfil`. Other authors (server log entries seeded at infil) appear by name.
 
 ### Listing order
 

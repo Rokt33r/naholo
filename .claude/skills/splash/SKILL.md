@@ -52,14 +52,14 @@ Read if you haven't read:
 - `{operationDir}/notes/OPERATION.md`
 - `{operationDir}/notes/TIMELINE.md`
 
-Validate: `## EXECUTION` must contain at least one `### OBJ N — Title` section. If EXECUTION is empty or shows the `_(empty …)_` placeholder, tell the user to run `/plan` first (and `/recon` first if MISSION is also empty) and stop.
+Validate: `## EXECUTION` must exist and contain at least one `### OBJ N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### OBJ N` sections under it, tell the user to run `/plan` first (and `/recon` first if `## MISSION` is also absent) and stop.
 
 ### 6. Pick the target OBJ
 
 - If `N` was provided → target OBJ N. If no matching `### OBJ N` section exists, stop and tell the user.
 - Otherwise → target the first unchecked OBJ in OBJECTIVES.md, top to bottom. If all are `[x]`, tell the user there's nothing left and suggest `/exfil`.
 
-If the targeted OBJ already has a non-empty `#### After-Action Report`, this is a **revision splash** — see step 9 (AAR update path).
+If the targeted OBJ already has a `#### After-Action Report` heading with a non-empty body, this is a **revision splash** — see step 9 (AAR update path). If the OBJ has no `#### After-Action Report` heading at all, this is a **fresh splash** — `/splash` adds the heading itself when shipping.
 
 ### 7. Read the OBJ contract
 
@@ -68,7 +68,7 @@ From OPERATION.md `### OBJ N — Title`:
 - The goal paragraph (success criterion).
 - `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI; treat as authoritative shape for the splash.
 - `#### Target files` — the planned file list.
-- Anything in `#### After-Action Report` if present (revision splash only).
+- Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 9.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the OBJ goal specifies — if they ask for more than, or different from, what the OBJ goal covers, **stop before implementing** and surface two options to the user:
 
@@ -94,14 +94,19 @@ After the changes are written:
 
 ### 9. Write the AAR (or update it for revision splashes)
 
-Replace the body of `#### After-Action Report` inside the OBJ's section with a concise report. Four labels in fixed order:
+Two paths:
+
+- **Fresh splash** (no `#### After-Action Report` heading on the target OBJ yet): append the `#### After-Action Report`.
+- **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading.
+
+In both paths the body has four labels in fixed order:
 
 - **What shipped**: 1–3 sentences on the actual change.
 - **Deviations**: anything that differs from the planned Target files or goal — extra files, alternate approach, scope adjustments. When there are none, write `none` inline on the same line as the label — no bullet list, no explanation.
 - **Notes**: anything the reviewer should know — known follow-ups, risks, things deferred to a later OBJ. Omit the heading entirely when there's nothing worth flagging.
 - **Splashed files**: the canonical list of files touched this splash. Bullet list of paths, no per-file explanations. Glob patterns are OK when many files changed for the same reason (e.g. `.claude/skills/*/SKILL.md`). This is the canonical record — do not duplicate the file list elsewhere in the AAR or in the chat summary.
 
-For a **revision splash** (the OBJ's AAR was already non-empty when picked), overwrite the AAR in place — do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading. The AAR is the canonical record of what's currently true on disk for that OBJ; revision history lives in TIMELINE.md.
+The AAR is the canonical record of what's currently true on disk for that OBJ; revision history lives in TIMELINE.md.
 
 ### 10. Flip the checkbox
 
