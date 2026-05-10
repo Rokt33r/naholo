@@ -105,12 +105,8 @@ Two paths:
 - **Fresh splash** (no `#### After-Action Report` heading on the target OBJ yet): append the `#### After-Action Report`.
 - **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading.
 
-In both paths the body has three labels in fixed order:
+In both paths the body has two labels in fixed order:
 
-- **COA stats**: three sub-bullets reconciling plan vs. reality at the top-level COA granularity.
-  - `- Planned: {N}` — count of top-level COA bullets in the OBJ's `#### Course of Action` as written by `/objs`.
-  - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
-  - `- Deviations: {N}` — count of COA-level differences from plan. Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/objs` may have missed COAs needed to hit the goal, in which case those additions land here without bumping Done.
 - **Deviations**: bullet list shaped exactly like a COA. Each top-level entry uses the same `Add` / `Edit` / `Delete` / `Run` / `Manual` verb + path/target form as a COA bullet. Sub-bullets describe what differed:
   - Plain sub-bullet: a top-level export / behavior / step that was added or changed at COA granularity.
   - `(Undone) {sub-bullet text}` — a planned sub-bullet from the original COA that did not ship.
@@ -138,6 +134,12 @@ Use local time in `YYYY-MM-DD HH:MM` format (matches the format `/infil` seeded 
 ### 12. Print summary
 
 Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
+
+The chat summary opens with a **COA stats** block that does not appear in the on-disk AAR (the AAR contains only Deviations + Notes; COA stats are chat-only). Compute the three counts from the work just performed:
+
+- `- Planned: {N}` — count of top-level COA bullets in the OBJ's `#### Course of Action` as written by `/objs`.
+- `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
+- `- Deviations: {N}` — count of COA-level differences from plan (matches the number of top-level entries in the **Deviations** section just written to the AAR). Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/objs` may have missed COAs needed to hit the goal, in which case those additions land here without bumping Done.
 
 Example:
 
