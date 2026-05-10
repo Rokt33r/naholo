@@ -1,7 +1,7 @@
 ---
 name: infil
 description: Infil a Naholo operation — fetch objectives, notes, and logs locally for offline-first workflow.
-argument-hint: '{operationNumber}'
+argument-hint: '[{operationNumber}]'
 model: sonnet
 ---
 
@@ -13,7 +13,10 @@ Infil is a one-way bring-down from server to local. It never pushes. If `OPERATI
 
 ## Arguments
 
-The argument is the operation number (e.g., `42`). Required.
+Optional operation number (e.g., `42`).
+
+- **Provided** → fresh infil. Runs `naholo agent infil <n>` to fetch the op from the server and create the infiled directory. Errors if an op is already infiled.
+- **Omitted** → re-infil (refresh). Runs `naholo agent pull` against the currently infiled op. Errors if nothing is infiled.
 
 ## What to do
 
@@ -21,10 +24,14 @@ The argument is the operation number (e.g., `42`). Required.
 
 2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-3. **Pull via CLI**: Run `naholo agent pull {operationNumber}`. Capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
+3. **Fetch via CLI**: Branch on whether `{operationNumber}` was provided.
+   - **Fresh infil ({operationNumber} provided)**: Run `naholo agent infil {operationNumber}`. If the CLI errors with "Already infiled. Run \"naholo agent exfil\" first.", tell the user that an op is already infiled — they can `/infil` (no args) to refresh it, or `/exfil` first to switch ops. Then stop.
+   - **Re-infil ({operationNumber} omitted)**: Run `naholo agent pull`. If the CLI errors with "No infiled operation", tell the user to pass an operation number (`/infil <n>`) for a fresh infil and stop.
+
+   Either way, capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
 
 4. **Read context**:
-   - **Title**: from the `Title:` line of pull's stdout.
+   - **Title**: from the `Title:` line of infil's stdout.
    - **Logs**: `{operationDir}/LOGS.yml` (YAML array of `{ id, createdAt, author, content }`).
    - **Notes**: every `*.md` file in `{operationDir}/notes/`.
 
@@ -66,7 +73,7 @@ The argument is the operation number (e.g., `42`). Required.
    - Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` and `/objs` append those when they run.
 
    **If OPERATION.md already exists**:
-   - Find what changed since the last TIMELINE bullet: new logs (LOGS.yml entries with `createdAt` later than the last TIMELINE date) and note changes (created/updated, from pull's CLI report).
+   - Find what changed since the last TIMELINE bullet: new logs (LOGS.yml entries with `createdAt` later than the last TIMELINE date) and note changes (created/updated, from infil's CLI report).
    - If nothing new → note "OPERATION.md is up to date" in the summary.
    - If something new → summarize it (e.g., "3 new logs, `research.md` updated") and **ask the user** whether to append a TIMELINE bullet. On confirmation, append one bullet to `TIMELINE.md` summarizing the new logs and note changes.
 
@@ -100,11 +107,11 @@ The argument is the operation number (e.g., `42`). Required.
    - Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
    - Timeline: [TIMELINE.md]({operationDir}/notes/TIMELINE.md)
 
-   Substitute `{operationDir}` with the absolute path printed on the pull's `Local:` line. Include the CLI output details (objectives updated/inserted, notes merged) in the summary.
+   Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line. Include the CLI output details (objectives updated/inserted, notes merged) in the summary.
 
 ## Rules
 
-- **Use `naholo agent pull` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync objectives/notes. The CLI handles all of that.
+- **Use `naholo agent infil` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync objectives/notes. The CLI handles all of that.
 - **Infil never pushes**. If OPERATION.md or TIMELINE.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.

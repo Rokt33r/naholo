@@ -11,7 +11,7 @@ Sync local changes back to Naholo, post a summary log, and clean up the local wo
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple), the local dir via `naholo agent op-path`, and the web-app URL via `naholo agent op-url`.
+No operation number — the skill resolves the active operation via `naholo agent op`, the local dir via `naholo agent op-path`, and the web-app URL via `naholo agent op-url`.
 
 Anything in quotes is optional freeform context. Common patterns:
 
@@ -27,11 +27,9 @@ If no instructions given, ask the user whether to close.
 
 2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-3. **Find infiled operation**: Run `naholo agent op-list`.
-   - If none exist → tell user there's no infiled operation to exfil.
-   - If multiple exist → show the list and ask user which one.
+3. **Find infiled operation**: Run `naholo agent op`. If it errors with "No infiled operation", tell the user there's no infiled operation to exfil and stop. Otherwise capture the printed `#{operationNumber} {title}` for context.
 
-4. **Resolve operation directory**: Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. If `{operationDir}` does not exist on disk, tell the user there's nothing to exfil for that operation and stop.
+4. **Resolve operation directory**: Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`.
 
 5. **Read local state** (for context when generating the summary log):
    - `{operationDir}/OBJECTIVES.md`
@@ -44,7 +42,7 @@ If no instructions given, ask the user whether to close.
      - If the user says **yes** → continue to step 7.
    - If all objectives are done → continue to step 7.
 
-7. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool. The push includes `TIMELINE.md` as just-another-note.
+7. **Push via CLI**: Run `naholo agent push` using the Bash tool. The push includes `TIMELINE.md` as just-another-note.
 
    **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 8.** Print the error and preserve local data (see step 11 failure path).
 
@@ -78,7 +76,7 @@ If no instructions given, ask the user whether to close.
       - Confirm that local data at `{operationDir}` is preserved
       - Suggest the user retry with `/exfil`
 
-12. **Print summary**: Run `naholo agent op-url {operationNumber}` via Bash to capture `{url}`, then print the exfil report as raw markdown — no surrounding fence. Format:
+12. **Print summary**: Run `naholo agent op-url` via Bash to capture `{url}`, then print the exfil report as raw markdown — no surrounding fence. Format:
 
     ```
     Exfil complete — [OP #{operationNumber}: "{title}"]({url})

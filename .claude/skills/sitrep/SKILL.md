@@ -11,7 +11,7 @@ Sync local changes back to Naholo and post a summary log, without closing the op
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple).
+No operation number — the skill resolves the active operation via `naholo agent op`.
 
 Anything in quotes is optional freeform context that informs the summary log (e.g., `"checkpoint before refactor"` or `"resuming tomorrow"`). Most invocations have no args.
 
@@ -21,18 +21,16 @@ Anything in quotes is optional freeform context that informs the summary log (e.
 
 2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
 
-3. **Find infiled operation**: Run `naholo agent op-list`.
-   - If none exist → tell user to run `/infil {operationNumber}` first and stop.
-   - If multiple exist → show the list and ask user which one.
+3. **Find infiled operation**: Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and stop. Otherwise capture the printed `#{operationNumber} {title}` for context.
 
-4. **Resolve operation directory**: Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. If `{operationDir}` does not exist on disk, tell the user to run `/infil {operationNumber}` first and stop.
+4. **Resolve operation directory**: Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`.
 
 5. **Read local state** (for context when generating the summary log):
    - `{operationDir}/OBJECTIVES.md`
    - `{operationDir}/notes/OPERATION.md`
    - `{operationDir}/notes/TIMELINE.md`
 
-6. **Push via CLI**: Run `naholo agent push {operationNumber}` using the Bash tool. The push includes `TIMELINE.md` as just-another-note. Read the CLI output to know what was synced.
+6. **Push via CLI**: Run `naholo agent push` using the Bash tool. The push includes `TIMELINE.md` as just-another-note. Read the CLI output to know what was synced.
 
 7. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
    - Objectives completed since last sitrep (count and names — pull from new TIMELINE bullets)

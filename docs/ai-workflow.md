@@ -13,11 +13,12 @@ Create an operation in Naholo and collect context:
 
 This is the brainstorming phase. The operation accumulates everything needed to start work.
 
-### Phase 2: Infil (`/infil {N}`)
+### Phase 2: Infil (`/infil [N]`)
 
-Fetch the operation locally for offline-first work.
+Fetch the operation locally for offline-first work. Only one op can be infiled at a time; the local data lives at a fixed `.naholo/local/infiled/` path with op identity stored in `op.yml`.
 
-- `naholo agent pull {N}` creates the local operation directory and pulls `OBJECTIVES.md` plus all existing `notes/*.md` from the server, then prints the absolute directory path on stdout — the `/infil` agent reads that line and does not need a separate `op-path` call
+- **Fresh infil (`/infil {N}`)**: `naholo agent infil {N}` creates the infiled directory, writes `op.yml` (`{ number, title }`), and pulls `OBJECTIVES.md` plus all existing `notes/*.md` from the server, then prints the absolute directory path on stdout — the `/infil` agent reads that line and does not need a separate `op-path` call. Errors with "Already infiled" if an op is already infiled
+- **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merge against the server) — no need to exfil first to pick up new server-side changes
 - The agent then generates the two workflow notes if missing (server-authored copies are preserved on re-runs):
   - `notes/OPERATION.md` — the single live document for the OP. Three top-level sections, written incrementally by their owning skills:
     - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes`
@@ -25,7 +26,7 @@ Fetch the operation locally for offline-first work.
     - `## EXECUTION` — one `### OBJ N — Title` section per objective with `#### Goal`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and a `#### After-Action Report` added by `/splash` when the OBJ ships (absent after infil; appended by `/objs`)
   - `notes/TIMELINE.md` — chronological event log (one bullet per existing server log)
 - `OBJECTIVES.md` stays as pulled (empty list until `/objs` populates it); other `notes/*.md` are whatever the operation already had
-- On re-run, `naholo agent pull` performs a 3-way merge (local vs server vs baseline) — never silently overwrites local changes
+- On re-infil, `naholo agent pull` performs a 3-way merge (local vs server vs baseline) — never silently overwrites local changes
 
 ### Phase 3: Recon (`/recon ["freeform"]`)
 
@@ -80,15 +81,15 @@ Two skills for different stages:
 - Posts final summary log via `create_operation_log`
 - Appends `- **{datetime} — exfil**: …` bullet to `TIMELINE.md`
 - Optionally closes the operation via `close_operation`
-- Deletes the local operation directory (resolved via `naholo agent op-path {N}`)
+- Deletes the local operation directory (resolved via `naholo agent op-path`)
 
 ## Argument conventions
 
-Only `/infil` takes the operation number. Every other skill resolves the active operation via `naholo agent op-list`.
+Only `/infil` takes the operation number, and only on a fresh infil. Every other skill resolves the active operation via `naholo agent op` (which reads `op.yml` and prints `#{N} {title}`).
 
 | Skill     | First arg shape                | Meaning                                                       |
 | --------- | ------------------------------ | ------------------------------------------------------------- |
-| `/infil`  | `{N}` (required)               | Operation number to pull                                      |
+| `/infil`  | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)      |
 | `/recon`  | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs      |
 | `/objs`   | `"freeform"` (optional)        | FRAGO instructions to revise unfinished OBJs (split / insert) |
 | `/splash` | `N` or `"freeform"` (optional) | OBJ number; or extra context for the next-unchecked OBJ       |
@@ -110,4 +111,4 @@ Only `/infil` takes the operation number. Every other skill resolves the active 
 | `create_operation_log` | `/sitrep`, `/exfil` | Post summary log entries    |
 | `close_operation`      | `/exfil`            | Close a completed operation |
 
-Objective and note syncing flows through the `naholo agent pull` / `naholo agent push` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.
+Objective and note syncing flows through the `naholo agent infil` / `naholo agent pull` / `naholo agent push` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.

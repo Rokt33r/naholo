@@ -12,7 +12,7 @@ The skill name is the unambiguous "where are we" signal: re-running `/recon` is 
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op-list` (asks if multiple).
+No operation number — the skill resolves the active operation via `naholo agent op`.
 
 Anything passed as an argument is treated as **freeform instructions** describing how to revise MISSION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 7 (re-run dispatch). Common patterns:
 
@@ -34,14 +34,11 @@ If you haven't already run `naholo agent man` in this session, run it now via th
 
 ### 3. Find infiled operation
 
-Run `naholo agent op-list`.
-
-- If none exist → tell user to run `/infil {operationNumber}` first and abort.
-- If multiple exist → show the list and ask user which one to use.
+Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and abort. Otherwise capture the printed `#{operationNumber} {title}` for context.
 
 ### 4. Resolve operation directory
 
-Run `naholo agent op-path {operationNumber}` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it. If `{operationDir}` does not exist on disk, tell the user to run `/infil {operationNumber}` first and stop.
+Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
 
 ### 5. Read local state
 

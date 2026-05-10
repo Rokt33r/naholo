@@ -27,7 +27,7 @@ Operational vocabulary used by the skills(Written in full in docs; may be abbrev
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
-1. **`/infil {n}`** — Input: operation number on server. `naholo agent pull {n}` creates the local operation directory, pulls `OBJECTIVES.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. The agent then generates the workflow notes if missing: `notes/OPERATION.md` (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills) and `notes/TIMELINE.md` (one bullet per existing log entry). `OBJECTIVES.md` stays as pulled (empty list, ready for `/recon`). Never pushes.
+1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)**: takes an operation number from the server. Runs `naholo agent infil {n}`, which creates the infiled directory at `.naholo/local/infiled/`, writes `op.yml` (`{ number, title }`), pulls `OBJECTIVES.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. Errors with "Already infiled. Run \"naholo agent exfil\" first." when an op is already infiled — only one op can be infiled at a time. **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merges objectives + notes against the latest server state). Either way, the agent then generates the workflow notes if missing: `notes/OPERATION.md` (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills) and `notes/TIMELINE.md` (one bullet per existing log entry). `OBJECTIVES.md` stays as pulled (empty list, ready for `/recon`). Never pushes.
 2. **`/recon ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Prerequisites / Warning Orders / Target Reference Points) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `OBJECTIVES.md` — those are `/objs`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, refresh Target Reference Points, etc.); EXECUTION-shaped instructions belong to `/objs`. Stops with a "next: `/objs`" pointer.
 3. **`/objs ["freeform"]`** — Input: recon-completed operation (MISSION populated). OPORD-style detail-cutter. Resolves any unanswered Warning Order alternatives, cuts MISSION into ORP-sized OBJs, **appends `## EXECUTION`** (one `### OBJ N — Title` per OBJ with `#### Goal` + `#### Scheme of Maneuver` when applicable + `#### Course of Action`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the OBJ), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list. Re-runs handle EXECUTION FRAGOs: edit unfinished OBJs only; never touch completed OBJs (those with a populated AAR).
 4. **`/splash [N] ["freeform"]`** — Input: objs-completed operation with at least one unchecked OBJ. With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`. Reads the OBJ's Goal + Course of Action from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target OBJ section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in OBJECTIVES.md, appends a TIMELINE.md bullet. Stops after one OBJ.
@@ -91,28 +91,38 @@ When a skill prints a list of notes (infil summary, sitrep recap, etc.), the ord
 
 ## Commands
 
-### `naholo agent pull <n>`
+Only one op can be infiled at a time. The agent CLI is a small state machine: `infil` enters the infiled state, `pull`/`push`/`op-path`/`op` operate on it, `exfil` exits. State is persisted as `op.yml` at the infiled root. Commands that need an infiled op error with `No infiled operation. Run "naholo agent infil <n>" first.` when none exists.
 
-Fetches the operation from the server and materializes it on disk.
+### `naholo agent infil <n>`
 
-- Fresh run: creates the local operation directory, writes `OBJECTIVES.md`, `notes/*.md`, and `.base/` copies from server state.
-- Re-run: 3-way merges notes line-by-line (via diff3) and structurally merges objectives by ID. Reports `updated`/`kept-local`/`merged`/`conflict`/`created`/`unchanged` per file.
-- Outputs a human-readable report with counts and a final `Local: <absolute-path>/` line. Read stdout to know what happened and to pick up the directory path — `/infil` agents use this instead of running `op-path` separately.
-- Agents use this during `/infil`. Never runs pushes.
+Initial fetch. Takes the server op number, creates `.naholo/local/infiled/`, writes `op.yml`, and pulls objectives/notes/.base/LOGS.yml. Errors with `Already infiled. Run "naholo agent exfil" first.` when an op is already infiled. Agents use this during `/infil`.
 
-### `naholo agent push <n>`
+### `naholo agent pull`
 
-Pushes local changes to the server.
+Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge against the server.
 
+- 3-way merges notes line-by-line (via diff3) and structurally merges objectives by ID. Reports `updated`/`kept-local`/`merged`/`conflict`/`created`/`unchanged` per file.
+- Refreshes `op.yml.title` from the server.
+- Errors with `No infiled operation` when nothing is infiled. Switching ops requires `exfil` then `infil`. Never runs pushes.
+
+### `naholo agent push`
+
+Argless. Pushes local changes to the server.
+
+- Reads the op number from `op.yml`.
 - Reads `OBJECTIVES.md` and syncs the objective tree (creates new objectives, updates existing by `[ref]` id).
 - Patches newly created objectives with `[ref](naholo://objectives/{id})` links in the local file.
 - Reads every `notes/*.md` (including `TIMELINE.md`) and creates or updates the corresponding server note.
 - Updates `.base/` with the just-pushed state as the new baseline for future 3-way merges.
 - Outputs sync counts. Agents use this during `/sitrep` and `/exfil`.
 
-### `naholo agent op-path <n>`
+### `naholo agent op-path`
 
-Prints the absolute local directory for operation `<n>`. Skills resolve the operation directory through this command — never hardcode `.naholo/local/operations/...` paths.
+Argless. Prints the absolute infiled directory (`.naholo/local/infiled/`). Skills resolve the operation directory through this command — never hardcode `.naholo/local/infiled/...` paths.
+
+### `naholo agent op`
+
+Argless. Prints `#{number} {title}` for the infiled op. Errors with `No infiled operation` when nothing is infiled. Skills use this to discover the active op number/title.
 
 ### `naholo agent man`
 

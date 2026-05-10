@@ -102,8 +102,8 @@ export function registerResources(
   )
 
   server.registerResource(
-    'local-operations',
-    'naholo://local/operations',
+    'local-infiled',
+    'naholo://local/infiled',
     { description: 'Currently infiled operation' },
     async (uri) => {
       const opYml = readOpYml()

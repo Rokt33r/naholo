@@ -1,12 +1,16 @@
 import { Command } from 'commander'
-import { withErrorHandling } from '../../errors.js'
-import { getLocalOperationDir } from '../../lib/local-operations.js'
+import { CliError, withErrorHandling } from '../../errors.js'
+import { getLocalOperationDir, readOpYml } from '../../lib/local-operations.js'
 
 export const opPathCommand = new Command('op-path')
-  .description('Print the absolute local directory for an operation')
-  .argument('<operationNumber>', 'Operation number')
+  .description('Print the absolute local directory of the infiled operation')
   .action(
-    withErrorHandling(async (_operationNumber: string) => {
+    withErrorHandling(async () => {
+      if (readOpYml() == null) {
+        throw new CliError(
+          'No infiled operation. Run "naholo agent infil <n>" first.',
+        )
+      }
       console.log(getLocalOperationDir())
     }),
   )

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
-import { opListCommand } from './op-list.js'
+import { opCommand } from './op.js'
 import { opPathCommand } from './op-path.js'
 import { opUrlCommand } from './op-url.js'
 import { pullCommand } from './pull.js'
@@ -15,6 +15,6 @@ agentCommand.addCommand(infilCommand)
 agentCommand.addCommand(pullCommand)
 agentCommand.addCommand(pushCommand)
 agentCommand.addCommand(manCommand)
-agentCommand.addCommand(opListCommand)
+agentCommand.addCommand(opCommand)
 agentCommand.addCommand(opPathCommand)
 agentCommand.addCommand(opUrlCommand)
