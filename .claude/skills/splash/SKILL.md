@@ -67,7 +67,7 @@ From OPERATION.md `### OBJ N — Title`:
 
 - `#### Goal` — the success criterion.
 - `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI / signature changes; treat as authoritative shape for the splash.
-- `#### Course of Action` — the planned action list (Add / Edit / Delete / Run).
+- `#### Course of Action` — the planned action list (Add / Edit / Delete / Run / Manual).
 - Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 9.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the OBJ goal specifies — if they ask for more than, or different from, what the OBJ goal covers, **stop before implementing** and surface two options to the user:
@@ -82,6 +82,12 @@ Wait for the user to choose before continuing.
 Implement the code changes that satisfy the OBJ goal:
 
 - Execute the steps listed in Course of Action — modify or create files for `Add` / `Edit`, remove files for `Delete`, run shell commands for `Run`.
+- For `Manual:` items, **do not execute**. Pause and surface every `Manual:` step in this OBJ via `AskUserQuestion` (one question per step, batched up to four per call; fall back to sequential calls when the OBJ has more than four). Each question uses header `"Manual step"`, the COA line itself as the question text, and exactly these two options:
+  - **Done** — `"I completed the step. Continue the splash."` → proceed.
+  - **Defer** — `"Skip for now. Record as an open follow-up as a Notes line in the AAR."` → record the step verbatim in the AAR's `Notes` section as `Deferred manual step: {action}` and continue.
+
+  Manual steps are part of shipping the OBJ; the OBJ still ships either way (Done or Defer), but every Defer becomes a Notes line in the AAR so nothing is silently dropped.
+
 - Add files not in the list if they're genuinely required — note them in the AAR as deviations.
 - Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the OBJ scope. Do not refactor surrounding code, add features, or fix unrelated issues.
@@ -161,4 +167,5 @@ If the user should review before the next splash, mention it. If all OBJs are no
 - **OPERATION.md sections stay at SITUATION / MISSION / EXECUTION**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Don't re-elaborate the OBJ**: if the Goal or Course of Action are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the OBJ Goal — that's `/objs`'s job (or `/recon`, if MISSION itself needs to change).
 - **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
+- **`Manual:` items are user-owned**: never attempt to execute them; pause and ask the user to confirm completion before moving on.
 - Print the summary as raw markdown — no surrounding fence.

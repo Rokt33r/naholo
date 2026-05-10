@@ -109,13 +109,14 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has thr
 
   Skip this section entirely if the OBJ is a pure data/logic change with no flow, UI, or signature implications.
 
-- `#### Course of Action` — the atomic steps that ship this OBJ. Each item is one of four verbs:
+- `#### Course of Action` — the atomic steps that ship this OBJ. Each item is one of five verbs:
   - `Add {path}` — one-line purpose
   - `Edit {path}` — one-line description of what changes
   - `Delete {path}` — one-line reason
   - `` Run `{command}` `` — one-line purpose (migrations, rebuilds, mv, etc.)
+  - `Manual: {action}` — one-line description of what the user must do (verify in browser, run a command the agent must not run, paste a secret, etc.). `/splash` pauses on these and asks the user to confirm completion before continuing.
 
-  Sub-bullets (only under `Add` / `Edit`) name **top-level exported symbols**, one-liner per sub-bullet. List every changed export, even when the file exports a single thing (e.g. a Commander subcommand module). Do NOT list internal helpers, private functions, or per-line code descriptions. Omit sub-bullets entirely on `Delete` / `Run`, and on `Edit` items where no exported symbol is meaningfully changed (e.g. a registration-only edit).
+  Sub-bullets (only under `Add` / `Edit`) name **top-level exported symbols**, one-liner per sub-bullet. List every changed export, even when the file exports a single thing (e.g. a Commander subcommand module). Do NOT list internal helpers, private functions, or per-line code descriptions. Omit sub-bullets entirely on `Delete` / `Run` / `Manual`, and on `Edit` items where no exported symbol is meaningfully changed (e.g. a registration-only edit).
 
   Example:
 
@@ -128,6 +129,7 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has thr
     - `infil` subcommand: writes op.yml and pulls data
   - Delete packages/naholo-cli/src/commands/agent/op-list.ts — superseded by `op`
   - Run `mv .naholo/local/operations/122 .naholo/local/infiled` — migrate this op's data
+  - Manual: run `pnpm db:migrate` after the schema edit lands (CLAUDE.md forbids the agent from running it)
   ```
 
   Include all steps you can predict; `/splash` may add files in its AAR if it discovers more.
