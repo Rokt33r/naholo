@@ -22,7 +22,7 @@ Fetch the operation locally for offline-first work.
   - `notes/OPERATION.md` — the single live document for the OP. Three top-level sections, written incrementally by their owning skills:
     - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes`
     - `## MISSION` — `### Concept of Operations`, `### Prerequisites`, `### Warning Orders` (absent after infil; appended by `/recon`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet
-    - `## EXECUTION` — one `### OBJ N — Title` section per objective with goal, optional `#### Scheme of Maneuver`, `#### Target files`, and a `#### After-Action Report` added by `/splash` when the OBJ ships (absent after infil; appended by `/objs`)
+    - `## EXECUTION` — one `### OBJ N — Title` section per objective with `#### Goal`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and a `#### After-Action Report` added by `/splash` when the OBJ ships (absent after infil; appended by `/objs`)
   - `notes/TIMELINE.md` — chronological event log (one bullet per existing server log)
 - `OBJECTIVES.md` stays as pulled (empty list until `/objs` populates it); other `notes/*.md` are whatever the operation already had
 - On re-run, `naholo agent pull` performs a 3-way merge (local vs server vs baseline) — never silently overwrites local changes
@@ -41,7 +41,7 @@ Research the codebase and define the mission.
 Cut the recon'd MISSION into ORP-sized OBJs.
 
 - Reads the populated `## MISSION` and resolves any `- ? <prompt> (a / b) >` sub-bullets under Warning Orders: empty answer collapses the alts into `- Rejected: a, b`; an answer matching an alt swaps the WO bold label and moves the original chosen path into `- Rejected:`
-- Appends `## EXECUTION` with one `### OBJ N — Title` section per OBJ. Each OBJ has a goal paragraph (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI changes), and a `#### Target files` bullet list with per-symbol/per-change notes. The `#### After-Action Report` heading is NOT written by `/objs` — `/splash` adds it when the OBJ ships
+- Appends `## EXECUTION` with one `### OBJ N — Title` section per OBJ. Each OBJ has a `#### Goal` (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI / signature changes), and a `#### Course of Action` listing atomic Add / Edit / Delete / Run steps with top-level-export sub-bullets. The `#### After-Action Report` heading is NOT written by `/objs` — `/splash` adds it when the OBJ ships
 - Mirrors the OBJ list into `OBJECTIVES.md` as a flat `- [ ] N. Title` checklist (no sub-objectives)
 - Resumable — re-running picks up the partial EXECUTION state and continues
 - **FRAGO mode**: `/objs "freeform text"` treats the args as edit instructions for unfinished OBJs (split, merge, retitle, insert, drop). Completed OBJs (those with a `#### After-Action Report` heading) are immutable; new objectives are inserted as new `### OBJ N` sections
@@ -53,7 +53,7 @@ The bar is "could a fresh `/splash` session ship one OBJ by reading only that OB
 Implement one OBJ per invocation.
 
 - With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`
-- Reads the goal + Target files from the OBJ's `### OBJ N` section in OPERATION.md
+- Reads the Goal + Course of Action from the OBJ's `### OBJ N` section in OPERATION.md
 - Implements the code changes
 - Runs formatter and type checker
 - Adds the `#### After-Action Report` heading + body to the same OBJ section: what shipped, deviations from plan, notes, splashed files
@@ -97,11 +97,11 @@ Only `/infil` takes the operation number. Every other skill resolves the active 
 
 ## Key Files
 
-| File            | Role                                                                                                | Owned by                                                                                       |
-| --------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `OPERATION.md`  | Single live document — SITUATION, MISSION, EXECUTION (with per-OBJ goal, Scheme, Target files, AAR) | `/infil` creates SITUATION, `/recon` adds MISSION, `/objs` adds EXECUTION, `/splash` adds AARs |
-| `OBJECTIVES.md` | Flat checkbox list mirroring the EXECUTION OBJ headings                                             | `/objs` structures, `/splash` checks off                                                       |
-| `TIMELINE.md`   | Chronological event log; pushed as just-another-note                                                | `/infil` seeds, all skills append                                                              |
+| File            | Role                                                                                                                | Owned by                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `OPERATION.md`  | Single live document — SITUATION, MISSION, EXECUTION (with per-OBJ Goal, Scheme of Maneuver, Course of Action, AAR) | `/infil` creates SITUATION, `/recon` adds MISSION, `/objs` adds EXECUTION, `/splash` adds AARs |
+| `OBJECTIVES.md` | Flat checkbox list mirroring the EXECUTION OBJ headings                                                             | `/objs` structures, `/splash` checks off                                                       |
+| `TIMELINE.md`   | Chronological event log; pushed as just-another-note                                                                | `/infil` seeds, all skills append                                                              |
 
 ## MCP Integration
 

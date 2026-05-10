@@ -75,18 +75,20 @@ Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 - **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized OBJs and populate EXECUTION (one `### OBJ N — Title` per OBJ). Mirror to `OBJECTIVES.md` (step 10). Append `- **{YYYY-MM-DD HH:MM} — objs**: Drafted N OBJs.` to TIMELINE.md.
 - **EXECUTION present but partially populated, no args** → resume in place. Continue from where the previous run left off — finish partial OBJs, fill missing subsections. Append `- **{YYYY-MM-DD HH:MM} — plan (resumed)**: …` to TIMELINE.md.
 - **Args provided, classify intent**:
-  - **Targeted edit** — args describe partial changes to specific unfinished OBJs (split, merge, retitle, swap target files). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — plan (revised)**: {summary}` to TIMELINE.md.
+  - **Targeted edit** — args describe partial changes to specific unfinished OBJs (split, merge, retitle, swap Course of Action steps). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — plan (revised)**: {summary}` to TIMELINE.md.
   - **FRAGO** — args describe inserting new OBJs or removing/rewriting unfinished OBJs. Insert new `### OBJ N — Title` sections (renumber subsequent unfinished OBJs as needed). Mark removals by deleting the OBJ section entirely **only if the OBJ is unfinished** (no `#### After-Action Report` heading); never delete or rewrite an OBJ whose AAR heading is present. Append `- **{YYYY-MM-DD HH:MM} — plan (FRAGO)**: {summary}` to TIMELINE.md.
   - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with AskQuestionTool that the user really want this. If they do, rewrite EXECUTION and renew all OBJs even finished. Append `- **{YYYY-MM-DD HH:MM} — plan (restart)**: {summary}` to TIMELINE.md.
 
 ### 9. Write OPERATION.md EXECUTION
 
-One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section MUST contain:
+One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has three subsections — **`#### Goal`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
 
-- A goal paragraph (1–3 sentences) immediately under the heading. State the success criterion concretely — `/splash` uses this to decide when the OBJ is done.
-- `#### Scheme of Maneuver` (optional but **required** when the OBJ introduces or modifies control flow, request lifecycle, or UI layout). An ASCII diagram so the reviewer can grasp the change at a glance:
+- `#### Goal` — one or two sentences stating the success criterion concretely. This is the bar `/splash` uses to decide when the OBJ is done. Name observable end states (a command prints X, `tsc` is green, file Y exists, etc.). Don't restate what's changing — that's Course of Action's job. No "atomic flip of …" framing, no scope boundaries, no rationale.
+
+- `#### Scheme of Maneuver` (optional, but **required** when the OBJ introduces or modifies control flow, request lifecycle, UI layout, or symbol/path signatures). Use code-fenced ASCII for visual artifacts:
   - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches.
   - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions.
+  - **Signature changes / before-after layouts**: a fenced block with arrows showing the diff.
   - **Linear / trivially simple flow**: a numbered list is acceptable instead of a diagram.
 
   Example (control flow):
@@ -96,34 +98,47 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section MUST co
                            └─no───► 401
   ```
 
-  Skip this section entirely if the OBJ is a pure data/logic change with no flow or UI implications.
-
-- `#### Target files` — bullet list of files to create or modify, with a nested sub-list of per-symbol or per-change notes underneath each file. Format:
+  Example (signature diff):
 
   ```
-  - {path}
-    - `symbolOrSection`: brief description of the change. Can span more than one sentence if needed, but stay terse.
-    - another change in the same file.
+  helper signatures in local-operations.ts:
+    getLocalOperationDir(opNum)  →  getLocalOperationDir()
+    getNotesDir(opNum)           →  getNotesDir()
+    + readOpYml() / writeOpYml({ number, title })
   ```
+
+  Skip this section entirely if the OBJ is a pure data/logic change with no flow, UI, or signature implications.
+
+- `#### Course of Action` — the atomic steps that ship this OBJ. Each item is one of four verbs:
+  - `Add {path}` — one-line purpose
+  - `Edit {path}` — one-line description of what changes
+  - `Delete {path}` — one-line reason
+  - `` Run `{command}` `` — one-line purpose (migrations, rebuilds, mv, etc.)
+
+  Sub-bullets (only under `Add` / `Edit`) name **top-level exported symbols**, one-liner per sub-bullet. List every changed export, even when the file exports a single thing (e.g. a Commander subcommand module). Do NOT list internal helpers, private functions, or per-line code descriptions. Omit sub-bullets entirely on `Delete` / `Run`, and on `Edit` items where no exported symbol is meaningfully changed (e.g. a registration-only edit).
 
   Example:
 
   ```
-  - src/server/services/operator.ts
-    - `createOperator()`: add `loadoutId` arg; default to active loadout when omitted.
-    - `upsertOperator()`: delete — replaced by `createOperator` + new `updateOperator`.
-  - src/components/operations/operation-page.tsx
-    - thread the new `loadoutId` through props; no UI change.
+  - Edit packages/naholo-cli/src/lib/local-operations.ts
+    - `getLocalOperationDir`, `getNotesDir`, `getBaseDir`, `getObjectivesPath`,
+      `getBaseObjectivesPath`, `getBaseNotesDir`: drop the `operationNumber` arg
+    - `readOpYml`, `writeOpYml`: new — read/write `op.yml` at the infiled root
+  - Add packages/naholo-cli/src/commands/agent/infil.ts
+    - `infil` subcommand: writes op.yml and pulls data
+  - Delete packages/naholo-cli/src/commands/agent/op-list.ts — superseded by `op`
+  - Run `mv .naholo/local/operations/122 .naholo/local/infiled` — migrate this op's data
   ```
 
-  Include all files you can predict; `/splash` may add files in its AAR if it discovers more. Per-change notes are NOT sub-objectives — they're file-local annotations to scope the splash work.
+  Include all steps you can predict; `/splash` may add files in its AAR if it discovers more.
 
-`/objs`'s per-OBJ template ends at `#### Target files`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the OBJ.
+`/objs`'s per-OBJ template ends at `#### Course of Action`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the OBJ.
 
 ORP sizing rules:
 
 - Each OBJ should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
-- No sub-objectives. If a chunk feels like it needs sub-bullets, split it into two top-level OBJs. (Per-change notes under `#### Target files` are not sub-objectives — they're file-local annotations.)
+- **Goal is the success criterion only.** Don't restate what's changing — that's Course of Action's job.
+- No sub-objectives. If a chunk feels like it needs sub-bullets, split it into two top-level OBJs. (Course of Action sub-bullets are not sub-objectives — they're per-symbol annotations on a single step.)
 - OBJs are ordered for shipping — top-to-bottom is the default `/splash` order.
 - A goal that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/recon` to add the decision if it's missing).
 

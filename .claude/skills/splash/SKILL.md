@@ -65,9 +65,9 @@ If the targeted OBJ already has a `#### After-Action Report` heading with a non-
 
 From OPERATION.md `### OBJ N — Title`:
 
-- The goal paragraph (success criterion).
-- `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI; treat as authoritative shape for the splash.
-- `#### Target files` — the planned file list.
+- `#### Goal` — the success criterion.
+- `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI / signature changes; treat as authoritative shape for the splash.
+- `#### Course of Action` — the planned action list (Add / Edit / Delete / Run).
 - Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 9.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the OBJ goal specifies — if they ask for more than, or different from, what the OBJ goal covers, **stop before implementing** and surface two options to the user:
@@ -81,7 +81,7 @@ Wait for the user to choose before continuing.
 
 Implement the code changes that satisfy the OBJ goal:
 
-- Modify or create the files listed in Target files.
+- Execute the steps listed in Course of Action — modify or create files for `Add` / `Edit`, remove files for `Delete`, run shell commands for `Run`.
 - Add files not in the list if they're genuinely required — note them in the AAR as deviations.
 - Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the OBJ scope. Do not refactor surrounding code, add features, or fix unrelated issues.
@@ -102,7 +102,7 @@ Two paths:
 In both paths the body has four labels in fixed order:
 
 - **What shipped**: 1–3 sentences on the actual change. Fewer is better. No motivational framing, no "why this matters", no recap of the OBJ goal — only what changed. Per-file detail belongs in the code (and is implicit in `**Splashed files**`), not here.
-- **Deviations**: anything that differs from the planned Target files or goal — extra files, alternate approach, scope adjustments. One concise bullet per deviation. Attribution rules:
+- **Deviations**: anything that differs from the planned Course of Action or Goal — extra files, alternate approach, scope adjustments. One concise bullet per deviation. Attribution rules:
   - **Agent-initiated** (you chose to deviate during implementation): state the deviation and a brief reason — you already have the reasoning from your thought process, so commit it to the AAR.
   - **User-initiated** (the user's freeform args expanded or redirected scope): state the deviation only. If the user gave a reason, quote/paraphrase it in one short clause; if they didn't, do **not** invent one — just record the change.
   - Either way, keep each entry to one sentence.
@@ -155,10 +155,10 @@ If the user should review before the next splash, mention it. If all OBJs are no
 - **One OBJ per invocation**: ship exactly one, then stop. The user re-runs `/splash` for the next.
 - **AAR is overwritten in place on revision** — never add a second AAR section to an OBJ.
 - **Stay in scope**: the OBJ goal is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
-- **Don't touch other OBJs**: do not edit other OBJs' Target files, AARs, or goals. If the work reveals that another OBJ needs revision, surface it — don't silently rewrite.
+- **Don't touch other OBJs**: do not edit other OBJs' Course of Action, AARs, or Goals. If the work reveals that another OBJ needs revision, surface it — don't silently rewrite.
 - **OBJECTIVES.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next OBJ.
 - **TIMELINE.md gets exactly one bullet per splash invocation**.
 - **OPERATION.md sections stay at SITUATION / MISSION / EXECUTION**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
-- **Don't re-elaborate the OBJ**: if the goal or Target files are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the OBJ goal — that's `/objs`'s job (or `/recon`, if MISSION itself needs to change).
+- **Don't re-elaborate the OBJ**: if the Goal or Course of Action are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the OBJ Goal — that's `/objs`'s job (or `/recon`, if MISSION itself needs to change).
 - **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
 - Print the summary as raw markdown — no surrounding fence.
