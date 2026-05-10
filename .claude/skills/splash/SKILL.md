@@ -67,7 +67,7 @@ From OPERATION.md `### OBJ N — Title`:
 
 - `#### Goal` — the success criterion.
 - `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI / signature changes; treat as authoritative shape for the splash.
-- `#### Course of Action` — the planned action list (Add / Edit / Delete / Run / Manual).
+- `#### Course of Action` — the planned action list (Add / Edit / Move / Delete / Run / Manual).
 - Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 9.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the OBJ goal specifies — if they ask for more than, or different from, what the OBJ goal covers, **stop before implementing** and surface two options to the user:
@@ -81,7 +81,7 @@ Wait for the user to choose before continuing.
 
 Implement the code changes that satisfy the OBJ goal:
 
-- Execute the steps listed in Course of Action — modify or create files for `Add` / `Edit`, remove files for `Delete`, run shell commands for `Run`.
+- Execute the steps listed in Course of Action — modify or create files for `Add` / `Edit`, relocate files for `Move` (use `git mv` when the file is git-tracked, plain `mv` otherwise), remove files for `Delete`, run shell commands for `Run`.
 - For `Manual:` items, **do not execute**. Pause and surface every `Manual:` step in this OBJ via `AskUserQuestion` (one question per step, batched up to four per call; fall back to sequential calls when the OBJ has more than four). Each question uses header `"Manual step"`, the COA line itself as the question text, and exactly these two options:
   - **Done** — `"I completed the step. Continue the splash."` → proceed.
   - **Defer** — `"Skip for now. Record as an open follow-up as a Notes line in the AAR."` → record the step verbatim in the AAR's `Notes` section as `Deferred manual step: {action}` and continue.

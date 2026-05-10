@@ -41,7 +41,7 @@ Research the codebase and define the mission.
 Cut the recon'd MISSION into ORP-sized OBJs.
 
 - Reads the populated `## MISSION` and resolves any `- ? <prompt> (a / b) >` sub-bullets under Warning Orders: empty answer collapses the alts into `- Rejected: a, b`; an answer matching an alt swaps the WO bold label and moves the original chosen path into `- Rejected:`
-- Appends `## EXECUTION` with one `### OBJ N — Title` section per OBJ. Each OBJ has a `#### Goal` (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI / signature changes), and a `#### Course of Action` listing atomic Add / Edit / Delete / Run / Manual steps with top-level-export sub-bullets. The `#### After-Action Report` heading is NOT written by `/objs` — `/splash` adds it when the OBJ ships
+- Appends `## EXECUTION` with one `### OBJ N — Title` section per OBJ. Each OBJ has a `#### Goal` (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI / signature changes), and a `#### Course of Action` listing atomic Add / Edit / Move / Delete / Run / Manual steps with top-level-export sub-bullets. The `#### After-Action Report` heading is NOT written by `/objs` — `/splash` adds it when the OBJ ships
 - Mirrors the OBJ list into `OBJECTIVES.md` as a flat `- [ ] N. Title` checklist (no sub-objectives)
 - Resumable — re-running picks up the partial EXECUTION state and continues
 - **FRAGO mode**: `/objs "freeform text"` treats the args as edit instructions for unfinished OBJs (split, merge, retitle, insert, drop). Completed OBJs (those with a `#### After-Action Report` heading) are immutable; new objectives are inserted as new `### OBJ N` sections

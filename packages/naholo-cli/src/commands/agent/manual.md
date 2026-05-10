@@ -20,7 +20,7 @@ Operational vocabulary used by the skills(Written in full in docs; may be abbrev
 - **CONOPS** — Concept of Operations. The two-or-three-sentence overview that opens MISSION: names the chosen approach and ties it back to `SITUATION.Pain`. Concept-level only — file lists and edit steps belong in Warning Orders, not here.
 - **WARNORD** — Warning Order. One bulleted decision inside MISSION's `### Warning Orders` subsection — one sentence per decision.
 - **OPORD** — Operation Order. The detail-cutting brief: the MISSION broken into ordered, ship-sized tasks, each with a Course of Action. `/objs` writes the OPORD into `## EXECUTION` (one `### OBJ N — Title` per ORP) and mirrors the OBJ list to `OBJECTIVES.md`.
-- **COA** — Course of Action. the per-OBJ action list inside EXECUTION. Each item names an explicit step (Add / Edit / Delete / Run / Manual) so non-file work (migrations, rebuilds) is first-class. `Manual:` items are user-owned — `/splash` pauses for the user instead of executing them. Sub-bullets list only top-level exported symbols.
+- **COA** — Course of Action. the per-OBJ action list inside EXECUTION. Each item names an explicit step (Add / Edit / Move / Delete / Run / Manual) so non-file work (migrations, rebuilds) is first-class. `Manual:` items are user-owned — `/splash` pauses for the user instead of executing them. Sub-bullets list only top-level exported symbols.
 - **FRAGO** — Fragmentary Order. Mid-cycle changes to remaining (unfinished) OBJs via re-running `/objs` with freeform instructions.
 
 ## Workflow
@@ -58,7 +58,7 @@ The single live document per OP. `/infil` writes SITUATION, `/recon` appends MIS
   - `## EXECUTION` — per-OBJ workspace. Appended by `/objs`. One `### OBJ N — {title}` subsection per objective, in order. Each OBJ section contains:
     - `#### Goal` — one or two sentences naming the success criterion `/splash` uses to know when the OBJ is done. Not a re-narration of what's changing.
     - `#### Scheme of Maneuver` (optional) — ASCII diagram of the new flow, wireframe of the UI, or before/after signature diff. A numbered list is acceptable for trivially linear flows.
-    - `#### Course of Action` — the atomic action list (Add / Edit / Delete / Run / Manual). Sub-bullets list only top-level exported symbols, one-liner each. Sub-bullets are file-local annotations, not sub-objectives.
+    - `#### Course of Action` — the atomic action list (Add / Edit / Move / Delete / Run / Manual). Sub-bullets list only top-level exported symbols, one-liner each. Sub-bullets are file-local annotations, not sub-objectives.
     - `#### After-Action Report` — added by `/splash` when the OBJ ships (and overwritten in place on revision splashes). Its presence is the "shipped" signal. Format contract is owned by the splash skill.
 
 - **No other top-level sections**: only the three above are allowed — do not invent new `##` headings. Timeline lives in TIMELINE.md. Per-OBJ progress lives in EXECUTION's AARs.
