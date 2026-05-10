@@ -105,16 +105,20 @@ Two paths:
 - **Fresh splash** (no `#### After-Action Report` heading on the target OBJ yet): append the `#### After-Action Report`.
 - **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading.
 
-In both paths the body has four labels in fixed order:
+In both paths the body has three labels in fixed order:
 
-- **What shipped**: 1–3 sentences on the actual change. Fewer is better. No motivational framing, no "why this matters", no recap of the OBJ goal — only what changed. Per-file detail belongs in the code (and is implicit in `**Splashed files**`), not here.
-- **Deviations**: anything that differs from the planned Course of Action or Goal — extra files, alternate approach, scope adjustments. One concise bullet per deviation. Attribution rules:
-  - **Agent-initiated** (you chose to deviate during implementation): state the deviation and a brief reason — you already have the reasoning from your thought process, so commit it to the AAR.
-  - **User-initiated** (the user's freeform args expanded or redirected scope): state the deviation only. If the user gave a reason, quote/paraphrase it in one short clause; if they didn't, do **not** invent one — just record the change.
-  - Either way, keep each entry to one sentence.
+- **COA stats**: three sub-bullets reconciling plan vs. reality at the top-level COA granularity.
+  - `- Planned: {N}` — count of top-level COA bullets in the OBJ's `#### Course of Action` as written by `/objs`.
+  - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
+  - `- Deviations: {N}` — count of COA-level differences from plan. Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/objs` may have missed COAs needed to hit the goal, in which case those additions land here without bumping Done.
+- **Deviations**: bullet list shaped exactly like a COA. Each top-level entry uses the same `Add` / `Edit` / `Delete` / `Run` / `Manual` verb + path/target form as a COA bullet. Sub-bullets describe what differed:
+  - Plain sub-bullet: a top-level export / behavior / step that was added or changed at COA granularity.
+  - `(Undone) {sub-bullet text}` — a planned sub-bullet from the original COA that did not ship.
+  - For a fully-skipped planned top-level item, write `- (Undone) {original COA line}` with optional sub-bullets explaining why or what's missing.
+  - Internal-only changes (refactors, helper extraction, naming) that don't change a top-level COA bullet are **not** deviations and don't appear here.
   - When there are no deviations, write `none` inline on the same line as the label — no bullet list, no explanation.
-- **Notes**: anything the reviewer should know — known follow-ups, risks, things deferred to a later OBJ. Omit the heading entirely when there's nothing worth flagging.
-- **Splashed files**: the canonical list of files touched this splash. Bullet list of paths, no per-file explanations. Glob patterns are OK when many files changed for the same reason (e.g. `.claude/skills/*/SKILL.md`). This is the canonical record — do not duplicate the file list elsewhere in the AAR or in the chat summary.
+  - Attribution: **Agent-initiated** deviations (you chose to deviate during implementation) include a brief reason — commit your reasoning to the AAR. **User-initiated** deviations (the user's freeform args expanded or redirected scope) record the change only; if the user gave a reason, quote/paraphrase it in one short clause, otherwise do **not** invent one. One sentence per entry.
+- **Notes**: anything the reviewer should know — known follow-ups, risks, things deferred to a later OBJ, deferred `Manual:` steps. Omit the heading entirely when there's nothing worth flagging.
 
 The AAR is the canonical record of what's currently true on disk for that OBJ; revision history lives in TIMELINE.md.
 
@@ -133,21 +137,28 @@ Use local time in `YYYY-MM-DD HH:MM` format (matches the format `/infil` seeded 
 
 ### 12. Print summary
 
-Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md. Do not add a `- Key files:` bullet (Splashed files inside the AAR is the canonical list) and do not add a `- AAR: [link]` bullet (the AAR is already inline).
+Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
 
 Example:
 
 OBJ 3 shipped: "Add /splash skill spec"
 
-**What shipped**: Wrote the splash skill spec describing the one-OBJ-per-invocation contract, the AAR format, and the OBJECTIVES.md flip rule.
+**COA stats**
 
-**Deviations**: none
+- Planned: 5
+- Done: 4
+- Deviations: 2
 
-**Notes**: ...
+**Deviations**
 
-**Splashed files**
+- Edit src/foo.ts
+  - Added `bar()` helper not in plan because the new flow needed a shared parser
+  - (Undone) `legacyParse()` removal — left in place; another OBJ depends on it
+- (Undone) Run `pnpm db:migrate` — deferred per CLAUDE.md (user owns DB migrations)
 
-- [docs/skills/SPLASH.md](docs/skills/SPLASH.md)
+**Notes**
+
+- Deferred manual step: rotate the staging API key after deploy
 
 ---
 

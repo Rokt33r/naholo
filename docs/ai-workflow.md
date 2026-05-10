@@ -56,7 +56,7 @@ Implement one OBJ per invocation.
 - Reads the Goal + Course of Action from the OBJ's `### OBJ N` section in OPERATION.md
 - Implements the code changes
 - Runs formatter and type checker
-- Adds the `#### After-Action Report` heading + body to the same OBJ section: what shipped, deviations from plan, notes, splashed files
+- Adds the `#### After-Action Report` heading + body to the same OBJ section: COA stats (planned / done / deviations), deviations, notes
 - Flips `- [ ]` → `- [x]` for that OBJ in `OBJECTIVES.md`
 - Appends a `- **{datetime} — splash**: …` bullet to `TIMELINE.md`
 - Stops after one OBJ — the user reviews the AAR, then runs `/splash` again for the next

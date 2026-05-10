@@ -48,7 +48,7 @@ If no instructions given, ask the user whether to close.
 
    **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 8.** Print the error and preserve local data (see step 11 failure path).
 
-8. **Post summary log**: Post via `create_operation_log` MCP tool. Format is **header line + one short bullet per OBJ (≤1 sentence each)**, paraphrased from each OBJ's `**What shipped**` AAR sentence in `{operationDir}/notes/OPERATION.md`. Don't re-narrate; compress aggressively. If the user gave freeform context, append it after the bullets.
+8. **Post summary log**: Post via `create_operation_log` MCP tool. Format is **header line + one short bullet per OBJ (≤1 sentence each)**, paraphrased from each OBJ's `#### Goal` and `#### Course of Action` in `{operationDir}/notes/OPERATION.md` (and the AAR's `**Deviations**` when the OBJ shipped with non-trivial deviations). Don't re-narrate; compress aggressively. If the user gave freeform context, append it after the bullets.
 
    Example for a 3-OBJ operation:
 
@@ -94,5 +94,5 @@ If no instructions given, ask the user whether to close.
 - **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
 - **TIMELINE.md is the only file that gets the new bullet** — OPERATION.md keeps SITUATION / MISSION / EXECUTION only.
 - **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this infil session.
-- **Summary log = header line + one short bullet per OBJ (≤1 sentence each).** Paraphrase from each AAR's `**What shipped**` sentence; don't re-narrate the OBJ. Short and forgettable beats comprehensive.
+- **Summary log = header line + one short bullet per OBJ (≤1 sentence each).** Paraphrase from each OBJ's Goal + Course of Action (plus AAR Deviations when relevant); don't re-narrate the OBJ. Short and forgettable beats comprehensive.
 - Print the summary as raw markdown — no surrounding fence.
