@@ -6,7 +6,7 @@ argument-hint: '["freeform MISSION instructions"]'
 
 # Recon — Define the Mission
 
-The MISSION-writing skill. Researches the codebase and writes `## MISSION` (Concept of Operations / Prerequisites / Warning Orders) into `OPERATION.md` — appending the section when absent, revising in place when it already exists. Stops there. `/recon` does **not** write `## EXECUTION`, does **not** mirror to `OBJECTIVES.md`, and does **not** prune open questions — those are owned by `/objs`.
+The MISSION-writing skill. Researches the codebase and writes `## MISSION` (Concept of Operations / Prerequisites / Warning Orders) into `OPERATION.md` — appending the section when absent, revising in place when it already exists. Stops there. `/recon` does **not** write `## EXECUTION` and does **not** mirror to `OBJECTIVES.md` — those are owned by `/objs`.
 
 The skill name is the unambiguous "where are we" signal: re-running `/recon` is for direction changes (Concept of Operations rewrite, Warning Order revision, Prerequisites change). Once MISSION is settled, the user runs `/objs` to cut it into ORP-sized OBJs.
 
@@ -62,7 +62,12 @@ Investigate thoroughly to understand:
 
 The goal is enough context to write a Concept of Operations that names the chosen path and connects to SITUATION.Pain, Prerequisites that are real, and Warning Orders that name each decision. `/objs` will use the MISSION to cut EXECUTION later — recon's job is to make the planning brief crisp.
 
-If research surfaces questions that need a human answer before MISSION can commit, `/recon` may add an `### Open questions` block under `## SITUATION` (one `### {question}` per question, followed by `Answer ->` on the next line). Pruning unanswered questions is `/objs`'s job — leaving them in place between `/recon` and `/objs` is fine.
+Default: commit to the most viable option you find — put it in the WO bold label and let the user override on review. Append a `- ? <prompt> (opt-a / opt-b) >` sub-bullet under a Warning Order **only** in these two cases:
+
+1. The user has named viable options in context (SITUATION, chat, prior `/recon` args) but has not picked one — surface their options back so they can pick.
+2. You recognize a well-known alternative that is definitively better than the path you're about to commit to (industry-standard pattern, project's existing convention being violated) — surface the comparison instead of silently adopting the inferior path.
+
+Otherwise do **not** ask. No alts for naming, paths, style, or anything you're already confident about. Most operations will have zero `- ?` sub-bullets. `/objs` later resolves any that remain.
 
 ### 7. Re-run dispatch + write MISSION
 
@@ -80,7 +85,11 @@ Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
 
 - `### Concept of Operations` — **two or three sentences max**. Names the chosen approach and connects it to `SITUATION.Pain`. Concept-level only — do **not** enumerate files, edit steps, or build commands here; those belong in Warning Orders or are derived later in EXECUTION.
 - `### Prerequisites` — bullet list of things that must exist or be true before any OBJ can ship.
-- `### Warning Orders` — a flat bullet list of decisions. One bullet per decision. Each bullet starts with a **bold one-line label** stating the decision, then `: ` and a single sentence of reasoning. Keep the bold label short — avoid long code spans, file paths, or multi-clause titles inside the bold (put those in the reasoning half after the colon). No `####` headings, no prose paragraphs. Use a sub-bullet only when one sentence genuinely cannot carry the decision (e.g., the decision has two or three concrete items the reader needs to see); keep sub-bullets to one short clause each and avoid them whenever possible. Rejected alternatives, when present, go on a `- Rejected: …` sub-bullet under the decision they apply to — only include this when the user explicitly named the rejected option or the agent surfaced and the user dismissed it; do not invent strawman rejections. Decisions belong here, not inside individual OBJs.
+- `### Warning Orders` — a flat bullet list of decisions. One bullet per decision. Each bullet starts with a **bold one-line label** stating the decision, then `: ` and a single sentence of reasoning. Keep the bold label short — avoid long code spans, file paths, or multi-clause titles inside the bold (put those in the reasoning half after the colon). No `####` headings, no prose paragraphs. Use a sub-bullet only when one sentence genuinely cannot carry the decision (e.g., the decision has two or three concrete items the reader needs to see); keep sub-bullets to one short clause each and avoid them whenever possible. Two optional sub-bullet forms:
+  - `- ? <prompt> (opt-a / opt-b) >` — a single open alt for the user to answer (or for `/objs` to resolve). Only when the high bar in step 6 is met.
+  - `- Rejected: opt-a, opt-b` — alternatives the user dismissed or `/objs` collapsed. Comma-joined, no reasons unless the user added them.
+
+  Decisions belong here, not inside individual OBJs.
 
 Example:
 
@@ -92,7 +101,6 @@ Example:
 - **`docs/ai-workflow.md` needs a structural pass**: textual substitution alone won't fix it
   - currently lists only five skills (omits the OPORD skill)
   - describes the wrong skill as the EXECUTION-cutter
-  - Rejected: leaving the file as-is with a one-line addendum.
 ```
 
 ### 9. Print summary
@@ -104,7 +112,7 @@ Example (printed directly, not fenced):
 Recon complete for OP #42: "Implement user auth"
 
 - Mission: Concept of Operations + Prerequisites + 4 Warning Orders
-- Open questions: 2 (awaiting answer before `/objs`)
+- Open alts: 1 (awaiting answer or `/objs` resolution)
 - Researched:
   - [src/auth/](src/auth/)
   - [src/server/services/operator.ts](src/server/services/operator.ts)
@@ -118,8 +126,9 @@ Next:
 
 ## Rules
 
-- **MISSION-only**: `/recon` appends `## MISSION` (heading + subsections) when absent and revises it in place when present. It does NOT write `## EXECUTION`, does NOT mirror to `OBJECTIVES.md`, and does NOT prune open questions. Those are `/objs`'s job.
-- **Decisions commit to one path**: every Warning Order and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft.
-- **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. No anything else. Open questions live under SITUATION; per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
+- **MISSION-only**: `/recon` appends `## MISSION` (heading + subsections) when absent and revises it in place when present. It does NOT write `## EXECUTION` and does NOT mirror to `OBJECTIVES.md`. Those are `/objs`'s job.
+- **Decisions commit to one path**: every Warning Order and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft. The narrow exception is the `- ? ... >` sub-bullet, which is reserved for the two cases in step 6.
+- **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
+- **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TIMELINE.md`.
 - Print the summary as raw markdown — no surrounding fence.

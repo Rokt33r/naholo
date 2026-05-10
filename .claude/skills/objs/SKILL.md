@@ -6,7 +6,7 @@ argument-hint: '["freeform FRAGO instructions"]'
 
 # Objs — Cut the Mission into OBJs
 
-OPORD-style detail-cutter. Reads `## MISSION` (must already be populated by `/recon`), prunes unanswered open questions, cuts the mission into ORP-sized OBJs, **appends `## EXECUTION`** to `OPERATION.md` when absent (revises in place when present), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list.
+OPORD-style detail-cutter. Reads `## MISSION` (must already be populated by `/recon`), resolves any unanswered Warning Order alternatives, cuts the mission into ORP-sized OBJs, **appends `## EXECUTION`** to `OPERATION.md` when absent (revises in place when present), and mirrors the OBJ list into `OBJECTIVES.md` as a flat checkbox list.
 
 The skill name is the unambiguous "where are we" signal: re-running `/objs` is for plan adjustment (insert / remove / revise unfinished OBJs). Direction changes — Concept of Operations rewrites, Warning Order revisions, new Prerequisites — belong to `/recon`, not `/objs`.
 
@@ -58,9 +58,15 @@ Read if you haven't read:
 
 `## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the three required subsections (`### Concept of Operations`, `### Prerequisites`, `### Warning Orders`), stop and tell the user to run `/recon` first. `/objs` is the OPORD pass — without a populated MISSION it has nothing to cut.
 
-### 7. Prune unanswered open questions
+### 7. Resolve Warning Order alternatives
 
-Under `## SITUATION` → `### Open questions` (if present), remove every `### {question}` block whose `Answer ->` line is empty or whitespace-only. Keep answered questions — their answers may be load-bearing context that the OBJs reference. If the entire `### Open questions` block becomes empty, remove the block heading too. Match with roughly `^### .+\n\s*Answer ->\s*$\n?` (multiline). When in doubt, leave the question in place.
+For each `### Warning Orders` bullet that has a `- ? <prompt> (opt-a / opt-b) >` sub-bullet, resolve it in place:
+
+- **No answer written** (nothing after the trailing `>`) → replace the `- ? ...` sub-bullet with `- Rejected: opt-a, opt-b`. The bold-label chosen path stays as-is. If a `- Rejected:` already exists on the WO, merge into it (comma-join).
+- **User wrote an answer matching one of the listed options** → rewrite the WO's bold label to commit to that option, then replace the sub-bullet with `- Rejected: <original chosen + remaining alts>`.
+- **User wrote a free-form answer** (something not in the listed options) → rewrite the bold label to that answer, replace the sub-bullet with `- Rejected: opt-a, opt-b`.
+
+No reasons on rejected items unless the user wrote them in. When in doubt, treat the answer as empty and collapse to Rejected.
 
 ### 8. Re-run dispatch + write EXECUTION
 
@@ -159,6 +165,7 @@ Next:
 - **Decisions commit to one path**: every OBJ goal names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/recon` to add the missing Warning Order.
 - **Preserve `[ref]` links** in OBJECTIVES.md.
 - **Respect existing done states**: don't uncheck `[x]` items in OBJECTIVES.md.
-- **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. No anything else. Open questions live under SITUATION; per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
+- **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
+- **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **Do NOT implement any code** — only edit `OPERATION.md`, `OBJECTIVES.md`, and `TIMELINE.md`.
 - Print the summary as raw markdown — no surrounding fence.

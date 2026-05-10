@@ -20,8 +20,8 @@ Fetch the operation locally for offline-first work.
 - `naholo agent pull {N}` creates the local operation directory and pulls `OBJECTIVES.md` plus all existing `notes/*.md` from the server, then prints the absolute directory path on stdout — the `/infil` agent reads that line and does not need a separate `op-path` call
 - The agent then generates the two workflow notes if missing (server-authored copies are preserved on re-runs):
   - `notes/OPERATION.md` — the single live document for the OP. Three top-level sections, written incrementally by their owning skills:
-    - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes` and transient `### Open questions` blocks
-    - `## MISSION` — `### Concept of Operations`, `### Prerequisites`, `### Warning Orders` (absent after infil; appended by `/recon`)
+    - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes`
+    - `## MISSION` — `### Concept of Operations`, `### Prerequisites`, `### Warning Orders` (absent after infil; appended by `/recon`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet
     - `## EXECUTION` — one `### OBJ N — Title` section per objective with goal, optional `#### Scheme of Maneuver`, `#### Target files`, and a `#### After-Action Report` added by `/splash` when the OBJ ships (absent after infil; appended by `/objs`)
   - `notes/TIMELINE.md` — chronological event log (one bullet per existing server log)
 - `OBJECTIVES.md` stays as pulled (empty list until `/objs` populates it); other `notes/*.md` are whatever the operation already had
@@ -32,15 +32,15 @@ Fetch the operation locally for offline-first work.
 Research the codebase and define the mission.
 
 - Appends `## MISSION` to `OPERATION.md` with three subsections: `### Concept of Operations` (two-or-three-sentence overview tying the chosen approach to `SITUATION.Pain`), `### Prerequisites` (bullet list of what must exist before any OBJ can ship), and `### Warning Orders` (flat bulleted decisions, one per line, with optional `- Rejected: …` sub-bullets)
-- May add an `### Open questions` block under `## SITUATION` for questions that need a human answer before `/objs` can cut OBJs; pruning unanswered questions is `/objs`'s job
+- May add a `- ? <prompt> (a / b) >` sub-bullet under a Warning Order, but only when the user has named viable options without picking one, or when a well-known alternative is definitively better than the committed path. Otherwise commits to the most viable option found and lets the user override on review. Most operations have none
 - Resumable — re-running picks up where the previous run left off; freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, etc.)
-- Does NOT write `## EXECUTION`, mirror to `OBJECTIVES.md`, or prune open questions — those belong to `/objs`
+- Does NOT write `## EXECUTION` or mirror to `OBJECTIVES.md` — those belong to `/objs`
 
 ### Phase 4: Objs (`/objs ["freeform"]`)
 
 Cut the recon'd MISSION into ORP-sized OBJs.
 
-- Reads the populated `## MISSION` and prunes any `### Open questions` whose `Answer ->` is still empty
+- Reads the populated `## MISSION` and resolves any `- ? <prompt> (a / b) >` sub-bullets under Warning Orders: empty answer collapses the alts into `- Rejected: a, b`; an answer matching an alt swaps the WO bold label and moves the original chosen path into `- Rejected:`
 - Appends `## EXECUTION` with one `### OBJ N — Title` section per OBJ. Each OBJ has a goal paragraph (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI changes), and a `#### Target files` bullet list with per-symbol/per-change notes. The `#### After-Action Report` heading is NOT written by `/objs` — `/splash` adds it when the OBJ ships
 - Mirrors the OBJ list into `OBJECTIVES.md` as a flat `- [ ] N. Title` checklist (no sub-objectives)
 - Resumable — re-running picks up the partial EXECUTION state and continues
