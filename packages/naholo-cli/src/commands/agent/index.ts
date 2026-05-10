@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
 import { opListCommand } from './op-list.js'
 import { opPathCommand } from './op-path.js'
@@ -10,6 +11,7 @@ export const agentCommand = new Command('agent').description(
   'Commands for AI agent workflows',
 )
 
+agentCommand.addCommand(infilCommand)
 agentCommand.addCommand(pullCommand)
 agentCommand.addCommand(pushCommand)
 agentCommand.addCommand(manCommand)

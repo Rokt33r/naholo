@@ -3,7 +3,7 @@ import path from 'node:path'
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
-import { withErrorHandling } from '../../errors.js'
+import { CliError, withErrorHandling } from '../../errors.js'
 import { mergeObjectives } from '../../lib/merge-objectives.js'
 import { formatObjectivesMarkdown } from '../../lib/objectives-markdown.js'
 import { threeWayMerge } from '../../lib/three-way-merge.js'
@@ -37,13 +37,18 @@ function writeLogsYaml(serverLogs: ServerLog[]): void {
 }
 
 export const pullCommand = new Command('pull')
-  .description('Pull operation context from server to local')
-  .argument('<operationNumber>', 'Operation number')
+  .description('Refresh the currently infiled operation from the server')
   .action(
-    withErrorHandling(async (operationNumber: string) => {
-      const { client, projectSlug } = getCliContext()
-      const opNum = Number(operationNumber)
+    withErrorHandling(async () => {
+      const opYml = readOpYml()
+      if (opYml == null) {
+        throw new CliError(
+          'No infiled operation. Run "naholo agent infil <n>" first.',
+        )
+      }
+      const opNum = opYml.number
 
+      const { client, projectSlug } = getCliContext()
       const [serverOperation, serverObjectives, serverNotes, serverLogs] =
         await Promise.all([
           client.getOperation(projectSlug, opNum),
@@ -52,208 +57,99 @@ export const pullCommand = new Command('pull')
           client.listOperationLogs(projectSlug, opNum),
         ])
 
-      const localDir = getLocalOperationDir()
-      const isRerun = fs.existsSync(localDir)
+      const notesDir = getNotesDir()
+      const baseNotesDir = getBaseNotesDir()
 
-      if (isRerun) {
-        mergeAndReport(
-          opNum,
-          serverOperation,
-          serverObjectives,
-          serverNotes,
-          serverLogs,
-        )
-      } else {
-        freshPull(
-          opNum,
-          serverOperation,
-          serverObjectives,
-          serverNotes,
-          serverLogs,
+      // Ensure dirs exist (they should, but just in case)
+      fs.mkdirSync(notesDir, { recursive: true })
+      fs.mkdirSync(baseNotesDir, { recursive: true })
+
+      // --- Merge OBJECTIVES.md (structured, not text merge) ---
+      const objectivesPath = getObjectivesPath()
+      const localObjectivesMd = fs.existsSync(objectivesPath)
+        ? fs.readFileSync(objectivesPath, 'utf-8')
+        : ''
+      const objMerge = mergeObjectives(
+        opNum,
+        localObjectivesMd,
+        serverObjectives,
+      )
+      fs.writeFileSync(objectivesPath, objMerge.merged)
+
+      // Server state for .base/ baseline
+      const serverObjectivesMd =
+        serverObjectives.length > 0
+          ? `# OBJECTIVES — OP #${opNum}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
+          : `# OBJECTIVES — OP #${opNum}\n\n_(no objectives yet)_\n`
+
+      // --- Merge notes ---
+      const noteResults: { name: string; action: string }[] = []
+      const processedServerNotes = new Set<string>()
+
+      for (const serverNote of serverNotes) {
+        processedServerNotes.add(serverNote.name)
+        const localPath = path.join(notesDir, `${serverNote.name}.md`)
+        const basePath = path.join(baseNotesDir, `${serverNote.name}.md`)
+        const result = mergeFile(localPath, basePath, serverNote.content)
+        noteResults.push({ name: serverNote.name, action: result })
+      }
+
+      // Locally-created notes (no server match)
+      const localNoteFiles = fs.existsSync(notesDir)
+        ? fs.readdirSync(notesDir).filter((f) => f.endsWith('.md'))
+        : []
+      for (const file of localNoteFiles) {
+        const name = file.replace(/\.md$/, '')
+        if (!processedServerNotes.has(name)) {
+          noteResults.push({ name, action: 'kept-local' })
+        }
+      }
+
+      // Update .base/ with server state
+      fs.writeFileSync(getBaseObjectivesPath(), serverObjectivesMd)
+      for (const serverNote of serverNotes) {
+        fs.writeFileSync(
+          path.join(baseNotesDir, `${serverNote.name}.md`),
+          serverNote.content,
         )
       }
+
+      writeLogsYaml(serverLogs)
+
+      // Refresh op.yml title from server (preserve number).
+      writeOpYml({ number: opNum, title: serverOperation.title })
+
+      // Report
+      console.log(
+        `Pulled operation #${opNum}: "${serverOperation.title}" (re-run)`,
+      )
+      console.log(
+        `  Objectives: ${serverObjectives.length} on server — ${objMerge.updated} updated, ${objMerge.inserted} inserted`,
+      )
+
+      const counts = noteResults.reduce(
+        (acc, r) => {
+          acc[r.action] = (acc[r.action] ?? 0) + 1
+          return acc
+        },
+        {} as Record<string, number>,
+      )
+
+      const countStr = Object.entries(counts)
+        .map(([action, count]) => `${count} ${action}`)
+        .join(', ')
+      console.log(`  Notes: ${noteResults.length} total — ${countStr}`)
+      if ((counts['conflict'] ?? 0) > 0) {
+        const conflictNames = noteResults
+          .filter((r) => r.action === 'conflict')
+          .map((c) => c.name)
+          .join(', ')
+        console.log(`  Conflicts: ${conflictNames}`)
+      }
+      console.log(`  Logs: ${serverLogs.length} entries`)
+      console.log(`  Local: ${getLocalOperationDir()}/`)
     }),
   )
-
-interface OperationInfo {
-  title: string
-  number: number
-}
-
-function freshPull(
-  operationNumber: number,
-  serverOperation: OperationInfo,
-  serverObjectives: {
-    id: string
-    parentObjectiveId: string | null
-    name: string
-    note: string | null
-    done: boolean
-    position: number
-    createdAt: string
-    updatedAt: string
-  }[],
-  serverNotes: { name: string; content: string }[],
-  serverLogs: ServerLog[],
-): void {
-  const notesDir = getNotesDir()
-  const baseNotesDir = getBaseNotesDir()
-
-  // Create directories
-  fs.mkdirSync(notesDir, { recursive: true })
-  fs.mkdirSync(baseNotesDir, { recursive: true })
-
-  // Write OBJECTIVES.md
-  const objectivesMd =
-    serverObjectives.length > 0
-      ? `# OBJECTIVES — OP #${operationNumber}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
-      : `# OBJECTIVES — OP #${operationNumber}\n\n_(no objectives yet)_\n`
-
-  fs.writeFileSync(getObjectivesPath(), objectivesMd)
-  fs.writeFileSync(getBaseObjectivesPath(), objectivesMd)
-
-  // Write notes
-  for (const note of serverNotes) {
-    const filename = `${note.name}.md`
-    fs.writeFileSync(path.join(notesDir, filename), note.content)
-    fs.writeFileSync(path.join(baseNotesDir, filename), note.content)
-  }
-
-  writeLogsYaml(serverLogs)
-
-  // Report
-  const doneCount = serverObjectives.filter((o) => o.done).length
-  console.log(`Pulled operation #${operationNumber}`)
-  console.log(`  Title: ${serverOperation.title}`)
-  console.log(
-    `  Objectives: ${serverObjectives.length} (${doneCount} done, ${serverObjectives.length - doneCount} remaining)`,
-  )
-  console.log(
-    `  Notes: ${serverNotes.length}${serverNotes.length > 0 ? ` (${serverNotes.map((n) => n.name).join(', ')})` : ''}`,
-  )
-  console.log(`  Logs: ${serverLogs.length} entries`)
-  console.log(`  Local: ${getLocalOperationDir()}/`)
-}
-
-function mergeAndReport(
-  operationNumber: number,
-  serverOperation: OperationInfo,
-  serverObjectives: {
-    id: string
-    parentObjectiveId: string | null
-    name: string
-    note: string | null
-    done: boolean
-    position: number
-    createdAt: string
-    updatedAt: string
-  }[],
-  serverNotes: { name: string; content: string }[],
-  serverLogs: ServerLog[],
-): void {
-  const notesDir = getNotesDir()
-  const baseNotesDir = getBaseNotesDir()
-
-  // Ensure dirs exist (they should, but just in case)
-  fs.mkdirSync(notesDir, { recursive: true })
-  fs.mkdirSync(baseNotesDir, { recursive: true })
-
-  // --- Merge OBJECTIVES.md (structured, not text merge) ---
-  const objectivesPath = getObjectivesPath()
-  const localObjectivesMd = fs.existsSync(objectivesPath)
-    ? fs.readFileSync(objectivesPath, 'utf-8')
-    : ''
-  const objMerge = mergeObjectives(
-    operationNumber,
-    localObjectivesMd,
-    serverObjectives,
-  )
-  fs.writeFileSync(objectivesPath, objMerge.merged)
-
-  // Also write server state to .base/ for future diffs
-  const serverObjectivesMd =
-    serverObjectives.length > 0
-      ? `# OBJECTIVES — OP #${operationNumber}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
-      : `# OBJECTIVES — OP #${operationNumber}\n\n_(no objectives yet)_\n`
-
-  // --- Merge notes ---
-  const noteResults: { name: string; action: string }[] = []
-
-  // Track which server notes we've processed
-  const processedServerNotes = new Set<string>()
-
-  // Process server notes
-  for (const serverNote of serverNotes) {
-    processedServerNotes.add(serverNote.name)
-    const localPath = path.join(notesDir, `${serverNote.name}.md`)
-    const basePath = path.join(baseNotesDir, `${serverNote.name}.md`)
-
-    const result = mergeFile(localPath, basePath, serverNote.content)
-    noteResults.push({ name: serverNote.name, action: result })
-  }
-
-  // Check for locally-created notes (no server match, no base)
-  const localNoteFiles = fs.existsSync(notesDir)
-    ? fs.readdirSync(notesDir).filter((f) => f.endsWith('.md'))
-    : []
-
-  for (const file of localNoteFiles) {
-    const name = file.replace(/\.md$/, '')
-    if (!processedServerNotes.has(name)) {
-      noteResults.push({ name, action: 'kept-local' })
-    }
-  }
-
-  // Update .base/ with server state
-  fs.writeFileSync(getBaseObjectivesPath(), serverObjectivesMd)
-  for (const serverNote of serverNotes) {
-    fs.writeFileSync(
-      path.join(baseNotesDir, `${serverNote.name}.md`),
-      serverNote.content,
-    )
-  }
-
-  writeLogsYaml(serverLogs)
-
-  // Refresh op.yml title from server (preserve number).
-  const existingOpYml = readOpYml()
-  if (existingOpYml != null) {
-    writeOpYml({
-      number: existingOpYml.number,
-      title: serverOperation.title,
-    })
-  }
-
-  // Report
-  console.log(
-    `Pulled operation #${operationNumber}: "${serverOperation.title}" (re-run)`,
-  )
-  console.log(
-    `  Objectives: ${serverObjectives.length} on server — ${objMerge.updated} updated, ${objMerge.inserted} inserted`,
-  )
-
-  const counts = noteResults.reduce(
-    (acc, r) => {
-      acc[r.action] = (acc[r.action] ?? 0) + 1
-      return acc
-    },
-    {} as Record<string, number>,
-  )
-
-  const countStr = Object.entries(counts)
-    .map(([action, count]) => `${count} ${action}`)
-    .join(', ')
-  console.log(`  Notes: ${noteResults.length} total — ${countStr}`)
-  if ((counts['conflict'] ?? 0) > 0) {
-    const conflictNames = noteResults
-      .filter((r) => r.action === 'conflict')
-      .map((c) => c.name)
-      .join(', ')
-    console.log(`  Conflicts: ${conflictNames}`)
-  }
-  console.log(`  Logs: ${serverLogs.length} entries`)
-  console.log(`  Local: ${getLocalOperationDir()}/`)
-}
 
 /**
  * Three-way merge for a single file.
