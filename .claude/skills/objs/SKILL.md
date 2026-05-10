@@ -54,9 +54,13 @@ Read if you haven't read:
 - `{operationDir}/notes/OPERATION.md`
 - `{operationDir}/notes/TIMELINE.md`
 
+If MISSION includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/recon` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/objs` doesn't redo the discovery work.
+
 ### 6. Validate MISSION
 
 `## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the three required subsections (`### Concept of Operations`, `### Prerequisites`, `### Warning Orders`), stop and tell the user to run `/recon` first. `/objs` is the OPORD pass — without a populated MISSION it has nothing to cut.
+
+`### Target Reference Points` is optional — its absence is not a validation failure. If it's missing, `/objs` proceeds normally (and may have to research the codebase itself).
 
 ### 7. Resolve Warning Order alternatives
 

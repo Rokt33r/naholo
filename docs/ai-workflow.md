@@ -21,7 +21,7 @@ Fetch the operation locally for offline-first work.
 - The agent then generates the two workflow notes if missing (server-authored copies are preserved on re-runs):
   - `notes/OPERATION.md` — the single live document for the OP. Three top-level sections, written incrementally by their owning skills:
     - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes`
-    - `## MISSION` — `### Concept of Operations`, `### Prerequisites`, `### Warning Orders` (absent after infil; appended by `/recon`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet
+    - `## MISSION` — `### Concept of Operations`, `### Prerequisites`, `### Warning Orders`, `### Target Reference Points` (absent after infil; appended by `/recon`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet. TRP is a flat bullet list of files / folders / glob patterns (each `` `path` — tag ``) — a curated map a fresh `/objs` session uses to skip re-walking the codebase
     - `## EXECUTION` — one `### OBJ N — Title` section per objective with `#### Goal`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and a `#### After-Action Report` added by `/splash` when the OBJ ships (absent after infil; appended by `/objs`)
   - `notes/TIMELINE.md` — chronological event log (one bullet per existing server log)
 - `OBJECTIVES.md` stays as pulled (empty list until `/objs` populates it); other `notes/*.md` are whatever the operation already had
@@ -31,7 +31,7 @@ Fetch the operation locally for offline-first work.
 
 Research the codebase and define the mission.
 
-- Appends `## MISSION` to `OPERATION.md` with three subsections: `### Concept of Operations` (two-or-three-sentence overview tying the chosen approach to `SITUATION.Pain`), `### Prerequisites` (bullet list of what must exist before any OBJ can ship), and `### Warning Orders` (flat bulleted decisions, one per line, with optional `- Rejected: …` sub-bullets)
+- Appends `## MISSION` to `OPERATION.md` with four subsections: `### Concept of Operations` (two-or-three-sentence overview tying the chosen approach to `SITUATION.Pain`), `### Prerequisites` (bullet list of what must exist before any OBJ can ship), `### Warning Orders` (flat bulleted decisions, one per line, with optional `- Rejected: …` sub-bullets), and `### Target Reference Points` (flat list of `` `path-or-glob` — tag `` entries — the curated codebase map a fresh `/objs` session reads instead of re-researching)
 - May add a `- ? <prompt> (a / b) >` sub-bullet under a Warning Order, but only when the user has named viable options without picking one, or when a well-known alternative is definitively better than the committed path. Otherwise commits to the most viable option found and lets the user override on review. Most operations have none
 - Resumable — re-running picks up where the previous run left off; freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, etc.)
 - Does NOT write `## EXECUTION` or mirror to `OBJECTIVES.md` — those belong to `/objs`
