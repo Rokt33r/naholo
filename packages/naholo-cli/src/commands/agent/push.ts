@@ -20,7 +20,7 @@ export const pushCommand = new Command('push')
       const { client, projectSlug } = getCliContext()
       const opNum = Number(operationNumber)
 
-      const localDir = getLocalOperationDir(opNum)
+      const localDir = getLocalOperationDir()
       if (!fs.existsSync(localDir)) {
         throw new CliError(
           `No local data for operation #${opNum}. Run "naholo agent pull ${opNum}" first.`,
@@ -28,7 +28,7 @@ export const pushCommand = new Command('push')
       }
 
       // --- Sync objectives ---
-      const objectivesPath = getObjectivesPath(opNum)
+      const objectivesPath = getObjectivesPath()
       const objectivesMd = fs.readFileSync(objectivesPath, 'utf-8')
       const objectives = parseObjectivesMarkdown(objectivesMd)
 
@@ -56,7 +56,7 @@ export const pushCommand = new Command('push')
       }
 
       // --- Sync notes ---
-      const notesDir = getNotesDir(opNum)
+      const notesDir = getNotesDir()
       const serverNotes = await client.listNotes(projectSlug, opNum)
       const serverNoteMap = new Map(serverNotes.map((n) => [n.name, n]))
 
@@ -84,8 +84,8 @@ export const pushCommand = new Command('push')
       }
 
       // --- Update .base/ ---
-      const baseObjectivesPath = getBaseObjectivesPath(opNum)
-      const baseNotesDir = getBaseNotesDir(opNum)
+      const baseObjectivesPath = getBaseObjectivesPath()
+      const baseNotesDir = getBaseNotesDir()
       fs.mkdirSync(baseNotesDir, { recursive: true })
 
       // .base/ = current local state (what was just pushed)

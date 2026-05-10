@@ -1,11 +1,9 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import {
   ResourceTemplate,
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import { getLocalOperationsRootDir } from '../lib/local-operations.js'
+import { readOpYml } from '../lib/local-operations.js'
 import { formatObjectivesMarkdown } from '../lib/objectives-markdown.js'
 
 export function registerResources(
@@ -106,64 +104,12 @@ export function registerResources(
   server.registerResource(
     'local-operations',
     'naholo://local/operations',
-    { description: 'List of locally infiled operations' },
+    { description: 'Currently infiled operation' },
     async (uri) => {
-      const localOperationsDir = getLocalOperationsRootDir()
-      let entries: fs.Dirent[] = []
-      try {
-        entries = fs.readdirSync(localOperationsDir, { withFileTypes: true })
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          (error as NodeJS.ErrnoException).code === 'ENOENT'
-        ) {
-          // Directory doesn't exist — no infiled operations
-        } else {
-          throw error
-        }
-      }
-
-      const operationNumbers = entries
-        .filter((e) => e.isDirectory() && /^\d+$/.test(e.name))
-        .map((e) => Number(e.name))
-        .sort((a, b) => a - b)
-
-      if (operationNumbers.length === 0) {
-        return {
-          contents: [{ uri: uri.href, mimeType: 'text/plain', text: '' }],
-        }
-      }
-
-      const OPERATION_TITLE_RE = /^# OPERATION — Operation #\d+:\s*(.+)$/
-      const lines = operationNumbers.map((num) => {
-        const operationPath = path.join(
-          localOperationsDir,
-          String(num),
-          'notes',
-          'OPERATION.md',
-        )
-        if (!fs.existsSync(operationPath)) {
-          return `#${num} (malformed - OPERATION.md doesn't exist)`
-        }
-        try {
-          const firstLine = fs
-            .readFileSync(operationPath, 'utf-8')
-            .split('\n', 1)[0]
-          const match = OPERATION_TITLE_RE.exec(firstLine)
-          if (match != null) {
-            return `#${num} ${match[1].trim()}`
-          }
-          return `#${num} (malformed - OPERATION.md header not recognized)`
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error)
-          return `#${num} (malformed - ${message})`
-        }
-      })
-
+      const opYml = readOpYml()
+      const text = opYml == null ? '' : `#${opYml.number} ${opYml.title}`
       return {
-        contents: [
-          { uri: uri.href, mimeType: 'text/plain', text: lines.join('\n') },
-        ],
+        contents: [{ uri: uri.href, mimeType: 'text/plain', text }],
       }
     },
   )
