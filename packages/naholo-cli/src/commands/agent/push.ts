@@ -10,22 +10,22 @@ import {
   getBaseNotesDir,
   getObjectivesPath,
   getBaseObjectivesPath,
+  readOpYml,
 } from '../../lib/local-operations.js'
 
 export const pushCommand = new Command('push')
-  .description('Push local operation changes to server')
-  .argument('<operationNumber>', 'Operation number')
+  .description('Push the infiled operation to the server')
   .action(
-    withErrorHandling(async (operationNumber: string) => {
-      const { client, projectSlug } = getCliContext()
-      const opNum = Number(operationNumber)
-
-      const localDir = getLocalOperationDir()
-      if (!fs.existsSync(localDir)) {
+    withErrorHandling(async () => {
+      const opYml = readOpYml()
+      if (opYml == null) {
         throw new CliError(
-          `No local data for operation #${opNum}. Run "naholo agent pull ${opNum}" first.`,
+          'No infiled operation. Run "naholo agent infil <n>" first.',
         )
       }
+      const opNum = opYml.number
+      const { client, projectSlug } = getCliContext()
+      const localDir = getLocalOperationDir()
 
       // --- Sync objectives ---
       const objectivesPath = getObjectivesPath()
