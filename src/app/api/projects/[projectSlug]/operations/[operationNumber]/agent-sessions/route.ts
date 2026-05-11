@@ -40,14 +40,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { project, operation } = await requireOperationAccess(
-      projectSlug,
-      operationNumber,
-    )
+    const { project, operation, actualProjectOperator } =
+      await requireOperationAccess(projectSlug, operationNumber)
 
     const result = await upsertAgentSession({
       projectId: project.id,
       operationId: operation.id,
+      projectOperatorId: actualProjectOperator.id,
       sessionId: validation.data.sessionId,
       title: validation.data.title,
       startedAt: new Date(validation.data.startedAt),

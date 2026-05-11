@@ -211,6 +211,13 @@
       "when": 1778460059660,
       "tag": "0029_acoustic_freak",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1778499999218,
+      "tag": "0030_medical_prowler",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import { ok } from '@/lib/return-result'
 export async function upsertAgentSession(data: {
   projectId: string
   operationId: string
+  projectOperatorId: string | null
   sessionId: string
   title: string | null
   startedAt: Date
@@ -20,6 +21,7 @@ export async function upsertAgentSession(data: {
     .values({
       projectId: data.projectId,
       operationId: data.operationId,
+      projectOperatorId: data.projectOperatorId,
       sessionId: data.sessionId,
       title: data.title,
       startedAt: data.startedAt,
@@ -33,6 +35,7 @@ export async function upsertAgentSession(data: {
       set: {
         projectId: data.projectId,
         operationId: data.operationId,
+        projectOperatorId: data.projectOperatorId,
         title: data.title,
         startedAt: data.startedAt,
         endedAt: data.endedAt,
