@@ -22,6 +22,7 @@
     "cli:build-dist": "tsx scripts/build-cli-dist.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
     "@aws-sdk/client-ses": "^3.936.0",
     "@kenmon/email-otp-authenticator": "1.0.0-pre.1",
     "@kenmon/google-oauth-authenticator": "1.0.0-pre.1",

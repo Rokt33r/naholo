@@ -42,3 +42,6 @@ next-env.d.ts
 
 # CLI dist artifacts
 public/cli/
+
+# Local object-storage dev root (NAHOLO_STORAGE_DRIVER=fs)
+/.storage/
