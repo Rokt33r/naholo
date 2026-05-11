@@ -1,4 +1,5 @@
 import type {
+  AgentSessionPayload,
   AuthUser,
   CreateObjectiveInput,
   CreateOperatorTokenResult,
@@ -367,6 +368,20 @@ export class NaholoClient {
     return this.request(
       'DELETE',
       this.operationPath(projectSlug, operationNumber, `/logs/${logId}`),
+    )
+  }
+
+  // ---- Agent Sessions ----
+
+  recordAgentSession(
+    projectSlug: string,
+    operationNumber: number | string,
+    payload: AgentSessionPayload,
+  ): Promise<{ id: string }> {
+    return this.request(
+      'POST',
+      this.operationPath(projectSlug, operationNumber, '/agent-sessions'),
+      payload,
     )
   }
 
