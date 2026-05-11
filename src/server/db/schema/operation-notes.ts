@@ -44,6 +44,10 @@ export const operationNotes = pgTable(
 export const operationNotesRelations = relations(
   operationNotes,
   ({ one, many }) => ({
+    operation: one(operations, {
+      fields: [operationNotes.operationId],
+      references: [operations.id],
+    }),
     currentRevision: one(operationNoteRevisions, {
       fields: [operationNotes.currentRevisionId],
       references: [operationNoteRevisions.id],

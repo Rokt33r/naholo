@@ -7,6 +7,7 @@ import {
   integer,
   AnyPgColumn,
 } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { operations } from './operations'
 import { projects } from './projects'
 import { projectOperators } from './project-operators'
@@ -36,3 +37,13 @@ export const operationObjectives = pgTable('operation_objectives', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
+
+export const operationObjectivesRelations = relations(
+  operationObjectives,
+  ({ one }) => ({
+    operation: one(operations, {
+      fields: [operationObjectives.operationId],
+      references: [operations.id],
+    }),
+  }),
+)

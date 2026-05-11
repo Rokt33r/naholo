@@ -7,8 +7,13 @@ import {
   integer,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { projectOperators } from './project-operators'
+import { operationLogs } from './operation-logs'
+import { operationNotes } from './operation-notes'
+import { operationObjectives } from './operation-objectives'
+import { operationAgentSessions } from './operation-agent-sessions'
 
 export const operations = pgTable(
   'operations',
@@ -36,3 +41,18 @@ export const operations = pgTable(
     ),
   ],
 )
+
+export const operationsRelations = relations(operations, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [operations.projectId],
+    references: [projects.id],
+  }),
+  projectOperator: one(projectOperators, {
+    fields: [operations.projectOperatorId],
+    references: [projectOperators.id],
+  }),
+  logs: many(operationLogs),
+  notes: many(operationNotes),
+  objectives: many(operationObjectives),
+  agentSessions: many(operationAgentSessions),
+}))
