@@ -84,7 +84,25 @@ Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
 One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has three subsections — **`#### Goal`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
 
-- `#### Goal` — one or two sentences stating the success criterion concretely. This is the bar `/splash` uses to decide when the OBJ is done. Name observable end states (a command prints X, `tsc` is green, file Y exists, etc.). Don't restate what's changing — that's Course of Action's job. No "atomic flip of …" framing, no scope boundaries, no rationale.
+- `#### Goal` — one sentence, ≤ ~25 words, naming the **approach** this OBJ takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from COA). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Goal is the skim-anchor — concrete shapes are reviewed in SOM, concrete steps in COA. Examples:
+
+  ```
+  #### Goal
+
+  Add an env-selected storage adapter with S3 and local-FS drivers so later OBJs can write blobs without knowing where they land.
+  ```
+
+  ```
+  #### Goal
+
+  Swap the agent-session schema from inline transcript columns to a `has_transcript` flag and move transcript writes into the record endpoint via the storage adapter.
+  ```
+
+  ```
+  #### Goal
+
+  Slim `stats-record` to a `sessions.yml` upsert; transport moves out of the Stop hook entirely.
+  ```
 
 - `#### Scheme of Maneuver` (optional, but **required** when the OBJ introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, **DB schema (table column lists), DTOs, or API request/response shapes**). The Goal must stay a one-or-two-sentence success criterion — if the OBJ ships a structure (columns, fields, signature), the structure goes here, not in the Goal. Use code-fenced ASCII for visual artifacts:
   - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches. Untagged fence.
@@ -193,7 +211,7 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has thr
 ORP sizing rules:
 
 - Each OBJ should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
-- **Goal is the success criterion only.** Don't restate what's changing — that's Course of Action's job.
+- **Goal is the approach summary only.** Concrete shapes live in SOM, concrete steps live in COA — Goal must stay a single skim-readable headline.
 - No sub-objectives. If a chunk feels like it needs sub-bullets, split it into two top-level OBJs. (Course of Action sub-bullets are not sub-objectives — they're per-symbol annotations on a single step.)
 - OBJs are ordered for shipping — top-to-bottom is the default `/splash` order.
 - A goal that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/recon` to add the decision if it's missing).
@@ -233,7 +251,7 @@ Next:
 - **MISSION must exist**: abort with a "run `/recon` first" message if MISSION is absent or missing required subsections.
 - **No sub-objectives**: every OBJ is flat. If you feel the urge to sub-bullet, split into two OBJs.
 - **Completed OBJs are immutable**: an OBJ with a `#### After-Action Report` heading MUST NOT be edited, renumbered, or removed. New OBJs from FRAGO are appended after the last existing OBJ.
-- **Decisions commit to one path**: every OBJ goal names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/recon` to add the missing Warning Order.
+- **Decisions commit to one path**: every OBJ Goal headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/recon` to add the missing Warning Order.
 - **Preserve `[ref]` links** in OBJECTIVES.md.
 - **Respect existing done states**: don't uncheck `[x]` items in OBJECTIVES.md.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
