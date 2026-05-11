@@ -32,12 +32,18 @@ Anything in quotes is optional freeform context that informs the summary log (e.
 
 6. **Push via CLI**: Run `naholo agent push` using the Bash tool. The push includes `TIMELINE.md` as just-another-note. Read the CLI output to know what was synced.
 
-7. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool. Include:
-   - Objectives completed since last sitrep (count and names — pull from new TIMELINE bullets)
-   - Objectives added or revised (from `/recon` MISSION edits or `/objs` EXECUTION edits)
-   - Notes created or updated
-   - Brief description of code changes (run `git diff --stat` if available, or summarize from OPERATION.md AARs)
-   - Any freeform context the user provided
+7. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool.
+
+   **The first line MUST start with the literal sync signal `**sitrep** — ` (bold word, em-dash, single space).** `/infil` keys off this prefix to detect and skip sync echoes on re-infil — without it, the next infil will re-mirror this log as a new TIMELINE bullet (duplicate info).
+
+   Format:
+
+   ```
+   **sitrep** — {one-sentence headline: synced {N} objectives, {N} notes; what's the state}
+
+   - {optional bullets: objectives completed, objectives added/revised, notes touched, code-change summary from `git diff --stat` or OPERATION.md AARs}
+   - {any freeform context the user provided}
+   ```
 
 8. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — sitrep**: Synced {N} objectives, {N} notes. {brief summary}`. Do NOT append to OPERATION.md — TIMELINE.md is the only file that gets chronological bullets.
 

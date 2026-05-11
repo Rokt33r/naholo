@@ -72,10 +72,16 @@ Optional operation number (e.g., `42`).
    - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") inside SITUATION subsections where relevant.
    - Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` and `/objs` append those when they run.
 
-   **If OPERATION.md already exists**:
-   - Find what changed since the last TIMELINE bullet: new logs (LOGS.yml entries with `createdAt` later than the last TIMELINE date) and note changes (created/updated, from infil's CLI report).
-   - If nothing new → note "OPERATION.md is up to date" in the summary.
-   - If something new → summarize it (e.g., "3 new logs, `research.md` updated") and **ask the user** whether to append a TIMELINE bullet. On confirmation, append one bullet to `TIMELINE.md` summarizing the new logs and note changes.
+   **If OPERATION.md already exists** (common case: a prior `/sitrep` or `/exfil` already pushed it, and this is a fresh infil after a mid-cycle exfil — e.g., the OP was paused waiting on a prerequisite OP):
+   - Diff server state against local notes:
+     - **New logs**: LOGS.yml entries with `createdAt` later than the last TIMELINE bullet.
+     - **Note changes**: created/updated, from infil's CLI report.
+   - **Skip sync-summary logs** (strict signal — do not pattern-guess): any LOGS.yml entry whose `content` first line begins with `**sitrep** —` or `**exfil** —` is a sync recap emitted by those skills. Its information is already encoded in the TIMELINE bullets that were just pulled — re-mirroring it would duplicate. Ignore these entries entirely when computing "what's new."
+   - **What counts as significant**: genuine new human comms (user notes, teammate questions, decision flips), substantive note edits a teammate made server-side, or new objectives — NOT sitrep/exfil echoes.
+   - If nothing significant → note "OPERATION.md is up to date" in the summary; do not touch TIMELINE or SITUATION.
+   - If something significant → summarize it (e.g., "2 new user notes, `research.md` updated server-side"), then:
+     - Append one TIMELINE bullet per significant event (no user confirmation needed for routine new logs; ask only if a SITUATION rewrite is on the table).
+     - If the new info materially changes `### Pain`, `### Suggested solution`, or `### Notes` under SITUATION (e.g., user pivoted the problem, added a hard constraint), patch SITUATION in place. Leave MISSION and EXECUTION alone — those are owned by `/recon` and `/objs`.
 
 6. **Handle TIMELINE.md** (sibling of OPERATION.md):
 

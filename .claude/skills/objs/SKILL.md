@@ -86,10 +86,17 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has thr
 
 - `#### Goal` — one or two sentences stating the success criterion concretely. This is the bar `/splash` uses to decide when the OBJ is done. Name observable end states (a command prints X, `tsc` is green, file Y exists, etc.). Don't restate what's changing — that's Course of Action's job. No "atomic flip of …" framing, no scope boundaries, no rationale.
 
-- `#### Scheme of Maneuver` (optional, but **required** when the OBJ introduces or modifies control flow, request lifecycle, UI layout, or symbol/path signatures). Use code-fenced ASCII for visual artifacts:
-  - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches.
-  - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions.
-  - **Signature changes / before-after layouts**: a fenced block with arrows showing the diff.
+- `#### Scheme of Maneuver` (optional, but **required** when the OBJ introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, **DB schema (table column lists), DTOs, or API request/response shapes**). The Goal must stay a one-or-two-sentence success criterion — if the OBJ ships a structure (columns, fields, signature), the structure goes here, not in the Goal. Use code-fenced ASCII for visual artifacts:
+  - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches. Untagged fence.
+  - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions. Untagged fence.
+  - **Schema layout**: a fenced block listing each column with its type, constraints, and FK relationships (one column per line). Tag with `sql` if you're writing literal DDL; otherwise leave the fence untagged.
+  - **Signature changes / before-after layouts, DTOs, API shapes, public function signatures**: pick the fence tag in this priority order so code editors and markdown renderers syntax-highlight it correctly:
+    1. **The language the symbols actually live in** (preferred — e.g., `ts` for a `NaholoClient.recordAgentSession` signature, `py` for a Python service method, `rs` for a Rust function).
+    2. **The project's primary language** (backup — use when the OBJ spans the project broadly and no single file owns the symbol).
+    3. **Pseudo-code, last resort** (when neither of the above applies — e.g., a cross-language design sketch). Write it in TypeScript-ish syntax inside an **untagged** fence so renderers don't misclassify it.
+
+    Use real exported symbol names when the type/class will exist in code (`AgentSessionPayload`, `NaholoClient`, etc.). When the shape is anonymous in code (e.g., an inline request body object literal in a route handler with no exported type), use a placeholder name prefixed `sample_` in snake*case (`sample_request_body`, `sample_response_body`, `sample_hook_payload`) so the reader knows the name itself is illustrative, not a symbol to grep for. The `sample*\*` convention applies regardless of the chosen language.
+
   - **Linear / trivially simple flow**: a numbered list is acceptable instead of a diagram.
 
   Example (control flow):
@@ -99,13 +106,57 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has thr
                            └─no───► 401
   ```
 
-  Example (signature diff):
+  Example (signature diff — real symbols in a TS project, `ts` fence):
+
+  ```ts
+  // before → after, in local-operations.ts
+  function getLocalOperationDir(opNum: number): string  →  function getLocalOperationDir(): string
+  function getNotesDir(opNum: number): string           →  function getNotesDir(): string
+  function readOpYml(): { number: number; title: string }   // new
+  function writeOpYml(op: { number: number; title: string }): void   // new
+  ```
+
+  Example (schema layout — untagged fence):
 
   ```
-  helper signatures in local-operations.ts:
-    getLocalOperationDir(opNum)  →  getLocalOperationDir()
-    getNotesDir(opNum)           →  getNotesDir()
-    + readOpYml() / writeOpYml({ number, title })
+  operation_agent_sessions
+    id                    uuid pk
+    operation_id          uuid → operations.id (cascade)
+    session_id            text unique
+    ai_title              text nullable
+    started_at            timestamp
+    ...
+  ```
+
+  Example (anonymous DTO / API shape — `sample_*` placeholders, fence tagged with the project's primary language):
+
+  ```ts
+  type sample_request_body = {
+    sessionId: string
+    aiTitle: string | null
+    transcript: string | null // null when truncated
+    // ...
+  }
+
+  type sample_response_body = { id: string }
+  ```
+
+  Example (public function signature — real exported symbols, `ts` fence):
+
+  ```ts
+  class NaholoClient {
+    recordAgentSession(
+      projectSlug: string,
+      operationNumber: number,
+      payload: AgentSessionPayload,
+    ): Promise<{ id: string }>
+  }
+
+  type AgentSessionPayload = {
+    sessionId: string
+    aiTitle: string | null
+    // ...
+  }
   ```
 
   Skip this section entirely if the OBJ is a pure data/logic change with no flow, UI, or signature implications.

@@ -48,14 +48,25 @@ If no instructions given, ask the user whether to close.
 
 8. **Post summary log**: Post via `create_operation_log` MCP tool. Format is **header line + one short bullet per OBJ (≤1 sentence each)**, paraphrased from each OBJ's `#### Goal` and `#### Course of Action` in `{operationDir}/notes/OPERATION.md` (and the AAR's `**Deviations**` when the OBJ shipped with non-trivial deviations). Don't re-narrate; compress aggressively. If the user gave freeform context, append it after the bullets.
 
+   **The first line MUST start with the literal sync signal `**exfil** — ` (bold word, em-dash, single space).** `/infil` keys off this prefix to detect and skip sync echoes on re-infil — without it, the next infil will re-mirror this log as a new TIMELINE bullet (duplicate info).
+
    Example for a 3-OBJ operation:
 
    ```
-   Exfil — OP #128 shipped, 3 OBJs squashed.
+   **exfil** — OP #128 shipped, 3 OBJs squashed.
 
    - Renamed `.claude/skills/plan/` → `.claude/skills/objs/` via `git mv`, patched the settings allowlist.
    - Swept every `/plan` mention to `/objs` across the five SKILL.md files + `manual.md` (final grep is clean).
    - Restructured `docs/ai-workflow.md` to a six-skill chain with a new Phase 4 for `/objs`.
+   ```
+
+   Example for a recon-only mid-cycle exfil (no OBJs shipped):
+
+   ```
+   **exfil** — OP #66 paused mid-recon (blocked on OP #122); no OBJs shipped.
+
+   - MISSION fully drafted: single Stop hook → `naholo agent stats-record` (detached) → idempotent transcript upsert.
+   - Notes pushed: OPERATION (SITUATION + MISSION), TIMELINE.
    ```
 
    **If `create_operation_log` fails → STOP. Do NOT proceed to step 9.** Report the error and preserve local data (see step 11 failure path).
