@@ -218,6 +218,13 @@
       "when": 1778499999218,
       "tag": "0030_medical_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1778532422157,
+      "tag": "0031_boring_the_call",
+      "breakpoints": true
     }
   ]
 }

@@ -1,12 +1,12 @@
 import {
   pgTable,
-  uuid,
   text,
   timestamp,
   integer,
   jsonb,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 
 export type PaddleSubscriptionStatus =
   | 'incomplete'
@@ -19,7 +19,7 @@ export type PaddleSubscriptionStatus =
 export const paddleSubscriptions = pgTable(
   'paddle_subscriptions',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuidV7IdColumn(),
     paddleSubscriptionId: text('paddle_subscription_id').notNull(),
     paddleCustomerId: text('paddle_customer_id').notNull(),
     billingEmail: text('billing_email').notNull().default(''),

@@ -1,0 +1,23 @@
+ALTER TABLE "cli_login_requests" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "email_otps" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "user_identifiers" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "sessions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "projects" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "operations" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "operation_logs" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "operation_agent_sessions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "operation_objectives" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "operation_notes" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "operation_note_revisions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "project_operators" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "project_operator_api_tokens" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "skill_loadouts" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "skills" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "skill_revisions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "user_api_tokens" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "project_invites" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "user_notification_emails" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "project_subscriptions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "paddle_subscriptions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "paddle_webhook_events" ALTER COLUMN "id" DROP DEFAULT;

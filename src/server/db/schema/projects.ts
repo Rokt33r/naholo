@@ -7,6 +7,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projectOperators } from './project-operators'
 import { skillLoadouts } from './skill-loadouts'
@@ -15,7 +16,7 @@ import { projectSubscriptions } from './project-subscriptions'
 export const projects = pgTable(
   'projects',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuidV7IdColumn(),
     name: text('name').notNull(),
     description: text('description'),
     slug: text('slug').notNull(),

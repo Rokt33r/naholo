@@ -1,9 +1,10 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { users } from './users'
 
 export const userApiTokens = pgTable('user_api_tokens', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuidV7IdColumn(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),

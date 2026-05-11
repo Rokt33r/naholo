@@ -1,4 +1,5 @@
 import { pgTable, uuid, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { paddleSubscriptions } from './paddle-subscriptions'
@@ -7,7 +8,7 @@ import { projectOperators } from './project-operators'
 export const projectSubscriptions = pgTable(
   'project_subscriptions',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuidV7IdColumn(),
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),

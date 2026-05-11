@@ -6,13 +6,14 @@ import {
   jsonb,
   unique,
 } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { users } from './users'
 
 export const userIdentifiers = pgTable(
   'user_identifiers',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuidV7IdColumn(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),

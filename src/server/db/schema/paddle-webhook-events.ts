@@ -1,17 +1,17 @@
 import {
   pgTable,
-  uuid,
   text,
   timestamp,
   jsonb,
   uniqueIndex,
   index,
 } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 
 export const paddleWebhookEvents = pgTable(
   'paddle_webhook_events',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuidV7IdColumn(),
     eventId: text('event_id').notNull(),
     eventType: text('event_type').notNull(),
     occurredAt: timestamp('occurred_at').notNull(),

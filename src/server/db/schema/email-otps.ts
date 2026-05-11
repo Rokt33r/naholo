@@ -1,7 +1,8 @@
-import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 
 export const emailOtps = pgTable('email_otps', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuidV7IdColumn(),
   email: text('email').notNull(),
   code: text('code').notNull(),
   signature: text('signature').notNull(),

@@ -5,6 +5,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
+import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { skills } from './skills'
@@ -12,7 +13,7 @@ import { skills } from './skills'
 export const skillLoadouts = pgTable(
   'skill_loadouts',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuidV7IdColumn(),
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
