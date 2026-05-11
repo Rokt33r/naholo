@@ -204,6 +204,13 @@
       "when": 1777959988514,
       "tag": "0028_misty_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1778460059660,
+      "tag": "0029_acoustic_freak",
+      "breakpoints": true
     }
   ]
 }

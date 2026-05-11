@@ -1,0 +1,44 @@
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  integer,
+} from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
+import { operations } from './operations'
+import { projects } from './projects'
+
+export const operationAgentSessions = pgTable('operation_agent_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  operationId: uuid('operation_id')
+    .notNull()
+    .references(() => operations.id, { onDelete: 'cascade' }),
+  sessionId: text('session_id').notNull().unique(),
+  title: text('title'),
+  startedAt: timestamp('started_at').notNull(),
+  endedAt: timestamp('ended_at').notNull(),
+  transcript: text('transcript'),
+  transcriptTruncated: boolean('transcript_truncated').notNull().default(false),
+  transcriptSizeBytes: integer('transcript_size_bytes').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const operationAgentSessionsRelations = relations(
+  operationAgentSessions,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [operationAgentSessions.projectId],
+      references: [projects.id],
+    }),
+    operation: one(operations, {
+      fields: [operationAgentSessions.operationId],
+      references: [operations.id],
+    }),
+  }),
+)
