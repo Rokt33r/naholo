@@ -43,8 +43,8 @@ src/
 
 - `pnpm run dev` — dev server
 - `pnpm run build` — production build (do NOT run for verification)
-- `npx tsc` — type check (use this for verification)
-- `pnpm format` - format code with prettier, run this after editing is done.
+- `pnpm test-types` — type check (use this for verification). Run without asking — no permission prompt needed.
+- `pnpm format` — format code with prettier. Run after editing is done — no permission prompt needed.
 - **Do NOT run `db:generate` or `db:migrate`** — leave DB migrations to the user
 
 ## Domain Model
