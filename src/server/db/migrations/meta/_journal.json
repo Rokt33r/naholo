@@ -225,6 +225,13 @@
       "when": 1778532422157,
       "tag": "0031_boring_the_call",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1778542799253,
+      "tag": "0032_supreme_toad",
+      "breakpoints": true
     }
   ]
 }

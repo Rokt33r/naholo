@@ -1,4 +1,5 @@
 import 'server-only'
+import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { operationAgentSessions } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
@@ -12,8 +13,6 @@ export async function upsertAgentSession(data: {
   title: string | null
   startedAt: Date
   endedAt: Date
-  transcript: string | null
-  transcriptTruncated: boolean
   transcriptSizeBytes: number
 }): Promise<ReturnResult<{ id: string }>> {
   const [row] = await db
@@ -26,8 +25,6 @@ export async function upsertAgentSession(data: {
       title: data.title,
       startedAt: data.startedAt,
       endedAt: data.endedAt,
-      transcript: data.transcript,
-      transcriptTruncated: data.transcriptTruncated,
       transcriptSizeBytes: data.transcriptSizeBytes,
     })
     .onConflictDoUpdate({
@@ -39,8 +36,6 @@ export async function upsertAgentSession(data: {
         title: data.title,
         startedAt: data.startedAt,
         endedAt: data.endedAt,
-        transcript: data.transcript,
-        transcriptTruncated: data.transcriptTruncated,
         transcriptSizeBytes: data.transcriptSizeBytes,
         updatedAt: new Date(),
       },
@@ -48,4 +43,15 @@ export async function upsertAgentSession(data: {
     .returning({ id: operationAgentSessions.id })
 
   return ok({ id: row.id })
+}
+
+export async function setAgentSessionHasTranscript(
+  id: string,
+): Promise<ReturnResult<void>> {
+  await db
+    .update(operationAgentSessions)
+    .set({ hasTranscript: true, updatedAt: new Date() })
+    .where(eq(operationAgentSessions.id, id))
+
+  return ok(undefined)
 }

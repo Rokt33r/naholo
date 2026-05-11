@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
-import { upsertAgentSession } from '@/server/services/agent-session'
+import {
+  setAgentSessionHasTranscript,
+  upsertAgentSession,
+} from '@/server/services/agent-session'
+import { getStorageAdapter } from '@/server/storage'
 
 type RouteContext = {
   params: Promise<{
@@ -16,8 +20,7 @@ const upsertAgentSessionSchema = z.object({
   title: z.string().nullable(),
   startedAt: z.iso.datetime(),
   endedAt: z.iso.datetime(),
-  transcript: z.string().nullable(),
-  transcriptTruncated: z.boolean(),
+  transcript: z.string(),
   transcriptSizeBytes: z.number().int().nonnegative(),
 })
 
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { project, operation, actualProjectOperator } =
       await requireOperationAccess(projectSlug, operationNumber)
 
-    const result = await upsertAgentSession({
+    const upserted = await upsertAgentSession({
       projectId: project.id,
       operationId: operation.id,
       projectOperatorId: actualProjectOperator.id,
@@ -51,15 +54,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
       title: validation.data.title,
       startedAt: new Date(validation.data.startedAt),
       endedAt: new Date(validation.data.endedAt),
-      transcript: validation.data.transcript,
-      transcriptTruncated: validation.data.transcriptTruncated,
       transcriptSizeBytes: validation.data.transcriptSizeBytes,
     })
-    if (!result.success) {
-      return NextResponse.json({ error: result.error.message }, { status: 500 })
+    if (!upserted.success) {
+      return NextResponse.json(
+        { error: upserted.error.message },
+        { status: 500 },
+      )
     }
 
-    return NextResponse.json(result.data, { status: 200 })
+    const storage = getStorageAdapter()
+    await storage.putObject(
+      `agent-session-transcripts/${project.id}/${operation.number}/${upserted.data.id}`,
+      validation.data.transcript,
+    )
+
+    const flagged = await setAgentSessionHasTranscript(upserted.data.id)
+    if (!flagged.success) {
+      return NextResponse.json(
+        { error: flagged.error.message },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json(upserted.data, { status: 200 })
   } catch (error) {
     return mapApiError(error)
   }
