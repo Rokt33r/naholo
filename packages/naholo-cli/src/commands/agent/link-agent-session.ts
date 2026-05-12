@@ -23,9 +23,9 @@ async function readStdinJson(): Promise<unknown> {
   return JSON.parse(raw)
 }
 
-export const statsRecordCommand = new Command('stats-record')
+export const linkAgentSessionCommand = new Command('link-agent-session')
   .description(
-    'Claude Code Stop hook handler: record the session in the infiled op locally',
+    'Claude Code Stop hook handler: link the current agent session to the infiled op locally',
   )
   .action(
     withErrorHandling(async () => {
