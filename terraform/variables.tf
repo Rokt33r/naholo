@@ -137,3 +137,9 @@ variable "base_url" {
   description = "Base URL for the application (e.g., https://your-domain.com)"
   type        = string
 }
+
+# File Storage Configuration
+variable "s3_naholo_file_storage_bucket" {
+  description = "Globally-unique name for the S3 bucket used for server-side file storage (agent session transcripts, etc.)"
+  type        = string
+}

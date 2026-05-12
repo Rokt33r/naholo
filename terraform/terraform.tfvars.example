@@ -38,3 +38,7 @@ github_repository = "iLuvGimbap/naholo"
 # container_image = ""
 
 base_url="https://naholo.app"
+
+# File Storage Configuration
+# Globally-unique S3 bucket name for server-side file storage (agent session transcripts, etc.)
+s3_naholo_file_storage_bucket = "naholo-file-storage"

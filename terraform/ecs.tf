@@ -111,6 +111,14 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "BASE_URL"
           value = var.base_url
+        },
+        {
+          name  = "NAHOLO_STORAGE_DRIVER"
+          value = "s3"
+        },
+        {
+          name  = "NAHOLO_STORAGE_S3_BUCKET"
+          value = aws_s3_bucket.file_storage.id
         }
         ],
         var.google_oauth_client_id != "" ? [

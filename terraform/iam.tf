@@ -114,6 +114,27 @@ resource "aws_iam_role_policy" "ecs_task_ses" {
   })
 }
 
+# Policy for S3 file-storage bucket access
+resource "aws_iam_role_policy" "ecs_task_s3" {
+  name_prefix = "${var.project_name}-ecs-s3-"
+  role        = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "${aws_s3_bucket.file_storage.arn}/*"
+      }
+    ]
+  })
+}
+
 # Policy for ECS Exec (debugging)
 resource "aws_iam_role_policy" "ecs_task_exec" {
   name_prefix = "${var.project_name}-ecs-exec-"
