@@ -45,9 +45,6 @@ export class NaholoClient {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     }
-    if (this.projectOperatorId != null) {
-      headers['x-naholo-project-operator'] = this.projectOperatorId
-    }
 
     const res = await fetch(url, {
       method,

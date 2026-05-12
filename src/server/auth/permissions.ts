@@ -9,7 +9,6 @@ import {
 } from '../services/project-operator-api-token'
 import {
   resolveProjectOperatorByUserIdAndProjectId,
-  getProjectOperator,
   type ProjectOperator,
 } from '../services/project-operator'
 import {
@@ -31,7 +30,6 @@ export type RequireProjectOperatorOptions = {
 
 export type ProjectOperatorContext = {
   projectOperator: ProjectOperator
-  actualProjectOperator: ProjectOperator
   project: { id: string; slug: string }
 }
 
@@ -165,12 +163,14 @@ export async function requireAdminProjectOperator(
   projectSlug: string,
   options?: RequireProjectOperatorOptions,
 ): Promise<ProjectOperatorContext> {
-  const { projectOperator, actualProjectOperator, project } =
-    await requireProjectOperator(projectSlug, options)
+  const { projectOperator, project } = await requireProjectOperator(
+    projectSlug,
+    options,
+  )
   if (projectOperator.role !== 'admin') {
     throw new Error('Forbidden')
   }
-  return { projectOperator, actualProjectOperator, project }
+  return { projectOperator, project }
 }
 
 /**
@@ -198,8 +198,7 @@ export async function requireProjectOperator(
 
   const project = { id: projectRow.id, slug: projectRow.slug }
 
-  const { projectOperator, actualProjectOperator } =
-    await resolveProjectOperator(project.id)
+  const { projectOperator } = await resolveProjectOperator(project.id)
 
   if (config.billing && options?.skipSubscriptionCheck !== true) {
     const projectSubscriptionStatus =
@@ -216,12 +215,11 @@ export async function requireProjectOperator(
     }
   }
 
-  return { projectOperator, actualProjectOperator, project }
+  return { projectOperator, project }
 }
 
 type ResolvedProjectOperator = {
   projectOperator: ProjectOperator
-  actualProjectOperator: ProjectOperator
 }
 
 async function resolveProjectOperator(
@@ -231,7 +229,7 @@ async function resolveProjectOperator(
   const authorization = headersList.get('authorization')
   if (authorization?.startsWith('Bearer naholo_user_')) {
     const token = authorization.slice('Bearer '.length)
-    return requireProjectOperatorByUserApiToken(projectId, token, headersList)
+    return requireProjectOperatorByUserApiToken(projectId, token)
   }
   if (authorization?.startsWith('Bearer naholo_')) {
     const token = authorization.slice('Bearer '.length)
@@ -256,16 +254,12 @@ async function requireProjectOperatorByApiToken(
   // Update lastUsedAt in the background
   touchProjectOperatorApiToken(result.tokenId)
 
-  return {
-    projectOperator: result.projectOperator,
-    actualProjectOperator: result.projectOperator,
-  }
+  return { projectOperator: result.projectOperator }
 }
 
 async function requireProjectOperatorByUserApiToken(
   projectId: string,
   token: string,
-  headersList: Headers,
 ): Promise<ResolvedProjectOperator> {
   const result = await resolveUserByApiToken(token)
   if (result == null) {
@@ -275,34 +269,15 @@ async function requireProjectOperatorByUserApiToken(
   // Update lastUsedAt in the background
   touchUserApiToken(result.tokenId)
 
-  // The user's own project operator is always the actual identity behind the call.
-  const actualProjectOperator =
-    await resolveProjectOperatorByUserIdAndProjectId(result.userId, projectId)
-  if (actualProjectOperator == null) {
+  const projectOperator = await resolveProjectOperatorByUserIdAndProjectId(
+    result.userId,
+    projectId,
+  )
+  if (projectOperator == null) {
     throw new Error('Forbidden')
   }
 
-  // Check for project operator override header (only for user tokens)
-  const overrideOperatorId = headersList.get('x-naholo-project-operator')
-  if (overrideOperatorId != null) {
-    const projectOperator = await getProjectOperator(
-      overrideOperatorId,
-      projectId,
-    )
-    if (
-      projectOperator == null ||
-      (projectOperator.type !== 'bot' &&
-        projectOperator.userId !== result.userId)
-    ) {
-      throw new Error('Forbidden')
-    }
-    return { projectOperator, actualProjectOperator }
-  }
-
-  return {
-    projectOperator: actualProjectOperator,
-    actualProjectOperator,
-  }
+  return { projectOperator }
 }
 
 async function requireProjectOperatorBySession(
@@ -321,7 +296,7 @@ async function requireProjectOperatorBySession(
     throw new Error('Forbidden')
   }
 
-  return { projectOperator: operator, actualProjectOperator: operator }
+  return { projectOperator: operator }
 }
 
 // --- Resource-level permissions ---
@@ -339,8 +314,10 @@ export async function requireOperationAccess(
     operation: { id: string; number: number }
   }
 > {
-  const { projectOperator, actualProjectOperator, project } =
-    await requireProjectOperator(projectSlug, options)
+  const { projectOperator, project } = await requireProjectOperator(
+    projectSlug,
+    options,
+  )
 
   const parsed = Number(operationNumber)
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -357,7 +334,7 @@ export async function requireOperationAccess(
     throw new NotFoundError('Operation')
   }
 
-  return { projectOperator, actualProjectOperator, project, operation }
+  return { projectOperator, project, operation }
 }
 
 /**
@@ -374,8 +351,11 @@ export async function requireOperationLogAccess(
     log: { id: string }
   }
 > {
-  const { projectOperator, actualProjectOperator, project, operation } =
-    await requireOperationAccess(projectSlug, operationNumber, options)
+  const { projectOperator, project, operation } = await requireOperationAccess(
+    projectSlug,
+    operationNumber,
+    options,
+  )
 
   const log = await db.query.operationLogs.findFirst({
     columns: { id: true },
@@ -387,7 +367,7 @@ export async function requireOperationLogAccess(
     throw new NotFoundError('OperationLog')
   }
 
-  return { projectOperator, actualProjectOperator, project, operation, log }
+  return { projectOperator, project, operation, log }
 }
 
 /**
@@ -404,8 +384,11 @@ export async function requireOperationNoteAccess(
     note: { id: string; name: string }
   }
 > {
-  const { projectOperator, actualProjectOperator, project, operation } =
-    await requireOperationAccess(projectSlug, operationNumber, options)
+  const { projectOperator, project, operation } = await requireOperationAccess(
+    projectSlug,
+    operationNumber,
+    options,
+  )
 
   const note = await db.query.operationNotes.findFirst({
     columns: { id: true, name: true },
@@ -417,7 +400,7 @@ export async function requireOperationNoteAccess(
     throw new NotFoundError('Note')
   }
 
-  return { projectOperator, actualProjectOperator, project, operation, note }
+  return { projectOperator, project, operation, note }
 }
 
 /**
@@ -434,8 +417,11 @@ export async function requireOperationObjectiveAccess(
     objective: { id: string }
   }
 > {
-  const { projectOperator, actualProjectOperator, project, operation } =
-    await requireOperationAccess(projectSlug, operationNumber, options)
+  const { projectOperator, project, operation } = await requireOperationAccess(
+    projectSlug,
+    operationNumber,
+    options,
+  )
 
   const objective = await db.query.operationObjectives.findFirst({
     columns: { id: true },
@@ -449,7 +435,6 @@ export async function requireOperationObjectiveAccess(
 
   return {
     projectOperator,
-    actualProjectOperator,
     project,
     operation,
     objective,
