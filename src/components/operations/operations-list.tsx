@@ -17,6 +17,7 @@ import { useOperationsList } from './operations-list-context'
 import { OperationItem } from './operation-item'
 import { CreateOperationDialog } from './create-operation-dialog'
 import { useOperations } from '@/hooks/use-operations'
+import { useOperationsListStream } from '@/hooks/use-operations-list-stream'
 import type { Project } from 'naholo-api/types'
 
 type OperationsListProps = {
@@ -42,6 +43,7 @@ export function OperationsList({
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
   const { operations, isLoading, refetch } = useOperations(projectSlug, filter)
+  useOperationsListStream(projectSlug)
 
   const filteredOperations = operations.filter((operation) => {
     const query = searchQuery.toLowerCase()
