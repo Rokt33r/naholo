@@ -149,3 +149,4 @@ Next:
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-OBJ progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TIMELINE.md`.
 - Print the summary as raw markdown — no surrounding fence.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.

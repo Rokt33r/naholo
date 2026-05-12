@@ -124,3 +124,4 @@ Optional operation number (e.g., `42`).
 - Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` appends MISSION, `/objs` appends EXECUTION.
 - Objective notes from the server should be folded into OPERATION.md SITUATION context, NOT written to OBJECTIVES.md (OBJECTIVES.md is a pure checklist, populated by `/recon`).
 - Print the summary as raw markdown — no surrounding fence.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from infil's `Local:` line.
