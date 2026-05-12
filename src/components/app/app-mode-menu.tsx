@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LandPlot, Contact, ToolCase, Settings, Menu } from 'lucide-react'
+import { LandPlot, Contact, Settings, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,14 +44,6 @@ export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
         >
           <Contact className='mr-2 h-4 w-4' />
           Operators
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() =>
-            router.push(`/app/projects/${currentProjectSlug}/skill-loadouts`)
-          }
-        >
-          <ToolCase className='mr-2 h-4 w-4' />
-          Skill Loadouts
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setSettingsOpen(true)}>

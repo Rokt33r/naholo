@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LandPlot, Contact, ToolCase, Settings } from 'lucide-react'
+import { LandPlot, Contact, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
@@ -42,16 +42,6 @@ export function AppModeSidebar({
       >
         <Contact className='size-5' />
       </ToolSidebarButton>
-      <ToolSidebarButton
-        isActive={currentMode === 'skill-loadouts'}
-        tooltip='Skill Loadouts'
-        onClick={() =>
-          router.push(`/app/projects/${currentProjectSlug}/skill-loadouts`)
-        }
-      >
-        <ToolCase className='size-5' />
-      </ToolSidebarButton>
-
       <ToolSidebarSpacing />
 
       <ToolSidebarButton
