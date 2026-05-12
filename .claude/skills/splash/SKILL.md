@@ -134,6 +134,8 @@ The chat summary opens with a **COA stats** block that does not appear in the on
 - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
 - `- Deviations: {N}` — count of COA-level differences from plan (matches the number of top-level entries in the **Deviations** section just written to the AAR). Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/objs` may have missed COAs needed to hit the goal, in which case those additions land here without bumping Done.
 
+Always end the summary with a **Review** line linking to `OPERATION.md` so the user can open it and skim the AAR / next OBJ before re-running `/splash`. Use a markdown link with the operation directory's relative path from the current working directory — e.g. `- Review: [OPERATION.md]({relativeOperationDir}/notes/OPERATION.md)`.
+
 Example:
 
 OBJ 3 shipped: "Add /splash skill spec"
@@ -159,6 +161,7 @@ OBJ 3 shipped: "Add /splash skill spec"
 
 - Progress: 3/8 OBJs done
 - Next: `/splash` to ship OBJ 4 ("/sitrep skill rewrite")
+- Review: [OPERATION.md](.naholo/local/infiled/notes/OPERATION.md)
 
 If the user should review before the next splash, mention it. If all OBJs are now done, suggest `/exfil`.
 
