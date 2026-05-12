@@ -6,7 +6,7 @@ import {
   setAgentSessionHasTranscript,
   upsertAgentSession,
 } from '@/server/services/agent-session'
-import { getStorageAdapter } from '@/server/storage'
+import { getFileStorageAdapter } from '@/server/file-storage'
 
 type RouteContext = {
   params: Promise<{
@@ -65,8 +65,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const transcript = validation.data.transcript
     if (transcript != null) {
-      const storage = getStorageAdapter()
-      await storage.putObject(
+      const fileStorage = getFileStorageAdapter()
+      await fileStorage.putObject(
         `agent-session-transcripts/${project.id}/${operation.number}/${upserted.data.id}`,
         transcript,
       )

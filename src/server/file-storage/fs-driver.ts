@@ -1,11 +1,11 @@
 import 'server-only'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { StorageAdapter } from './index'
+import type { FileStorageAdapter } from './index'
 
-export function createFsStorageAdapter(options: {
+export function createFsFileStorageAdapter(options: {
   root: string
-}): StorageAdapter {
+}): FileStorageAdapter {
   const root = path.resolve(options.root)
 
   return {
