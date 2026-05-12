@@ -11,9 +11,6 @@ import type {
   Note,
   Project,
   ProjectWithOperator,
-  Skill,
-  SkillLoadoutSummary,
-  SkillSummary,
   Objective,
   SyncObjectivesInput,
   SyncObjectivesResult,
@@ -82,13 +79,6 @@ export class NaholoClient {
     return this.projectPath(
       projectSlug,
       `/operations/${operationNumber}${suffix}`,
-    )
-  }
-
-  private skillLoadoutPath(projectSlug: string, slug: string, suffix = '') {
-    return this.projectPath(
-      projectSlug,
-      `/skill-loadouts/${encodeURIComponent(slug)}${suffix}`,
     )
   }
 
@@ -382,116 +372,6 @@ export class NaholoClient {
       'POST',
       this.operationPath(projectSlug, operationNumber, '/agent-sessions'),
       payload,
-    )
-  }
-
-  // ---- Skill Loadouts ----
-
-  listSkillLoadouts(projectSlug: string): Promise<SkillLoadoutSummary[]> {
-    return this.request('GET', this.projectPath(projectSlug, '/skill-loadouts'))
-  }
-
-  getSkillLoadout(
-    projectSlug: string,
-    slug: string,
-  ): Promise<SkillLoadoutSummary> {
-    return this.request('GET', this.skillLoadoutPath(projectSlug, slug))
-  }
-
-  createSkillLoadout(
-    projectSlug: string,
-    input: { name: string; slug: string },
-  ): Promise<{ id: string }> {
-    return this.request(
-      'POST',
-      this.projectPath(projectSlug, '/skill-loadouts'),
-      input,
-    )
-  }
-
-  updateSkillLoadout(
-    projectSlug: string,
-    slug: string,
-    input: { name?: string; slug?: string },
-  ): Promise<SkillLoadoutSummary> {
-    return this.request(
-      'PATCH',
-      this.skillLoadoutPath(projectSlug, slug),
-      input,
-    )
-  }
-
-  deleteSkillLoadout(projectSlug: string, slug: string): Promise<void> {
-    return this.request('DELETE', this.skillLoadoutPath(projectSlug, slug))
-  }
-
-  // ---- Skills ----
-
-  listSkills(
-    projectSlug: string,
-    skillLoadoutSlug: string,
-    opts: { with: 'content' },
-  ): Promise<Skill[]>
-  listSkills(
-    projectSlug: string,
-    skillLoadoutSlug: string,
-  ): Promise<SkillSummary[]>
-  listSkills(
-    projectSlug: string,
-    skillLoadoutSlug: string,
-    opts?: { with: 'content' },
-  ): Promise<SkillSummary[] | Skill[]> {
-    const qs = opts?.with != null ? `?with=${opts.with}` : ''
-    return this.request(
-      'GET',
-      this.skillLoadoutPath(projectSlug, skillLoadoutSlug, `/skills${qs}`),
-    )
-  }
-
-  getSkill(
-    projectSlug: string,
-    skillLoadoutSlug: string,
-    name: string,
-  ): Promise<Skill> {
-    return this.request(
-      'GET',
-      this.skillLoadoutPath(
-        projectSlug,
-        skillLoadoutSlug,
-        `/skills/${encodeURIComponent(name)}`,
-      ),
-    )
-  }
-
-  upsertSkill(
-    projectSlug: string,
-    skillLoadoutSlug: string,
-    name: string,
-    input: { content: string },
-  ): Promise<{ id: string; currentRevisionId: string }> {
-    return this.request(
-      'PUT',
-      this.skillLoadoutPath(
-        projectSlug,
-        skillLoadoutSlug,
-        `/skills/${encodeURIComponent(name)}`,
-      ),
-      input,
-    )
-  }
-
-  deleteSkill(
-    projectSlug: string,
-    skillLoadoutSlug: string,
-    name: string,
-  ): Promise<void> {
-    return this.request(
-      'DELETE',
-      this.skillLoadoutPath(
-        projectSlug,
-        skillLoadoutSlug,
-        `/skills/${encodeURIComponent(name)}`,
-      ),
     )
   }
 

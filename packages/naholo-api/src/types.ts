@@ -125,30 +125,6 @@ export type OperationLog = {
   updatedAt: string
 }
 
-// ---- Skill Loadout ----
-
-export type SkillLoadoutSummary = {
-  id: string
-  name: string
-  slug: string
-  createdAt: string
-  updatedAt: string
-}
-
-// ---- Skill ----
-
-export type SkillSummary = {
-  id: string
-  name: string
-  currentRevisionId: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export type Skill = SkillSummary & {
-  content: string
-}
-
 // ---- Operator ----
 
 export type Operator = {
