@@ -7,7 +7,8 @@
       "Edit(/.claude/skills/ship/**)",
       "Edit(/.claude/skills/sitrep/**)",
       "Bash(pnpm test-types *)",
-      "Bash(pnpm format *)"
+      "Bash(pnpm format *)",
+      "Bash(naholo agent *)"
     ]
   }
 }
