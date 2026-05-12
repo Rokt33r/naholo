@@ -129,7 +129,7 @@ variable "google_oauth_state_secret" {
 variable "github_repository" {
   description = "GitHub repository in format 'owner/repo-name' for OIDC authentication. Each repository should have its own IAM role for security isolation."
   type        = string
-  default     = "rokt33r/naholo"
+  default     = "Rokt33r/naholo"
 }
 
 # Application URL

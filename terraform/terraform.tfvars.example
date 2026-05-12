@@ -20,7 +20,7 @@ google_oauth_redirect_uri    = "https://your-domain.com/api/auth/google/callback
 google_oauth_state_secret    = "generate-with-openssl-rand-base64-32"
 
 # GitHub Actions Configuration
-github_repository = "rokt33r/naholo"
+github_repository = "Rokt33r/naholo"
 
 # ECS Configuration (optional overrides)
 # ecs_task_cpu       = 256  # 0.25 vCPU
