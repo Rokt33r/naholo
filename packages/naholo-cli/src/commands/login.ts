@@ -9,6 +9,7 @@ import { writeGlobalClaudeConfig } from '../claude-code-config.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
 import { listProfiles, readProfile, writeProfile } from '../profile.js'
+import { pickSoul } from '../soul.js'
 
 export const loginCommand = new Command('login')
   .description('Authenticate with a Naholo server')
@@ -147,13 +148,24 @@ export const loginCommand = new Command('login')
 
         // 10. Save profile
         ensureNaholoHomeDir()
+        const createdAt = new Date().toISOString()
         writeProfile(profileName, {
           baseUrl,
           token,
           tokenName,
-          createdAt: new Date().toISOString(),
+          createdAt,
         })
         setDefaultProfile(profileName)
+
+        // 10a. Pick a soul for this profile and persist it
+        const soul = await pickSoul()
+        writeProfile(profileName, {
+          baseUrl,
+          token,
+          tokenName,
+          createdAt,
+          soul,
+        })
 
         // Register MCP server and permissions globally
         writeGlobalClaudeConfig()

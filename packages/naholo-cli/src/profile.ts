@@ -8,6 +8,7 @@ export interface Profile {
   token: string
   tokenName: string
   createdAt: string
+  soul?: string | null
 }
 
 function getProfilesDir(): string {
