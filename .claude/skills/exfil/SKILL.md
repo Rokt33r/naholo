@@ -80,14 +80,18 @@ If no instructions given, ask the user whether to close.
       - If yes → use `close_operation` MCP tool
       - If no → leave open
 
-11. **Clean up or abort**:
-    - **If push and summary log completed successfully**: Delete the `{operationDir}` directory.
+11. **Upload agent sessions**: Run `naholo agent upload-agent-sessions` via the Bash tool. This drains `sessions.yml` (the local list of agent sessions linked to this op by the Stop hook) and POSTs each transcript synchronously to the record endpoint.
+
+    **If `naholo agent upload-agent-sessions` fails (non-zero exit code) → STOP. Do NOT proceed to step 12.** Preserve local data (see step 12 failure path). The server-side state from steps 7–10 is already synced; the upload can be retried by re-running `/exfil`, which is idempotent (per-session POST overwrites the blob).
+
+12. **Clean up or abort**:
+    - **If push, summary log, and agent-session upload completed successfully**: Delete the `{operationDir}` directory.
     - **If any step failed**: Do NOT delete. Instead:
       - Print which step failed and what the error was
       - Confirm that local data at `{operationDir}` is preserved
       - Suggest the user retry with `/exfil`
 
-12. **Print summary**: Run `naholo agent op-url` via Bash to capture `{url}`, then print the exfil report as raw markdown — no surrounding fence. Format:
+13. **Print summary**: Run `naholo agent op-url` via Bash to capture `{url}`, then print the exfil report as raw markdown — no surrounding fence. Format:
 
     ```
     Exfil complete — [OP #{operationNumber}: "{title}"]({url})
@@ -103,5 +107,6 @@ If no instructions given, ask the user whether to close.
 - **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
 - **TIMELINE.md is the only file that gets the new bullet** — OPERATION.md keeps SITUATION / MISSION / EXECUTION only.
 - **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this infil session.
+- **`naholo agent upload-agent-sessions` is the last action before local-dir deletion** — order is push → log → close → upload-agent-sessions → delete. The upload runs after close so that an upload failure preserves both the local dir (for retry) and the already-synced server state; the upload is idempotent on retry.
 - **Summary log = header line + one short bullet per OBJ (≤1 sentence each).** Paraphrase from each OBJ's Goal + Course of Action (plus AAR Deviations when relevant); don't re-narrate the OBJ. Short and forgettable beats comprehensive.
 - Print the summary as raw markdown — no surrounding fence.
