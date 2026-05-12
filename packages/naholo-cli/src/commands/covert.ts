@@ -1,3 +1,4 @@
+import os from 'node:os'
 import path from 'node:path'
 import checkbox from '@inquirer/checkbox'
 import confirm from '@inquirer/confirm'
@@ -16,6 +17,7 @@ import {
   removeCovertOpsProjectConfig,
   writeCovertOpsConfig,
 } from '../covert-config.js'
+import { installStopHook } from '../lib/claude-settings.js'
 import { generateCodeName } from '../lib/codename.js'
 import { installSkills } from './skills-install.js'
 
@@ -97,6 +99,14 @@ covertCommand
 
       const covertOpsRoot = path.join(getCovertOpsDir(), codeName)
 
+      // Install Claude Code Stop hook in the user-global settings file
+      const userSettingsPath = path.join(
+        os.homedir(),
+        '.claude',
+        'settings.json',
+      )
+      const hookResult = installStopHook(userSettingsPath)
+
       console.log()
       console.log(`Covert mode registered for: ${cwd}`)
       console.log(`  Project:  ${selectedProject.name}`)
@@ -105,6 +115,11 @@ covertCommand
       console.log(`  Project dir:  ${covertOpsRoot}`)
       console.log()
       console.log(`Config stored in ${getCovertOpsConfigPath()}`)
+      console.log(
+        hookResult === 'added'
+          ? `Stop hook installed in ${userSettingsPath}`
+          : `Stop hook already present in ${userSettingsPath}`,
+      )
       console.log('No files written to the project repo.')
       console.log()
 
