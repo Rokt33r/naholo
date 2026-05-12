@@ -89,7 +89,7 @@ Implement the code changes that satisfy the OBJ goal:
 - Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the OBJ scope. Do not refactor surrounding code, add features, or fix unrelated issues.
 
-Verification (formatters, type checks, tests, etc.) is **not implicit**. If an OBJ needs verification after editing, `/objs` is expected to have written explicit `Run` entries for those commands in the COA. Execute them in order with the rest of the COA; do not improvise additional verification steps that the OBJ didn't list.
+After the COA finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you actually changed (e.g. a formatter on any tracked-file change, a type checker on any TS-source change). These are not listed on the COA — `/objs` deliberately omits them. If a verification fails, attempt to fix the failure as long as the fix stays within the OBJ's scope; record the fix as a deviation in the AAR. If the fix would expand scope (touches files unrelated to the OBJ, requires schema or contract changes, etc.), stop and surface the failure to the user rather than improvising.
 
 ### 9. Write the AAR (or update it for revision splashes)
 
