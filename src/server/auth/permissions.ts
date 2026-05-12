@@ -327,34 +327,6 @@ async function requireProjectOperatorBySession(
 // --- Resource-level permissions ---
 
 /**
- * Requires project operator access AND verifies skill loadout belongs to project.
- */
-export async function requireSkillLoadoutAccess(
-  projectSlug: string,
-  slug: string,
-  options?: RequireProjectOperatorOptions,
-): Promise<
-  ProjectOperatorContext & {
-    skillLoadout: { id: string }
-  }
-> {
-  const { projectOperator, actualProjectOperator, project } =
-    await requireProjectOperator(projectSlug, options)
-
-  const skillLoadout = await db.query.skillLoadouts.findFirst({
-    columns: { id: true },
-    where: (t, { eq, and }) =>
-      and(eq(t.slug, slug), eq(t.projectId, project.id)),
-  })
-
-  if (skillLoadout == null) {
-    throw new NotFoundError('Skill Loadout')
-  }
-
-  return { projectOperator, actualProjectOperator, project, skillLoadout }
-}
-
-/**
  * Requires project operator access AND verifies operation belongs to project.
  * Use for routes that operate on operation-level resources (logs, notes, objectives).
  */
