@@ -89,11 +89,7 @@ Implement the code changes that satisfy the OBJ goal:
 - Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the OBJ scope. Do not refactor surrounding code, add features, or fix unrelated issues.
 
-After the changes are written:
-
-- Run the formatter: `npm run format` (or the project's equivalent).
-- Run the type checker: `npx tsc` (or the project's equivalent).
-- Fix anything that breaks before proceeding.
+Verification (formatters, type checks, tests, etc.) is **not implicit**. If an OBJ needs verification after editing, `/objs` is expected to have written explicit `Run` entries for those commands in the COA. Execute them in order with the rest of the COA; do not improvise additional verification steps that the OBJ didn't list.
 
 ### 9. Write the AAR (or update it for revision splashes)
 

@@ -43,8 +43,8 @@ src/
 
 - `pnpm run dev` — dev server
 - `pnpm run build` — production build (do NOT run for verification)
-- `pnpm test-types` — type check (use this for verification). Run without asking — no permission prompt needed.
-- `pnpm format` — format code with prettier. Run after editing is done — no permission prompt needed.
+- `pnpm test-types` — type check. Run after editing whenever any TypeScript source file has changed. No permission prompt needed.
+- `pnpm format` — format code with prettier. Run after editing whenever any tracked file has changed. No permission prompt needed.
 - **Do NOT run `db:generate` or `db:migrate`** — leave DB migrations to the user
 
 ## Domain Model

@@ -206,6 +206,11 @@ One `### OBJ N — Title` subsection per OBJ, in order. Each OBJ section has thr
 
   Include all steps you can predict; `/splash` may add files in its AAR if it discovers more.
 
+  **Encoding project rules as COA entries.** `CLAUDE.md` and any files under `.claude/rules/` define general project conventions (e.g. "run `pnpm format` after editing", "run `pnpm test` for verification", "do not run `db:migrate` — the user owns it"). Read those before drafting COA. When a rule applies to the OBJ at hand, encode it as a concrete COA line so `/splash` executes it as part of the OBJ:
+  - Post-edit formatters and type checkers → trailing `` Run `<command>` `` entries (one per command).
+  - User-owned actions the agent must not run → `Manual: {action}` entries.
+  - Rules that don't apply to this OBJ (e.g. no code edited → no formatter needed) → omit; don't pad COA.
+
 `/objs`'s per-OBJ template ends at `#### Course of Action`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the OBJ.
 
 ORP sizing rules:
