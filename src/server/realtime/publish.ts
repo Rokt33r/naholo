@@ -18,3 +18,16 @@ export function publishOperationEvent(
       console.error('[realtime] Failed to publish event:', error)
     })
 }
+
+export function publishProjectEvent(
+  projectId: string,
+  type: RealtimeEvent['type'],
+  sourceClientId?: string,
+): void {
+  // Fire-and-forget — realtime is best-effort, must not block or fail mutations
+  realtimeBroker
+    .publish(`project:${projectId}`, { type, sourceClientId })
+    .catch((error: unknown) => {
+      console.error('[realtime] Failed to publish event:', error)
+    })
+}

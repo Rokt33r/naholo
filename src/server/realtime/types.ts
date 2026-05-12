@@ -4,6 +4,7 @@ export type RealtimeEventType =
   | 'objectives-changed'
   | 'logs-changed'
   | 'notes-changed'
+  | 'operations-list-changed'
 
 export interface RealtimeEvent {
   type: RealtimeEventType
