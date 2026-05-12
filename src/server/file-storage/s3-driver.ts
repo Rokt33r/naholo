@@ -1,5 +1,9 @@
 import 'server-only'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3'
 import type { FileStorageAdapter } from './index'
 
 export function createS3FileStorageAdapter(options: {
@@ -20,6 +24,18 @@ export function createS3FileStorageAdapter(options: {
           Body: body,
         }),
       )
+    },
+    async getObject(key) {
+      const response = await client.send(
+        new GetObjectCommand({
+          Bucket: options.bucket,
+          Key: key,
+        }),
+      )
+      if (response.Body == null) {
+        throw new Error(`S3 object not found or empty: ${key}`)
+      }
+      return await response.Body.transformToString('utf-8')
     },
   }
 }

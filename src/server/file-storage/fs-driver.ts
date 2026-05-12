@@ -14,5 +14,9 @@ export function createFsFileStorageAdapter(options: {
       await fs.mkdir(path.dirname(fullPath), { recursive: true })
       await fs.writeFile(fullPath, body)
     },
+    async getObject(key) {
+      const fullPath = path.join(root, key)
+      return await fs.readFile(fullPath, 'utf-8')
+    },
   }
 }
