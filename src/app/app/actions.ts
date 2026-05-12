@@ -211,13 +211,14 @@ export async function updateObjectiveAction(
   id: string,
   name: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectOperator, operation } = await requireOperationAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
     operationNumber,
   )
 
   const result = await updateObjective({
     projectOperatorId: projectOperator.id,
+    projectId: project.id,
     operationId: operation.id,
     objectiveId: id,
     name,
@@ -236,13 +237,14 @@ export async function setObjectiveDoneAction(
   id: string,
   done: boolean,
 ): Promise<ReturnResult<undefined>> {
-  const { projectOperator, operation } = await requireOperationAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
     operationNumber,
   )
 
   const result = await setObjectiveDone({
     projectOperatorId: projectOperator.id,
+    projectId: project.id,
     operationId: operation.id,
     objectiveId: id,
     done,
@@ -260,13 +262,14 @@ export async function deleteObjectiveAction(
   operationNumber: number,
   id: string,
 ): Promise<ReturnResult<undefined>> {
-  const { projectOperator, operation } = await requireOperationAccess(
+  const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
     operationNumber,
   )
 
   const result = await deleteObjective({
     projectOperatorId: projectOperator.id,
+    projectId: project.id,
     operationId: operation.id,
     objectiveId: id,
   })

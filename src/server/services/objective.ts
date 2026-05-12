@@ -5,7 +5,7 @@ import { eq, and, isNull, gt, gte, lt, lte, sql, inArray } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from '../errors'
-import { publishOperationEvent } from '../realtime/publish'
+import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 
 export type Objective = {
   id: string
@@ -118,6 +118,11 @@ export async function createObjective(data: {
     'objectives-changed',
     data.sourceClientId,
   )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok({ id: objective.id })
 }
@@ -127,6 +132,7 @@ export async function createObjective(data: {
  */
 export async function updateObjective(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   objectiveId: string
   name: string
@@ -160,6 +166,11 @@ export async function updateObjective(data: {
     'objectives-changed',
     data.sourceClientId,
   )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -169,6 +180,7 @@ export async function updateObjective(data: {
  */
 export async function setObjectiveDone(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   objectiveId: string
   done: boolean
@@ -202,6 +214,11 @@ export async function setObjectiveDone(data: {
     'objectives-changed',
     data.sourceClientId,
   )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -211,6 +228,7 @@ export async function setObjectiveDone(data: {
  */
 export async function updateObjectiveNote(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   objectiveId: string
   note: string | null
@@ -244,6 +262,11 @@ export async function updateObjectiveNote(data: {
     'objectives-changed',
     data.sourceClientId,
   )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -253,6 +276,7 @@ export async function updateObjectiveNote(data: {
  */
 export async function deleteObjective(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   objectiveId: string
   sourceClientId?: string
@@ -281,6 +305,11 @@ export async function deleteObjective(data: {
     'objectives-changed',
     data.sourceClientId,
   )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -290,6 +319,7 @@ export async function deleteObjective(data: {
  */
 export async function moveObjective(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   objectiveId: string
   newParentObjectiveId: string | null
@@ -426,6 +456,11 @@ export async function moveObjective(data: {
   publishOperationEvent(
     data.operationId,
     'objectives-changed',
+    data.sourceClientId,
+  )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
     data.sourceClientId,
   )
 
@@ -640,6 +675,11 @@ export async function syncObjectives(data: {
   publishOperationEvent(
     data.operationId,
     'objectives-changed',
+    data.sourceClientId,
+  )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
     data.sourceClientId,
   )
 

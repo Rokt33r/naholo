@@ -5,7 +5,7 @@ import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from '../errors'
-import { publishOperationEvent } from '../realtime/publish'
+import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 
 export type Operation = {
   id: string
@@ -113,8 +113,9 @@ export async function createOperation(data: {
   projectOperatorId: string
   projectId: string
   title: string
+  sourceClientId?: string
 }): Promise<ReturnResult<{ id: string; number: number }>> {
-  return await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [{ operationCounter }] = await tx
       .update(projects)
       .set({
@@ -135,6 +136,14 @@ export async function createOperation(data: {
 
     return ok({ id: operation.id, number: operationCounter })
   })
+
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
+
+  return result
 }
 
 /**
@@ -165,6 +174,11 @@ export async function updateOperation(data: {
   }
 
   publishOperationEvent(operation.id, 'operation-updated', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -197,6 +211,11 @@ export async function closeOperation(data: {
   }
 
   publishOperationEvent(operation.id, 'operation-updated', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -229,6 +248,11 @@ export async function reopenOperation(data: {
   }
 
   publishOperationEvent(operation.id, 'operation-updated', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
@@ -256,6 +280,11 @@ export async function deleteOperation(data: {
   }
 
   publishOperationEvent(operation.id, 'operation-deleted', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }

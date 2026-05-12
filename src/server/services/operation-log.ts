@@ -6,7 +6,7 @@ import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from '../errors'
 import { generateOperationLogPreview } from '@/lib/operation-utils'
-import { publishOperationEvent } from '../realtime/publish'
+import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 
 export type OperationLog = {
   id: string
@@ -90,6 +90,11 @@ export async function createOperationLog(data: {
     .where(eq(operations.id, data.operationId))
 
   publishOperationEvent(data.operationId, 'logs-changed', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok(log)
 }
@@ -99,6 +104,7 @@ export async function createOperationLog(data: {
  */
 export async function updateOperationLog(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   logId: string
   content: string
@@ -160,6 +166,11 @@ export async function updateOperationLog(data: {
     .where(eq(operations.id, data.operationId))
 
   publishOperationEvent(data.operationId, 'logs-changed', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok(log)
 }
@@ -169,6 +180,7 @@ export async function updateOperationLog(data: {
  */
 export async function deleteOperationLog(data: {
   projectOperatorId: string
+  projectId: string
   operationId: string
   logId: string
   sourceClientId?: string
@@ -215,6 +227,11 @@ export async function deleteOperationLog(data: {
     .where(eq(operations.id, data.operationId))
 
   publishOperationEvent(data.operationId, 'logs-changed', data.sourceClientId)
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }

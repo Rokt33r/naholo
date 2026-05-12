@@ -25,7 +25,7 @@ const moveObjectiveSchema = z.object({
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber, objectiveId } = await context.params
-    const { projectOperator, operation } =
+    const { projectOperator, project, operation } =
       await requireOperationObjectiveAccess(
         projectSlug,
         operationNumber,
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await moveObjective({
       projectOperatorId: projectOperator.id,
+      projectId: project.id,
       operationId: operation.id,
       objectiveId,
       newParentObjectiveId,

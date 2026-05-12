@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import { listOperations, createOperation } from '@/server/services/operation'
+import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
@@ -62,10 +63,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { projectOperator, project } =
       await requireProjectOperator(projectSlug)
 
+    const sourceClientId = getSourceClientId(request)
+
     const result = await createOperation({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       title,
+      sourceClientId,
     })
 
     if (!result.success) {

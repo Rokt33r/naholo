@@ -31,7 +31,7 @@ const updateObjectiveSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber, objectiveId } = await context.params
-    const { projectOperator, operation } =
+    const { projectOperator, project, operation } =
       await requireOperationObjectiveAccess(
         projectSlug,
         operationNumber,
@@ -60,6 +60,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (name !== undefined) {
       const result = await updateObjective({
         projectOperatorId: projectOperator.id,
+        projectId: project.id,
         operationId: operation.id,
         objectiveId,
         name,
@@ -77,6 +78,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (note !== undefined) {
       const result = await updateObjectiveNote({
         projectOperatorId: projectOperator.id,
+        projectId: project.id,
         operationId: operation.id,
         objectiveId,
         note,
@@ -94,6 +96,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (done !== undefined) {
       const result = await setObjectiveDone({
         projectOperatorId: projectOperator.id,
+        projectId: project.id,
         operationId: operation.id,
         objectiveId,
         done,
@@ -120,7 +123,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber, objectiveId } = await context.params
-    const { projectOperator, operation } =
+    const { projectOperator, project, operation } =
       await requireOperationObjectiveAccess(
         projectSlug,
         operationNumber,
@@ -131,6 +134,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const result = await deleteObjective({
       projectOperatorId: projectOperator.id,
+      projectId: project.id,
       operationId: operation.id,
       objectiveId,
       sourceClientId,

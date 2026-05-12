@@ -27,11 +27,8 @@ const updateOperationLogSchema = z.object({
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber, logId } = await context.params
-    const { projectOperator, operation } = await requireOperationLogAccess(
-      projectSlug,
-      operationNumber,
-      logId,
-    )
+    const { projectOperator, project, operation } =
+      await requireOperationLogAccess(projectSlug, operationNumber, logId)
 
     let body
     try {
@@ -54,6 +51,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const result = await updateOperationLog({
       projectOperatorId: projectOperator.id,
+      projectId: project.id,
       operationId: operation.id,
       logId,
       content,
@@ -83,16 +81,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber, logId } = await context.params
-    const { projectOperator, operation } = await requireOperationLogAccess(
-      projectSlug,
-      operationNumber,
-      logId,
-    )
+    const { projectOperator, project, operation } =
+      await requireOperationLogAccess(projectSlug, operationNumber, logId)
 
     const sourceClientId = getSourceClientId(request)
 
     const result = await deleteOperationLog({
       projectOperatorId: projectOperator.id,
+      projectId: project.id,
       operationId: operation.id,
       logId,
       sourceClientId,
