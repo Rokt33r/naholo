@@ -20,7 +20,7 @@ const upsertAgentSessionSchema = z.object({
   title: z.string().nullable(),
   startedAt: z.iso.datetime(),
   endedAt: z.iso.datetime(),
-  transcript: z.string(),
+  transcript: z.string().nullable(),
   transcriptSizeBytes: z.number().int().nonnegative(),
 })
 
@@ -63,18 +63,21 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const storage = getStorageAdapter()
-    await storage.putObject(
-      `agent-session-transcripts/${project.id}/${operation.number}/${upserted.data.id}`,
-      validation.data.transcript,
-    )
-
-    const flagged = await setAgentSessionHasTranscript(upserted.data.id)
-    if (!flagged.success) {
-      return NextResponse.json(
-        { error: flagged.error.message },
-        { status: 500 },
+    const transcript = validation.data.transcript
+    if (transcript != null) {
+      const storage = getStorageAdapter()
+      await storage.putObject(
+        `agent-session-transcripts/${project.id}/${operation.number}/${upserted.data.id}`,
+        transcript,
       )
+
+      const flagged = await setAgentSessionHasTranscript(upserted.data.id)
+      if (!flagged.success) {
+        return NextResponse.json(
+          { error: flagged.error.message },
+          { status: 500 },
+        )
+      }
     }
 
     return NextResponse.json(upserted.data, { status: 200 })

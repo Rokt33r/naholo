@@ -198,7 +198,8 @@ export type AgentSessionPayload = {
   title: string | null
   startedAt: string // ISO 8601
   endedAt: string // ISO 8601
+  // null = caller is recording the session but opting out of transcript upload;
+  // server leaves has_transcript=false and skips the storage write.
   transcript: string | null
-  transcriptTruncated: boolean
   transcriptSizeBytes: number
 }
