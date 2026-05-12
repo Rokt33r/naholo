@@ -123,9 +123,9 @@ covertCommand
       console.log('No files written to the project repo.')
       console.log()
 
-      // Prompt to install core skill loadout
+      // Prompt to install core skills
       const installCore = await confirm({
-        message: 'Install core skill loadout?',
+        message: 'Install core skills?',
         default: true,
       })
       if (installCore) {

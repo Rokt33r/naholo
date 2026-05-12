@@ -96,9 +96,9 @@ export const initCommand = new Command('init')
       )
       console.log()
 
-      // 7. Prompt to install core skill loadout
+      // 7. Prompt to install core skills
       const installCore = await confirm({
-        message: 'Install core skill loadout?',
+        message: 'Install core skills?',
         default: true,
       })
       if (installCore) {
