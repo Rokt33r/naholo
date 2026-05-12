@@ -1,4 +1,5 @@
 import 'server-only'
+import { config } from '../config'
 import { createFsStorageAdapter } from './fs-driver'
 import { createS3StorageAdapter } from './s3-driver'
 
@@ -17,30 +18,14 @@ export function getStorageAdapter(): StorageAdapter {
 }
 
 function buildStorageAdapter(): StorageAdapter {
-  const driver = process.env.NAHOLO_STORAGE_DRIVER ?? 'fs'
+  const fileStorage = config.fileStorage
 
-  if (driver === 'fs') {
-    const root = process.env.NAHOLO_STORAGE_FS_ROOT
-    return createFsStorageAdapter({
-      root: root == null || root.length === 0 ? '.storage' : root,
-    })
+  if (fileStorage.driver === 'fs') {
+    return createFsStorageAdapter({ root: fileStorage.fsRoot })
   }
 
-  if (driver === 's3') {
-    const bucket = process.env.NAHOLO_STORAGE_S3_BUCKET
-    if (bucket == null || bucket.length === 0) {
-      throw new Error(
-        'NAHOLO_STORAGE_S3_BUCKET must be set when NAHOLO_STORAGE_DRIVER=s3',
-      )
-    }
-    return createS3StorageAdapter({
-      bucket,
-      prefix: process.env.NAHOLO_STORAGE_S3_PREFIX,
-      region: process.env.AWS_REGION,
-    })
-  }
-
-  throw new Error(
-    `Unknown NAHOLO_STORAGE_DRIVER: ${driver} (expected 'fs' or 's3')`,
-  )
+  return createS3StorageAdapter({
+    bucket: fileStorage.s3Bucket,
+    region: config.aws.region,
+  })
 }

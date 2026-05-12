@@ -31,6 +31,34 @@ export type PaddleConfig = {
   environment: string
 }
 
+type FileStorageConfig =
+  | { driver: 'fs'; fsRoot: string }
+  | { driver: 's3'; s3Bucket: string }
+
+function buildFileStorageConfig(): FileStorageConfig {
+  const driver = getOptionalEnv('NAHOLO_STORAGE_DRIVER', 'fs')
+
+  if (driver === 'fs') {
+    return {
+      driver: 'fs',
+      fsRoot: getOptionalEnv('NAHOLO_STORAGE_FS_ROOT', '.storage'),
+    }
+  }
+
+  if (driver === 's3') {
+    return {
+      driver: 's3',
+      s3Bucket: getRequiredEnv('NAHOLO_STORAGE_S3_BUCKET'),
+    }
+  }
+
+  throw new Error(
+    `Unknown NAHOLO_STORAGE_DRIVER: ${driver} (expected 'fs' or 's3')`,
+  )
+}
+
+const fileStorageConfig = buildFileStorageConfig()
+
 const billingEnabled = process.env.BILLING === 'true'
 
 const paddleConfig: PaddleConfig | null = billingEnabled
@@ -69,6 +97,8 @@ export const config = {
     region: getOptionalEnv('AWS_REGION', 'ap-northeast-1'),
     sesFromEmail: getOptionalEnv('AWS_SES_FROM_EMAIL', 'noreply@example.com'),
   },
+
+  fileStorage: fileStorageConfig,
 
   googleOAuth: {
     clientId: getOptionalEnv('GOOGLE_OAUTH_CLIENT_ID'),
