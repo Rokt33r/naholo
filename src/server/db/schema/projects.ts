@@ -10,7 +10,6 @@ import {
 import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projectOperators } from './project-operators'
-import { skillLoadouts } from './skill-loadouts'
 import { projectSubscriptions } from './project-subscriptions'
 
 export const projects = pgTable(
@@ -34,7 +33,6 @@ export const projects = pgTable(
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   projectOperators: many(projectOperators),
-  skillLoadouts: many(skillLoadouts),
   activeProjectSubscription: one(projectSubscriptions, {
     fields: [projects.activeProjectSubscriptionId],
     references: [projectSubscriptions.id],
