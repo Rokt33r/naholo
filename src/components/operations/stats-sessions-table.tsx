@@ -3,13 +3,11 @@ import type { SessionRowStats } from './stats-view'
 
 type StatsSessionsTableProps = {
   rows: SessionRowStats[]
-  selectedAgentSessionId: string | null
   onSelectAgentSession: (agentSessionId: string) => void
 }
 
 export function StatsSessionsTable({
   rows,
-  selectedAgentSessionId,
   onSelectAgentSession,
 }: StatsSessionsTableProps) {
   if (rows.length === 0) {
@@ -34,14 +32,20 @@ export function StatsSessionsTable({
         </thead>
         <tbody>
           {rows.map((row) => {
-            const isSelected = selectedAgentSessionId === row.agentSession.id
+            const canOpen = row.agentSession.hasTranscript
             return (
               <tr
                 key={row.agentSession.id}
-                onClick={() => onSelectAgentSession(row.agentSession.id)}
+                onClick={() => {
+                  if (canOpen) {
+                    onSelectAgentSession(row.agentSession.id)
+                  }
+                }}
                 className={cn(
-                  'cursor-pointer border-t hover:bg-muted/50',
-                  isSelected && 'bg-muted',
+                  'border-t',
+                  canOpen
+                    ? 'cursor-pointer hover:bg-muted/50'
+                    : 'cursor-default text-muted-foreground',
                 )}
               >
                 <Td className='max-w-[280px] truncate'>

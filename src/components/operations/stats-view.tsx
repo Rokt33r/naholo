@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { createResponseError } from '@/lib/fetcher'
 import {
@@ -12,7 +13,7 @@ import {
 } from '@/hooks/use-agent-sessions'
 import { StatsTotals } from './stats-totals'
 import { StatsSessionsTable } from './stats-sessions-table'
-import { TranscriptViewer } from './transcript-viewer'
+import { TranscriptDialog } from './transcript-dialog'
 
 export type SessionRowStats = {
   agentSession: AgentSessionSummary
@@ -31,8 +32,6 @@ export type SessionRowStats = {
 type StatsViewProps = {
   projectSlug: string
   operationNumber: number
-  selectedAgentSessionId: string | null
-  onSelectAgentSession: (agentSessionId: string) => void
 }
 
 async function fetchTranscriptText(url: string): Promise<string> {
@@ -43,15 +42,13 @@ async function fetchTranscriptText(url: string): Promise<string> {
   return await response.text()
 }
 
-export function StatsView({
-  projectSlug,
-  operationNumber,
-  selectedAgentSessionId,
-  onSelectAgentSession,
-}: StatsViewProps) {
+export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
   const { data: agentSessions = [], isLoading } = useAgentSessions(
     projectSlug,
     operationNumber,
+  )
+  const [openAgentSessionId, setOpenAgentSessionId] = useState<string | null>(
+    null,
   )
 
   const transcriptQueries = useQueries({
@@ -95,31 +92,29 @@ export function StatsView({
     )
   }
 
+  const openAgentSession =
+    openAgentSessionId == null
+      ? null
+      : (agentSessions.find((s) => s.id === openAgentSessionId) ?? null)
+
   return (
-    <div className='flex h-full flex-col gap-4 p-4'>
+    <div className='flex h-full flex-col gap-4 overflow-auto p-4'>
       <StatsTotals rows={rows} />
-      <div className='grid min-h-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2'>
-        <div className='min-h-0 overflow-auto'>
-          <StatsSessionsTable
-            rows={rows}
-            selectedAgentSessionId={selectedAgentSessionId}
-            onSelectAgentSession={onSelectAgentSession}
-          />
-        </div>
-        <div className='min-h-0 overflow-hidden rounded-md border'>
-          {selectedAgentSessionId == null ? (
-            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
-              Select a session to view its transcript.
-            </div>
-          ) : (
-            <TranscriptViewer
-              projectSlug={projectSlug}
-              operationNumber={operationNumber}
-              agentSessionId={selectedAgentSessionId}
-            />
-          )}
-        </div>
-      </div>
+      <StatsSessionsTable
+        rows={rows}
+        onSelectAgentSession={setOpenAgentSessionId}
+      />
+      <TranscriptDialog
+        projectSlug={projectSlug}
+        operationNumber={operationNumber}
+        agentSession={openAgentSession}
+        open={openAgentSession != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOpenAgentSessionId(null)
+          }
+        }}
+      />
     </div>
   )
 }

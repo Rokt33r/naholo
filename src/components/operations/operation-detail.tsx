@@ -84,9 +84,6 @@ export function OperationDetail({
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showObjectivesDialog, setShowObjectivesDialog] = useState(false)
-  const [selectedAgentSessionId, setSelectedAgentSessionId] = useState<
-    string | null
-  >(null)
 
   const { data: agentSessions } = useAgentSessions(projectSlug, operationNumber)
   const hasAgentSessions = (agentSessions?.length ?? 0) > 0
@@ -308,8 +305,6 @@ export function OperationDetail({
           <StatsView
             projectSlug={projectSlug}
             operationNumber={operation.number}
-            selectedAgentSessionId={selectedAgentSessionId}
-            onSelectAgentSession={setSelectedAgentSessionId}
           />
         )}
         {activeTab.type === 'note' &&
