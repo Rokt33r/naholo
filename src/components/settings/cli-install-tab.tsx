@@ -11,9 +11,9 @@ export function CliInstallTab() {
       </div>
 
       <div className='space-y-2'>
-        <h4 className='text-sm font-medium'>Install via script</h4>
+        <h4 className='text-sm font-medium'>Install via npm</h4>
         <pre className='bg-muted rounded-md p-3 text-sm'>
-          <code>curl -fsSL https://naholo.app/install.sh | bash</code>
+          <code>npm install -g @naholo/cli</code>
         </pre>
       </div>
 
