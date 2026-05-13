@@ -1,9 +1,41 @@
 import 'server-only'
-import { eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { operationAgentSessions } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok } from '@/lib/return-result'
+import { ConflictError, NotFoundError } from '../errors'
+import { getFileStorageAdapter } from '../file-storage'
+
+export type AgentSessionSummary = {
+  id: string
+  sessionId: string
+  title: string | null
+  startedAt: string
+  endedAt: string
+  hasTranscript: boolean
+  transcriptSizeBytes: number
+}
+
+function toSummary(row: {
+  id: string
+  sessionId: string
+  title: string | null
+  startedAt: Date
+  endedAt: Date
+  hasTranscript: boolean
+  transcriptSizeBytes: number
+}): AgentSessionSummary {
+  return {
+    id: row.id,
+    sessionId: row.sessionId,
+    title: row.title,
+    startedAt: row.startedAt.toISOString(),
+    endedAt: row.endedAt.toISOString(),
+    hasTranscript: row.hasTranscript,
+    transcriptSizeBytes: row.transcriptSizeBytes,
+  }
+}
 
 export async function upsertAgentSession(data: {
   projectId: string
@@ -54,4 +86,50 @@ export async function setAgentSessionHasTranscript(
     .where(eq(operationAgentSessions.id, id))
 
   return ok(undefined)
+}
+
+export async function listAgentSessionsByOperation(
+  operationId: string,
+): Promise<AgentSessionSummary[]> {
+  const rows = await db.query.operationAgentSessions.findMany({
+    where: eq(operationAgentSessions.operationId, operationId),
+    orderBy: asc(operationAgentSessions.startedAt),
+  })
+  return rows.map(toSummary)
+}
+
+export async function getAgentSessionById(params: {
+  operationId: string
+  agentSessionId: string
+}): Promise<AgentSessionSummary | null> {
+  const row = await db.query.operationAgentSessions.findFirst({
+    where: and(
+      eq(operationAgentSessions.id, params.agentSessionId),
+      eq(operationAgentSessions.operationId, params.operationId),
+    ),
+  })
+  return row == null ? null : toSummary(row)
+}
+
+export async function getAgentSessionTranscriptText(params: {
+  projectId: string
+  operationId: string
+  operationNumber: number
+  agentSessionId: string
+}): Promise<string> {
+  const row = await db.query.operationAgentSessions.findFirst({
+    where: and(
+      eq(operationAgentSessions.id, params.agentSessionId),
+      eq(operationAgentSessions.operationId, params.operationId),
+    ),
+  })
+  if (row == null) {
+    throw new NotFoundError('agent_session')
+  }
+  if (!row.hasTranscript) {
+    throw new ConflictError('Agent session has no transcript')
+  }
+
+  const key = `agent-session-transcripts/${params.projectId}/${params.operationNumber}/${row.id}`
+  return await getFileStorageAdapter().getObject(key)
 }
