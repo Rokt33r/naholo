@@ -14,7 +14,6 @@ export const projectOperators = pgTable('project_operators', {
   type: text('type').notNull().default('user'), // 'user' | 'bot'
   name: text('name').notNull(),
   role: text('role').notNull().default('member'), // 'admin' | 'member'
-  soul: text('soul'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

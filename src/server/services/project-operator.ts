@@ -10,7 +10,6 @@ export type ProjectOperator = {
   type: string
   name: string
   role: string
-  soul: string | null
   createdAt: Date
 }
 
@@ -37,37 +36,10 @@ export async function createProjectOperator(
       name: data.name,
       type: data.type ?? 'user',
       role: data.role ?? 'member',
-      soul: data.soul,
     })
     .returning({ id: projectOperators.id })
 
   return { id: operator.id }
-}
-
-export type UpdateProjectOperatorInput = {
-  soul?: string
-}
-
-/**
- * Update a project operator
- */
-export async function updateProjectOperator(
-  operatorId: string,
-  projectId: string,
-  data: UpdateProjectOperatorInput,
-): Promise<ProjectOperator | null> {
-  const [updated] = await db
-    .update(projectOperators)
-    .set(data)
-    .where(
-      and(
-        eq(projectOperators.id, operatorId),
-        eq(projectOperators.projectId, projectId),
-      ),
-    )
-    .returning()
-
-  return updated ?? null
 }
 
 /**

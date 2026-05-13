@@ -134,7 +134,6 @@ export type Operator = {
   type: string
   name: string
   role: string
-  soul: string | null
   createdAt: string
 }
 

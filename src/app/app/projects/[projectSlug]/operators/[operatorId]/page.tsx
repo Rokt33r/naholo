@@ -4,7 +4,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Bot, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectContext } from '@/components/app/project-context'
-import { EditOperatorSoulForm } from '@/components/operators/edit-operator-soul-form'
 import { OperatorTokens } from '@/components/operators/operator-tokens'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useOperator } from '@/hooks/use-operators'
@@ -55,16 +54,6 @@ export default function OperatorDetailPage() {
                 </p>
               </div>
             </div>
-
-            {operator.type === 'bot' && (
-              <div className='border-t pt-6'>
-                <EditOperatorSoulForm
-                  projectSlug={projectSlug}
-                  operatorId={operatorId}
-                  soul={operator.soul}
-                />
-              </div>
-            )}
 
             <div className='border-t pt-6'>
               <OperatorTokens

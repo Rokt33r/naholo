@@ -1,0 +1,1 @@
+ALTER TABLE "project_operators" DROP COLUMN "soul";

@@ -372,18 +372,6 @@ export class NaholoClient {
     return this.request('GET', this.projectPath(projectSlug, '/operators'))
   }
 
-  updateOperator(
-    projectSlug: string,
-    operatorId: string,
-    input: { soul?: string },
-  ): Promise<Operator> {
-    return this.request(
-      'PATCH',
-      this.projectPath(projectSlug, `/operators/${operatorId}`),
-      input,
-    )
-  }
-
   getOperator(projectSlug: string, operatorId: string): Promise<Operator> {
     return this.request(
       'GET',

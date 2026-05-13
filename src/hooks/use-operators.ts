@@ -9,7 +9,6 @@ export type Operator = {
   type: string
   name: string
   role: string
-  soul: string | null
   createdAt: string
 }
 
@@ -45,38 +44,6 @@ export function useOperator(projectSlug: string, operatorId: string) {
     isLoading: query.isLoading,
     error: query.error,
   }
-}
-
-/**
- * Hook to update an operator
- */
-export function useUpdateOperator(projectSlug: string, operatorId: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (data: { soul?: string }) => {
-      const response = await fetch(
-        `/api/projects/${projectSlug}/operators/${operatorId}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        },
-      )
-      if (!response.ok) {
-        throw await createResponseError(response, 'Failed to update operator')
-      }
-      return response.json() as Promise<Operator>
-    },
-    onSuccess: (updated) => {
-      queryClient.setQueryData(['operator', projectSlug, operatorId], updated)
-    },
-    onError: (err) => {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to update operator',
-      )
-    },
-  })
 }
 
 /**
