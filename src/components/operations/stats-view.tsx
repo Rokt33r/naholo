@@ -12,6 +12,7 @@ import {
 } from '@/hooks/use-agent-sessions'
 import { StatsTotals } from './stats-totals'
 import { StatsSessionsTable } from './stats-sessions-table'
+import { TranscriptViewer } from './transcript-viewer'
 
 export type SessionRowStats = {
   agentSession: AgentSessionSummary
@@ -95,13 +96,30 @@ export function StatsView({
   }
 
   return (
-    <div className='flex h-full flex-col gap-4 overflow-auto p-4'>
+    <div className='flex h-full flex-col gap-4 p-4'>
       <StatsTotals rows={rows} />
-      <StatsSessionsTable
-        rows={rows}
-        selectedAgentSessionId={selectedAgentSessionId}
-        onSelectAgentSession={onSelectAgentSession}
-      />
+      <div className='grid min-h-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2'>
+        <div className='min-h-0 overflow-auto'>
+          <StatsSessionsTable
+            rows={rows}
+            selectedAgentSessionId={selectedAgentSessionId}
+            onSelectAgentSession={onSelectAgentSession}
+          />
+        </div>
+        <div className='min-h-0 overflow-hidden rounded-md border'>
+          {selectedAgentSessionId == null ? (
+            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
+              Select a session to view its transcript.
+            </div>
+          ) : (
+            <TranscriptViewer
+              projectSlug={projectSlug}
+              operationNumber={operationNumber}
+              agentSessionId={selectedAgentSessionId}
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }
