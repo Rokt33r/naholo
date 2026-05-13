@@ -63,36 +63,13 @@ covertCommand
         })),
       })
 
-      // 3. Fetch operators and filter to bot operators only
-      const operators = await client.listOperators(selectedProject.slug)
-      const botOperators = operators.filter((w) => w.type === 'bot')
-
-      if (botOperators.length === 0) {
-        throw new CliError(
-          'No bot operators found for this project. Create one via the web UI first.',
-        )
-      }
-
-      const selectedBotOperatorId = await select<string>({
-        message: 'Select a bot operator',
-        choices: botOperators.map((w) => ({
-          name: w.name,
-          value: w.id,
-        })),
-      })
-
-      const selectedBotOperator = botOperators.find(
-        (w) => w.id === selectedBotOperatorId,
-      )!
-
-      // 4. Write covert config
+      // 3. Write covert config
       const cwd = process.cwd()
       const config = readCovertOpsConfig()
       const codeName = generateCodeName(collectExistingCodeNames(config))
       config.projects[cwd] = {
         projectId: selectedProject.id,
         projectSlug: selectedProject.slug,
-        projectOperatorId: selectedBotOperatorId,
         codeName,
       }
       writeCovertOpsConfig(config)
@@ -110,7 +87,6 @@ covertCommand
       console.log()
       console.log(`Covert mode registered for: ${cwd}`)
       console.log(`  Project:  ${selectedProject.name}`)
-      console.log(`  Operator: ${selectedBotOperator.name} (bot)`)
       console.log(`  Codename: ${codeName}`)
       console.log(`  Project dir:  ${covertOpsRoot}`)
       console.log()

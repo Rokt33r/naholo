@@ -5,7 +5,6 @@ import { parse, stringify } from 'yaml'
 export interface ProjectConfig {
   projectId: string
   projectSlug: string
-  projectOperatorId: string
 }
 
 const PROJECT_CONFIG_DIR = '.naholo'

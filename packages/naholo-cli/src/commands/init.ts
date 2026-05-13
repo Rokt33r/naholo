@@ -48,39 +48,16 @@ export const initCommand = new Command('init')
         })),
       })
 
-      // 3. Fetch operators and filter to bot operators only for project-level config
-      const operators = await client.listOperators(selectedProject.slug)
-      const botOperators = operators.filter((w) => w.type === 'bot')
-
-      if (botOperators.length === 0) {
-        throw new CliError(
-          'No bot operators found for this project. Create one via the web UI first.',
-        )
-      }
-
-      const selectedBotOperatorId = await select<string>({
-        message: 'Select a bot operator for the project',
-        choices: botOperators.map((w) => ({
-          name: w.name,
-          value: w.id,
-        })),
-      })
-
-      const selectedBotOperator = botOperators.find(
-        (w) => w.id === selectedBotOperatorId,
-      )!
-
-      // 4. Write .naholo/config.yml
+      // 3. Write .naholo/config.yml
       writeProjectConfig({
         projectId: selectedProject.id,
         projectSlug: selectedProject.slug,
-        projectOperatorId: selectedBotOperatorId,
       })
 
-      // 5. Write .naholo/.gitignore
+      // 4. Write .naholo/.gitignore
       writeGitignore()
 
-      // 6. Install Claude Code Stop hook in the user-global settings file
+      // 5. Install Claude Code Stop hook in the user-global settings file
       //    (always global so a project that uses both `naholo init` and
       //    `naholo covert init` doesn't end up firing the hook twice).
       const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
@@ -88,7 +65,6 @@ export const initCommand = new Command('init')
 
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)
-      console.log(`Project operator: ${selectedBotOperator.name} (bot)`)
       console.log(
         hookResult === 'added'
           ? `Stop hook installed in ${settingsPath}`
@@ -96,7 +72,7 @@ export const initCommand = new Command('init')
       )
       console.log()
 
-      // 7. Prompt to install core skills
+      // 6. Prompt to install core skills
       const installCore = await confirm({
         message: 'Install core skills?',
         default: true,

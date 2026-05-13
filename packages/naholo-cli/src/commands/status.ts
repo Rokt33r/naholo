@@ -7,20 +7,14 @@ export const statusCommand = new Command('status')
   .action(
     withErrorHandling(
       async (_options: Record<string, unknown>, cmd: Command) => {
-        const { client, projectSlug, projectOperatorId, currentProfile } =
-          getCliContext()
+        const { client, projectSlug, currentProfile } = getCliContext()
 
         const project = await client.getProject(projectSlug)
-        const operator = await client.getOperator(
-          projectSlug,
-          projectOperatorId,
-        )
 
         console.log(`Project:    ${project.name}`)
         console.log(
           `URL:        ${currentProfile.profile.baseUrl}/app/projects/${projectSlug}`,
         )
-        console.log(`Operator:   ${operator.name} (${operator.type})`)
         console.log(`Profile:    ${currentProfile.name}`)
       },
     ),

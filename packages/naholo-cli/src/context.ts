@@ -9,7 +9,6 @@ export interface CliContext {
   globalConfig: GlobalConfig
   projectConfig: ProjectConfig
   projectSlug: string
-  projectOperatorId: string
   currentProfile: { name: string; profile: Profile }
   client: NaholoClient
 }
@@ -29,8 +28,6 @@ export function getCliContext(): CliContext {
     )
   }
 
-  const projectOperatorId = projectConfig.projectOperatorId
-
   const client = new NaholoClient({
     baseUrl: active.profile.baseUrl,
     token: active.profile.token,
@@ -42,7 +39,6 @@ export function getCliContext(): CliContext {
     globalConfig,
     projectConfig,
     projectSlug,
-    projectOperatorId,
     currentProfile: active,
     client,
   }
