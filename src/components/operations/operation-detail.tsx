@@ -38,6 +38,7 @@ import {
 } from '@/hooks/use-operations'
 import { useUpdateNote } from '@/hooks/use-notes'
 import { useOperationNoteStore } from '@/hooks/use-operation-note-store'
+import { useAgentSessions } from '@/hooks/use-agent-sessions'
 import type { Note } from 'naholo-api/types'
 
 type ActiveTab =
@@ -86,6 +87,9 @@ export function OperationDetail({
   const [selectedAgentSessionId, setSelectedAgentSessionId] = useState<
     string | null
   >(null)
+
+  const { data: agentSessions } = useAgentSessions(projectSlug, operationNumber)
+  const hasAgentSessions = (agentSessions?.length ?? 0) > 0
 
   const { operation, isLoading } = useOperation(projectSlug, operationNumber)
   const { mutateAsync: updateTitle } = useUpdateOperationTitle(
@@ -286,11 +290,13 @@ export function OperationDetail({
         notesSaveState={store.saveStates}
         isWideScreen={isWideScreen}
         logsCount={operationLogs.length}
+        hasAgentSessions={hasAgentSessions}
       />
 
       {/* Content */}
       <div className='flex-1 overflow-hidden'>
-        {activeTab.type === 'comms' && (
+        {(activeTab.type === 'comms' ||
+          (activeTab.type === 'stats' && !hasAgentSessions)) && (
           <OperationLogsList
             projectSlug={projectSlug}
             operationNumber={operation.number}
@@ -298,7 +304,7 @@ export function OperationDetail({
             isClosed={operation.closed}
           />
         )}
-        {activeTab.type === 'stats' && (
+        {activeTab.type === 'stats' && hasAgentSessions && (
           <StatsView
             projectSlug={projectSlug}
             operationNumber={operation.number}
