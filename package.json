@@ -19,8 +19,7 @@
     "test-db:create": "export $(grep -v '^#' .env.test | grep -v '^$' | xargs) && PGPASSWORD=$DB_PASSWORD createdb -h $DB_HOST -p $DB_PORT -U $DB_USER $DB_NAME",
     "test-db:drop": "export $(grep -v '^#' .env.test | grep -v '^$' | xargs) && PGPASSWORD=$DB_PASSWORD dropdb -h $DB_HOST -p $DB_PORT -U $DB_USER --if-exists $DB_NAME",
     "test-db:migrate": "export $(grep -v '^#' .env.test | grep -v '^$' | xargs) && pnpm drizzle-kit migrate",
-    "test:integration": "vitest run",
-    "cli:build-dist": "tsx scripts/build-cli-dist.ts"
+    "test:integration": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",

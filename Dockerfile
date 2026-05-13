@@ -43,9 +43,6 @@ ENV NODE_ENV=production
 ARG DEPLOYMENT_ID
 ENV DEPLOYMENT_ID=$DEPLOYMENT_ID
 
-# Build CLI distribution (public/cli/naholo-cli.js + checksums)
-RUN pnpm cli:build-dist
-
 # Build the Next.js application
 # Note: DATABASE_URL is not needed at build time for Next.js
 RUN pnpm build
