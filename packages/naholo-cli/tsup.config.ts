@@ -6,7 +6,7 @@ export default defineConfig({
   target: 'node20',
   platform: 'node',
   clean: true,
-  noExternal: ['naholo-api'],
+  noExternal: [/.*/],
   esbuildOptions(options) {
     options.loader = { ...options.loader, '.md': 'text' }
   },

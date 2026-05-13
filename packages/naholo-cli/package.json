@@ -1,7 +1,13 @@
 {
-  "name": "naholo-cli",
+  "name": "@naholo/cli",
   "version": "0.1.0",
   "description": "CLI for Naholo — task/issue management",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rokt33r/naholo.git",
+    "directory": "packages/naholo-cli"
+  },
   "type": "module",
   "bin": {
     "naholo": "./dist/cli.js"
@@ -9,6 +15,12 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch src --watch ../naholo-api/src",
