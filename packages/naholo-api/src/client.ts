@@ -1,5 +1,6 @@
 import type {
   AgentSessionPayload,
+  AgentSessionSummary,
   AuthUser,
   CreateObjectiveInput,
   CreateOperatorTokenResult,
@@ -364,6 +365,38 @@ export class NaholoClient {
       this.operationPath(projectSlug, operationNumber, '/agent-sessions'),
       payload,
     )
+  }
+
+  listAgentSessions(
+    projectSlug: string,
+    operationNumber: number | string,
+  ): Promise<AgentSessionSummary[]> {
+    return this.request(
+      'GET',
+      this.operationPath(projectSlug, operationNumber, '/agent-sessions'),
+    )
+  }
+
+  async getAgentSessionTranscript(
+    projectSlug: string,
+    operationNumber: number | string,
+    agentSessionId: string,
+  ): Promise<string> {
+    const path = this.operationPath(
+      projectSlug,
+      operationNumber,
+      `/agent-sessions/${agentSessionId}/transcript`,
+    )
+    const url = `${this.baseUrl}${path}`
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${this.token}` },
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`GET ${path} failed (${res.status}): ${text}`)
+    }
+    return await res.text()
   }
 
   // ---- Operators ----

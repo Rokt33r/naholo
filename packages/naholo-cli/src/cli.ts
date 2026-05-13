@@ -9,6 +9,7 @@ import { mcpCommand } from './commands/mcp.js'
 import { agentCommand } from './commands/agent/index.js'
 import { configCommand } from './commands/config/index.js'
 import { covertCommand } from './commands/covert.js'
+import { devCommand } from './commands/dev/index.js'
 import { logoutCommand } from './commands/logout.js'
 import { skillsCommand } from './commands/skills.js'
 import { statusCommand } from './commands/status.js'
@@ -30,6 +31,7 @@ program.addCommand(agentCommand)
 program.addCommand(configCommand)
 program.addCommand(skillsCommand)
 program.addCommand(covertCommand)
+program.addCommand(devCommand)
 program.addCommand(statusCommand)
 program.addCommand(whoamiCommand)
 

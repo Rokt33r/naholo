@@ -168,6 +168,16 @@ export type UserApiToken = {
 
 // ---- Agent sessions ----
 
+export type AgentSessionSummary = {
+  id: string
+  sessionId: string
+  title: string | null
+  startedAt: string // ISO 8601
+  endedAt: string // ISO 8601
+  hasTranscript: boolean
+  transcriptSizeBytes: number
+}
+
 export type AgentSessionPayload = {
   sessionId: string
   title: string | null
