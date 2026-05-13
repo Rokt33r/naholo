@@ -7,6 +7,9 @@ export default defineConfig({
   platform: 'node',
   clean: true,
   noExternal: [/.*/],
+  banner: {
+    js: "import { createRequire as __naholoCreateRequire } from 'node:module'; const require = __naholoCreateRequire(import.meta.url);",
+  },
   esbuildOptions(options) {
     options.loader = { ...options.loader, '.md': 'text' }
   },
