@@ -22,16 +22,10 @@ import type {
 export class NaholoClient {
   private baseUrl: string
   private token: string
-  private projectOperatorId: string | undefined
 
-  constructor(options: {
-    baseUrl: string
-    token: string
-    projectOperatorId?: string
-  }) {
+  constructor(options: { baseUrl: string; token: string }) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '')
     this.token = options.token
-    this.projectOperatorId = options.projectOperatorId
   }
 
   private async request<T>(

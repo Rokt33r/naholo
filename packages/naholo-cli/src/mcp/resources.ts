@@ -5,12 +5,12 @@ import {
 import type { NaholoClient } from 'naholo-api/client'
 import { readOpYml } from '../lib/local-operations.js'
 import { formatObjectivesMarkdown } from '../lib/objectives-markdown.js'
+import { getActiveProfile } from '../profile.js'
 
 export function registerResources(
   server: McpServer,
   client: NaholoClient,
   projectSlug: string,
-  projectOperatorId: string,
 ): void {
   server.registerResource(
     'project',
@@ -138,15 +138,16 @@ export function registerResources(
   server.registerResource(
     'soul',
     'naholo://soul',
-    { description: 'Personality / soul text for the current bot operator' },
+    { description: 'Personality / soul text for the active CLI profile' },
     async (uri) => {
-      const operator = await client.getOperator(projectSlug, projectOperatorId)
+      const active = getActiveProfile()
+      const soul = active?.profile.soul ?? ''
       return {
         contents: [
           {
             uri: uri.href,
             mimeType: 'text/markdown',
-            text: operator.soul ?? '',
+            text: soul,
           },
         ],
       }

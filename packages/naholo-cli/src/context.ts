@@ -34,7 +34,6 @@ export function getCliContext(): CliContext {
   const client = new NaholoClient({
     baseUrl: active.profile.baseUrl,
     token: active.profile.token,
-    projectOperatorId,
   })
 
   const projectSlug = projectConfig.projectSlug
