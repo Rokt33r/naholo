@@ -36,11 +36,13 @@
     "naholo-api": "workspace:*",
     "node-diff3": "^3.2.0",
     "open": "^10.1.0",
+    "update-notifier": "^7.3.1",
     "yaml": "^2.7.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@types/update-notifier": "^6.0.8",
     "tsup": "^8.5.1",
     "typescript": "^5"
   }

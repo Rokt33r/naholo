@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
+import updateNotifier from 'update-notifier'
+import pkg from '../package.json'
 import { initCommand } from './commands/init.js'
 import { loginCommand } from './commands/login.js'
 import { mcpCommand } from './commands/mcp.js'
@@ -30,5 +32,7 @@ program.addCommand(skillsCommand)
 program.addCommand(covertCommand)
 program.addCommand(statusCommand)
 program.addCommand(whoamiCommand)
+
+updateNotifier({ pkg }).notify({ defer: true })
 
 program.parse()
