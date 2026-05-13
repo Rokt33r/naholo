@@ -30,6 +30,7 @@ import { ObjectivesList } from '@/components/objectives/objectives-list'
 import { NoteView } from '@/components/notes/note-view'
 import { useOperationsList } from './operations-list-context'
 import { OperationTabs } from './operation-tabs'
+import { StatsView } from './stats-view'
 import {
   useOperation,
   useUpdateOperationTitle,
@@ -39,7 +40,10 @@ import { useUpdateNote } from '@/hooks/use-notes'
 import { useOperationNoteStore } from '@/hooks/use-operation-note-store'
 import type { Note } from 'naholo-api/types'
 
-type ActiveTab = { type: 'comms' } | { type: 'note'; noteName: string }
+type ActiveTab =
+  | { type: 'comms' }
+  | { type: 'stats' }
+  | { type: 'note'; noteName: string }
 
 type OperationDetailProps = {
   projectSlug: string
@@ -79,6 +83,9 @@ export function OperationDetail({
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showObjectivesDialog, setShowObjectivesDialog] = useState(false)
+  const [selectedAgentSessionId, setSelectedAgentSessionId] = useState<
+    string | null
+  >(null)
 
   const { operation, isLoading } = useOperation(projectSlug, operationNumber)
   const { mutateAsync: updateTitle } = useUpdateOperationTitle(
@@ -289,6 +296,14 @@ export function OperationDetail({
             operationNumber={operation.number}
             operationLogs={operationLogs}
             isClosed={operation.closed}
+          />
+        )}
+        {activeTab.type === 'stats' && (
+          <StatsView
+            projectSlug={projectSlug}
+            operationNumber={operation.number}
+            selectedAgentSessionId={selectedAgentSessionId}
+            onSelectAgentSession={setSelectedAgentSessionId}
           />
         )}
         {activeTab.type === 'note' &&

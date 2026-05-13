@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, FileText, Loader2, SatelliteDish } from 'lucide-react'
+import { Plus, FileText, Loader2, SatelliteDish, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { useCreateNote } from '@/hooks/use-notes'
@@ -9,7 +9,10 @@ import { NoteDialog } from '@/components/notes/note-dialog'
 import type { DebouncedSaveState } from '@/hooks/use-operation-note-store'
 import type { Note } from 'naholo-api/types'
 
-type ActiveTab = { type: 'comms' } | { type: 'note'; noteName: string }
+type ActiveTab =
+  | { type: 'comms' }
+  | { type: 'stats' }
+  | { type: 'note'; noteName: string }
 
 type OperationTabsProps = {
   projectSlug: string
@@ -84,6 +87,7 @@ export function OperationTabs({
   }
 
   const isCommsActive = activeTab.type === 'comms'
+  const isStatsActive = activeTab.type === 'stats'
 
   return (
     <div className='flex items-center gap-1 border-b px-2 py-2'>
@@ -93,6 +97,13 @@ export function OperationTabs({
       >
         <SatelliteDish className='mr-1 size-5' />
         {!isWideScreen ? `Comms (${logsCount})` : 'Comms'}
+      </Button>
+      <Button
+        variant={isStatsActive ? 'secondary' : 'ghost'}
+        onClick={() => onTabChange({ type: 'stats' })}
+      >
+        <BarChart3 className='mr-1 size-5' />
+        Stats
       </Button>
       {notes.map((note) => {
         const isActive =

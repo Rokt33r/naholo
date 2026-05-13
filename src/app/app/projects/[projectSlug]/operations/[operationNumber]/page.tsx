@@ -20,11 +20,17 @@ import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { OperationDetail } from '@/components/operations/operation-detail'
 import { ObjectivesList } from '@/components/objectives/objectives-list'
 
-type ActiveTab = { type: 'comms' } | { type: 'note'; noteName: string }
+type ActiveTab =
+  | { type: 'comms' }
+  | { type: 'stats' }
+  | { type: 'note'; noteName: string }
 
 function parseActiveTab(tabParam: string | null): ActiveTab {
   if (tabParam === 'comms') {
     return { type: 'comms' }
+  }
+  if (tabParam === 'stats') {
+    return { type: 'stats' }
   }
   if (tabParam?.startsWith('note:')) {
     return { type: 'note', noteName: tabParam.slice(5) }
@@ -75,6 +81,8 @@ export default function OperationPage() {
     const params = new URLSearchParams(searchParams)
     if (newTab.type === 'comms') {
       params.delete('tab')
+    } else if (newTab.type === 'stats') {
+      params.set('tab', 'stats')
     } else if (newTab.type === 'note') {
       params.set('tab', `note:${newTab.noteName}`)
     }
