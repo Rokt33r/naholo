@@ -1,5 +1,4 @@
 import 'server-only'
-import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
 
@@ -19,7 +18,6 @@ export type CreateProjectOperatorInput = {
   name: string
   type?: 'user' | 'bot'
   role?: 'admin' | 'member'
-  soul?: string
 }
 
 /**
