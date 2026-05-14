@@ -39,6 +39,13 @@ src/
 - Components: one component per file, co-located context providers
 - Result type: `Ok<T>` / `Err<E>` pattern in `lib/return-result.ts`
 
+## Rules
+
+Additional project rules live in [.claude/rules/](./.claude/rules/) and are loaded automatically:
+
+- [style.md](./.claude/rules/style.md) — code-style conventions
+- [skill-edits.md](./.claude/rules/skill-edits.md) — routing rule for editing core skills (`/infil`, `/recon`, `/objs`, `/splash`, `/sitrep`, `/exfil`)
+
 ## Build & Test
 
 - `pnpm run dev` — dev server
