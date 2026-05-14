@@ -131,3 +131,14 @@ Prints this manual to stdout. No arguments, no I/O. Skills run it once per sessi
 ## Chat output
 
 When printing an end-of-skill summary to the user (infil recap, recon summary, splash AAR digest, sitrep/exfil report), output raw markdown lines directly — **never wrap the summary block in a codeblock fence**. Fenced summaries break `[text](path)` link rendering in the Naholo UI. Files written to disk can still contain fenced code examples; this rule applies only to chat output.
+
+### Link format
+
+Summary links into `OPERATION.md` / `TIMELINE.md` use a **semantic label** and a **line-anchored URL** — the `#L<line>` lives in the URL only, never in the link label. The label is the noun the reader is opening: a top-level section (`MISSION`, `EXECUTION`), an OBJ (`OBJ 2`), an OBJ's AAR (`OBJ 1 - AAR`), or the file itself when there is no narrower target (`OPERATION.md`, `TIMELINE.md`). Resolve `<line>` by reading back the file the skill just wrote and locating the matching heading.
+
+Rendered shapes:
+
+- Section target: `[MISSION](/abs/path/notes/OPERATION.md#L13)`
+- OBJ target: `[OBJ 2](/abs/path/notes/OPERATION.md#L68)`
+- AAR target: `[OBJ 1 - AAR](/abs/path/notes/OPERATION.md#L61)`
+- Whole-file target (no specific heading): `[OPERATION.md](/abs/path/notes/OPERATION.md)`
