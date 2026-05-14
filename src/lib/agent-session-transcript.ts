@@ -1,7 +1,8 @@
 export type TranscriptEntryUsage = {
   inputTokens: number
   outputTokens: number
-  cacheCreationInputTokens: number
+  cacheCreation5mInputTokens: number
+  cacheCreation1hInputTokens: number
   cacheReadInputTokens: number
 }
 
@@ -9,6 +10,8 @@ export type TranscriptEntry = {
   index: number
   type: string
   timestamp: string | null
+  messageId: string | null
+  model: string | null
   usage: TranscriptEntryUsage | null
   summary: string | null
   raw: unknown
@@ -41,13 +44,42 @@ export function parseTranscript(jsonl: string): TranscriptEntry[] {
     const type = typeof record.type === 'string' ? record.type : 'unknown'
     const timestamp =
       typeof record.timestamp === 'string' ? record.timestamp : null
+    const messageId = extractMessageId(record)
+    const model = extractModel(record)
     const usage = extractUsage(record)
     const summary = extractSummary(record)
-    entries.push({ index, type, timestamp, usage, summary, raw })
+    entries.push({
+      index,
+      type,
+      timestamp,
+      messageId,
+      model,
+      usage,
+      summary,
+      raw,
+    })
     index += 1
   }
 
   return entries
+}
+
+function extractMessageId(record: Record<string, unknown>): string | null {
+  const message = record.message
+  if (message == null || typeof message !== 'object') {
+    return null
+  }
+  const id = (message as Record<string, unknown>).id
+  return typeof id === 'string' ? id : null
+}
+
+function extractModel(record: Record<string, unknown>): string | null {
+  const message = record.message
+  if (message == null || typeof message !== 'object') {
+    return null
+  }
+  const model = (message as Record<string, unknown>).model
+  return typeof model === 'string' ? model : null
 }
 
 function extractUsage(
@@ -62,10 +94,26 @@ function extractUsage(
     return null
   }
   const u = usage as Record<string, unknown>
+
+  const cacheCreationSplit = u.cache_creation
+  let cache5m = 0
+  let cache1h = 0
+  if (cacheCreationSplit != null && typeof cacheCreationSplit === 'object') {
+    const c = cacheCreationSplit as Record<string, unknown>
+    cache5m = numberOrZero(c.ephemeral_5m_input_tokens)
+    cache1h = numberOrZero(c.ephemeral_1h_input_tokens)
+  } else {
+    // Older transcripts only carry the flat `cache_creation_input_tokens` total —
+    // charge the whole thing to the 5m bucket so cost stays approximately right
+    // (5m is the cheaper of the two; understating beats inflating).
+    cache5m = numberOrZero(u.cache_creation_input_tokens)
+  }
+
   return {
     inputTokens: numberOrZero(u.input_tokens),
     outputTokens: numberOrZero(u.output_tokens),
-    cacheCreationInputTokens: numberOrZero(u.cache_creation_input_tokens),
+    cacheCreation5mInputTokens: cache5m,
+    cacheCreation1hInputTokens: cache1h,
     cacheReadInputTokens: numberOrZero(u.cache_read_input_tokens),
   }
 }

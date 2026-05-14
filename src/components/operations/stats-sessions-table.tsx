@@ -61,7 +61,7 @@ export function StatsSessionsTable({
                   {row.isLoading ? '…' : row.messageCount.toLocaleString()}
                 </Td>
                 <Td className='text-right tabular-nums'>
-                  {row.isLoading ? '…' : row.tokenTotal.toLocaleString()}
+                  {row.isLoading ? '…' : sumTokens(row).toLocaleString()}
                 </Td>
               </tr>
             )
@@ -90,6 +90,19 @@ function Td({
   className?: string
 }) {
   return <td className={cn('px-3 py-2', className)}>{children}</td>
+}
+
+function sumTokens(row: SessionRowStats): number {
+  let total = 0
+  for (const m of row.perModel) {
+    total +=
+      m.inputTokens +
+      m.outputTokens +
+      m.cacheCreation5mInputTokens +
+      m.cacheCreation1hInputTokens +
+      m.cacheReadInputTokens
+  }
+  return total
 }
 
 function formatStartedAt(iso: string): string {

@@ -20,11 +20,14 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
     messageCount += row.messageCount
     userCount += row.userCount
     assistantCount += row.assistantCount
-    inputTokens += row.inputTokens
-    outputTokens += row.outputTokens
-    cacheCreationInputTokens += row.cacheCreationInputTokens
-    cacheReadInputTokens += row.cacheReadInputTokens
     durationMs += row.durationMs
+    for (const m of row.perModel) {
+      inputTokens += m.inputTokens
+      outputTokens += m.outputTokens
+      cacheCreationInputTokens +=
+        m.cacheCreation5mInputTokens + m.cacheCreation1hInputTokens
+      cacheReadInputTokens += m.cacheReadInputTokens
+    }
   }
 
   return (

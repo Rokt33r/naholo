@@ -7,6 +7,7 @@ import {
   parseTranscript,
   type TranscriptEntry,
 } from '@/lib/agent-session-transcript'
+import { calculateCost } from '@/lib/agent-session-pricing'
 import {
   useAgentSessions,
   type AgentSessionSummary,
@@ -15,17 +16,26 @@ import { StatsTotals } from './stats-totals'
 import { StatsSessionsTable } from './stats-sessions-table'
 import { TranscriptDialog } from './transcript-dialog'
 
+export const UNKNOWN_MODEL = 'unknown'
+
+export type PerModelTotals = {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  cacheCreation5mInputTokens: number
+  cacheCreation1hInputTokens: number
+  cacheReadInputTokens: number
+  cost: number | null
+}
+
 export type SessionRowStats = {
   agentSession: AgentSessionSummary
   durationMs: number
   messageCount: number
   userCount: number
   assistantCount: number
-  inputTokens: number
-  outputTokens: number
-  cacheCreationInputTokens: number
-  cacheReadInputTokens: number
-  tokenTotal: number
+  perModel: PerModelTotals[]
+  totalCost: number | null
   isLoading: boolean
 }
 
@@ -123,10 +133,18 @@ function aggregateEntries(entries: TranscriptEntry[]) {
   let messageCount = 0
   let userCount = 0
   let assistantCount = 0
-  let inputTokens = 0
-  let outputTokens = 0
-  let cacheCreationInputTokens = 0
-  let cacheReadInputTokens = 0
+
+  const perModelMap = new Map<
+    string,
+    {
+      inputTokens: number
+      outputTokens: number
+      cacheCreation5mInputTokens: number
+      cacheCreation1hInputTokens: number
+      cacheReadInputTokens: number
+    }
+  >()
+  const seenMessageIds = new Set<string>()
 
   for (const entry of entries) {
     if (entry.type === 'user' || entry.type === 'assistant') {
@@ -137,26 +155,63 @@ function aggregateEntries(entries: TranscriptEntry[]) {
         assistantCount += 1
       }
     }
-    if (entry.usage != null) {
-      inputTokens += entry.usage.inputTokens
-      outputTokens += entry.usage.outputTokens
-      cacheCreationInputTokens += entry.usage.cacheCreationInputTokens
-      cacheReadInputTokens += entry.usage.cacheReadInputTokens
+    if (entry.usage == null) {
+      continue
     }
+    if (entry.messageId != null) {
+      if (seenMessageIds.has(entry.messageId)) {
+        continue
+      }
+      seenMessageIds.add(entry.messageId)
+    }
+    const modelKey = entry.model ?? UNKNOWN_MODEL
+    let bucket = perModelMap.get(modelKey)
+    if (bucket == null) {
+      bucket = {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheCreation5mInputTokens: 0,
+        cacheCreation1hInputTokens: 0,
+        cacheReadInputTokens: 0,
+      }
+      perModelMap.set(modelKey, bucket)
+    }
+    bucket.inputTokens += entry.usage.inputTokens
+    bucket.outputTokens += entry.usage.outputTokens
+    bucket.cacheCreation5mInputTokens += entry.usage.cacheCreation5mInputTokens
+    bucket.cacheCreation1hInputTokens += entry.usage.cacheCreation1hInputTokens
+    bucket.cacheReadInputTokens += entry.usage.cacheReadInputTokens
+  }
+
+  const perModel: PerModelTotals[] = []
+  let totalCost: number | null = 0
+  for (const [model, bucket] of perModelMap) {
+    const cost =
+      model === UNKNOWN_MODEL
+        ? null
+        : calculateCost(
+            {
+              inputTokens: bucket.inputTokens,
+              outputTokens: bucket.outputTokens,
+              cacheCreation5mInputTokens: bucket.cacheCreation5mInputTokens,
+              cacheCreation1hInputTokens: bucket.cacheCreation1hInputTokens,
+              cacheReadInputTokens: bucket.cacheReadInputTokens,
+            },
+            model,
+          )
+    if (cost == null) {
+      totalCost = null
+    } else if (totalCost != null) {
+      totalCost += cost
+    }
+    perModel.push({ model, ...bucket, cost })
   }
 
   return {
     messageCount,
     userCount,
     assistantCount,
-    inputTokens,
-    outputTokens,
-    cacheCreationInputTokens,
-    cacheReadInputTokens,
-    tokenTotal:
-      inputTokens +
-      outputTokens +
-      cacheCreationInputTokens +
-      cacheReadInputTokens,
+    perModel,
+    totalCost,
   }
 }
