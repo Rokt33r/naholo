@@ -1,9 +1,9 @@
-import infilContent from '../../../.claude/skills/infil/SKILL.md'
-import exfilContent from '../../../.claude/skills/exfil/SKILL.md'
-import reconContent from '../../../.claude/skills/recon/SKILL.md'
-import objsContent from '../../../.claude/skills/objs/SKILL.md'
-import splashContent from '../../../.claude/skills/splash/SKILL.md'
-import sitrepContent from '../../../.claude/skills/sitrep/SKILL.md'
+import infilContent from './skills/infil/SKILL.md'
+import exfilContent from './skills/exfil/SKILL.md'
+import reconContent from './skills/recon/SKILL.md'
+import objsContent from './skills/objs/SKILL.md'
+import splashContent from './skills/splash/SKILL.md'
+import sitrepContent from './skills/sitrep/SKILL.md'
 
 export const CORE_LOADOUT_NAME = 'core'
 
