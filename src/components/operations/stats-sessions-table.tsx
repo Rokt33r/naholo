@@ -24,10 +24,9 @@ export function StatsSessionsTable({
         <thead className='bg-muted/50 text-xs text-muted-foreground'>
           <tr>
             <Th className='text-left'>Title</Th>
-            <Th className='text-left'>Started</Th>
-            <Th className='text-right'>Duration</Th>
             <Th className='text-right'>Msgs</Th>
-            <Th className='text-right'>Tokens</Th>
+            <Th className='text-right'>Duration</Th>
+            <Th className='text-right'>Cost</Th>
           </tr>
         </thead>
         <tbody>
@@ -53,15 +52,14 @@ export function StatsSessionsTable({
                     <span className='text-muted-foreground'>(untitled)</span>
                   )}
                 </Td>
-                <Td>{formatStartedAt(row.agentSession.startedAt)}</Td>
-                <Td className='text-right tabular-nums'>
-                  {formatDurationHMS(row.durationMs)}
-                </Td>
                 <Td className='text-right tabular-nums'>
                   {row.isLoading ? '…' : row.messageCount.toLocaleString()}
                 </Td>
                 <Td className='text-right tabular-nums'>
-                  {row.isLoading ? '…' : sumTokens(row).toLocaleString()}
+                  {formatDurationHMS(row.durationMs)}
+                </Td>
+                <Td className='text-right tabular-nums'>
+                  {row.isLoading ? '…' : formatUSD(row.totalCost)}
                 </Td>
               </tr>
             )
@@ -92,26 +90,19 @@ function Td({
   return <td className={cn('px-3 py-2', className)}>{children}</td>
 }
 
-function sumTokens(row: SessionRowStats): number {
-  let total = 0
-  for (const m of row.perModel) {
-    total +=
-      m.inputTokens +
-      m.outputTokens +
-      m.cacheCreation5mInputTokens +
-      m.cacheCreation1hInputTokens +
-      m.cacheReadInputTokens
+function formatUSD(value: number | null): string {
+  if (value == null) {
+    return '—'
   }
-  return total
-}
-
-function formatStartedAt(iso: string): string {
-  const d = new Date(iso)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${mm}-${dd} ${hh}:${min}`
+  if (value < 0.01 && value > 0) {
+    return '<$0.01'
+  }
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 }
 
 function formatDurationHMS(ms: number): string {
