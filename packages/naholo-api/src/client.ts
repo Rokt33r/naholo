@@ -358,11 +358,16 @@ export class NaholoClient {
   recordAgentSession(
     projectSlug: string,
     operationNumber: number | string,
+    agentSessionSessionId: string,
     payload: AgentSessionPayload,
   ): Promise<{ id: string }> {
     return this.request(
-      'POST',
-      this.operationPath(projectSlug, operationNumber, '/agent-sessions'),
+      'PUT',
+      this.operationPath(
+        projectSlug,
+        operationNumber,
+        `/agent-sessions/${agentSessionSessionId}`,
+      ),
       payload,
     )
   }

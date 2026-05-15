@@ -179,7 +179,6 @@ export type AgentSessionSummary = {
 }
 
 export type AgentSessionPayload = {
-  sessionId: string
   title: string | null
   startedAt: string // ISO 8601
   endedAt: string // ISO 8601

@@ -29,8 +29,7 @@ export const uploadAgentSessionsCommand = new Command('upload-agent-sessions')
       for (const entry of entries) {
         const buffer = fs.readFileSync(entry.transcript_path)
         const transcript = buffer.toString('utf-8')
-        await client.recordAgentSession(projectSlug, opNum, {
-          sessionId: entry.session_id,
+        await client.recordAgentSession(projectSlug, opNum, entry.session_id, {
           title: entry.title,
           startedAt: entry.started_at,
           endedAt: entry.ended_at,
