@@ -132,7 +132,9 @@ Recon complete for OP #42: "Implement user auth"
 - Researched:
   - [src/auth/](src/auth/)
   - [src/server/services/operator.ts](src/server/services/operator.ts)
-- Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
+- Mission: [MISSION]({operationDir}/notes/OPERATION.md#L<line>)
+
+Resolve `<line>` by reading back `OPERATION.md` after writing MISSION and locating the `## MISSION` heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
 
 Next:
 

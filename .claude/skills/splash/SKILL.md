@@ -134,7 +134,12 @@ The chat summary opens with a **COA stats** block that does not appear in the on
 - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
 - `- Deviations: {N}` — count of COA-level differences from plan (matches the number of top-level entries in the **Deviations** section just written to the AAR). Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/objs` may have missed COAs needed to hit the goal, in which case those additions land here without bumping Done.
 
-Always end the summary with a **Review** line linking to `OPERATION.md` so the user can open it and skim the AAR / next OBJ before re-running `/splash`. Use a markdown link with the absolute operation directory path — e.g. `- Review: [OPERATION.md]({operationDir}/notes/OPERATION.md)`.
+Two summary lines carry semantic links per the manual's `## Chat output` → `### Link format` rule:
+
+- **`Next:`** — wraps the next unchecked OBJ in a link so the reader jumps straight to that OBJ section. Label is the semantic `OBJ N`; URL anchors the OBJ's `### OBJ N — Title` heading line. The OBJ title in parentheses stays plain text. Example: `- Next: /splash to ship [OBJ 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")`. Omit the line entirely when no unchecked OBJ remains.
+- **`Review:`** — points the user at the AAR just written. Label is `OBJ N - AAR`; URL anchors the just-shipped OBJ's `#### After-Action Report` heading line. Example: `- Review: [OBJ 3 - AAR]({operationDir}/notes/OPERATION.md#L84)`.
+
+Resolve `<line>` by reading back `OPERATION.md` after the AAR is written and locating the matching heading.
 
 Example:
 
@@ -160,8 +165,8 @@ OBJ 3 shipped: "Add /splash skill spec"
 ---
 
 - Progress: 3/8 OBJs done
-- Next: `/splash` to ship OBJ 4 ("/sitrep skill rewrite")
-- Review: [OPERATION.md]({operationDir}/notes/OPERATION.md)
+- Next: `/splash` to ship [OBJ 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")
+- Review: [OBJ 3 - AAR]({operationDir}/notes/OPERATION.md#L84)
 
 If the user should review before the next splash, mention it. If all OBJs are now done, suggest `/exfil`.
 

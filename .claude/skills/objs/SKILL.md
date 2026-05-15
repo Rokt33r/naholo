@@ -237,8 +237,10 @@ Example (printed directly, not fenced):
 Plan complete for OP #42: "Implement user auth"
 
 - Objectives: 6 total (0 done, 6 remaining)
-- Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
+- Execution: [EXECUTION]({operationDir}/notes/OPERATION.md#L<line>)
 - Objectives: [OBJECTIVES.md]({operationDir}/OBJECTIVES.md)
+
+Resolve `<line>` by reading back `OPERATION.md` after writing EXECUTION and locating the `## EXECUTION` heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
 
 Next:
 
