@@ -5,9 +5,11 @@ import { Command } from 'commander'
 import crypto from 'node:crypto'
 import http from 'node:http'
 import os from 'node:os'
+import path from 'node:path'
 import { writeGlobalClaudeConfig } from '../claude-code-config.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
+import { hasNaholoHooks, installNaholoHooks } from '../lib/claude-settings.js'
 import { listProfiles, readProfile, writeProfile } from '../profile.js'
 import { pickSoul } from '../soul.js'
 
@@ -44,6 +46,7 @@ export const loginCommand = new Command('login')
         if (selected != null) {
           setDefaultProfile(selected)
           console.log(`Switched to profile "${selected}".`)
+          await offerHookInstall()
           return
         }
       }
@@ -174,6 +177,7 @@ export const loginCommand = new Command('login')
         console.log(`Logged in successfully.`)
         console.log(`  Profile: ${profileName}`)
         console.log(`  Token:   ${tokenHint}`)
+        await offerHookInstall()
       } finally {
         callbackServer.close()
       }
@@ -245,4 +249,24 @@ function startCallbackServer(baseUrl: string): Promise<CallbackServer> {
 
     server.on('error', reject)
   })
+}
+
+async function offerHookInstall(): Promise<void> {
+  const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
+  if (hasNaholoHooks(settingsPath)) {
+    return
+  }
+
+  const install = await confirm({
+    message:
+      'Naholo collects agent-session transcripts via Claude Code Stop / SessionEnd hooks and uploads them to the Naholo server so they show up next to the operation they belong to. Install these hooks now? (Skip if you would rather not share transcripts.)',
+    default: true,
+  })
+
+  if (install) {
+    installNaholoHooks(settingsPath)
+    console.log(`Naholo hooks installed in ${settingsPath}`)
+  } else {
+    console.log('Skipped hook install — re-run `naholo login` to enable later.')
+  }
 }

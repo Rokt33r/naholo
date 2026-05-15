@@ -67,16 +67,14 @@ function hasCommandHook(
   return false
 }
 
-function installCommandHook(
-  settingsPath: string,
+function addCommandHook(
+  settings: ClaudeSettings,
   event: string,
   command: string,
-): 'added' | 'already-present' {
-  const settings = readSettings(settingsPath)
+): boolean {
   if (hasCommandHook(settings, event, command)) {
-    return 'already-present'
+    return false
   }
-
   const hooks = (settings.hooks ?? {}) as NonNullable<ClaudeSettings['hooks']>
   const existing = hooks[event]
   const entries: HookEntry[] = Array.isArray(existing)
@@ -88,24 +86,31 @@ function installCommandHook(
   })
   hooks[event] = entries
   settings.hooks = hooks
-
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
-  return 'added'
+  return true
 }
 
-export function installStopHook(
-  settingsPath: string,
-): 'added' | 'already-present' {
-  return installCommandHook(settingsPath, 'Stop', STOP_HOOK_COMMAND)
+export function hasNaholoHooks(settingsPath: string): boolean {
+  const settings = readSettings(settingsPath)
+  return (
+    hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND) &&
+    hasCommandHook(settings, 'SessionEnd', SESSION_END_HOOK_COMMAND)
+  )
 }
 
-export function installSessionEndHook(
+export function installNaholoHooks(
   settingsPath: string,
 ): 'added' | 'already-present' {
-  return installCommandHook(
-    settingsPath,
+  const settings = readSettings(settingsPath)
+  const addedStop = addCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
+  const addedSessionEnd = addCommandHook(
+    settings,
     'SessionEnd',
     SESSION_END_HOOK_COMMAND,
   )
+  if (!addedStop && !addedSessionEnd) {
+    return 'already-present'
+  }
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+  return 'added'
 }

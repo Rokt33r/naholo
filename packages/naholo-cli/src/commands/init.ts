@@ -1,5 +1,3 @@
-import os from 'node:os'
-import path from 'node:path'
 import confirm from '@inquirer/confirm'
 import select from '@inquirer/select'
 import { Command } from 'commander'
@@ -7,10 +5,6 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
-import {
-  installSessionEndHook,
-  installStopHook,
-} from '../lib/claude-settings.js'
 import { getActiveProfile } from '../profile.js'
 import { writeProjectConfig, writeGitignore } from '../project-config.js'
 import { installSkills } from './skills-install.js'
@@ -60,28 +54,11 @@ export const initCommand = new Command('init')
       // 4. Write .naholo/.gitignore
       writeGitignore()
 
-      // 5. Install Claude Code Stop hook in the user-global settings file
-      //    (always global so a project that uses both `naholo init` and
-      //    `naholo covert init` doesn't end up firing the hook twice).
-      const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
-      const stopHookResult = installStopHook(settingsPath)
-      const sessionEndHookResult = installSessionEndHook(settingsPath)
-
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)
-      console.log(
-        stopHookResult === 'added'
-          ? `Stop hook installed in ${settingsPath}`
-          : `Stop hook already present in ${settingsPath}`,
-      )
-      console.log(
-        sessionEndHookResult === 'added'
-          ? `SessionEnd hook installed in ${settingsPath}`
-          : `SessionEnd hook already present in ${settingsPath}`,
-      )
       console.log()
 
-      // 6. Prompt to install core skills
+      // 5. Prompt to install core skills
       const installCore = await confirm({
         message: 'Install core skills?',
         default: true,
