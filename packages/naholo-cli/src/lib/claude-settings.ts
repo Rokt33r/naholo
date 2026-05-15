@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const STOP_HOOK_COMMAND = 'naholo agent link-agent-session'
+const STOP_HOOK_COMMAND = 'naholo agent claude-code-stop'
 
 interface CommandHook {
   type: 'command'

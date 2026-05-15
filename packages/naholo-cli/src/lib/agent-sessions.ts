@@ -1,9 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import readline from 'node:readline'
+import type { NaholoClient } from 'naholo-api/client'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 import { z } from 'zod'
 import { getNaholoLocalDir } from './local-operations.js'
+
+export const STALE_SESSION_MS = 60 * 60 * 1000
 
 export type LocalAgentSessionEntry = z.infer<
   typeof localAgentSessionEntrySchema
@@ -133,4 +136,71 @@ export async function resolveLocalAgentSessionEntry(input: {
     last_message_at: lastTimestamp,
     ended: false,
   }
+}
+
+export function markSessionEnded(session_id: string): void {
+  const existing = readSessions()
+  const target = existing.find((e) => e.session_id === session_id)
+  if (target == null) {
+    return
+  }
+  if (target.ended) {
+    return
+  }
+  target.ended = true
+  upsertLocalAgentSessionEntry(target)
+}
+
+function isDrainable(entry: LocalAgentSessionEntry, now: Date): boolean {
+  if (entry.ended) {
+    return true
+  }
+  const lastMs = Date.parse(entry.last_message_at)
+  if (Number.isNaN(lastMs)) {
+    return false
+  }
+  return now.getTime() - lastMs > STALE_SESSION_MS
+}
+
+export async function drainSessions(
+  client: NaholoClient,
+  now: Date,
+): Promise<{
+  uploaded: string[]
+  failed: Array<{ session_id: string; error: Error }>
+}> {
+  const entries = readSessions()
+  const uploaded: string[] = []
+  const failed: Array<{ session_id: string; error: Error }> = []
+
+  for (const entry of entries) {
+    if (!isDrainable(entry, now)) {
+      continue
+    }
+    try {
+      const buffer = fs.readFileSync(entry.transcript_path)
+      const transcript = buffer.toString('utf-8')
+      await client.recordAgentSession(
+        entry.projectSlug,
+        entry.op,
+        entry.session_id,
+        {
+          title: entry.title,
+          startedAt: entry.started_at,
+          endedAt: entry.last_message_at,
+          transcript,
+          transcriptSizeBytes: buffer.byteLength,
+        },
+      )
+      uploaded.push(entry.session_id)
+    } catch (error) {
+      failed.push({
+        session_id: entry.session_id,
+        error: error instanceof Error ? error : new Error(String(error)),
+      })
+    }
+  }
+
+  removeSessions(uploaded)
+  return { uploaded, failed }
 }

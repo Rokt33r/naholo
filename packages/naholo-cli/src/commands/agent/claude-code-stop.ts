@@ -1,6 +1,8 @@
 import { Command } from 'commander'
-import { withErrorHandling } from '../../errors.js'
+import { getCliContext } from '../../context.js'
+import { CliError, withErrorHandling } from '../../errors.js'
 import {
+  drainSessions,
   resolveLocalAgentSessionEntry,
   upsertLocalAgentSessionEntry,
 } from '../../lib/agent-sessions.js'
@@ -25,9 +27,9 @@ async function readStdinJson(): Promise<unknown> {
   return JSON.parse(raw)
 }
 
-export const linkAgentSessionCommand = new Command('link-agent-session')
+export const claudeCodeStopCommand = new Command('claude-code-stop')
   .description(
-    'Claude Code Stop hook handler: link the current agent session to the infiled op locally',
+    'Claude Code Stop hook handler: link the current agent session to the infiled op and drain pending uploads',
   )
   .action(
     withErrorHandling(async () => {
@@ -61,5 +63,16 @@ export const linkAgentSessionCommand = new Command('link-agent-session')
       })
 
       upsertLocalAgentSessionEntry(entry)
+
+      let client
+      try {
+        client = getCliContext().client
+      } catch (error) {
+        if (error instanceof CliError) {
+          return
+        }
+        throw error
+      }
+      await drainSessions(client, new Date())
     }),
   )
