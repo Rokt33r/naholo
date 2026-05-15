@@ -56,11 +56,9 @@ export function NoteView({
 
   return (
     <div className='flex h-full flex-col'>
-      {/* Content */}
       <div className='relative flex min-h-0 flex-1 overflow-hidden'>
-        {/* Floating view-mode toggle */}
         {!isCreating && (
-          <div className='absolute top-2 right-2 z-10'>
+          <div className='absolute right-2 bottom-2 z-10'>
             <div className='rounded-md bg-background/80 p-1'>
               <ButtonGroup>
                 <Button
