@@ -155,12 +155,11 @@ export function OperationLogsList({
             ) : (
               <Button
                 variant='ghost'
-                size='icon'
                 onClick={handleClose}
                 disabled={isClosing}
-                title={message.trim() ? 'Close with log' : 'Close operation'}
               >
                 <CircleCheck className='size-5 text-purple-600' />
+                {message.trim() ? 'Close with log' : 'Close'}
               </Button>
             )}
             <Button
