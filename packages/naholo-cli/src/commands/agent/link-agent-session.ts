@@ -5,6 +5,8 @@ import {
   upsertLocalAgentSessionEntry,
 } from '../../lib/agent-sessions.js'
 import { readOpYml } from '../../lib/local-operations.js'
+import { readCovertOpsProjectConfig } from '../../covert-config.js'
+import { readProjectConfig } from '../../project-config.js'
 
 interface HookPayload {
   session_id?: unknown
@@ -45,9 +47,17 @@ export const linkAgentSessionCommand = new Command('link-agent-session')
         return
       }
 
+      const projectConfig =
+        readCovertOpsProjectConfig(process.cwd()) ?? readProjectConfig()
+      if (projectConfig == null) {
+        return
+      }
+
       const entry = await resolveLocalAgentSessionEntry({
         session_id: sessionId,
         transcript_path: transcriptPath,
+        projectSlug: projectConfig.projectSlug,
+        op: opYml.number,
       })
 
       upsertLocalAgentSessionEntry(entry)

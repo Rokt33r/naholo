@@ -6,16 +6,16 @@ import {
   readCovertOpsProjectConfig,
 } from '../covert-config.js'
 
-export function getLocalOperationsRootDir(): string {
+export function getNaholoLocalDir(): string {
   const covertEntry = readCovertOpsProjectConfig(process.cwd())
   if (covertEntry != null) {
-    return path.join(getCovertOpsDir(), covertEntry.codeName, 'infiled')
+    return path.join(getCovertOpsDir(), covertEntry.codeName)
   }
-  return path.resolve('.naholo/local/infiled')
+  return path.resolve('.naholo/local')
 }
 
 export function getLocalOperationDir(): string {
-  return getLocalOperationsRootDir()
+  return path.join(getNaholoLocalDir(), 'infiled')
 }
 
 export function getBaseDir(): string {

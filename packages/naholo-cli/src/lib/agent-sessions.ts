@@ -2,20 +2,27 @@ import fs from 'node:fs'
 import path from 'node:path'
 import readline from 'node:readline'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
-import { getLocalOperationDir } from './local-operations.js'
+import { z } from 'zod'
+import { getNaholoLocalDir } from './local-operations.js'
 
-export interface LocalAgentSessionEntry {
-  session_id: string
-  transcript_path: string
-  title: string | null
-  started_at: string
-  ended_at: string
-  size_bytes: number
-}
+export type LocalAgentSessionEntry = z.infer<
+  typeof localAgentSessionEntrySchema
+>
 
 export function getSessionsYmlPath(): string {
-  return path.join(getLocalOperationDir(), 'sessions.yml')
+  return path.join(getNaholoLocalDir(), 'agent-sessions.yml')
 }
+
+const localAgentSessionEntrySchema = z.object({
+  session_id: z.string(),
+  transcript_path: z.string(),
+  title: z.string().nullable(),
+  projectSlug: z.string(),
+  op: z.number(),
+  started_at: z.string(),
+  last_message_at: z.string(),
+  ended: z.boolean(),
+})
 
 export function readSessions(): LocalAgentSessionEntry[] {
   const ymlPath = getSessionsYmlPath()
@@ -27,16 +34,20 @@ export function readSessions(): LocalAgentSessionEntry[] {
   if (!Array.isArray(parsed)) {
     return []
   }
-  return parsed.filter(
-    (entry): entry is LocalAgentSessionEntry =>
-      entry != null &&
-      typeof entry === 'object' &&
-      typeof entry.session_id === 'string' &&
-      typeof entry.transcript_path === 'string' &&
-      typeof entry.started_at === 'string' &&
-      typeof entry.ended_at === 'string' &&
-      typeof entry.size_bytes === 'number',
-  )
+  const result: LocalAgentSessionEntry[] = []
+  for (const entry of parsed) {
+    const validated = localAgentSessionEntrySchema.safeParse(entry)
+    if (validated.success) {
+      result.push(validated.data)
+    }
+  }
+  return result
+}
+
+function writeSessions(entries: LocalAgentSessionEntry[]): void {
+  const ymlPath = getSessionsYmlPath()
+  fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
+  fs.writeFileSync(ymlPath, yamlStringify(entries))
 }
 
 export function upsertLocalAgentSessionEntry(
@@ -45,19 +56,31 @@ export function upsertLocalAgentSessionEntry(
   const existing = readSessions()
   const next = existing.filter((e) => e.session_id !== entry.session_id)
   next.push(entry)
-  fs.mkdirSync(path.dirname(getSessionsYmlPath()), { recursive: true })
-  fs.writeFileSync(getSessionsYmlPath(), yamlStringify(next))
+  writeSessions(next)
 }
 
-// Streams a Claude Code JSONL transcript for metadata only (timestamps, title, size)
-// and returns a full local-agent-session entry.
+export function removeSessions(sessionIds: string[]): void {
+  if (sessionIds.length === 0) {
+    return
+  }
+  const drop = new Set(sessionIds)
+  const existing = readSessions()
+  const next = existing.filter((e) => !drop.has(e.session_id))
+  if (next.length === existing.length) {
+    return
+  }
+  writeSessions(next)
+}
+
+// Streams a Claude Code JSONL transcript for metadata only (timestamps, title)
+// and returns a full local-agent-session entry tagged with the supplied op context.
 export async function resolveLocalAgentSessionEntry(input: {
   session_id: string
   transcript_path: string
+  projectSlug: string
+  op: number
 }): Promise<LocalAgentSessionEntry> {
-  const { session_id, transcript_path } = input
-  const stat = fs.statSync(transcript_path)
-  const size_bytes = stat.size
+  const { session_id, transcript_path, projectSlug, op } = input
 
   let firstTimestamp: string | null = null
   let lastTimestamp: string | null = null
@@ -104,8 +127,10 @@ export async function resolveLocalAgentSessionEntry(input: {
     session_id,
     transcript_path,
     title,
+    projectSlug,
+    op,
     started_at: firstTimestamp,
-    ended_at: lastTimestamp,
-    size_bytes,
+    last_message_at: lastTimestamp,
+    ended: false,
   }
 }
