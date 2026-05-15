@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     if (transcript != null) {
       const fileStorage = getFileStorageAdapter()
       await fileStorage.putObject(
-        `agent-session-transcripts/${project.id}/${operation.number}/${agentSessionSessionId}`,
+        `agent-session-transcripts/${project.id}/${operation.id}/${agentSessionSessionId}`,
         transcript,
       )
 

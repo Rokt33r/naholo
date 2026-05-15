@@ -122,7 +122,6 @@ export async function getAgentSessionBySessionId(params: {
 export async function getAgentSessionTranscriptText(params: {
   projectId: string
   operationId: string
-  operationNumber: number
   agentSessionSessionId: string
 }): Promise<string> {
   const row = await db.query.operationAgentSessions.findFirst({
@@ -138,6 +137,6 @@ export async function getAgentSessionTranscriptText(params: {
     throw new ConflictError('Agent session has no transcript')
   }
 
-  const key = `agent-session-transcripts/${params.projectId}/${params.operationNumber}/${row.sessionId}`
+  const key = `agent-session-transcripts/${params.projectId}/${params.operationId}/${row.sessionId}`
   return await getFileStorageAdapter().getObject(key)
 }

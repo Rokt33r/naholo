@@ -10,6 +10,7 @@ async function main() {
     .select({
       id: operationAgentSessions.id,
       projectId: operationAgentSessions.projectId,
+      operationId: operationAgentSessions.operationId,
       sessionId: operationAgentSessions.sessionId,
       operationNumber: operations.number,
     })
@@ -28,7 +29,7 @@ async function main() {
 
   for (const row of rows) {
     const oldKey = `agent-session-transcripts/${row.projectId}/${row.operationNumber}/${row.id}`
-    const newKey = `agent-session-transcripts/${row.projectId}/${row.operationNumber}/${row.sessionId}`
+    const newKey = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.sessionId}`
 
     if (oldKey === newKey) {
       skipped += 1

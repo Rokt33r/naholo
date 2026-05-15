@@ -22,7 +22,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const transcript = await getAgentSessionTranscriptText({
       projectId: project.id,
       operationId: operation.id,
-      operationNumber: operation.number,
       agentSessionSessionId: agentSessionSessionId,
     })
     return new NextResponse(transcript, {
