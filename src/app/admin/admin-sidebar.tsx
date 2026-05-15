@@ -32,6 +32,12 @@ const items = [
     label: 'Project Subscriptions',
     billingOnly: true,
   },
+  // TEMPORARY — remove after agent-session transcript migration (OP #145) is verified in prod.
+  {
+    href: '/admin/agent-session-transcripts-migration',
+    label: 'Agent-session transcript migration',
+    billingOnly: false,
+  },
 ]
 
 export function AdminSidebar() {
