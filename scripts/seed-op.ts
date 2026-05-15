@@ -259,10 +259,13 @@ async function main() {
         }
         const transcript = fs.readFileSync(transcriptPath, 'utf-8')
         await fileStorage.putObject(
-          `agent-session-transcripts/${destProject.id}/${destOperationNumber}/${upserted.data.id}`,
+          `agent-session-transcripts/${destProject.id}/${destOperationNumber}/${session.sessionId}`,
           transcript,
         )
-        const flagged = await setAgentSessionHasTranscript(upserted.data.id)
+        const flagged = await setAgentSessionHasTranscript({
+          operationId: destOperationId,
+          agentSessionSessionId: session.sessionId,
+        })
         if (!flagged.success) {
           console.error(
             `Failed to flag transcript for ${session.sessionId}: ${flagged.error.message}`,

@@ -7,13 +7,13 @@ type RouteContext = {
   params: Promise<{
     projectSlug: string
     operationNumber: string
-    agentSessionId: string
+    agentSessionSessionId: string
   }>
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const { projectSlug, operationNumber, agentSessionId } =
+    const { projectSlug, operationNumber, agentSessionSessionId } =
       await context.params
     const { project, operation } = await requireOperationAccess(
       projectSlug,
@@ -23,7 +23,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       projectId: project.id,
       operationId: operation.id,
       operationNumber: operation.number,
-      agentSessionId,
+      agentSessionSessionId: agentSessionSessionId,
     })
     return new NextResponse(transcript, {
       status: 200,

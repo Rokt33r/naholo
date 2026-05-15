@@ -60,10 +60,12 @@ export async function upsertAgentSession(data: {
       transcriptSizeBytes: data.transcriptSizeBytes,
     })
     .onConflictDoUpdate({
-      target: operationAgentSessions.sessionId,
+      target: [
+        operationAgentSessions.operationId,
+        operationAgentSessions.sessionId,
+      ],
       set: {
         projectId: data.projectId,
-        operationId: data.operationId,
         projectOperatorId: data.projectOperatorId,
         title: data.title,
         startedAt: data.startedAt,
@@ -77,13 +79,19 @@ export async function upsertAgentSession(data: {
   return ok({ id: row.id })
 }
 
-export async function setAgentSessionHasTranscript(
-  id: string,
-): Promise<ReturnResult<void>> {
+export async function setAgentSessionHasTranscript(params: {
+  operationId: string
+  agentSessionSessionId: string
+}): Promise<ReturnResult<void>> {
   await db
     .update(operationAgentSessions)
     .set({ hasTranscript: true, updatedAt: new Date() })
-    .where(eq(operationAgentSessions.id, id))
+    .where(
+      and(
+        eq(operationAgentSessions.operationId, params.operationId),
+        eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
+      ),
+    )
 
   return ok(undefined)
 }
@@ -98,14 +106,14 @@ export async function listAgentSessionsByOperation(
   return rows.map(toSummary)
 }
 
-export async function getAgentSessionById(params: {
+export async function getAgentSessionBySessionId(params: {
   operationId: string
-  agentSessionId: string
+  agentSessionSessionId: string
 }): Promise<AgentSessionSummary | null> {
   const row = await db.query.operationAgentSessions.findFirst({
     where: and(
-      eq(operationAgentSessions.id, params.agentSessionId),
       eq(operationAgentSessions.operationId, params.operationId),
+      eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
     ),
   })
   return row == null ? null : toSummary(row)
@@ -115,12 +123,12 @@ export async function getAgentSessionTranscriptText(params: {
   projectId: string
   operationId: string
   operationNumber: number
-  agentSessionId: string
+  agentSessionSessionId: string
 }): Promise<string> {
   const row = await db.query.operationAgentSessions.findFirst({
     where: and(
-      eq(operationAgentSessions.id, params.agentSessionId),
       eq(operationAgentSessions.operationId, params.operationId),
+      eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
     ),
   })
   if (row == null) {
@@ -130,6 +138,6 @@ export async function getAgentSessionTranscriptText(params: {
     throw new ConflictError('Agent session has no transcript')
   }
 
-  const key = `agent-session-transcripts/${params.projectId}/${params.operationNumber}/${row.id}`
+  const key = `agent-session-transcripts/${params.projectId}/${params.operationNumber}/${row.sessionId}`
   return await getFileStorageAdapter().getObject(key)
 }
