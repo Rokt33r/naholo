@@ -1,9 +1,10 @@
 export type ModelPricing = {
-  inputPerMTok: number
-  outputPerMTok: number
-  cacheCreation5mPerMTok: number
-  cacheCreation1hPerMTok: number
-  cacheReadPerMTok: number
+  baseTokenPricePerMTok: number
+  inputTokenWeight: number
+  outputTokenWeight: number
+  cacheCreation5mTokenWeight: number
+  cacheCreation1hTokenWeight: number
+  cacheReadTokenWeight: number
 }
 
 export type Usage = {
@@ -19,13 +20,18 @@ export type PricingTable = {
   modelPricingMap: Record<string, ModelPricing>
 }
 
+export const BASE_TOKEN_WEIGHTS = {
+  inputTokenWeight: 1,
+  cacheCreation5mTokenWeight: 1.25,
+  cacheCreation1hTokenWeight: 2,
+  cacheReadTokenWeight: 0.1,
+  outputTokenWeight: 5,
+} as const
+
 function pricingFromInput(basePrice: number): ModelPricing {
   return {
-    inputPerMTok: basePrice,
-    outputPerMTok: basePrice * 5,
-    cacheCreation5mPerMTok: basePrice * 1.25,
-    cacheCreation1hPerMTok: basePrice * 2,
-    cacheReadPerMTok: basePrice * 0.1,
+    baseTokenPricePerMTok: basePrice,
+    ...BASE_TOKEN_WEIGHTS,
   }
 }
 
@@ -48,6 +54,27 @@ export function getModelPricing(model: string | null): ModelPricing | null {
   return PRICING.modelPricingMap[model] ?? null
 }
 
+export function calculateWeightedTokens(
+  usage: Usage,
+  model: string | null,
+): number {
+  const pricing = getModelPricing(model)
+  const weights: {
+    inputTokenWeight: number
+    outputTokenWeight: number
+    cacheCreation5mTokenWeight: number
+    cacheCreation1hTokenWeight: number
+    cacheReadTokenWeight: number
+  } = pricing ?? BASE_TOKEN_WEIGHTS
+  return (
+    usage.inputTokens * weights.inputTokenWeight +
+    usage.cacheCreation5mInputTokens * weights.cacheCreation5mTokenWeight +
+    usage.cacheCreation1hInputTokens * weights.cacheCreation1hTokenWeight +
+    usage.cacheReadInputTokens * weights.cacheReadTokenWeight +
+    usage.outputTokens * weights.outputTokenWeight
+  )
+}
+
 export function calculateCost(
   usage: Usage,
   model: string | null,
@@ -57,11 +84,7 @@ export function calculateCost(
     return null
   }
   return (
-    (usage.inputTokens * pricing.inputPerMTok +
-      usage.outputTokens * pricing.outputPerMTok +
-      usage.cacheCreation5mInputTokens * pricing.cacheCreation5mPerMTok +
-      usage.cacheCreation1hInputTokens * pricing.cacheCreation1hPerMTok +
-      usage.cacheReadInputTokens * pricing.cacheReadPerMTok) /
+    (calculateWeightedTokens(usage, model) * pricing.baseTokenPricePerMTok) /
     1_000_000
   )
 }

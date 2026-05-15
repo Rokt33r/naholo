@@ -13,12 +13,15 @@ import {
 } from '@/components/ui/dialog'
 import { createResponseError } from '@/lib/fetcher'
 import type { AgentSessionSummary } from '@/hooks/use-agent-sessions'
+import { StatsTotals } from './stats-totals'
+import type { SessionRowStats } from './stats-view'
 import { TranscriptViewer } from './transcript-viewer'
 
 type TranscriptDialogProps = {
   projectSlug: string
   operationNumber: number
   agentSession: AgentSessionSummary | null
+  stats: SessionRowStats | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -27,6 +30,7 @@ export function TranscriptDialog({
   projectSlug,
   operationNumber,
   agentSession,
+  stats,
   open,
   onOpenChange,
 }: TranscriptDialogProps) {
@@ -75,6 +79,11 @@ export function TranscriptDialog({
             )}
           </DialogTitle>
         </DialogHeader>
+        {stats != null ? (
+          <div className='border-b px-4 py-3'>
+            <StatsTotals rows={[stats]} />
+          </div>
+        ) : null}
         <div className='min-h-0 flex-1 overflow-hidden'>
           <TranscriptViewer
             projectSlug={projectSlug}

@@ -7,7 +7,10 @@ import {
   parseTranscript,
   type TranscriptEntry,
 } from '@/lib/agent-session-transcript'
-import { calculateCost } from '@/lib/agent-session-pricing'
+import {
+  calculateCost,
+  calculateWeightedTokens,
+} from '@/lib/agent-session-pricing'
 import {
   useAgentSessions,
   type AgentSessionSummary,
@@ -17,6 +20,7 @@ import { StatsSessionsTable } from './stats-sessions-table'
 import { TranscriptDialog } from './transcript-dialog'
 
 export const UNKNOWN_MODEL = 'unknown'
+export const NO_SKILL = '(none)'
 
 export type PerModelTotals = {
   model: string
@@ -25,6 +29,7 @@ export type PerModelTotals = {
   cacheCreation5mInputTokens: number
   cacheCreation1hInputTokens: number
   cacheReadInputTokens: number
+  weightedTokens: number
   cost: number | null
 }
 
@@ -36,6 +41,9 @@ export type SessionRowStats = {
   assistantCount: number
   perModel: PerModelTotals[]
   totalCost: number | null
+  toolUseCount: number
+  toolUseByName: Record<string, number>
+  bySkill: Record<string, number>
   isLoading: boolean
 }
 
@@ -106,6 +114,10 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
     openAgentSessionId == null
       ? null
       : (agentSessions.find((s) => s.id === openAgentSessionId) ?? null)
+  const openStats =
+    openAgentSessionId == null
+      ? null
+      : (rows.find((r) => r.agentSession.id === openAgentSessionId) ?? null)
 
   return (
     <div className='flex h-full flex-col gap-4 overflow-auto p-4'>
@@ -118,6 +130,7 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
         projectSlug={projectSlug}
         operationNumber={operationNumber}
         agentSession={openAgentSession}
+        stats={openStats}
         open={openAgentSession != null}
         onOpenChange={(open) => {
           if (!open) {
@@ -133,6 +146,9 @@ function aggregateEntries(entries: TranscriptEntry[]) {
   let messageCount = 0
   let userCount = 0
   let assistantCount = 0
+  let toolUseCount = 0
+  const toolUseByName: Record<string, number> = {}
+  const bySkill: Record<string, number> = {}
 
   const perModelMap = new Map<
     string,
@@ -155,6 +171,10 @@ function aggregateEntries(entries: TranscriptEntry[]) {
         assistantCount += 1
       }
     }
+    for (const name of entry.toolUses) {
+      toolUseCount += 1
+      toolUseByName[name] = (toolUseByName[name] ?? 0) + 1
+    }
     if (entry.usage == null) {
       continue
     }
@@ -164,6 +184,10 @@ function aggregateEntries(entries: TranscriptEntry[]) {
       }
       seenMessageIds.add(entry.messageId)
     }
+    const skillKey = entry.attributionSkill ?? NO_SKILL
+    bySkill[skillKey] =
+      (bySkill[skillKey] ?? 0) +
+      calculateWeightedTokens(entry.usage, entry.model)
     const modelKey = entry.model ?? UNKNOWN_MODEL
     let bucket = perModelMap.get(modelKey)
     if (bucket == null) {
@@ -186,25 +210,21 @@ function aggregateEntries(entries: TranscriptEntry[]) {
   const perModel: PerModelTotals[] = []
   let totalCost: number | null = 0
   for (const [model, bucket] of perModelMap) {
-    const cost =
-      model === UNKNOWN_MODEL
-        ? null
-        : calculateCost(
-            {
-              inputTokens: bucket.inputTokens,
-              outputTokens: bucket.outputTokens,
-              cacheCreation5mInputTokens: bucket.cacheCreation5mInputTokens,
-              cacheCreation1hInputTokens: bucket.cacheCreation1hInputTokens,
-              cacheReadInputTokens: bucket.cacheReadInputTokens,
-            },
-            model,
-          )
+    const usage = {
+      inputTokens: bucket.inputTokens,
+      outputTokens: bucket.outputTokens,
+      cacheCreation5mInputTokens: bucket.cacheCreation5mInputTokens,
+      cacheCreation1hInputTokens: bucket.cacheCreation1hInputTokens,
+      cacheReadInputTokens: bucket.cacheReadInputTokens,
+    }
+    const weighted = calculateWeightedTokens(usage, model)
+    const cost = model === UNKNOWN_MODEL ? null : calculateCost(usage, model)
     if (cost == null) {
       totalCost = null
     } else if (totalCost != null) {
       totalCost += cost
     }
-    perModel.push({ model, ...bucket, cost })
+    perModel.push({ model, ...bucket, weightedTokens: weighted, cost })
   }
 
   return {
@@ -213,5 +233,8 @@ function aggregateEntries(entries: TranscriptEntry[]) {
     assistantCount,
     perModel,
     totalCost,
+    toolUseCount,
+    toolUseByName,
+    bySkill,
   }
 }

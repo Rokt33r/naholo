@@ -12,6 +12,8 @@ export type TranscriptEntry = {
   timestamp: string | null
   messageId: string | null
   model: string | null
+  attributionSkill: string | null
+  toolUses: string[]
   usage: TranscriptEntryUsage | null
   summary: string | null
   raw: unknown
@@ -46,6 +48,8 @@ export function parseTranscript(jsonl: string): TranscriptEntry[] {
       typeof record.timestamp === 'string' ? record.timestamp : null
     const messageId = extractMessageId(record)
     const model = extractModel(record)
+    const attributionSkill = extractAttributionSkill(record)
+    const toolUses = extractToolUses(record)
     const usage = extractUsage(record)
     const summary = extractSummary(record)
     entries.push({
@@ -54,6 +58,8 @@ export function parseTranscript(jsonl: string): TranscriptEntry[] {
       timestamp,
       messageId,
       model,
+      attributionSkill,
+      toolUses,
       usage,
       summary,
       raw,
@@ -80,6 +86,38 @@ function extractModel(record: Record<string, unknown>): string | null {
   }
   const model = (message as Record<string, unknown>).model
   return typeof model === 'string' ? model : null
+}
+
+function extractAttributionSkill(
+  record: Record<string, unknown>,
+): string | null {
+  const value = record.attributionSkill
+  return typeof value === 'string' && value.length > 0 ? value : null
+}
+
+function extractToolUses(record: Record<string, unknown>): string[] {
+  const message = record.message
+  if (message == null || typeof message !== 'object') {
+    return []
+  }
+  const content = (message as Record<string, unknown>).content
+  if (!Array.isArray(content)) {
+    return []
+  }
+  const names: string[] = []
+  for (const part of content) {
+    if (part == null || typeof part !== 'object') {
+      continue
+    }
+    const p = part as Record<string, unknown>
+    if (p.type !== 'tool_use') {
+      continue
+    }
+    if (typeof p.name === 'string' && p.name.length > 0) {
+      names.push(p.name)
+    }
+  }
+  return names
 }
 
 function extractUsage(
