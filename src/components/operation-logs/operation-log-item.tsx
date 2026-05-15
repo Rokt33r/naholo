@@ -136,7 +136,15 @@ export function OperationLogItem({
             </div>
           )}
           <div
-            onDoubleClick={isCreating || isReadOnly ? undefined : handleEdit}
+            onClick={
+              isCreating || isReadOnly
+                ? undefined
+                : (e) => {
+                    if (e.detail === 3) {
+                      handleEdit()
+                    }
+                  }
+            }
             className={cn(
               'inline-block max-w-full rounded-lg border p-2',
               isOwn ? 'bg-card' : 'bg-muted/50',

@@ -323,7 +323,6 @@ export function OperationDetail({
                 projectSlug={projectSlug}
                 operationNumber={operation.number}
                 initialContent={store.getContent(note.name) ?? note.content}
-                saveState={store.saveStates[note.name] ?? 'idle'}
                 onContentChange={(value) => store.setContent(note.name, value)}
               />
             )

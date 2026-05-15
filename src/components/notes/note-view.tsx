@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Loader2, PenLine, Columns2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
-import { MarkdownView } from '@/components/ui/markdown-view'
-import type { DebouncedSaveState } from '@/hooks/use-operation-note-store'
+import { NoteEditor } from '@/components/notes/note-editor'
+import { NotePreview } from '@/components/notes/note-preview'
 import type { Note } from 'naholo-api/types'
 
 type ViewMode = 'editor' | 'split' | 'preview'
@@ -15,14 +15,12 @@ type NoteViewProps = {
   projectSlug: string
   operationNumber: number
   initialContent: string
-  saveState: DebouncedSaveState
   onContentChange: (value: string) => void
 }
 
 export function NoteView({
   note,
   initialContent,
-  saveState,
   onContentChange,
 }: NoteViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('editor')
@@ -30,40 +28,30 @@ export function NoteView({
 
   const isCreating = note.id.startsWith('temp-')
 
-  const setContent = (value: string) => {
-    setContentState(value)
-    onContentChange(value)
-  }
-
-  const handleEditorDoubleClick = () => {
-    setViewMode('preview')
-  }
-
-  const handlePreviewDoubleClick = () => {
-    setViewMode('editor')
-  }
-
-  const renderEditor = (onDoubleClick?: () => void) => (
-    <textarea
-      value={content}
-      onChange={(e) => setContent(e.target.value)}
-      onDoubleClick={onDoubleClick}
-      className='h-full w-full flex-1 resize-none bg-transparent px-4 py-3 font-mono text-sm outline-none'
-      placeholder='Write your note content here... (Markdown supported)'
-    />
+  const setContent = useCallback(
+    (value: string) => {
+      setContentState(value)
+      onContentChange(value)
+    },
+    [onContentChange],
   )
 
-  const renderPreview = (onDoubleClick?: () => void) => (
-    <div
-      className='h-full flex-1 cursor-text overflow-y-auto px-4 py-3'
-      onDoubleClick={onDoubleClick}
-    >
-      {content ? (
-        <MarkdownView>{content}</MarkdownView>
-      ) : (
-        <p className='text-muted-foreground'>No content yet...</p>
-      )}
-    </div>
+  const handleEditorTripleClick = useCallback(
+    (e: React.MouseEvent<HTMLTextAreaElement>) => {
+      if (e.detail === 3) {
+        setViewMode('preview')
+      }
+    },
+    [],
+  )
+
+  const handlePreviewTripleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.detail === 3) {
+        setViewMode('editor')
+      }
+    },
+    [],
   )
 
   return (
@@ -110,19 +98,30 @@ export function NoteView({
             Creating note...
           </div>
         ) : viewMode === 'editor' ? (
-          renderEditor(handleEditorDoubleClick)
+          <NoteEditor
+            content={content}
+            onContentChange={setContent}
+            onClick={handleEditorTripleClick}
+          />
         ) : viewMode === 'split' ? (
           <>
             <div className='flex w-1/2 flex-col overflow-hidden'>
-              {renderEditor(handleEditorDoubleClick)}
+              <NoteEditor
+                content={content}
+                onContentChange={setContent}
+                onClick={handleEditorTripleClick}
+              />
             </div>
             <div className='w-px bg-border' />
             <div className='flex w-1/2 flex-col overflow-hidden'>
-              {renderPreview(handlePreviewDoubleClick)}
+              <NotePreview
+                content={content}
+                onClick={handlePreviewTripleClick}
+              />
             </div>
           </>
         ) : (
-          renderPreview(handlePreviewDoubleClick)
+          <NotePreview content={content} onClick={handlePreviewTripleClick} />
         )}
       </div>
     </div>
