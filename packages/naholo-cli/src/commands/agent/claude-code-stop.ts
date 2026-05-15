@@ -6,6 +6,7 @@ import {
   resolveLocalAgentSessionEntry,
   upsertLocalAgentSessionEntry,
 } from '../../lib/agent-sessions.js'
+import { appendHookError } from '../../lib/hook-errors.js'
 import { readOpYml } from '../../lib/local-operations.js'
 import { readCovertOpsProjectConfig } from '../../covert-config.js'
 import { readProjectConfig } from '../../project-config.js'
@@ -69,10 +70,17 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
         client = getCliContext().client
       } catch (error) {
         if (error instanceof CliError) {
+          appendHookError('claude-code-stop', error.message)
           return
         }
         throw error
       }
-      await drainSessions(client, new Date())
+      const result = await drainSessions(client, new Date())
+      for (const failure of result.failed) {
+        appendHookError(
+          'claude-code-stop',
+          `upload failed for ${failure.session_id}: ${failure.error.message}`,
+        )
+      }
     }),
   )

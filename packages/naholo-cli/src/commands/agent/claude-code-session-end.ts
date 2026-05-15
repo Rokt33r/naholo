@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
 import { drainSessions, markSessionEnded } from '../../lib/agent-sessions.js'
+import { appendHookError } from '../../lib/hook-errors.js'
 
 interface HookPayload {
   session_id?: unknown
@@ -38,10 +39,17 @@ export const claudeCodeSessionEndCommand = new Command(
         client = getCliContext().client
       } catch (error) {
         if (error instanceof CliError) {
+          appendHookError('claude-code-session-end', error.message)
           return
         }
         throw error
       }
-      await drainSessions(client, new Date())
+      const result = await drainSessions(client, new Date())
+      for (const failure of result.failed) {
+        appendHookError(
+          'claude-code-session-end',
+          `upload failed for ${failure.session_id}: ${failure.error.message}`,
+        )
+      }
     }),
   )
