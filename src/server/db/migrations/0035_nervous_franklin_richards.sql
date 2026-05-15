@@ -1,0 +1,2 @@
+ALTER TABLE "operation_agent_sessions" DROP CONSTRAINT "operation_agent_sessions_session_id_unique";--> statement-breakpoint
+ALTER TABLE "operation_agent_sessions" ADD CONSTRAINT "operation_agent_sessions_operation_id_session_id" UNIQUE("operation_id","session_id");
