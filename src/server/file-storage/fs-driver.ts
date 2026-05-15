@@ -18,5 +18,20 @@ export function createFsFileStorageAdapter(options: {
       const fullPath = path.join(root, key)
       return await fs.readFile(fullPath, 'utf-8')
     },
+    async deleteObject(key) {
+      const fullPath = path.join(root, key)
+      try {
+        await fs.unlink(fullPath)
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          (error as NodeJS.ErrnoException).code === 'ENOENT'
+        ) {
+          return
+        }
+        throw error
+      }
+    },
   }
 }

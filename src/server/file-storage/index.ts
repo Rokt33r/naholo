@@ -6,6 +6,7 @@ import { createS3FileStorageAdapter } from './s3-driver'
 export interface FileStorageAdapter {
   putObject(key: string, body: Buffer | string): Promise<void>
   getObject(key: string): Promise<string>
+  deleteObject(key: string): Promise<void>
 }
 
 let cached: FileStorageAdapter | null = null

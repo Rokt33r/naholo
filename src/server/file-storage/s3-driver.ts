@@ -3,6 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3'
 import type { FileStorageAdapter } from './index'
 
@@ -36,6 +37,14 @@ export function createS3FileStorageAdapter(options: {
         throw new Error(`S3 object not found or empty: ${key}`)
       }
       return await response.Body.transformToString('utf-8')
+    },
+    async deleteObject(key) {
+      await client.send(
+        new DeleteObjectCommand({
+          Bucket: options.bucket,
+          Key: key,
+        }),
+      )
     },
   }
 }
