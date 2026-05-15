@@ -17,7 +17,10 @@ import {
   removeCovertOpsProjectConfig,
   writeCovertOpsConfig,
 } from '../covert-config.js'
-import { installStopHook } from '../lib/claude-settings.js'
+import {
+  installSessionEndHook,
+  installStopHook,
+} from '../lib/claude-settings.js'
 import { generateCodeName } from '../lib/codename.js'
 import { installSkills } from './skills-install.js'
 
@@ -82,7 +85,8 @@ covertCommand
         '.claude',
         'settings.json',
       )
-      const hookResult = installStopHook(userSettingsPath)
+      const stopHookResult = installStopHook(userSettingsPath)
+      const sessionEndHookResult = installSessionEndHook(userSettingsPath)
 
       console.log()
       console.log(`Covert mode registered for: ${cwd}`)
@@ -92,9 +96,14 @@ covertCommand
       console.log()
       console.log(`Config stored in ${getCovertOpsConfigPath()}`)
       console.log(
-        hookResult === 'added'
+        stopHookResult === 'added'
           ? `Stop hook installed in ${userSettingsPath}`
           : `Stop hook already present in ${userSettingsPath}`,
+      )
+      console.log(
+        sessionEndHookResult === 'added'
+          ? `SessionEnd hook installed in ${userSettingsPath}`
+          : `SessionEnd hook already present in ${userSettingsPath}`,
       )
       console.log('No files written to the project repo.')
       console.log()

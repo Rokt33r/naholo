@@ -2,21 +2,21 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const STOP_HOOK_COMMAND = 'naholo agent claude-code-stop'
+const SESSION_END_HOOK_COMMAND = 'naholo agent claude-code-session-end'
 
 interface CommandHook {
   type: 'command'
   command: string
 }
 
-interface StopHookEntry {
+interface HookEntry {
   matcher?: string
   hooks?: CommandHook[]
 }
 
 interface ClaudeSettings {
   hooks?: {
-    Stop?: StopHookEntry[]
-    [event: string]: unknown
+    [event: string]: HookEntry[] | unknown
   }
   [key: string]: unknown
 }
@@ -36,19 +36,20 @@ function readSettings(settingsPath: string): ClaudeSettings {
   return parsed as ClaudeSettings
 }
 
-function hasStopHookCommand(
+function hasCommandHook(
   settings: ClaudeSettings,
+  event: string,
   command: string,
 ): boolean {
-  const stop = settings.hooks?.Stop
-  if (!Array.isArray(stop)) {
+  const entries = settings.hooks?.[event]
+  if (!Array.isArray(entries)) {
     return false
   }
-  for (const entry of stop) {
+  for (const entry of entries) {
     if (entry == null || typeof entry !== 'object') {
       continue
     }
-    const inner = entry.hooks
+    const inner = (entry as HookEntry).hooks
     if (!Array.isArray(inner)) {
       continue
     }
@@ -66,24 +67,45 @@ function hasStopHookCommand(
   return false
 }
 
-export function installStopHook(
+function installCommandHook(
   settingsPath: string,
+  event: string,
+  command: string,
 ): 'added' | 'already-present' {
   const settings = readSettings(settingsPath)
-  if (hasStopHookCommand(settings, STOP_HOOK_COMMAND)) {
+  if (hasCommandHook(settings, event, command)) {
     return 'already-present'
   }
 
   const hooks = (settings.hooks ?? {}) as NonNullable<ClaudeSettings['hooks']>
-  const stop = Array.isArray(hooks.Stop) ? hooks.Stop : []
-  stop.push({
+  const existing = hooks[event]
+  const entries: HookEntry[] = Array.isArray(existing)
+    ? (existing as HookEntry[])
+    : []
+  entries.push({
     matcher: '*',
-    hooks: [{ type: 'command', command: STOP_HOOK_COMMAND }],
+    hooks: [{ type: 'command', command }],
   })
-  hooks.Stop = stop
+  hooks[event] = entries
   settings.hooks = hooks
 
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
   return 'added'
+}
+
+export function installStopHook(
+  settingsPath: string,
+): 'added' | 'already-present' {
+  return installCommandHook(settingsPath, 'Stop', STOP_HOOK_COMMAND)
+}
+
+export function installSessionEndHook(
+  settingsPath: string,
+): 'added' | 'already-present' {
+  return installCommandHook(
+    settingsPath,
+    'SessionEnd',
+    SESSION_END_HOOK_COMMAND,
+  )
 }

@@ -7,7 +7,10 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
-import { installStopHook } from '../lib/claude-settings.js'
+import {
+  installSessionEndHook,
+  installStopHook,
+} from '../lib/claude-settings.js'
 import { getActiveProfile } from '../profile.js'
 import { writeProjectConfig, writeGitignore } from '../project-config.js'
 import { installSkills } from './skills-install.js'
@@ -61,14 +64,20 @@ export const initCommand = new Command('init')
       //    (always global so a project that uses both `naholo init` and
       //    `naholo covert init` doesn't end up firing the hook twice).
       const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
-      const hookResult = installStopHook(settingsPath)
+      const stopHookResult = installStopHook(settingsPath)
+      const sessionEndHookResult = installSessionEndHook(settingsPath)
 
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)
       console.log(
-        hookResult === 'added'
+        stopHookResult === 'added'
           ? `Stop hook installed in ${settingsPath}`
           : `Stop hook already present in ${settingsPath}`,
+      )
+      console.log(
+        sessionEndHookResult === 'added'
+          ? `SessionEnd hook installed in ${settingsPath}`
+          : `SessionEnd hook already present in ${settingsPath}`,
       )
       console.log()
 
