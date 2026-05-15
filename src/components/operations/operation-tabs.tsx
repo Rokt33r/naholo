@@ -92,9 +92,10 @@ export function OperationTabs({
   const isStatsActive = activeTab.type === 'stats'
 
   return (
-    <div className='flex items-center gap-1 border-b px-2 py-2'>
+    <div className='flex flex-wrap items-center gap-x-1 gap-y-1 border-b px-2 py-1'>
       <Button
         variant={isCommsActive ? 'secondary' : 'ghost'}
+        size='sm'
         onClick={() => onTabChange({ type: 'comms' })}
       >
         <SatelliteDish className='mr-1 size-5' />
@@ -103,6 +104,7 @@ export function OperationTabs({
       {hasAgentSessions && (
         <Button
           variant={isStatsActive ? 'secondary' : 'ghost'}
+          size='sm'
           onClick={() => onTabChange({ type: 'stats' })}
         >
           <BarChart3 className='mr-1 size-5' />
@@ -126,6 +128,7 @@ export function OperationTabs({
             <ContextMenuTrigger asChild>
               <Button
                 variant={isActive ? 'secondary' : 'ghost'}
+                size='sm'
                 onClick={() =>
                   onTabChange({ type: 'note', noteName: note.name })
                 }
@@ -133,7 +136,7 @@ export function OperationTabs({
                   e.preventDefault()
                   setEditingNote(note)
                 }}
-                className={`max-w-[140px] overflow-hidden ${
+                className={`max-w-[200px] overflow-hidden ${
                   !isActive && hasUnsavedChanges ? 'ring-2 ring-blue-500' : ''
                 }`}
               >
