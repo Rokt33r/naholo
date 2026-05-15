@@ -8,6 +8,14 @@ import { writeSkillFile } from '../skills.js'
 
 const CLAUDE_SKILLS_DIR = '.claude/skills'
 
+export const installSkillsCommand = new Command('install-skills')
+  .description('Install bundled core skills into .claude/skills/')
+  .action(
+    withErrorHandling(async () => {
+      await installSkills(coreSkills)
+    }),
+  )
+
 export async function installSkills(
   skills: { name: string; content: string }[],
 ): Promise<void> {
@@ -63,11 +71,3 @@ export async function installSkills(
     console.log(`  Overwritten: ${skill.name}`)
   }
 }
-
-export const installCommand = new Command('install')
-  .description('Install bundled core skills into .claude/skills/')
-  .action(
-    withErrorHandling(async () => {
-      await installSkills(coreSkills)
-    }),
-  )

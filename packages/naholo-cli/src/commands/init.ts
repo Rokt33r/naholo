@@ -7,7 +7,7 @@ import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { getActiveProfile } from '../profile.js'
 import { writeProjectConfig, writeGitignore } from '../project-config.js'
-import { installSkills } from './skills-install.js'
+import { installSkills } from './install-skills.js'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')

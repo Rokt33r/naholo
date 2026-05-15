@@ -17,7 +17,7 @@ import {
   writeCovertOpsConfig,
 } from '../covert-config.js'
 import { generateCodeName } from '../lib/codename.js'
-import { installSkills } from './skills-install.js'
+import { installSkills } from './install-skills.js'
 
 export const covertCommand = new Command('covert').description(
   'Manage covert mode for projects without repo config',
