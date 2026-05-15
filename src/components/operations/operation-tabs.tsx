@@ -142,9 +142,6 @@ export function OperationTabs({
               >
                 <FileText className='mr-1 size-5 shrink-0' />
                 <span className='truncate'>{note.name}</span>
-                {isActive && savingState === 'debouncing' && (
-                  <Loader2 className='ml-1 size-5 shrink-0 animate-spin text-muted-foreground' />
-                )}
                 {isActive && savingState === 'saving' && (
                   <Loader2 className='ml-1 size-5 shrink-0 animate-spin text-blue-500' />
                 )}
