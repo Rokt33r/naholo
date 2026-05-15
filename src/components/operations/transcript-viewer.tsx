@@ -7,19 +7,23 @@ import { TranscriptEntryRow } from './transcript-entry-row'
 type TranscriptViewerProps = {
   projectSlug: string
   operationNumber: number
-  agentSessionId: string
+  agentSessionSessionId: string
 }
 
 export function TranscriptViewer({
   projectSlug,
   operationNumber,
-  agentSessionId,
+  agentSessionSessionId,
 }: TranscriptViewerProps) {
   const {
     data: entries,
     isLoading,
     error,
-  } = useAgentSessionTranscript(projectSlug, operationNumber, agentSessionId)
+  } = useAgentSessionTranscript(
+    projectSlug,
+    operationNumber,
+    agentSessionSessionId,
+  )
 
   if (isLoading) {
     return (

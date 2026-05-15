@@ -65,9 +65,9 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
     projectSlug,
     operationNumber,
   )
-  const [openAgentSessionId, setOpenAgentSessionId] = useState<string | null>(
-    null,
-  )
+  const [openAgentSessionSessionId, setOpenAgentSessionSessionId] = useState<
+    string | null
+  >(null)
 
   const transcriptQueries = useQueries({
     queries: agentSessions.map((agentSession) => ({
@@ -75,11 +75,11 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
         'agent-session-transcript',
         projectSlug,
         operationNumber,
-        agentSession.id,
+        agentSession.sessionId,
       ],
       queryFn: () =>
         fetchTranscriptText(
-          `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSession.id}/transcript`,
+          `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSession.sessionId}/transcript`,
         ),
       select: (jsonl: string): TranscriptEntry[] => parseTranscript(jsonl),
       enabled: agentSession.hasTranscript,
@@ -111,20 +111,23 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
   }
 
   const openAgentSession =
-    openAgentSessionId == null
+    openAgentSessionSessionId == null
       ? null
-      : (agentSessions.find((s) => s.id === openAgentSessionId) ?? null)
+      : (agentSessions.find((s) => s.sessionId === openAgentSessionSessionId) ??
+        null)
   const openStats =
-    openAgentSessionId == null
+    openAgentSessionSessionId == null
       ? null
-      : (rows.find((r) => r.agentSession.id === openAgentSessionId) ?? null)
+      : (rows.find(
+          (r) => r.agentSession.sessionId === openAgentSessionSessionId,
+        ) ?? null)
 
   return (
     <div className='flex h-full flex-col gap-4 overflow-auto p-4'>
       <StatsTotals rows={rows} />
       <StatsSessionsTable
         rows={rows}
-        onSelectAgentSession={setOpenAgentSessionId}
+        onSelectAgentSession={setOpenAgentSessionSessionId}
       />
       <TranscriptDialog
         projectSlug={projectSlug}
@@ -134,7 +137,7 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
         open={openAgentSession != null}
         onOpenChange={(open) => {
           if (!open) {
-            setOpenAgentSessionId(null)
+            setOpenAgentSessionSessionId(null)
           }
         }}
       />

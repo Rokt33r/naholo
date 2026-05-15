@@ -16,21 +16,21 @@ async function fetchTranscriptText(url: string): Promise<string> {
 export function useAgentSessionTranscript(
   projectSlug: string,
   operationNumber: number,
-  agentSessionId: string | null,
+  agentSessionSessionId: string | null,
 ) {
   return useQuery({
     queryKey: [
       'agent-session-transcript',
       projectSlug,
       operationNumber,
-      agentSessionId,
+      agentSessionSessionId,
     ],
     queryFn: () =>
       fetchTranscriptText(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSessionId}/transcript`,
+        `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSessionSessionId}/transcript`,
       ),
     select: (jsonl): TranscriptEntry[] => parseTranscript(jsonl),
-    enabled: agentSessionId != null,
+    enabled: agentSessionSessionId != null,
     staleTime: 1000 * 60,
   })
 }

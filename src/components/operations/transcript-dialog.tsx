@@ -41,12 +41,12 @@ export function TranscriptDialog({
     return null
   }
 
-  const transcriptUrl = `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSession.id}/transcript`
+  const transcriptUrl = `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSession.sessionId}/transcript`
   const queryKey = [
     'agent-session-transcript',
     projectSlug,
     operationNumber,
-    agentSession.id,
+    agentSession.sessionId,
   ]
 
   const handleDownload = async () => {
@@ -88,7 +88,7 @@ export function TranscriptDialog({
           <TranscriptViewer
             projectSlug={projectSlug}
             operationNumber={operationNumber}
-            agentSessionId={agentSession.id}
+            agentSessionSessionId={agentSession.sessionId}
           />
         </div>
         <DialogFooter className='border-t px-4 py-3'>

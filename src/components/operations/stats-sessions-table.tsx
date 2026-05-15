@@ -3,7 +3,7 @@ import type { SessionRowStats } from './stats-view'
 
 type StatsSessionsTableProps = {
   rows: SessionRowStats[]
-  onSelectAgentSession: (agentSessionId: string) => void
+  onSelectAgentSession: (agentSessionSessionId: string) => void
 }
 
 export function StatsSessionsTable({
@@ -34,10 +34,10 @@ export function StatsSessionsTable({
             const canOpen = row.agentSession.hasTranscript
             return (
               <tr
-                key={row.agentSession.id}
+                key={row.agentSession.sessionId}
                 onClick={() => {
                   if (canOpen) {
-                    onSelectAgentSession(row.agentSession.id)
+                    onSelectAgentSession(row.agentSession.sessionId)
                   }
                 }}
                 className={cn(
