@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
+import type { SubscriptionDiscount } from '@/lib/billing/discount-lookup-client'
 import { CancellationControls } from './cancellation-controls'
 import { CheckoutSeatPicker } from './checkout-seat-picker'
 import { SeatControls } from './seat-controls'
@@ -68,6 +69,7 @@ export default function ProjectSubscriptionPage() {
   const [now, setNow] = useState(() => Date.now())
   const [seatQuantity, setSeatQuantity] = useState(1)
   const seatQuantityInitializedRef = useRef(false)
+  const [discount, setDiscount] = useState<SubscriptionDiscount | null>(null)
 
   const minSeats = Math.max(1, data?.usedSeats ?? 1)
   useEffect(() => {
@@ -169,6 +171,7 @@ export default function ProjectSubscriptionPage() {
       paddleRef.current = paddle
       paddle.Checkout.open({
         items: [{ priceId, quantity: seatQuantity }],
+        ...(discount != null ? { discountId: discount.id } : {}),
         customData: { projectSubscriptionCheckoutToken: token },
         settings: {
           displayMode: 'inline',
@@ -217,38 +220,40 @@ export default function ProjectSubscriptionPage() {
 
   if (isActive) {
     return (
-      <div className='mx-auto flex w-full max-w-2xl flex-col gap-6 p-6'>
-        <div className='flex flex-col gap-2'>
-          <h1 className='text-xl font-semibold'>Subscription active</h1>
-          <p className='text-muted-foreground text-sm'>
-            Manage your subscription below. Card changes are still handled via
-            the &ldquo;Manage subscription&rdquo; link in your latest Paddle
-            billing email.
-          </p>
+      <div className='h-full overflow-y-auto'>
+        <div className='mx-auto flex w-full max-w-2xl flex-col gap-6 p-6'>
+          <div className='flex flex-col gap-2'>
+            <h1 className='text-xl font-semibold'>Subscription active</h1>
+            <p className='text-muted-foreground text-sm'>
+              Manage your subscription below. Card changes are still handled via
+              the &ldquo;Manage subscription&rdquo; link in your latest Paddle
+              billing email.
+            </p>
+          </div>
+
+          <SubscriptionReadout
+            paddleSubscription={data.subscription?.paddleSubscription ?? null}
+            usedSeats={data.usedSeats}
+          />
+
+          {data.subscription != null && (
+            <>
+              <SeatControls
+                projectSlug={projectSlug}
+                paddleSubscription={data.subscription.paddleSubscription}
+                usedSeats={data.usedSeats}
+              />
+              <CancellationControls
+                projectSlug={projectSlug}
+                paddleSubscription={data.subscription.paddleSubscription}
+              />
+            </>
+          )}
+
+          <Button asChild variant='outline' className='self-start'>
+            <Link href={`/app/projects/${projectSlug}`}>Back to project</Link>
+          </Button>
         </div>
-
-        <SubscriptionReadout
-          paddleSubscription={data.subscription?.paddleSubscription ?? null}
-          usedSeats={data.usedSeats}
-        />
-
-        {data.subscription != null && (
-          <>
-            <SeatControls
-              projectSlug={projectSlug}
-              paddleSubscription={data.subscription.paddleSubscription}
-              usedSeats={data.usedSeats}
-            />
-            <CancellationControls
-              projectSlug={projectSlug}
-              paddleSubscription={data.subscription.paddleSubscription}
-            />
-          </>
-        )}
-
-        <Button asChild variant='outline' className='self-start'>
-          <Link href={`/app/projects/${projectSlug}`}>Back to project</Link>
-        </Button>
       </div>
     )
   }
@@ -260,80 +265,87 @@ export default function ProjectSubscriptionPage() {
     now - checkoutState.completedAt.getTime() > AWAITING_WEBHOOK_BANNER_MS
 
   return (
-    <div className='mx-auto flex w-full max-w-3xl flex-col gap-6 p-6'>
-      <div className='flex flex-col gap-2'>
-        <h1 className='text-xl font-semibold'>Start your subscription</h1>
-        <p className='text-muted-foreground text-sm'>
-          $5 per human operator per month + VAT. Bots are always free.
-        </p>
-      </div>
-
-      <SubscriptionReadout
-        paddleSubscription={data.subscription?.paddleSubscription ?? null}
-        usedSeats={data.usedSeats}
-      />
-
-      <CheckoutSeatPicker
-        priceId={requirePaddlePublicConfig().priceId}
-        quantity={seatQuantity}
-        onQuantityChange={setSeatQuantity}
-        minSeats={minSeats}
-        disabled={
-          checkoutState.phase !== 'idle' &&
-          checkoutState.phase !== 'expired' &&
-          checkoutState.phase !== 'error'
-        }
-      />
-
-      {(checkoutState.phase === 'idle' ||
-        checkoutState.phase === 'issuing' ||
-        checkoutState.phase === 'expired' ||
-        checkoutState.phase === 'error') && (
-        <div className='flex flex-col gap-3 rounded-lg border p-4'>
-          {checkoutState.phase === 'expired' && (
-            <Alert variant='destructive'>
-              <AlertDescription>
-                This checkout session has expired. Click the button to start a
-                new one.
-              </AlertDescription>
-            </Alert>
-          )}
-          {checkoutState.phase === 'error' && (
-            <Alert variant='destructive'>
-              <AlertDescription>{checkoutState.message}</AlertDescription>
-            </Alert>
-          )}
+    <div className='h-full overflow-y-auto'>
+      <div className='mx-auto flex w-full max-w-3xl flex-col gap-6 p-6'>
+        <div className='flex flex-col gap-2'>
+          <h1 className='text-xl font-semibold'>Start your subscription</h1>
           <p className='text-muted-foreground text-sm'>
-            This checkout session is valid for 1 hour.
+            $5 per human operator per month + VAT. Bots are always free.
           </p>
-          <Button
-            onClick={handleStartCheckout}
-            disabled={checkoutState.phase === 'issuing'}
-            className='self-start'
-          >
-            {checkoutState.phase === 'issuing' ? 'Starting…' : 'Start checkout'}
-          </Button>
         </div>
-      )}
 
-      {checkoutState.phase === 'open' && checkoutState.awaitingWebhook && (
-        <div className='text-muted-foreground text-sm'>
-          Finalizing subscription…
-        </div>
-      )}
-      {showStillWaitingBanner && (
-        <Alert>
-          <AlertDescription>
-            Still waiting for Paddle confirmation. Refresh in a moment.
-          </AlertDescription>
-        </Alert>
-      )}
-      <div
-        ref={frameRef}
-        className={`${FRAME_CLASS} ${
-          checkoutState.phase === 'open' ? 'min-h-[600px]' : ''
-        }`}
-      />
+        <SubscriptionReadout
+          paddleSubscription={data.subscription?.paddleSubscription ?? null}
+          usedSeats={data.usedSeats}
+        />
+
+        <CheckoutSeatPicker
+          projectSlug={projectSlug}
+          priceId={requirePaddlePublicConfig().priceId}
+          quantity={seatQuantity}
+          onQuantityChange={setSeatQuantity}
+          minSeats={minSeats}
+          disabled={
+            checkoutState.phase !== 'idle' &&
+            checkoutState.phase !== 'expired' &&
+            checkoutState.phase !== 'error'
+          }
+          discount={discount}
+          onDiscountChange={setDiscount}
+        />
+
+        {(checkoutState.phase === 'idle' ||
+          checkoutState.phase === 'issuing' ||
+          checkoutState.phase === 'expired' ||
+          checkoutState.phase === 'error') && (
+          <div className='flex flex-col gap-3 rounded-lg border p-4'>
+            {checkoutState.phase === 'expired' && (
+              <Alert variant='destructive'>
+                <AlertDescription>
+                  This checkout session has expired. Click the button to start a
+                  new one.
+                </AlertDescription>
+              </Alert>
+            )}
+            {checkoutState.phase === 'error' && (
+              <Alert variant='destructive'>
+                <AlertDescription>{checkoutState.message}</AlertDescription>
+              </Alert>
+            )}
+            <p className='text-muted-foreground text-sm'>
+              This checkout session is valid for 1 hour.
+            </p>
+            <Button
+              onClick={handleStartCheckout}
+              disabled={checkoutState.phase === 'issuing'}
+              className='self-start'
+            >
+              {checkoutState.phase === 'issuing'
+                ? 'Starting…'
+                : 'Start checkout'}
+            </Button>
+          </div>
+        )}
+
+        {checkoutState.phase === 'open' && checkoutState.awaitingWebhook && (
+          <div className='text-muted-foreground text-sm'>
+            Finalizing subscription…
+          </div>
+        )}
+        {showStillWaitingBanner && (
+          <Alert>
+            <AlertDescription>
+              Still waiting for Paddle confirmation. Refresh in a moment.
+            </AlertDescription>
+          </Alert>
+        )}
+        <div
+          ref={frameRef}
+          className={`${FRAME_CLASS} ${
+            checkoutState.phase === 'open' ? 'min-h-[600px]' : ''
+          }`}
+        />
+      </div>
     </div>
   )
 }
