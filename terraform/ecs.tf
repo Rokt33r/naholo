@@ -119,6 +119,14 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "NAHOLO_STORAGE_S3_BUCKET"
           value = aws_s3_bucket.file_storage.id
+        },
+        {
+          name  = "BILLING"
+          value = "true"
+        },
+        {
+          name  = "PADDLE_ENVIRONMENT"
+          value = "production"
         }
         ],
         var.google_oauth_client_id != "" ? [
@@ -147,6 +155,18 @@ resource "aws_ecs_task_definition" "app" {
         {
           name      = "GOOGLE_OAUTH_STATE_SECRET"
           valueFrom = aws_secretsmanager_secret.google_oauth_state_secret.arn
+        },
+        {
+          name      = "PADDLE_API_KEY"
+          valueFrom = aws_secretsmanager_secret.paddle_api_key.arn
+        },
+        {
+          name      = "PADDLE_WEBHOOK_SECRET"
+          valueFrom = aws_secretsmanager_secret.paddle_webhook_secret.arn
+        },
+        {
+          name      = "PADDLE_PROJECT_TOKEN_SECRET"
+          valueFrom = aws_secretsmanager_secret.paddle_project_token_secret.arn
         }
         ],
         var.google_oauth_client_secret != "" ? [

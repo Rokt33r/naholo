@@ -42,3 +42,8 @@ base_url="https://naholo.app"
 # File Storage Configuration
 # Globally-unique S3 bucket name for server-side file storage (agent session transcripts, etc.)
 s3_naholo_file_storage_bucket = "naholo-file-storage"
+
+# Paddle Configuration (server-side, runtime)
+paddle_api_key              = "YOUR_PADDLE_API_KEY"
+paddle_webhook_secret       = "YOUR_PADDLE_WEBHOOK_SECRET"
+paddle_project_token_secret = "generate-with-openssl-rand-base64-32"

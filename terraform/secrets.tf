@@ -66,3 +66,51 @@ resource "aws_secretsmanager_secret_version" "google_oauth_state_secret" {
   secret_id     = aws_secretsmanager_secret.google_oauth_state_secret.id
   secret_string = var.google_oauth_state_secret
 }
+
+# Paddle API key
+resource "aws_secretsmanager_secret" "paddle_api_key" {
+  name_prefix             = "${var.project_name}-paddle-api-key-"
+  description             = "Paddle API key for ${var.project_name}"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-paddle-api-key"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "paddle_api_key" {
+  secret_id     = aws_secretsmanager_secret.paddle_api_key.id
+  secret_string = var.paddle_api_key
+}
+
+# Paddle webhook (notification) secret
+resource "aws_secretsmanager_secret" "paddle_webhook_secret" {
+  name_prefix             = "${var.project_name}-paddle-webhook-secret-"
+  description             = "Paddle webhook secret for ${var.project_name}"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-paddle-webhook-secret"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "paddle_webhook_secret" {
+  secret_id     = aws_secretsmanager_secret.paddle_webhook_secret.id
+  secret_string = var.paddle_webhook_secret
+}
+
+# Paddle project token secret (HMAC key)
+resource "aws_secretsmanager_secret" "paddle_project_token_secret" {
+  name_prefix             = "${var.project_name}-paddle-project-token-secret-"
+  description             = "HMAC key for signing Paddle project tokens for ${var.project_name}"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-paddle-project-token-secret"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "paddle_project_token_secret" {
+  secret_id     = aws_secretsmanager_secret.paddle_project_token_secret.id
+  secret_string = var.paddle_project_token_secret
+}
