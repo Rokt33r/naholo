@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { CancellationControls } from './cancellation-controls'
+import { CheckoutSeatPicker } from './checkout-seat-picker'
 import { SeatControls } from './seat-controls'
 import { SubscriptionReadout } from './subscription-readout'
 import {
@@ -65,6 +66,16 @@ export default function ProjectSubscriptionPage() {
   const frameRef = useRef<HTMLDivElement>(null)
   const paddleRef = useRef<Paddle | null>(null)
   const [now, setNow] = useState(() => Date.now())
+  const [seatQuantity, setSeatQuantity] = useState(1)
+  const seatQuantityInitializedRef = useRef(false)
+
+  const minSeats = Math.max(1, data?.usedSeats ?? 1)
+  useEffect(() => {
+    if (data != null && !seatQuantityInitializedRef.current) {
+      seatQuantityInitializedRef.current = true
+      setSeatQuantity(Math.max(1, data.usedSeats))
+    }
+  }, [data])
 
   const status = data?.subscription?.paddleSubscription.status ?? null
   const isActive =
@@ -157,7 +168,7 @@ export default function ProjectSubscriptionPage() {
       }
       paddleRef.current = paddle
       paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
+        items: [{ priceId, quantity: seatQuantity }],
         customData: { projectSubscriptionCheckoutToken: token },
         settings: {
           displayMode: 'inline',
@@ -260,6 +271,18 @@ export default function ProjectSubscriptionPage() {
       <SubscriptionReadout
         paddleSubscription={data.subscription?.paddleSubscription ?? null}
         usedSeats={data.usedSeats}
+      />
+
+      <CheckoutSeatPicker
+        priceId={requirePaddlePublicConfig().priceId}
+        quantity={seatQuantity}
+        onQuantityChange={setSeatQuantity}
+        minSeats={minSeats}
+        disabled={
+          checkoutState.phase !== 'idle' &&
+          checkoutState.phase !== 'expired' &&
+          checkoutState.phase !== 'error'
+        }
       />
 
       {(checkoutState.phase === 'idle' ||
