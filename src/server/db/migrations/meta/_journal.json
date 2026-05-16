@@ -267,6 +267,13 @@
       "when": 1778970775376,
       "tag": "0037_right_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1778973600336,
+      "tag": "0038_overjoyed_ultimates",
+      "breakpoints": true
     }
   ]
 }
