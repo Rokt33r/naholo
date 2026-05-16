@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { fetcher } from '@/lib/fetcher'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createResponseError, fetcher, mutationFetch } from '@/lib/fetcher'
 import type { ActiveProjectSubscriptionResponse } from '@/app/api/projects/[projectSlug]/active-project-subscription/route'
 
 export type { ActiveProjectSubscriptionResponse }
@@ -30,6 +30,32 @@ export function useActiveProjectSubscription(
         return false
       }
       return POLL_INTERVAL_MS
+    },
+  })
+}
+
+export type SubscriptionCancellationAction = 'cancel' | 'resume'
+
+export function useUpdateSubscriptionCancellation(projectSlug: string) {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, SubscriptionCancellationAction>({
+    mutationFn: async (action) => {
+      const res = await mutationFetch(
+        `/api/projects/${projectSlug}/billing/cancellation`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        },
+      )
+      if (!res.ok) {
+        throw await createResponseError(res)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['active-project-subscription', projectSlug],
+      })
     },
   })
 }

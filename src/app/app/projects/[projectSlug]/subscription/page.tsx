@@ -5,15 +5,14 @@ import Link from 'next/link'
 import { useParams, redirect } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { CheckoutEventNames } from '@paddle/paddle-js'
+
 import type { Paddle, PaddleEventData } from '@paddle/paddle-js'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import { useProjectContext } from '@/components/app/project-context'
-import {
-  useActiveProjectSubscription,
-  type ActiveProjectSubscriptionResponse,
-} from '@/hooks/use-active-project-subscription'
+import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
+import { CancellationControls } from './cancellation-controls'
+import { SubscriptionReadout } from './subscription-readout'
 import {
   initializePaddle,
   subscribePaddleEvents,
@@ -210,12 +209,23 @@ export default function ProjectSubscriptionPage() {
         <div className='flex flex-col gap-2'>
           <h1 className='text-xl font-semibold'>Subscription active</h1>
           <p className='text-muted-foreground text-sm'>
-            Update seats, change your card, or cancel via the &ldquo;Manage
-            subscription&rdquo; link in your latest Paddle billing email.
+            Manage your subscription below. Card changes are still handled via
+            the &ldquo;Manage subscription&rdquo; link in your latest Paddle
+            billing email.
           </p>
         </div>
 
-        <SubscriptionReadout data={data} />
+        <SubscriptionReadout
+          paddleSubscription={data.subscription?.paddleSubscription ?? null}
+          usedSeats={data.usedSeats}
+        />
+
+        {data.subscription != null && (
+          <CancellationControls
+            projectSlug={projectSlug}
+            paddleSubscription={data.subscription.paddleSubscription}
+          />
+        )}
 
         <Button asChild variant='outline' className='self-start'>
           <Link href={`/app/projects/${projectSlug}`}>Back to project</Link>
@@ -239,7 +249,10 @@ export default function ProjectSubscriptionPage() {
         </p>
       </div>
 
-      <SubscriptionReadout data={data} />
+      <SubscriptionReadout
+        paddleSubscription={data.subscription?.paddleSubscription ?? null}
+        usedSeats={data.usedSeats}
+      />
 
       {(checkoutState.phase === 'idle' ||
         checkoutState.phase === 'issuing' ||
@@ -292,50 +305,4 @@ export default function ProjectSubscriptionPage() {
       />
     </div>
   )
-}
-
-function SubscriptionReadout({
-  data,
-}: {
-  data: ActiveProjectSubscriptionResponse
-}) {
-  const sub = data.subscription
-  const paddle = sub?.paddleSubscription ?? null
-  const status = paddle?.status ?? null
-  const seatQuantity = paddle?.seatQuantity ?? 0
-  return (
-    <div className='space-y-3 rounded-lg border p-4'>
-      <div className='flex items-center justify-between text-sm'>
-        <span className='text-muted-foreground'>Status</span>
-        <SubscriptionStatusBadge status={status} />
-      </div>
-      <div className='flex items-center justify-between text-sm'>
-        <span className='text-muted-foreground'>Seats</span>
-        <span className='font-medium'>
-          {data.usedSeats} / {seatQuantity} used
-        </span>
-      </div>
-      <div className='flex items-center justify-between text-sm'>
-        <span className='text-muted-foreground'>Trial ends</span>
-        <span className='font-medium'>{formatDate(paddle?.trialEndsAt)}</span>
-      </div>
-      <div className='flex items-center justify-between text-sm'>
-        <span className='text-muted-foreground'>Next billing</span>
-        <span className='font-medium'>
-          {formatDate(paddle?.currentPeriodEnd)}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-function formatDate(value: string | null | undefined): string {
-  if (value == null) {
-    return '—'
-  }
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) {
-    return '—'
-  }
-  return d.toLocaleDateString()
 }
