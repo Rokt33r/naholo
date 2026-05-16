@@ -253,6 +253,13 @@
       "when": 1778812159893,
       "tag": "0035_nervous_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1778969106344,
+      "tag": "0036_clear_photon",
+      "breakpoints": true
     }
   ]
 }
