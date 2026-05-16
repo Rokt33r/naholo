@@ -272,23 +272,24 @@ export default function ProjectSubscriptionPage() {
         </div>
       )}
 
-      {checkoutState.phase === 'open' && (
-        <>
-          {checkoutState.awaitingWebhook && (
-            <div className='text-muted-foreground text-sm'>
-              Finalizing subscription…
-            </div>
-          )}
-          {showStillWaitingBanner && (
-            <Alert>
-              <AlertDescription>
-                Still waiting for Paddle confirmation. Refresh in a moment.
-              </AlertDescription>
-            </Alert>
-          )}
-          <div ref={frameRef} className={`${FRAME_CLASS} min-h-[600px]`} />
-        </>
+      {checkoutState.phase === 'open' && checkoutState.awaitingWebhook && (
+        <div className='text-muted-foreground text-sm'>
+          Finalizing subscription…
+        </div>
       )}
+      {showStillWaitingBanner && (
+        <Alert>
+          <AlertDescription>
+            Still waiting for Paddle confirmation. Refresh in a moment.
+          </AlertDescription>
+        </Alert>
+      )}
+      <div
+        ref={frameRef}
+        className={`${FRAME_CLASS} ${
+          checkoutState.phase === 'open' ? 'min-h-[600px]' : ''
+        }`}
+      />
     </div>
   )
 }
