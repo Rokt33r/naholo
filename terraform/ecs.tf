@@ -127,6 +127,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "PADDLE_ENVIRONMENT"
           value = "production"
+        },
+        {
+          name  = "PADDLE_PRICE_ID"
+          value = var.paddle_price_id
         }
         ],
         var.google_oauth_client_id != "" ? [

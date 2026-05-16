@@ -162,3 +162,8 @@ variable "paddle_project_token_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "paddle_price_id" {
+  description = "Paddle catalog price ID for the per-seat subscription (server-side, used for subscription updates)"
+  type        = string
+}

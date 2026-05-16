@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { CancellationControls } from './cancellation-controls'
+import { SeatControls } from './seat-controls'
 import { SubscriptionReadout } from './subscription-readout'
 import {
   initializePaddle,
@@ -221,10 +222,17 @@ export default function ProjectSubscriptionPage() {
         />
 
         {data.subscription != null && (
-          <CancellationControls
-            projectSlug={projectSlug}
-            paddleSubscription={data.subscription.paddleSubscription}
-          />
+          <>
+            <SeatControls
+              projectSlug={projectSlug}
+              paddleSubscription={data.subscription.paddleSubscription}
+              usedSeats={data.usedSeats}
+            />
+            <CancellationControls
+              projectSlug={projectSlug}
+              paddleSubscription={data.subscription.paddleSubscription}
+            />
+          </>
         )}
 
         <Button asChild variant='outline' className='self-start'>

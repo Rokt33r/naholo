@@ -36,6 +36,30 @@ export function useActiveProjectSubscription(
 
 export type SubscriptionCancellationAction = 'cancel' | 'resume'
 
+export function useUpdateSubscriptionSeats(projectSlug: string) {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, number>({
+    mutationFn: async (quantity) => {
+      const res = await mutationFetch(
+        `/api/projects/${projectSlug}/billing/seats`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity }),
+        },
+      )
+      if (!res.ok) {
+        throw await createResponseError(res)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['active-project-subscription', projectSlug],
+      })
+    },
+  })
+}
+
 export function useUpdateSubscriptionCancellation(projectSlug: string) {
   const queryClient = useQueryClient()
   return useMutation<void, Error, SubscriptionCancellationAction>({

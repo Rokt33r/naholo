@@ -29,6 +29,7 @@ export type PaddleConfig = {
   webhookSecret: string
   projectTokenSecret: string
   environment: string
+  priceId: string
 }
 
 type FileStorageConfig =
@@ -67,6 +68,7 @@ const paddleConfig: PaddleConfig | null = billingEnabled
       webhookSecret: getRequiredEnv('PADDLE_WEBHOOK_SECRET'),
       projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
       environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
+      priceId: getRequiredEnv('PADDLE_PRICE_ID'),
     }
   : null
 
