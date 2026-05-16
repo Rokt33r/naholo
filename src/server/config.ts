@@ -32,6 +32,13 @@ export type PaddleConfig = {
   priceId: string
 }
 
+export type PolarConfig = {
+  accessToken: string
+  webhookSecret: string
+  environment: 'sandbox' | 'production'
+  productId: string
+}
+
 type FileStorageConfig =
   | { driver: 'fs'; fsRoot: string }
   | { driver: 's3'; s3Bucket: string }
@@ -69,6 +76,18 @@ const paddleConfig: PaddleConfig | null = billingEnabled
       projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
       environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
       priceId: getRequiredEnv('PADDLE_PRICE_ID'),
+    }
+  : null
+
+const polarConfig: PolarConfig | null = billingEnabled
+  ? {
+      accessToken: getRequiredEnv('POLAR_ACCESS_TOKEN'),
+      webhookSecret: getRequiredEnv('POLAR_WEBHOOK_SECRET'),
+      environment:
+        getOptionalEnv('POLAR_ENVIRONMENT', 'sandbox') === 'production'
+          ? 'production'
+          : 'sandbox',
+      productId: getRequiredEnv('POLAR_PRODUCT_ID'),
     }
   : null
 
@@ -112,6 +131,7 @@ export const config = {
   billing: billingEnabled,
 
   paddle: paddleConfig,
+  polar: polarConfig,
 } as const
 
 export function requirePaddleConfig(): PaddleConfig {
@@ -121,4 +141,13 @@ export function requirePaddleConfig(): PaddleConfig {
     )
   }
   return config.paddle
+}
+
+export function requirePolarConfig(): PolarConfig {
+  if (config.polar == null) {
+    throw new Error(
+      'Polar config is not loaded — set BILLING=true to enable billing',
+    )
+  }
+  return config.polar
 }
