@@ -260,6 +260,13 @@
       "when": 1778969106344,
       "tag": "0036_clear_photon",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1778970775376,
+      "tag": "0037_right_rockslide",
+      "breakpoints": true
     }
   ]
 }
