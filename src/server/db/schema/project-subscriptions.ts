@@ -13,9 +13,10 @@ export const projectSubscriptions = pgTable(
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
-    paddleSubscriptionId: uuid('paddle_subscription_id')
-      .notNull()
-      .references(() => paddleSubscriptions.id, { onDelete: 'cascade' }),
+    paddleSubscriptionId: uuid('paddle_subscription_id').references(
+      () => paddleSubscriptions.id,
+      { onDelete: 'cascade' },
+    ),
     polarSubscriptionId: uuid('polar_subscription_id').references(
       () => polarSubscriptions.id,
       { onDelete: 'set null' },

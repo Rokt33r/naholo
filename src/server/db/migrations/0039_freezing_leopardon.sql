@@ -1,0 +1,1 @@
+ALTER TABLE "project_subscriptions" ALTER COLUMN "paddle_subscription_id" DROP NOT NULL;
