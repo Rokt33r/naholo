@@ -69,6 +69,11 @@ jobs:
           # Build Docker image
           docker build \
             --build-arg DEPLOYMENT_ID=${{ github.ref_name }} \
+            --build-arg NEXT_PUBLIC_BILLING=${{ secrets.NEXT_PUBLIC_BILLING }} \
+            --build-arg NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=${{ secrets.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN }} \
+            --build-arg NEXT_PUBLIC_PADDLE_ENVIRONMENT=${{ secrets.NEXT_PUBLIC_PADDLE_ENVIRONMENT }} \
+            --build-arg NEXT_PUBLIC_PADDLE_PRICE_ID=${{ secrets.NEXT_PUBLIC_PADDLE_PRICE_ID }} \
+            --build-arg NEXT_PUBLIC_PADDLE_MANAGE_URL=${{ secrets.NEXT_PUBLIC_PADDLE_MANAGE_URL }} \
             --cache-from $ECR_REGISTRY/$ECR_REPOSITORY:latest \
             --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             --tag $ECR_REGISTRY/$ECR_REPOSITORY:latest \
