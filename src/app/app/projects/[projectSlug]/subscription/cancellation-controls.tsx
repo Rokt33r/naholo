@@ -17,33 +17,34 @@ import {
   type ActiveProjectSubscriptionResponse,
 } from '@/hooks/use-active-project-subscription'
 
-type PaddleSubscription = NonNullable<
+type PolarSubscription = NonNullable<
   NonNullable<
     ActiveProjectSubscriptionResponse['subscription']
-  >['paddleSubscription']
+  >['polarSubscription']
 >
 
 export function CancellationControls({
   projectSlug,
-  paddleSubscription,
+  polarSubscription,
 }: {
   projectSlug: string
-  paddleSubscription: PaddleSubscription
+  polarSubscription: PolarSubscription
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const mutation = useUpdateSubscriptionCancellation(projectSlug)
 
   const cancellationScheduled =
-    paddleSubscription.cancelAt != null &&
-    paddleSubscription.status !== 'canceled'
+    polarSubscription.cancelAtPeriodEnd &&
+    polarSubscription.status !== 'canceled'
 
   if (cancellationScheduled) {
     return (
       <div className='flex flex-col gap-3 rounded-lg border p-4'>
         <Alert>
           <AlertDescription>
-            Subscription will end on {formatDate(paddleSubscription.cancelAt)}.
-            You can resume any time before then to keep your seats.
+            Subscription will end on{' '}
+            {formatDate(polarSubscription.currentPeriodEnd)}. You can resume any
+            time before then to keep your seats.
           </AlertDescription>
         </Alert>
         {mutation.error != null && (
@@ -68,7 +69,7 @@ export function CancellationControls({
         <h2 className='text-sm font-medium'>Cancel subscription</h2>
         <p className='text-muted-foreground text-sm'>
           You&rsquo;ll keep access until the end of your current billing period
-          on {formatDate(paddleSubscription.currentPeriodEnd)}.
+          on {formatDate(polarSubscription.currentPeriodEnd)}.
         </p>
       </div>
       {mutation.error != null && (
@@ -90,7 +91,7 @@ export function CancellationControls({
             <DialogTitle>Cancel subscription?</DialogTitle>
             <DialogDescription>
               The subscription will end on{' '}
-              {formatDate(paddleSubscription.currentPeriodEnd)}. You can resume
+              {formatDate(polarSubscription.currentPeriodEnd)}. You can resume
               before then to keep your seats. Renewal will stop after that date.
             </DialogDescription>
           </DialogHeader>

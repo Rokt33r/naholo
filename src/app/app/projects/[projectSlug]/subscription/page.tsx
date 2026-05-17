@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { CancellationControls } from './cancellation-controls'
-import { SeatControls } from './seat-controls'
 import { SubscriptionReadout } from './subscription-readout'
 import { loadPolarCheckout } from '@/lib/billing/polar-browser'
 import { publicConfig } from '@/lib/publicConfig'
@@ -22,6 +21,11 @@ type CheckoutSessionResponse = {
   url: string
   expiresAt: string
 }
+
+type PortalState =
+  | { phase: 'idle' }
+  | { phase: 'opening' }
+  | { phase: 'error'; message: string }
 
 type CheckoutState =
   | { phase: 'idle' }
@@ -74,6 +78,7 @@ export default function ProjectSubscriptionPage() {
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     phase: 'idle',
   })
+  const [portalState, setPortalState] = useState<PortalState>({ phase: 'idle' })
   const awaitingWebhook =
     checkoutState.phase === 'open' && checkoutState.awaitingWebhook
   const { data, isLoading } = useActiveProjectSubscription(projectSlug, {
@@ -83,12 +88,9 @@ export default function ProjectSubscriptionPage() {
   const embedRef = useRef<PolarEmbedCheckout | null>(null)
   const [now, setNow] = useState(() => Date.now())
 
-  const status = data?.subscription?.paddleSubscription?.status ?? null
+  const status = data?.subscription?.polarSubscription?.status ?? null
   const isActive =
-    status === 'active' ||
-    status === 'trialing' ||
-    status === 'past_due' ||
-    status === 'paused'
+    status === 'active' || status === 'trialing' || status === 'past_due'
 
   useEffect(() => {
     if (isActive && checkoutState.phase === 'open') {
@@ -194,6 +196,35 @@ export default function ProjectSubscriptionPage() {
     }
   }
 
+  const handleManagePayment = async () => {
+    setPortalState({ phase: 'opening' })
+    try {
+      const res = await fetch(`/api/projects/${projectSlug}/billing/portal`, {
+        method: 'POST',
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: unknown
+        } | null
+        const message =
+          body != null && typeof body.error === 'string'
+            ? body.error
+            : `Failed to open billing portal (${res.status})`
+        throw new Error(message)
+      }
+      const { url } = (await res.json()) as { url: string }
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setPortalState({ phase: 'idle' })
+    } catch (error) {
+      console.error('Failed to open Polar portal', error)
+      setPortalState({
+        phase: 'error',
+        message:
+          error instanceof Error ? error.message : 'Failed to open portal.',
+      })
+    }
+  }
+
   if (isLoading || data == null) {
     return <div className='text-muted-foreground p-8 text-sm'>Loading…</div>
   }
@@ -222,28 +253,36 @@ export default function ProjectSubscriptionPage() {
           <div className='flex flex-col gap-2'>
             <h1 className='text-xl font-semibold'>Subscription active</h1>
             <p className='text-muted-foreground text-sm'>
-              Manage your subscription below. Card changes are still handled via
-              the &ldquo;Manage subscription&rdquo; link in your latest Paddle
-              billing email.
+              Manage your subscription below.
             </p>
           </div>
 
           <SubscriptionReadout
-            paddleSubscription={data.subscription?.paddleSubscription ?? null}
+            polarSubscription={data.subscription?.polarSubscription ?? null}
             usedSeats={data.usedSeats}
           />
 
-          {data.subscription?.paddleSubscription != null && (
+          {data.subscription?.polarSubscription != null && (
             <>
-              <SeatControls
-                projectSlug={projectSlug}
-                paddleSubscription={data.subscription.paddleSubscription}
-                usedSeats={data.usedSeats}
-              />
               <CancellationControls
                 projectSlug={projectSlug}
-                paddleSubscription={data.subscription.paddleSubscription}
+                polarSubscription={data.subscription.polarSubscription}
               />
+              <Button
+                onClick={handleManagePayment}
+                disabled={portalState.phase === 'opening'}
+                variant='outline'
+                className='self-start'
+              >
+                {portalState.phase === 'opening'
+                  ? 'Opening…'
+                  : 'Manage subscription'}
+              </Button>
+              {portalState.phase === 'error' && (
+                <Alert variant='destructive'>
+                  <AlertDescription>{portalState.message}</AlertDescription>
+                </Alert>
+              )}
             </>
           )}
 
@@ -272,7 +311,7 @@ export default function ProjectSubscriptionPage() {
         </div>
 
         <SubscriptionReadout
-          paddleSubscription={data.subscription?.paddleSubscription ?? null}
+          polarSubscription={data.subscription?.polarSubscription ?? null}
           usedSeats={data.usedSeats}
         />
 

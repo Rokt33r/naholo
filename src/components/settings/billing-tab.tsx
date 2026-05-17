@@ -54,28 +54,26 @@ export function BillingTab({ onClose }: BillingTabProps) {
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Status</span>
           <SubscriptionStatusBadge
-            status={data.subscription?.paddleSubscription?.status ?? null}
+            status={data.subscription?.polarSubscription?.status ?? null}
           />
         </div>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Seats</span>
           <span className='font-medium'>
             {data.usedSeats} /{' '}
-            {data.subscription?.paddleSubscription?.seatQuantity ?? 0} used
+            {data.subscription?.polarSubscription?.seats ?? '—'} used
           </span>
         </div>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Trial ends</span>
           <span className='font-medium'>
-            {formatDate(data.subscription?.paddleSubscription?.trialEndsAt)}
+            {formatDate(data.subscription?.polarSubscription?.trialEnd)}
           </span>
         </div>
         <div className='flex items-center justify-between text-sm'>
           <span className='text-muted-foreground'>Next billing</span>
           <span className='font-medium'>
-            {formatDate(
-              data.subscription?.paddleSubscription?.currentPeriodEnd,
-            )}
+            {formatDate(data.subscription?.polarSubscription?.currentPeriodEnd)}
           </span>
         </div>
       </div>

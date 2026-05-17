@@ -28,7 +28,6 @@ import {
   countActiveHumanOperators,
   getActiveProjectSubscription,
   isActiveSubscriptionStatus,
-  type SubscriptionStatus,
 } from './project-subscription'
 import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
 
@@ -81,27 +80,27 @@ async function seedBotOperator(projectId: string) {
 
 async function seedActiveSubscription(input: {
   projectId: string
-  status: SubscriptionStatus
-  seatQuantity: number
+  status: string
+  seats: number | null
   createdByOperatorId?: string | null
 }) {
-  const paddleSubId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-  const [paddle] = await testDb
-    .insert(schema.paddleSubscriptions)
+  const polarSubId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  const [polar] = await testDb
+    .insert(schema.polarSubscriptions)
     .values({
-      paddleSubscriptionId: paddleSubId,
-      paddleCustomerId: `cus_${paddleSubId}`,
+      polarSubscriptionId: polarSubId,
+      polarCustomerId: `cus_${polarSubId}`,
       billingEmail: 'billing@example.com',
       status: input.status,
-      seatQuantity: input.seatQuantity,
+      seats: input.seats,
     })
-    .returning({ id: schema.paddleSubscriptions.id })
+    .returning({ id: schema.polarSubscriptions.id })
 
   const [link] = await testDb
     .insert(schema.projectSubscriptions)
     .values({
       projectId: input.projectId,
-      paddleSubscriptionId: paddle.id,
+      polarSubscriptionId: polar.id,
       createdByOperatorId: input.createdByOperatorId ?? null,
     })
     .returning({ id: schema.projectSubscriptions.id })
@@ -111,7 +110,7 @@ async function seedActiveSubscription(input: {
     .set({ activeProjectSubscriptionId: link.id })
     .where(eq(schema.projects.id, input.projectId))
 
-  return { paddleId: paddle.id, linkId: link.id }
+  return { polarId: polar.id, linkId: link.id }
 }
 
 beforeAll(async () => {
@@ -151,15 +150,15 @@ describe('getActiveProjectSubscription', () => {
     await seedActiveSubscription({
       projectId,
       status: 'active',
-      seatQuantity: 3,
+      seats: 3,
     })
 
     const result = await getActiveProjectSubscription(projectId)
     expect(result).not.toBeNull()
     expect(result?.projectId).toBe(projectId)
-    expect(result?.paddleSubscription?.status).toBe('active')
-    expect(result?.paddleSubscription?.seatQuantity).toBe(3)
-    expect(result?.paddleSubscription?.billingEmail).toBe('billing@example.com')
+    expect(result?.polarSubscription?.status).toBe('active')
+    expect(result?.polarSubscription?.seats).toBe(3)
+    expect(result?.polarSubscription?.billingEmail).toBe('billing@example.com')
   })
 })
 
@@ -180,7 +179,7 @@ describe('assertSeatAvailable', () => {
     await seedActiveSubscription({
       projectId,
       status: 'incomplete',
-      seatQuantity: 1,
+      seats: 1,
     })
 
     const result = await assertSeatAvailable(projectId)
@@ -198,7 +197,7 @@ describe('assertSeatAvailable', () => {
     await seedActiveSubscription({
       projectId,
       status: 'trialing',
-      seatQuantity: 1,
+      seats: 1,
     })
     await seedHumanOperator(projectId, userId)
 
@@ -217,7 +216,7 @@ describe('assertSeatAvailable', () => {
     await seedActiveSubscription({
       projectId,
       status: 'trialing',
-      seatQuantity: 2,
+      seats: 2,
     })
     await seedHumanOperator(projectId, userId)
 
@@ -231,7 +230,7 @@ describe('assertSeatAvailable', () => {
     await seedActiveSubscription({
       projectId,
       status: 'active',
-      seatQuantity: 3,
+      seats: 3,
     })
 
     const result = await assertSeatAvailable(projectId)
@@ -244,7 +243,7 @@ describe('assertSeatAvailable', () => {
     await seedActiveSubscription({
       projectId,
       status: 'trialing',
-      seatQuantity: 1,
+      seats: 1,
     })
     await seedBotOperator(projectId)
     await seedBotOperator(projectId)

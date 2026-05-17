@@ -246,16 +246,17 @@ export async function assertSeatAvailable(
   projectId: string,
 ): Promise<ReturnResult<undefined>> {
   const subscription = await getActiveProjectSubscription(projectId)
-  if (subscription == null || subscription.paddleSubscription == null) {
+  if (subscription == null || subscription.polarSubscription == null) {
     return err(new SubscriptionNotReadyError())
   }
-  const status = subscription.paddleSubscription.status
-  if (!isActiveSubscriptionStatus(status)) {
+  const status = subscription.polarSubscription.status
+  if (status !== 'active' && status !== 'trialing') {
     return err(new SubscriptionNotReadyError())
   }
 
+  const seatCap = subscription.polarSubscription.seats ?? 1
   const humanCount = await countActiveHumanOperators(projectId)
-  if (humanCount >= subscription.paddleSubscription.seatQuantity) {
+  if (humanCount >= seatCap) {
     return err(new SeatLimitExceededError())
   }
   return ok()

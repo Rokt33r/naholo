@@ -1,19 +1,19 @@
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import type { ActiveProjectSubscriptionResponse } from '@/hooks/use-active-project-subscription'
 
-type PaddleSubscription = NonNullable<
+type PolarSubscription = NonNullable<
   ActiveProjectSubscriptionResponse['subscription']
->['paddleSubscription']
+>['polarSubscription']
 
 export function SubscriptionReadout({
-  paddleSubscription,
+  polarSubscription,
   usedSeats,
 }: {
-  paddleSubscription: PaddleSubscription | null
+  polarSubscription: PolarSubscription | null
   usedSeats: number
 }) {
-  const status = paddleSubscription?.status ?? null
-  const seatQuantity = paddleSubscription?.seatQuantity ?? 0
+  const status = polarSubscription?.status ?? null
+  const seats = polarSubscription?.seats
   return (
     <div className='space-y-3 rounded-lg border p-4'>
       <div className='flex items-center justify-between text-sm'>
@@ -23,19 +23,19 @@ export function SubscriptionReadout({
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Seats</span>
         <span className='font-medium'>
-          {usedSeats} / {seatQuantity} used
+          {usedSeats} / {seats ?? '—'} used
         </span>
       </div>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Trial ends</span>
         <span className='font-medium'>
-          {formatDate(paddleSubscription?.trialEndsAt)}
+          {formatDate(polarSubscription?.trialEnd)}
         </span>
       </div>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Next billing</span>
         <span className='font-medium'>
-          {formatDate(paddleSubscription?.currentPeriodEnd)}
+          {formatDate(polarSubscription?.currentPeriodEnd)}
         </span>
       </div>
     </div>
