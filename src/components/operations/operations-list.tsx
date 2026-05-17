@@ -7,11 +7,10 @@ import {
   useRouter,
   useSearchParams,
 } from 'next/navigation'
-import { PanelLeftClose, Search, SquarePen } from 'lucide-react'
+import { LandPlot, PanelLeftClose, Search, SquarePen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
-import { ProjectSwitcher } from '@/components/projects/project-switcher'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useOperationsList } from './operations-list-context'
 import { OperationItem } from './operation-item'
@@ -62,13 +61,12 @@ export function OperationsList({
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between px-2 pt-2 gap-2'>
+      <div className='flex items-center justify-between gap-2 px-2 pt-2 h-10'>
         {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
-        <ProjectSwitcher
-          projects={projects}
-          currentProjectSlug={projectSlug}
-          currentProjectName={projectName}
-        />
+        <h2 className='flex flex-1 items-center gap-2 px-2 font-semibold'>
+          <LandPlot className='size-5' />
+          Operations
+        </h2>
         {showCollapseButton && (
           <Button size='icon' variant='ghost' onClick={toggle}>
             <PanelLeftClose className='size-5' />

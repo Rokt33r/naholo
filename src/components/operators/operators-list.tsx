@@ -1,9 +1,8 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { Bot, UserPlus, User } from 'lucide-react'
+import { Bot, Contact, UserPlus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ProjectSwitcher } from '@/components/projects/project-switcher'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useOperators } from '@/hooks/use-operators'
@@ -32,17 +31,10 @@ export function OperatorsList({
 
   return (
     <div className='flex h-full flex-col'>
-      <div className='flex items-center justify-between px-2 pt-2 gap-2'>
+      <div className='flex items-center justify-between gap-2 px-2 pt-2'>
         {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
-        <ProjectSwitcher
-          projects={projects}
-          currentProjectSlug={projectSlug}
-          currentProjectName={projectName}
-        />
-      </div>
-
-      <div className='flex items-center justify-between px-4 py-3'>
-        <h2 className='text-sm font-semibold text-muted-foreground'>
+        <h2 className='flex flex-1 items-center gap-2 px-2 font-semibold'>
+          <Contact className='size-5' />
           Operators
         </h2>
         <div className='flex items-center gap-1'>

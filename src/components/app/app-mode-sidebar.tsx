@@ -9,6 +9,8 @@ import {
   ToolSidebarSpacing,
 } from '@/components/ui/tool-sidebar'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
+import { ProjectSwitcher } from '@/components/projects/project-switcher'
+import { useProjectContext } from '@/components/app/project-context'
 
 type AppModeSidebarProps = {
   currentProjectSlug: string
@@ -21,9 +23,18 @@ export function AppModeSidebar({
 }: AppModeSidebarProps) {
   const router = useRouter()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { projectName, projects } = useProjectContext()
 
   return (
     <ToolSidebar>
+      <div className='flex justify-center'>
+        <ProjectSwitcher
+          projects={projects}
+          currentProjectSlug={currentProjectSlug}
+          currentProjectName={projectName}
+          compact
+        />
+      </div>
       <ToolSidebarButton
         isActive={currentMode === 'operations'}
         tooltip='Operations'
