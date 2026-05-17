@@ -62,18 +62,25 @@ export async function listProjectSubscriptions(input: {
   ])
 
   return {
-    rows: rows.map((row) => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      projectId: row.project.id,
-      projectName: row.project.name,
-      projectSlug: row.project.slug,
-      paddleSubscriptionRowId: row.paddleSubscription.id,
-      paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
-      paddleSubscriptionStatus: row.paddleSubscription.status,
-      createdByOperatorId: row.createdByOperator?.id ?? null,
-      createdByOperatorName: row.createdByOperator?.user?.name ?? null,
-    })),
+    rows: rows.flatMap((row) => {
+      if (row.paddleSubscription == null) {
+        return []
+      }
+      return [
+        {
+          id: row.id,
+          createdAt: row.createdAt,
+          projectId: row.project.id,
+          projectName: row.project.name,
+          projectSlug: row.project.slug,
+          paddleSubscriptionRowId: row.paddleSubscription.id,
+          paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
+          paddleSubscriptionStatus: row.paddleSubscription.status,
+          createdByOperatorId: row.createdByOperator?.id ?? null,
+          createdByOperatorName: row.createdByOperator?.user?.name ?? null,
+        },
+      ]
+    }),
     total,
   }
 }
@@ -91,7 +98,7 @@ export async function getProjectSubscription(
       },
     },
   })
-  if (row == null) {
+  if (row == null || row.paddleSubscription == null) {
     return null
   }
   return {

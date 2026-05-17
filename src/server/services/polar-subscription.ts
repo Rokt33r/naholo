@@ -6,32 +6,30 @@ import type { Subscription } from '@polar-sh/sdk/models/components/subscription.
 
 export type PolarSubscriptionRow = typeof polarSubscriptions.$inferSelect
 
-export async function upsertPolarSubscriptionFromEvent(input: {
-  data: Subscription
-}): Promise<{ row: PolarSubscriptionRow; applied: boolean }> {
-  const { data } = input
-
+export async function upsertPolarSubscription(
+  polarSubscription: Subscription,
+): Promise<{ row: PolarSubscriptionRow; applied: boolean }> {
   const existing = await db.query.polarSubscriptions.findFirst({
-    where: (t, { eq }) => eq(t.polarSubscriptionId, data.id),
+    where: (t, { eq }) => eq(t.polarSubscriptionId, polarSubscription.id),
   })
 
   const values = {
-    polarSubscriptionId: data.id,
-    polarCustomerId: data.customerId,
-    billingEmail: data.customer.email ?? '',
-    metadata: (data.metadata as Record<string, unknown>) ?? null,
-    status: data.status,
-    seats: data.seats ?? null,
-    currentPeriodStart: data.currentPeriodStart,
-    currentPeriodEnd: data.currentPeriodEnd,
-    trialStart: data.trialStart,
-    trialEnd: data.trialEnd,
-    cancelAtPeriodEnd: data.cancelAtPeriodEnd,
-    canceledAt: data.canceledAt,
-    startedAt: data.startedAt,
-    endsAt: data.endsAt,
-    endedAt: data.endedAt,
-    modifiedAt: data.modifiedAt,
+    polarSubscriptionId: polarSubscription.id,
+    polarCustomerId: polarSubscription.customerId,
+    billingEmail: polarSubscription.customer.email ?? '',
+    metadata: (polarSubscription.metadata as Record<string, unknown>) ?? null,
+    status: polarSubscription.status,
+    seats: polarSubscription.seats ?? null,
+    currentPeriodStart: polarSubscription.currentPeriodStart,
+    currentPeriodEnd: polarSubscription.currentPeriodEnd,
+    trialStart: polarSubscription.trialStart,
+    trialEnd: polarSubscription.trialEnd,
+    cancelAtPeriodEnd: polarSubscription.cancelAtPeriodEnd,
+    canceledAt: polarSubscription.canceledAt,
+    startedAt: polarSubscription.startedAt,
+    endsAt: polarSubscription.endsAt,
+    endedAt: polarSubscription.endedAt,
+    modifiedAt: polarSubscription.modifiedAt,
     updatedAt: new Date(),
   }
 
@@ -41,17 +39,15 @@ export async function upsertPolarSubscriptionFromEvent(input: {
       .values(values)
       .returning()
     if (inserted == null) {
-      throw new Error(
-        'upsertPolarSubscriptionFromEvent: insert returned no row',
-      )
+      throw new Error('upsertPolarSubscription: insert returned no row')
     }
     return { row: inserted, applied: true }
   }
 
   if (
     existing.modifiedAt != null &&
-    data.modifiedAt != null &&
-    existing.modifiedAt > data.modifiedAt
+    polarSubscription.modifiedAt != null &&
+    existing.modifiedAt > polarSubscription.modifiedAt
   ) {
     return { row: existing, applied: false }
   }
@@ -62,7 +58,7 @@ export async function upsertPolarSubscriptionFromEvent(input: {
     .where(eq(polarSubscriptions.id, existing.id))
     .returning()
   if (updated == null) {
-    throw new Error('upsertPolarSubscriptionFromEvent: update returned no row')
+    throw new Error('upsertPolarSubscription: update returned no row')
   }
   return { row: updated, applied: true }
 }

@@ -8,7 +8,7 @@ import type { Customer } from '@polar-sh/sdk/models/components/customer.js'
 import { requirePolarConfig } from '@/server/config'
 import { recordPolarWebhookEvent } from '@/server/services/polar-webhook-event'
 import {
-  upsertPolarSubscriptionFromEvent,
+  upsertPolarSubscription,
   patchPolarSubscriptionBillingEmail,
 } from '@/server/services/polar-subscription'
 
@@ -55,9 +55,7 @@ export async function POST(request: NextRequest) {
       case 'subscription.uncanceled':
       case 'subscription.past_due':
       case 'subscription.revoked': {
-        await upsertPolarSubscriptionFromEvent({
-          data: event.data as Subscription,
-        })
+        await upsertPolarSubscription(event.data as Subscription)
         break
       }
       case 'customer.created':

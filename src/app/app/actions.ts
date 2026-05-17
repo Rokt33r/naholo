@@ -16,6 +16,8 @@ import {
   deleteProject,
 } from '@/server/services/project'
 import { createProjectOperator } from '@/server/services/project-operator'
+import { provisionPolarTrialForProject } from '@/server/services/polar-trial'
+import { db } from '@/server/db'
 import { createOperation } from '@/server/services/operation'
 import { createOperationLog } from '@/server/services/operation-log'
 import {
@@ -48,14 +50,33 @@ export async function createProjectAction(
     return err(new Error('Unauthorized'))
   }
 
+  const notificationEmail = await db.query.userNotificationEmails.findFirst({
+    columns: { email: true },
+    where: (t, { eq }) => eq(t.userId, user.id),
+  })
+  if (notificationEmail == null) {
+    return err(
+      new Error(
+        'Configure a notification email on your account before creating a project.',
+      ),
+    )
+  }
+
   const result = await createProject({ name, slug, description })
   if (result.success) {
-    await createProjectOperator({
+    const operator = await createProjectOperator({
       projectId: result.data.id,
       userId: user.id,
       name: user.name,
       role: 'admin',
     })
+
+    await provisionPolarTrialForProject({
+      projectId: result.data.id,
+      billingEmail: notificationEmail.email,
+      createdByOperatorId: operator.id,
+    })
+
     revalidatePath('/app')
   }
 
