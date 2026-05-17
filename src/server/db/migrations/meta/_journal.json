@@ -288,6 +288,13 @@
       "when": 1779004973956,
       "tag": "0040_certain_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1779005010115,
+      "tag": "0041_typical_edwin_jarvis",
+      "breakpoints": true
     }
   ]
 }
