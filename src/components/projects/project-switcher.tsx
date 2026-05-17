@@ -17,14 +17,12 @@ type ProjectSwitcherProps = {
   projects: Project[]
   currentProjectSlug: string
   currentProjectName: string
-  compact?: boolean
 }
 
 export function ProjectSwitcher({
   projects,
   currentProjectSlug,
   currentProjectName,
-  compact = false,
 }: ProjectSwitcherProps) {
   const router = useRouter()
 
@@ -37,28 +35,15 @@ export function ProjectSwitcher({
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            'hover:bg-accent flex cursor-pointer items-center rounded-md',
-            compact
-              ? 'size-9 justify-center text-sm font-semibold uppercase'
-              : 'flex-1 gap-1 px-2 py-1 font-semibold',
+            'relative flex cursor-pointer items-center rounded-md transition-colors focus-visible:outline-none size-10 justify-center bg-foreground text-background',
           )}
-          title={compact ? currentProjectName : undefined}
+          title={currentProjectName}
         >
-          {compact ? (
-            <span>{currentProjectName.slice(0, 1)}</span>
-          ) : (
-            <>
-              <div className='flex-1 text-left'>{currentProjectName}</div>
-              <ChevronDown className='text-muted-foreground h-4 w-4' />
-            </>
-          )}
+          <span aria-hidden>{currentProjectName.slice(0, 1)}</span>
+          <span className='sr-only'>Switch project</span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align='start'
-        side={compact ? 'right' : 'bottom'}
-        className='w-56'
-      >
+      <DropdownMenuContent align='start' side={'right'} className='w-56'>
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.id}

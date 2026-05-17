@@ -35,7 +35,7 @@ function ToolSidebarButton({
       <TooltipTrigger asChild>
         <button
           className={cn(
-            'flex size-9 items-center justify-center rounded-md transition-colors',
+            'flex size-10 items-center justify-center rounded-md transition-colors',
             'hover:bg-accent hover:text-accent-foreground',
             isActive && 'bg-accent text-accent-foreground',
             className,

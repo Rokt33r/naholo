@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
   ToolSidebarButton,
+  ToolSidebarSeparator,
   ToolSidebarSpacing,
 } from '@/components/ui/tool-sidebar'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
@@ -27,14 +28,11 @@ export function AppModeSidebar({
 
   return (
     <ToolSidebar>
-      <div className='flex justify-center'>
-        <ProjectSwitcher
-          projects={projects}
-          currentProjectSlug={currentProjectSlug}
-          currentProjectName={projectName}
-          compact
-        />
-      </div>
+      <ProjectSwitcher
+        projects={projects}
+        currentProjectSlug={currentProjectSlug}
+        currentProjectName={projectName}
+      />
       <ToolSidebarButton
         isActive={currentMode === 'operations'}
         tooltip='Operations'
