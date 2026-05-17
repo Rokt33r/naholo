@@ -48,3 +48,11 @@ paddle_api_key              = "YOUR_PADDLE_API_KEY"
 paddle_webhook_secret       = "YOUR_PADDLE_WEBHOOK_SECRET"
 paddle_project_token_secret = "generate-with-openssl-rand-base64-32"
 paddle_price_id             = "pri_xxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Polar Configuration (server-side, runtime)
+# Scopes needed on the access token: checkouts:write, subscriptions:read/write,
+# customers:read/write, members:read/write, discounts:read, webhooks:read.
+polar_access_token   = "polar_oat_..."
+polar_webhook_secret = "polar_whsec_..."
+polar_product_id     = "YOUR_POLAR_PRODUCT_ID"
+polar_environment    = "production"

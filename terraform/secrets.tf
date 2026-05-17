@@ -114,3 +114,35 @@ resource "aws_secretsmanager_secret_version" "paddle_project_token_secret" {
   secret_id     = aws_secretsmanager_secret.paddle_project_token_secret.id
   secret_string = var.paddle_project_token_secret
 }
+
+# Polar API access token
+resource "aws_secretsmanager_secret" "polar_access_token" {
+  name_prefix             = "${var.project_name}-polar-access-token-"
+  description             = "Polar API access token for ${var.project_name}"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-polar-access-token"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "polar_access_token" {
+  secret_id     = aws_secretsmanager_secret.polar_access_token.id
+  secret_string = var.polar_access_token
+}
+
+# Polar webhook signing secret
+resource "aws_secretsmanager_secret" "polar_webhook_secret" {
+  name_prefix             = "${var.project_name}-polar-webhook-secret-"
+  description             = "Polar webhook signing secret for ${var.project_name}"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-polar-webhook-secret"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "polar_webhook_secret" {
+  secret_id     = aws_secretsmanager_secret.polar_webhook_secret.id
+  secret_string = var.polar_webhook_secret
+}

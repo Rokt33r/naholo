@@ -167,3 +167,27 @@ variable "paddle_price_id" {
   description = "Paddle catalog price ID for the per-seat subscription (server-side, used for subscription updates)"
   type        = string
 }
+
+# Polar Configuration (server-side, runtime)
+variable "polar_access_token" {
+  description = "Polar API access token (server-side, scopes: checkouts:write, subscriptions:read/write, customers:read/write, members:read/write, discounts:read, webhooks:read)"
+  type        = string
+  sensitive   = true
+}
+
+variable "polar_webhook_secret" {
+  description = "Polar webhook signing secret (server-side, from Polar webhook destination)"
+  type        = string
+  sensitive   = true
+}
+
+variable "polar_product_id" {
+  description = "Polar per-seat product ID (must match NEXT_PUBLIC_POLAR_PRODUCT_ID)"
+  type        = string
+}
+
+variable "polar_environment" {
+  description = "Polar environment: 'sandbox' or 'production'"
+  type        = string
+  default     = "sandbox"
+}
