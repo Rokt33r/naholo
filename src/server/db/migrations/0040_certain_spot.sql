@@ -1,0 +1,1 @@
+ALTER TABLE "polar_subscriptions" DROP COLUMN "cancel_at_period_end";

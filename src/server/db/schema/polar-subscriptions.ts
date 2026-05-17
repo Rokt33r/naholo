@@ -23,7 +23,6 @@ export const polarSubscriptions = pgTable(
     currentPeriodEnd: timestamp('current_period_end'),
     trialStart: timestamp('trial_start'),
     trialEnd: timestamp('trial_end'),
-    cancelAtPeriodEnd: boolean('cancel_at_period_end').notNull().default(false),
     canceledAt: timestamp('canceled_at'),
     startedAt: timestamp('started_at'),
     endsAt: timestamp('ends_at'),

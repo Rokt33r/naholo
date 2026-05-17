@@ -281,6 +281,13 @@
       "when": 1778974883850,
       "tag": "0039_freezing_leopardon",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1779004973956,
+      "tag": "0040_certain_spot",
+      "breakpoints": true
     }
   ]
 }
