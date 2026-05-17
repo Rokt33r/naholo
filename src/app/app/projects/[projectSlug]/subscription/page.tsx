@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, redirect } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { CheckoutEventNames } from '@paddle/paddle-js'
 
-import type { Paddle, PaddleEventData } from '@paddle/paddle-js'
+import type { PolarEmbedCheckout } from '@polar-sh/checkout/embed'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProjectContext } from '@/components/app/project-context'
@@ -16,15 +15,15 @@ import { CancellationControls } from './cancellation-controls'
 import { CheckoutSeatPicker } from './checkout-seat-picker'
 import { SeatControls } from './seat-controls'
 import { SubscriptionReadout } from './subscription-readout'
-import {
-  initializePaddle,
-  subscribePaddleEvents,
-} from '@/lib/billing/paddle-browser'
-import { fetchProjectSubscriptionCheckoutToken } from '@/lib/billing/checkout-token-client'
+import { loadPolarCheckout } from '@/lib/billing/polar-browser'
 import { publicConfig, requirePaddlePublicConfig } from '@/lib/publicConfig'
 
-const FRAME_CLASS = 'paddle-checkout-frame'
 const AWAITING_WEBHOOK_BANNER_MS = 5 * 60 * 1000
+
+type CheckoutSessionResponse = {
+  url: string
+  expiresAt: string
+}
 
 type CheckoutState =
   | { phase: 'idle' }
@@ -38,7 +37,7 @@ type CheckoutState =
   | { phase: 'expired' }
   | { phase: 'error'; message: string }
 
-function humanizeTokenError(error: unknown): string {
+function humanizeCheckoutError(error: unknown): string {
   if (error instanceof Error) {
     if (error.message.includes('403')) {
       return 'Only admin operators can start checkout.'
@@ -48,12 +47,31 @@ function humanizeTokenError(error: unknown): string {
   return 'Failed to start checkout.'
 }
 
+async function createCheckoutSession(
+  projectSlug: string,
+): Promise<CheckoutSessionResponse> {
+  const res = await fetch(`/api/projects/${projectSlug}/billing/checkout`, {
+    method: 'POST',
+  })
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: unknown
+    } | null
+    const message =
+      body != null && typeof body.error === 'string'
+        ? body.error
+        : `Failed to create checkout session (${res.status})`
+    throw new Error(message)
+  }
+  return (await res.json()) as CheckoutSessionResponse
+}
+
 export default function ProjectSubscriptionPage() {
   const { projectSlug } = useParams<{ projectSlug: string }>()
   if (!publicConfig.billing) {
     redirect(`/app/projects/${projectSlug}`)
   }
-  const { projectId, currentOperator } = useProjectContext()
+  const { currentOperator } = useProjectContext()
   const isAdmin = currentOperator.role === 'admin'
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     phase: 'idle',
@@ -64,8 +82,7 @@ export default function ProjectSubscriptionPage() {
     awaitingWebhook,
   })
   const queryClient = useQueryClient()
-  const frameRef = useRef<HTMLDivElement>(null)
-  const paddleRef = useRef<Paddle | null>(null)
+  const embedRef = useRef<PolarEmbedCheckout | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [seatQuantity, setSeatQuantity] = useState(1)
   const seatQuantityInitializedRef = useRef(false)
@@ -89,10 +106,11 @@ export default function ProjectSubscriptionPage() {
   useEffect(() => {
     if (isActive && checkoutState.phase === 'open') {
       try {
-        paddleRef.current?.Checkout.close()
+        embedRef.current?.close()
       } catch (error) {
-        console.error('Failed to close Paddle checkout', error)
+        console.error('Failed to close Polar checkout', error)
       }
+      embedRef.current = null
       setCheckoutState({ phase: 'idle' })
     }
   }, [isActive, checkoutState.phase])
@@ -105,33 +123,18 @@ export default function ProjectSubscriptionPage() {
     const timeoutMs = Math.max(0, expiresAt.getTime() - Date.now())
     const timer = window.setTimeout(() => {
       try {
-        paddleRef.current?.Checkout.close()
+        embedRef.current?.close()
       } catch (error) {
-        console.error('Failed to close Paddle checkout on expiry', error)
+        console.error('Failed to close Polar checkout on expiry', error)
       }
+      embedRef.current = null
       setCheckoutState({ phase: 'expired' })
     }, timeoutMs)
 
-    const unsubscribe = subscribePaddleEvents((event: PaddleEventData) => {
-      if (event.name !== CheckoutEventNames.CHECKOUT_COMPLETED) {
-        return
-      }
-      setCheckoutState((prev) => {
-        if (prev.phase !== 'open') {
-          return prev
-        }
-        return { ...prev, awaitingWebhook: true, completedAt: new Date() }
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['active-project-subscription', projectSlug],
-      })
-    })
-
     return () => {
       window.clearTimeout(timer)
-      unsubscribe()
     }
-  }, [checkoutState, projectSlug, queryClient])
+  }, [checkoutState])
 
   useEffect(() => {
     if (checkoutState.phase !== 'open' || !checkoutState.awaitingWebhook) {
@@ -147,48 +150,55 @@ export default function ProjectSubscriptionPage() {
 
   const handleStartCheckout = async () => {
     setCheckoutState({ phase: 'issuing' })
-    let token: string
-    let expiresAt: Date
+    let session: CheckoutSessionResponse
     try {
-      const res = await fetchProjectSubscriptionCheckoutToken(projectSlug)
-      token = res.token
-      expiresAt = res.expiresAt
+      session = await createCheckoutSession(projectSlug)
     } catch (error) {
-      console.error('Failed to issue checkout token', error)
+      console.error('Failed to create checkout session', error)
       setCheckoutState({
         phase: 'error',
-        message: humanizeTokenError(error),
+        message: humanizeCheckoutError(error),
       })
       return
     }
 
     try {
-      const { priceId } = requirePaddlePublicConfig()
-      const paddle = await initializePaddle()
-      if (paddle == null) {
-        throw new Error('Paddle failed to initialize')
-      }
-      paddleRef.current = paddle
-      paddle.Checkout.open({
-        items: [{ priceId, quantity: seatQuantity }],
-        ...(discount != null ? { discountId: discount.id } : {}),
-        customData: { projectSubscriptionCheckoutToken: token },
-        settings: {
-          displayMode: 'inline',
-          frameTarget: FRAME_CLASS,
-          frameInitialHeight: 600,
-          frameStyle:
-            'width: 100%; min-width: 312px; background-color: transparent; border: none;',
-        },
+      const PolarEmbedCheckoutCtor = await loadPolarCheckout()
+      const embed = await PolarEmbedCheckoutCtor.create(session.url, {
+        theme: 'light',
       })
+      embedRef.current = embed
+
+      embed.addEventListener('success', () => {
+        setCheckoutState((prev) => {
+          if (prev.phase !== 'open') {
+            return prev
+          }
+          return { ...prev, awaitingWebhook: true, completedAt: new Date() }
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['active-project-subscription', projectSlug],
+        })
+      })
+
+      embed.addEventListener('close', () => {
+        embedRef.current = null
+        setCheckoutState((prev) => {
+          if (prev.phase !== 'open' || prev.awaitingWebhook) {
+            return prev
+          }
+          return { phase: 'idle' }
+        })
+      })
+
       setCheckoutState({
         phase: 'open',
-        expiresAt,
+        expiresAt: new Date(session.expiresAt),
         awaitingWebhook: false,
         completedAt: null,
       })
     } catch (error) {
-      console.error('Failed to open inline checkout', error)
+      console.error('Failed to open Polar checkout', error)
       setCheckoutState({
         phase: 'error',
         message:
@@ -335,16 +345,10 @@ export default function ProjectSubscriptionPage() {
         {showStillWaitingBanner && (
           <Alert>
             <AlertDescription>
-              Still waiting for Paddle confirmation. Refresh in a moment.
+              Still waiting for Polar confirmation. Refresh in a moment.
             </AlertDescription>
           </Alert>
         )}
-        <div
-          ref={frameRef}
-          className={`${FRAME_CLASS} ${
-            checkoutState.phase === 'open' ? 'min-h-[600px]' : ''
-          }`}
-        />
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import 'server-only'
 import { eq } from 'drizzle-orm'
+import { ResourceNotFound } from '@polar-sh/sdk/models/errors/resourcenotfound.js'
 import { db } from '../db'
 import { projects, projectSubscriptions } from '../db/schema'
 import { config } from '@/server/config'
@@ -18,15 +19,27 @@ export async function provisionPolarTrialForProject(input: {
   const { projectId, billingEmail, createdByOperatorId } = input
   const polar = getPolarServerClient()
 
-  const customer = await polar.customers.create({
-    email: billingEmail,
-    externalId: projectId,
-    metadata: { projectId },
-  })
+  let customerId: string
+  try {
+    const existing = await polar.customers.getExternal({
+      externalId: projectId,
+    })
+    customerId = existing.id
+  } catch (error) {
+    if (!(error instanceof ResourceNotFound)) {
+      throw error
+    }
+    const created = await polar.customers.create({
+      email: billingEmail,
+      externalId: projectId,
+      metadata: { projectId },
+    })
+    customerId = created.id
+  }
 
   const subscription = await polar.subscriptions.create({
     productId: config.polar.productId,
-    customerId: customer.id,
+    customerId,
     metadata: { projectId, projectOperatorId: createdByOperatorId },
   })
 
