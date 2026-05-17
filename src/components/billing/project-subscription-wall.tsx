@@ -50,7 +50,7 @@ export function ProjectSubscriptionWall({
     return <div className='h-full w-full' aria-busy='true' />
   }
 
-  const status = data.subscription?.paddleSubscription.status ?? null
+  const status = data.subscription?.paddleSubscription?.status ?? null
   const isActive = status === 'active' || status === 'trialing'
 
   if (isActive) {

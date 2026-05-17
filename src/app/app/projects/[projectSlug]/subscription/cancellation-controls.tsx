@@ -18,8 +18,10 @@ import {
 } from '@/hooks/use-active-project-subscription'
 
 type PaddleSubscription = NonNullable<
-  ActiveProjectSubscriptionResponse['subscription']
->['paddleSubscription']
+  NonNullable<
+    ActiveProjectSubscriptionResponse['subscription']
+  >['paddleSubscription']
+>
 
 export function CancellationControls({
   projectSlug,

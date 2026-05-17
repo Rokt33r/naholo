@@ -14,6 +14,7 @@ import type { SubscriptionDiscount } from '@/lib/billing/discount-lookup-client'
 import { CancellationControls } from './cancellation-controls'
 import { CheckoutSeatPicker } from './checkout-seat-picker'
 import { SeatControls } from './seat-controls'
+import { StartTrialPanel } from './start-trial-panel'
 import { SubscriptionReadout } from './subscription-readout'
 import { loadPolarCheckout } from '@/lib/billing/polar-browser'
 import { publicConfig, requirePaddlePublicConfig } from '@/lib/publicConfig'
@@ -96,7 +97,8 @@ export default function ProjectSubscriptionPage() {
     }
   }, [data])
 
-  const status = data?.subscription?.paddleSubscription.status ?? null
+  const status = data?.subscription?.paddleSubscription?.status ?? null
+  const hasPolarSubscription = data?.subscription?.polarSubscription != null
   const isActive =
     status === 'active' ||
     status === 'trialing' ||
@@ -246,7 +248,7 @@ export default function ProjectSubscriptionPage() {
             usedSeats={data.usedSeats}
           />
 
-          {data.subscription != null && (
+          {data.subscription?.paddleSubscription != null && (
             <>
               <SeatControls
                 projectSlug={projectSlug}
@@ -273,6 +275,10 @@ export default function ProjectSubscriptionPage() {
     checkoutState.awaitingWebhook &&
     checkoutState.completedAt != null &&
     now - checkoutState.completedAt.getTime() > AWAITING_WEBHOOK_BANNER_MS
+
+  if (!hasPolarSubscription) {
+    return <StartTrialPanel projectSlug={projectSlug} />
+  }
 
   return (
     <div className='h-full overflow-y-auto'>

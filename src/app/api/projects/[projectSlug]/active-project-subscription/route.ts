@@ -24,13 +24,15 @@ export type ActiveProjectSubscriptionResponse = {
       trialEndsAt: string | null
       cancelAt: string | null
       canceledAt: string | null
-    }
+    } | null
+    polarSubscription: { id: string } | null
     createdAt: string
     updatedAt: string
   } | null
   usedSeats: number
 }
 
+// TODO If we still using this serialize stuff, we need to move this to service so other route can share.
 function serializeDates(
   subscription: ActiveProjectSubscription,
 ): ActiveProjectSubscriptionResponse['subscription'] {
@@ -39,19 +41,23 @@ function serializeDates(
     id: subscription.id,
     projectId: subscription.projectId,
     createdByOperatorId: subscription.createdByOperatorId,
-    paddleSubscription: {
-      id: p.id,
-      paddleSubscriptionId: p.paddleSubscriptionId,
-      paddleCustomerId: p.paddleCustomerId,
-      billingEmail: p.billingEmail,
-      status: p.status,
-      seatQuantity: p.seatQuantity,
-      currentPeriodStart: p.currentPeriodStart?.toISOString() ?? null,
-      currentPeriodEnd: p.currentPeriodEnd?.toISOString() ?? null,
-      trialEndsAt: p.trialEndsAt?.toISOString() ?? null,
-      cancelAt: p.cancelAt?.toISOString() ?? null,
-      canceledAt: p.canceledAt?.toISOString() ?? null,
-    },
+    paddleSubscription:
+      p == null
+        ? null
+        : {
+            id: p.id,
+            paddleSubscriptionId: p.paddleSubscriptionId,
+            paddleCustomerId: p.paddleCustomerId,
+            billingEmail: p.billingEmail,
+            status: p.status,
+            seatQuantity: p.seatQuantity,
+            currentPeriodStart: p.currentPeriodStart?.toISOString() ?? null,
+            currentPeriodEnd: p.currentPeriodEnd?.toISOString() ?? null,
+            trialEndsAt: p.trialEndsAt?.toISOString() ?? null,
+            cancelAt: p.cancelAt?.toISOString() ?? null,
+            canceledAt: p.canceledAt?.toISOString() ?? null,
+          },
+    polarSubscription: subscription.polarSubscription,
     createdAt: subscription.createdAt.toISOString(),
     updatedAt: subscription.updatedAt.toISOString(),
   }

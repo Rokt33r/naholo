@@ -32,7 +32,8 @@ export type ActiveProjectSubscription = {
     trialEndsAt: Date | null
     cancelAt: Date | null
     canceledAt: Date | null
-  }
+  } | null
+  polarSubscription: { id: string } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -50,15 +51,22 @@ export async function getActiveProjectSubscription(
     columns: { activeProjectSubscriptionId: true },
     with: {
       activeProjectSubscription: {
-        with: { paddleSubscription: true },
+        with: {
+          paddleSubscription: true,
+          polarSubscription: { columns: { id: true } },
+        },
       },
     },
     where: (t, { eq }) => eq(t.id, projectId),
   })
 
   const link = project?.activeProjectSubscription
-  const paddle = link?.paddleSubscription
-  if (link == null || paddle == null) {
+  if (link == null) {
+    return null
+  }
+  const paddle = link.paddleSubscription
+  const polar = link.polarSubscription
+  if (paddle == null && polar == null) {
     return null
   }
 
@@ -66,19 +74,23 @@ export async function getActiveProjectSubscription(
     id: link.id,
     projectId: link.projectId,
     createdByOperatorId: link.createdByOperatorId,
-    paddleSubscription: {
-      id: paddle.id,
-      paddleSubscriptionId: paddle.paddleSubscriptionId,
-      paddleCustomerId: paddle.paddleCustomerId,
-      billingEmail: paddle.billingEmail,
-      status: paddle.status,
-      seatQuantity: paddle.seatQuantity,
-      currentPeriodStart: paddle.currentPeriodStart,
-      currentPeriodEnd: paddle.currentPeriodEnd,
-      trialEndsAt: paddle.trialEndsAt,
-      cancelAt: paddle.cancelAt,
-      canceledAt: paddle.canceledAt,
-    },
+    paddleSubscription:
+      paddle == null
+        ? null
+        : {
+            id: paddle.id,
+            paddleSubscriptionId: paddle.paddleSubscriptionId,
+            paddleCustomerId: paddle.paddleCustomerId,
+            billingEmail: paddle.billingEmail,
+            status: paddle.status,
+            seatQuantity: paddle.seatQuantity,
+            currentPeriodStart: paddle.currentPeriodStart,
+            currentPeriodEnd: paddle.currentPeriodEnd,
+            trialEndsAt: paddle.trialEndsAt,
+            cancelAt: paddle.cancelAt,
+            canceledAt: paddle.canceledAt,
+          },
+    polarSubscription: polar == null ? null : { id: polar.id },
     createdAt: link.createdAt,
     updatedAt: link.updatedAt,
   }
@@ -199,7 +211,7 @@ export async function assertSeatAvailable(
   projectId: string,
 ): Promise<ReturnResult<undefined>> {
   const subscription = await getActiveProjectSubscription(projectId)
-  if (subscription == null) {
+  if (subscription == null || subscription.paddleSubscription == null) {
     return err(new SubscriptionNotReadyError())
   }
   const status = subscription.paddleSubscription.status

@@ -157,9 +157,9 @@ describe('getActiveProjectSubscription', () => {
     const result = await getActiveProjectSubscription(projectId)
     expect(result).not.toBeNull()
     expect(result?.projectId).toBe(projectId)
-    expect(result?.paddleSubscription.status).toBe('active')
-    expect(result?.paddleSubscription.seatQuantity).toBe(3)
-    expect(result?.paddleSubscription.billingEmail).toBe('billing@example.com')
+    expect(result?.paddleSubscription?.status).toBe('active')
+    expect(result?.paddleSubscription?.seatQuantity).toBe(3)
+    expect(result?.paddleSubscription?.billingEmail).toBe('billing@example.com')
   })
 })
 

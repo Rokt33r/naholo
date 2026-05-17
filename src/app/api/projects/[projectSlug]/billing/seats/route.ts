@@ -31,7 +31,7 @@ export async function POST(
     const { quantity } = requestBodySchema.parse(await request.json())
 
     const subscription = await getActiveProjectSubscription(project.id)
-    if (subscription == null) {
+    if (subscription == null || subscription.paddleSubscription == null) {
       throw new NotFoundError('Subscription')
     }
 
