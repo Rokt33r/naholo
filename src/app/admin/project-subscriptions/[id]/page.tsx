@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { getProjectSubscription } from '@/server/admin/project-subscription'
 import { PaddleSubscriptionStatusBadge } from '../../_components/paddle-subscription-status-badge'
+import { PolarSubscriptionStatusBadge } from '../../_components/polar-subscription-status-badge'
 
 export default async function ProjectSubscriptionDetailPage({
   params,
@@ -64,15 +65,42 @@ export default async function ProjectSubscriptionDetailPage({
       <h2 className='mt-6 text-sm font-semibold text-zinc-700 dark:text-zinc-300'>
         Paddle Subscription
       </h2>
-      <div className='mt-2 flex items-center gap-3 rounded border border-zinc-200 p-3 text-sm dark:border-zinc-800'>
-        <PaddleSubscriptionStatusBadge status={sub.paddleSubscription.status} />
-        <Link
-          href={`/admin/paddle-subscriptions/${sub.paddleSubscription.id}`}
-          className='font-mono text-xs text-zinc-900 hover:underline dark:text-zinc-100'
-        >
-          {sub.paddleSubscription.paddleSubscriptionId}
-        </Link>
-      </div>
+      {sub.paddleSubscription != null ? (
+        <div className='mt-2 flex items-center gap-3 rounded border border-zinc-200 p-3 text-sm dark:border-zinc-800'>
+          <PaddleSubscriptionStatusBadge
+            status={sub.paddleSubscription.status}
+          />
+          <Link
+            href={`/admin/paddle-subscriptions/${sub.paddleSubscription.id}`}
+            className='font-mono text-xs text-zinc-900 hover:underline dark:text-zinc-100'
+          >
+            {sub.paddleSubscription.paddleSubscriptionId}
+          </Link>
+        </div>
+      ) : (
+        <p className='mt-2 text-sm text-zinc-500 dark:text-zinc-400'>
+          (no paddle subscription)
+        </p>
+      )}
+
+      <h2 className='mt-6 text-sm font-semibold text-zinc-700 dark:text-zinc-300'>
+        Polar Subscription
+      </h2>
+      {sub.polarSubscription != null ? (
+        <div className='mt-2 flex items-center gap-3 rounded border border-zinc-200 p-3 text-sm dark:border-zinc-800'>
+          <PolarSubscriptionStatusBadge status={sub.polarSubscription.status} />
+          <Link
+            href={`/admin/polar-subscriptions/${sub.polarSubscription.id}`}
+            className='font-mono text-xs text-zinc-900 hover:underline dark:text-zinc-100'
+          >
+            {sub.polarSubscription.polarSubscriptionId}
+          </Link>
+        </div>
+      ) : (
+        <p className='mt-2 text-sm text-zinc-500 dark:text-zinc-400'>
+          (no polar subscription)
+        </p>
+      )}
     </div>
   )
 }

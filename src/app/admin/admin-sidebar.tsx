@@ -28,6 +28,16 @@ const items = [
     billingOnly: true,
   },
   {
+    href: '/admin/polar-webhook-events',
+    label: 'Polar Webhook Events',
+    billingOnly: true,
+  },
+  {
+    href: '/admin/polar-subscriptions',
+    label: 'Polar Subscriptions',
+    billingOnly: true,
+  },
+  {
     href: '/admin/project-subscriptions',
     label: 'Project Subscriptions',
     billingOnly: true,

@@ -14,9 +14,16 @@ export type ProjectSubscriptionListItem = {
   projectId: string
   projectName: string
   projectSlug: string
-  paddleSubscriptionRowId: string
-  paddleSubscriptionId: string
-  paddleSubscriptionStatus: PaddleSubscriptionStatus
+  paddleSubscription: {
+    rowId: string
+    paddleSubscriptionId: string
+    status: PaddleSubscriptionStatus
+  } | null
+  polarSubscription: {
+    rowId: string
+    polarSubscriptionId: string
+    status: string
+  } | null
   createdByOperatorId: string | null
   createdByOperatorName: string | null
 }
@@ -30,7 +37,12 @@ export type ProjectSubscriptionDetail = {
     id: string
     paddleSubscriptionId: string
     status: PaddleSubscriptionStatus
-  }
+  } | null
+  polarSubscription: {
+    id: string
+    polarSubscriptionId: string
+    status: string
+  } | null
   createdByOperator: {
     id: string
     userName: string | null
@@ -49,6 +61,9 @@ export async function listProjectSubscriptions(input: {
         paddleSubscription: {
           columns: { id: true, paddleSubscriptionId: true, status: true },
         },
+        polarSubscription: {
+          columns: { id: true, polarSubscriptionId: true, status: true },
+        },
         createdByOperator: {
           columns: { id: true },
           with: { user: { columns: { id: true, name: true } } },
@@ -62,25 +77,31 @@ export async function listProjectSubscriptions(input: {
   ])
 
   return {
-    rows: rows.flatMap((row) => {
-      if (row.paddleSubscription == null) {
-        return []
-      }
-      return [
-        {
-          id: row.id,
-          createdAt: row.createdAt,
-          projectId: row.project.id,
-          projectName: row.project.name,
-          projectSlug: row.project.slug,
-          paddleSubscriptionRowId: row.paddleSubscription.id,
-          paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
-          paddleSubscriptionStatus: row.paddleSubscription.status,
-          createdByOperatorId: row.createdByOperator?.id ?? null,
-          createdByOperatorName: row.createdByOperator?.user?.name ?? null,
-        },
-      ]
-    }),
+    rows: rows.map((row) => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      projectId: row.project.id,
+      projectName: row.project.name,
+      projectSlug: row.project.slug,
+      paddleSubscription:
+        row.paddleSubscription != null
+          ? {
+              rowId: row.paddleSubscription.id,
+              paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
+              status: row.paddleSubscription.status,
+            }
+          : null,
+      polarSubscription:
+        row.polarSubscription != null
+          ? {
+              rowId: row.polarSubscription.id,
+              polarSubscriptionId: row.polarSubscription.polarSubscriptionId,
+              status: row.polarSubscription.status,
+            }
+          : null,
+      createdByOperatorId: row.createdByOperator?.id ?? null,
+      createdByOperatorName: row.createdByOperator?.user?.name ?? null,
+    })),
     total,
   }
 }
@@ -93,12 +114,13 @@ export async function getProjectSubscription(
     with: {
       project: true,
       paddleSubscription: true,
+      polarSubscription: true,
       createdByOperator: {
         with: { user: true },
       },
     },
   })
-  if (row == null || row.paddleSubscription == null) {
+  if (row == null) {
     return null
   }
   return {
@@ -110,11 +132,22 @@ export async function getProjectSubscription(
       name: row.project.name,
       slug: row.project.slug,
     },
-    paddleSubscription: {
-      id: row.paddleSubscription.id,
-      paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
-      status: row.paddleSubscription.status,
-    },
+    paddleSubscription:
+      row.paddleSubscription != null
+        ? {
+            id: row.paddleSubscription.id,
+            paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
+            status: row.paddleSubscription.status,
+          }
+        : null,
+    polarSubscription:
+      row.polarSubscription != null
+        ? {
+            id: row.polarSubscription.id,
+            polarSubscriptionId: row.polarSubscription.polarSubscriptionId,
+            status: row.polarSubscription.status,
+          }
+        : null,
     createdByOperator:
       row.createdByOperator != null
         ? {
