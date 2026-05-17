@@ -35,7 +35,7 @@ export class SubscriptionNotReadyError extends ServiceError {
 
 export class SeatLimitExceededError extends ServiceError {
   constructor(
-    message = 'Seat limit reached. Open the "Manage subscription" link in your latest Paddle billing email to add more seats.',
+    message = 'Seat limit reached. Open "Manage subscription" from the project billing settings to increase your seat count via the Polar customer portal.',
   ) {
     super(message)
     this.name = 'SeatLimitExceededError'

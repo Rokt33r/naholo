@@ -18,16 +18,6 @@ import { publicConfig } from '@/lib/publicConfig'
 const items = [
   { href: '/admin/users', label: 'Users', billingOnly: false },
   {
-    href: '/admin/paddle-webhook-events',
-    label: 'Paddle Webhook Events',
-    billingOnly: true,
-  },
-  {
-    href: '/admin/paddle-subscriptions',
-    label: 'Paddle Subscriptions',
-    billingOnly: true,
-  },
-  {
     href: '/admin/polar-webhook-events',
     label: 'Polar Webhook Events',
     billingOnly: true,

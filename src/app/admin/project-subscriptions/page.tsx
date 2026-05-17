@@ -5,7 +5,6 @@ import {
   PROJECT_SUBSCRIPTION_PAGE_SIZE,
   listProjectSubscriptions,
 } from '@/server/admin/project-subscription'
-import { PaddleSubscriptionStatusBadge } from '../_components/paddle-subscription-status-badge'
 import { PolarSubscriptionStatusBadge } from '../_components/polar-subscription-status-badge'
 
 const searchParamsSchema = z.object({
@@ -49,7 +48,6 @@ export default async function ProjectSubscriptionsPage({
             <tr className='border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400'>
               <th className='pb-2 pr-4 font-medium'>Created</th>
               <th className='pb-2 pr-4 font-medium'>Project</th>
-              <th className='pb-2 pr-4 font-medium'>Paddle</th>
               <th className='pb-2 pr-4 font-medium'>Polar</th>
               <th className='pb-2 font-medium'>Created By</th>
             </tr>
@@ -78,20 +76,6 @@ export default async function ProjectSubscriptionsPage({
                       ({row.projectSlug})
                     </span>
                   </Link>
-                </td>
-                <td className='py-2 pr-4'>
-                  {row.paddleSubscription != null ? (
-                    <Link
-                      href={`/admin/paddle-subscriptions/${row.paddleSubscription.rowId}`}
-                      className='hover:underline'
-                    >
-                      <PaddleSubscriptionStatusBadge
-                        status={row.paddleSubscription.status}
-                      />
-                    </Link>
-                  ) : (
-                    <span className='text-zinc-400 dark:text-zinc-600'>—</span>
-                  )}
                 </td>
                 <td className='py-2 pr-4'>
                   {row.polarSubscription != null ? (

@@ -144,30 +144,6 @@ variable "s3_naholo_file_storage_bucket" {
   type        = string
 }
 
-# Paddle Configuration (server-side, runtime)
-variable "paddle_api_key" {
-  description = "Paddle API key (server-side, from Paddle dashboard)"
-  type        = string
-  sensitive   = true
-}
-
-variable "paddle_webhook_secret" {
-  description = "Paddle notification (webhook) secret (server-side, from Paddle dashboard)"
-  type        = string
-  sensitive   = true
-}
-
-variable "paddle_project_token_secret" {
-  description = "HMAC key for signing Paddle project tokens (generate with: openssl rand -base64 32)"
-  type        = string
-  sensitive   = true
-}
-
-variable "paddle_price_id" {
-  description = "Paddle catalog price ID for the per-seat subscription (server-side, used for subscription updates)"
-  type        = string
-}
-
 # Polar Configuration (server-side, runtime)
 variable "polar_access_token" {
   description = "Polar API access token (server-side, scopes: checkouts:write, subscriptions:read/write, customers:read/write, members:read/write, discounts:read, webhooks:read)"

@@ -187,7 +187,7 @@ export async function requireProjectOperator(
     columns: { id: true, slug: true },
     with: {
       activeProjectSubscription: {
-        with: { paddleSubscription: { columns: { status: true } } },
+        with: { polarSubscription: { columns: { status: true } } },
       },
     },
     where: (t, { eq }) => eq(t.slug, projectSlug),
@@ -202,14 +202,10 @@ export async function requireProjectOperator(
 
   if (config.billing && options?.skipSubscriptionCheck !== true) {
     const projectSubscriptionStatus =
-      projectRow.activeProjectSubscription?.paddleSubscription?.status ?? null
-    const subscription =
-      projectSubscriptionStatus == null
-        ? null
-        : { status: projectSubscriptionStatus as SubscriptionStatus }
+      projectRow.activeProjectSubscription?.polarSubscription?.status ?? null
     if (
-      subscription == null ||
-      !isActiveSubscriptionStatus(subscription.status)
+      projectSubscriptionStatus == null ||
+      !isActiveSubscriptionStatus(projectSubscriptionStatus)
     ) {
       throw new SubscriptionNotReadyError()
     }

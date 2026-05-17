@@ -125,14 +125,6 @@ resource "aws_ecs_task_definition" "app" {
           value = "true"
         },
         {
-          name  = "PADDLE_ENVIRONMENT"
-          value = "production"
-        },
-        {
-          name  = "PADDLE_PRICE_ID"
-          value = var.paddle_price_id
-        },
-        {
           name  = "POLAR_ENVIRONMENT"
           value = var.polar_environment
         },
@@ -167,18 +159,6 @@ resource "aws_ecs_task_definition" "app" {
         {
           name      = "GOOGLE_OAUTH_STATE_SECRET"
           valueFrom = aws_secretsmanager_secret.google_oauth_state_secret.arn
-        },
-        {
-          name      = "PADDLE_API_KEY"
-          valueFrom = aws_secretsmanager_secret.paddle_api_key.arn
-        },
-        {
-          name      = "PADDLE_WEBHOOK_SECRET"
-          valueFrom = aws_secretsmanager_secret.paddle_webhook_secret.arn
-        },
-        {
-          name      = "PADDLE_PROJECT_TOKEN_SECRET"
-          valueFrom = aws_secretsmanager_secret.paddle_project_token_secret.arn
         },
         {
           name      = "POLAR_ACCESS_TOKEN"

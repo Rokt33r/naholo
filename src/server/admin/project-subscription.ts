@@ -1,10 +1,7 @@
 import 'server-only'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import {
-  projectSubscriptions,
-  type PaddleSubscriptionStatus,
-} from '../db/schema'
+import { projectSubscriptions } from '../db/schema'
 
 export const PROJECT_SUBSCRIPTION_PAGE_SIZE = 50
 
@@ -14,11 +11,6 @@ export type ProjectSubscriptionListItem = {
   projectId: string
   projectName: string
   projectSlug: string
-  paddleSubscription: {
-    rowId: string
-    paddleSubscriptionId: string
-    status: PaddleSubscriptionStatus
-  } | null
   polarSubscription: {
     rowId: string
     polarSubscriptionId: string
@@ -33,11 +25,6 @@ export type ProjectSubscriptionDetail = {
   createdAt: Date
   updatedAt: Date
   project: { id: string; name: string; slug: string }
-  paddleSubscription: {
-    id: string
-    paddleSubscriptionId: string
-    status: PaddleSubscriptionStatus
-  } | null
   polarSubscription: {
     id: string
     polarSubscriptionId: string
@@ -58,9 +45,6 @@ export async function listProjectSubscriptions(input: {
     db.query.projectSubscriptions.findMany({
       with: {
         project: { columns: { id: true, name: true, slug: true } },
-        paddleSubscription: {
-          columns: { id: true, paddleSubscriptionId: true, status: true },
-        },
         polarSubscription: {
           columns: { id: true, polarSubscriptionId: true, status: true },
         },
@@ -83,14 +67,6 @@ export async function listProjectSubscriptions(input: {
       projectId: row.project.id,
       projectName: row.project.name,
       projectSlug: row.project.slug,
-      paddleSubscription:
-        row.paddleSubscription != null
-          ? {
-              rowId: row.paddleSubscription.id,
-              paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
-              status: row.paddleSubscription.status,
-            }
-          : null,
       polarSubscription:
         row.polarSubscription != null
           ? {
@@ -113,7 +89,6 @@ export async function getProjectSubscription(
     where: eq(projectSubscriptions.id, id),
     with: {
       project: true,
-      paddleSubscription: true,
       polarSubscription: true,
       createdByOperator: {
         with: { user: true },
@@ -132,14 +107,6 @@ export async function getProjectSubscription(
       name: row.project.name,
       slug: row.project.slug,
     },
-    paddleSubscription:
-      row.paddleSubscription != null
-        ? {
-            id: row.paddleSubscription.id,
-            paddleSubscriptionId: row.paddleSubscription.paddleSubscriptionId,
-            status: row.paddleSubscription.status,
-          }
-        : null,
     polarSubscription:
       row.polarSubscription != null
         ? {

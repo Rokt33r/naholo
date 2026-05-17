@@ -24,14 +24,6 @@ function getOptionalEnv(key: string, defaultValue?: string): string {
   return process.env[key] || defaultValue || ''
 }
 
-export type PaddleConfig = {
-  apiKey: string
-  webhookSecret: string
-  projectTokenSecret: string
-  environment: string
-  priceId: string
-}
-
 export type PolarConfig = {
   accessToken: string
   webhookSecret: string
@@ -68,16 +60,6 @@ function buildFileStorageConfig(): FileStorageConfig {
 const fileStorageConfig = buildFileStorageConfig()
 
 const billingEnabled = process.env.BILLING === 'true'
-
-const paddleConfig: PaddleConfig | null = billingEnabled
-  ? {
-      apiKey: getRequiredEnv('PADDLE_API_KEY'),
-      webhookSecret: getRequiredEnv('PADDLE_WEBHOOK_SECRET'),
-      projectTokenSecret: getRequiredEnv('PADDLE_PROJECT_TOKEN_SECRET'),
-      environment: getOptionalEnv('PADDLE_ENVIRONMENT', 'sandbox'),
-      priceId: getRequiredEnv('PADDLE_PRICE_ID'),
-    }
-  : null
 
 const polarConfig: PolarConfig | null = billingEnabled
   ? {
@@ -130,18 +112,8 @@ export const config = {
 
   billing: billingEnabled,
 
-  paddle: paddleConfig,
   polar: polarConfig,
 } as const
-
-export function requirePaddleConfig(): PaddleConfig {
-  if (config.paddle == null) {
-    throw new Error(
-      'Paddle config is not loaded — set BILLING=true to enable billing',
-    )
-  }
-  return config.paddle
-}
 
 export function requirePolarConfig(): PolarConfig {
   if (config.polar == null) {

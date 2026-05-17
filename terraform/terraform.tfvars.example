@@ -43,12 +43,6 @@ base_url="https://naholo.app"
 # Globally-unique S3 bucket name for server-side file storage (agent session transcripts, etc.)
 s3_naholo_file_storage_bucket = "naholo-file-storage"
 
-# Paddle Configuration (server-side, runtime)
-paddle_api_key              = "YOUR_PADDLE_API_KEY"
-paddle_webhook_secret       = "YOUR_PADDLE_WEBHOOK_SECRET"
-paddle_project_token_secret = "generate-with-openssl-rand-base64-32"
-paddle_price_id             = "pri_xxxxxxxxxxxxxxxxxxxxxxxxx"
-
 # Polar Configuration (server-side, runtime)
 # Scopes needed on the access token: checkouts:write, subscriptions:read/write,
 # customers:read/write, members:read/write, discounts:read, webhooks:read.
