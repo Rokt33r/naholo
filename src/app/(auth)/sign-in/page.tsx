@@ -15,7 +15,7 @@ export default async function SignInPage({
     allowedAuthMethods: ['session'],
   })
   if (user) {
-    redirect(validatedReturnTo || '/')
+    redirect(validatedReturnTo || '/app')
   }
 
   return <SignInForm returnTo={validatedReturnTo ?? undefined} />

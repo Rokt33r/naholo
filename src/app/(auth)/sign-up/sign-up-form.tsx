@@ -70,7 +70,7 @@ export function SignUpForm({ returnTo }: { returnTo?: string }) {
       return
     }
 
-    router.push(returnTo || '/')
+    router.push(returnTo || '/app')
     router.refresh()
   }
 
