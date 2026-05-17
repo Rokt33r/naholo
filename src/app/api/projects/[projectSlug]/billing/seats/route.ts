@@ -6,9 +6,8 @@ import {
   SeatLimitExceededError,
 } from '@/server/errors'
 import { requireAdminProjectOperator } from '@/server/auth/permissions'
-import { getPaddleServerClient } from '@/server/billing/paddle'
-import { requirePaddleConfig } from '@/server/config'
-import { upsertPaddleSubscriptionFromEvent } from '@/server/services/paddle-subscription'
+import { getPolarServerClient } from '@/server/billing/polar'
+import { upsertPolarSubscription } from '@/server/services/polar-subscription'
 import {
   countActiveHumanOperators,
   getActiveProjectSubscription,
@@ -31,7 +30,7 @@ export async function POST(
     const { quantity } = requestBodySchema.parse(await request.json())
 
     const subscription = await getActiveProjectSubscription(project.id)
-    if (subscription == null || subscription.paddleSubscription == null) {
+    if (subscription == null || subscription.polarSubscription == null) {
       throw new NotFoundError('Subscription')
     }
 
@@ -44,16 +43,12 @@ export async function POST(
       )
     }
 
-    const { priceId } = requirePaddleConfig()
-    const paddleSubscriptionId =
-      subscription.paddleSubscription.paddleSubscriptionId
-    const paddle = getPaddleServerClient()
-    const occurredAt = new Date()
-    const data = await paddle.subscriptions.update(paddleSubscriptionId, {
-      items: [{ priceId, quantity }],
-      prorationBillingMode: 'prorated_immediately',
+    const polar = getPolarServerClient()
+    const updated = await polar.subscriptions.update({
+      id: subscription.polarSubscription.polarSubscriptionId,
+      subscriptionUpdate: { seats: quantity },
     })
-    await upsertPaddleSubscriptionFromEvent({ data, occurredAt })
+    await upsertPolarSubscription(updated)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

@@ -33,7 +33,23 @@ export type ActiveProjectSubscription = {
     cancelAt: Date | null
     canceledAt: Date | null
   } | null
-  polarSubscription: { id: string } | null
+  polarSubscription: {
+    id: string
+    polarSubscriptionId: string
+    polarCustomerId: string
+    billingEmail: string
+    status: string
+    seats: number | null
+    currentPeriodStart: Date | null
+    currentPeriodEnd: Date | null
+    trialStart: Date | null
+    trialEnd: Date | null
+    cancelAtPeriodEnd: boolean
+    canceledAt: Date | null
+    startedAt: Date | null
+    endsAt: Date | null
+    endedAt: Date | null
+  } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -53,7 +69,7 @@ export async function getActiveProjectSubscription(
       activeProjectSubscription: {
         with: {
           paddleSubscription: true,
-          polarSubscription: { columns: { id: true } },
+          polarSubscription: true,
         },
       },
     },
@@ -90,7 +106,26 @@ export async function getActiveProjectSubscription(
             cancelAt: paddle.cancelAt,
             canceledAt: paddle.canceledAt,
           },
-    polarSubscription: polar == null ? null : { id: polar.id },
+    polarSubscription:
+      polar == null
+        ? null
+        : {
+            id: polar.id,
+            polarSubscriptionId: polar.polarSubscriptionId,
+            polarCustomerId: polar.polarCustomerId,
+            billingEmail: polar.billingEmail,
+            status: polar.status,
+            seats: polar.seats,
+            currentPeriodStart: polar.currentPeriodStart,
+            currentPeriodEnd: polar.currentPeriodEnd,
+            trialStart: polar.trialStart,
+            trialEnd: polar.trialEnd,
+            cancelAtPeriodEnd: polar.cancelAtPeriodEnd,
+            canceledAt: polar.canceledAt,
+            startedAt: polar.startedAt,
+            endsAt: polar.endsAt,
+            endedAt: polar.endedAt,
+          },
     createdAt: link.createdAt,
     updatedAt: link.updatedAt,
   }
