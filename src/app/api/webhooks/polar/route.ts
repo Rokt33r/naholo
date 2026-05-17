@@ -11,6 +11,7 @@ import {
   upsertPolarSubscription,
   patchPolarSubscriptionBillingEmail,
 } from '@/server/services/polar-subscription'
+import { claimPolarProjectSubscriptionFromEvent } from '@/server/services/polar-project-subscription'
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
@@ -55,7 +56,21 @@ export async function POST(request: NextRequest) {
       case 'subscription.uncanceled':
       case 'subscription.past_due':
       case 'subscription.revoked': {
-        await upsertPolarSubscription(event.data as Subscription)
+        const subscription = event.data as Subscription
+        const { row } = await upsertPolarSubscription(subscription)
+        if (event.type === 'subscription.created') {
+          const claim = await claimPolarProjectSubscriptionFromEvent({
+            polarSubscriptionRow: row,
+            metadata: subscription.metadata,
+          })
+          if (!claim.claimed) {
+            console.warn(
+              'Polar subscription.created claim skipped:',
+              claim.reason,
+              { polarSubscriptionId: subscription.id },
+            )
+          }
+        }
         break
       }
       case 'customer.created':

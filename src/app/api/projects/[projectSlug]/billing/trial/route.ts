@@ -5,7 +5,7 @@ import {
   requireAdminProjectOperator,
 } from '@/server/auth/permissions'
 import { db } from '@/server/db'
-import { provisionPolarTrialForProject } from '@/server/services/polar-trial'
+import { createPolarTrialCheckout } from '@/server/services/polar-trial'
 
 export async function POST(
   _request: NextRequest,
@@ -49,13 +49,22 @@ export async function POST(
       )
     }
 
-    await provisionPolarTrialForProject({
+    const checkout = await createPolarTrialCheckout({
       projectId: project.id,
       billingEmail: notificationEmail.email,
       createdByOperatorId: projectOperator.id,
     })
+    if (checkout == null) {
+      return NextResponse.json(
+        { error: 'Billing is not enabled.' },
+        { status: 503 },
+      )
+    }
 
-    return new NextResponse(null, { status: 204 })
+    return NextResponse.json({
+      url: checkout.url,
+      expiresAt: checkout.expiresAt.toISOString(),
+    })
   } catch (error) {
     return mapApiError(error)
   }
