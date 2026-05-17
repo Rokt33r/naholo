@@ -59,7 +59,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           )}
           {isAdmin && publicConfig.billing && (
             <TabsContent value='billing' className='overflow-y-auto'>
-              <BillingTab onClose={() => onOpenChange(false)} />
+              <BillingTab />
             </TabsContent>
           )}
           <TabsContent value='user' className='overflow-y-auto'>

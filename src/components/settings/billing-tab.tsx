@@ -1,45 +1,13 @@
 'use client'
 
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
+import { ManageSubscriptionBlock } from '@/components/billing/manage-subscription-block'
+import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 
-function formatDate(value: string | null | undefined): string {
-  if (value == null) {
-    return '—'
-  }
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) {
-    return '—'
-  }
-  return d.toLocaleDateString()
-}
-
-type BillingTabProps = {
-  onClose: () => void
-}
-
-export function BillingTab({ onClose }: BillingTabProps) {
+export function BillingTab() {
   const { projectSlug } = useProjectContext()
   const { data, isLoading, error } = useActiveProjectSubscription(projectSlug)
-
-  if (isLoading) {
-    return (
-      <div className='text-muted-foreground py-8 text-center text-sm'>
-        Loading…
-      </div>
-    )
-  }
-
-  if (error != null || data == null) {
-    return (
-      <div className='text-muted-foreground py-8 text-center text-sm'>
-        Failed to load subscription.
-      </div>
-    )
-  }
 
   return (
     <div className='space-y-6'>
@@ -50,46 +18,22 @@ export function BillingTab({ onClose }: BillingTabProps) {
         </p>
       </div>
 
-      <div className='space-y-3 rounded-lg border p-4'>
-        <div className='flex items-center justify-between text-sm'>
-          <span className='text-muted-foreground'>Status</span>
-          <SubscriptionStatusBadge
-            status={data.subscription?.polarSubscription?.status ?? null}
-          />
+      {isLoading || data == null ? (
+        <div className='text-muted-foreground py-8 text-center text-sm'>
+          {error != null ? 'Failed to load subscription.' : 'Loading…'}
         </div>
-        <div className='flex items-center justify-between text-sm'>
-          <span className='text-muted-foreground'>Seats</span>
-          <span className='font-medium'>
-            {data.usedSeats} /{' '}
-            {data.subscription?.polarSubscription?.seats ?? '—'} used
-          </span>
-        </div>
-        <div className='flex items-center justify-between text-sm'>
-          <span className='text-muted-foreground'>Trial ends</span>
-          <span className='font-medium'>
-            {formatDate(data.subscription?.polarSubscription?.trialEnd)}
-          </span>
-        </div>
-        <div className='flex items-center justify-between text-sm'>
-          <span className='text-muted-foreground'>Next billing</span>
-          <span className='font-medium'>
-            {formatDate(data.subscription?.polarSubscription?.currentPeriodEnd)}
-          </span>
-        </div>
-      </div>
+      ) : (
+        <SubscriptionReadout
+          polarSubscription={data.subscription?.polarSubscription ?? null}
+          usedSeats={data.usedSeats}
+        />
+      )}
 
-      <Button asChild className='self-start'>
-        <Link
-          href={`/app/projects/${projectSlug}/subscription`}
-          onClick={onClose}
-        >
-          Manage subscription
-        </Link>
-      </Button>
-
-      <p className='text-muted-foreground text-xs'>
-        Seats and cancellation are managed on the subscription page.
-      </p>
+      <ManageSubscriptionBlock
+        projectSlug={projectSlug}
+        variant='default'
+        className='self-start'
+      />
     </div>
   )
 }
