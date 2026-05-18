@@ -7,6 +7,10 @@ subscription, priced per active human operator seat (bots are free and don't
 count toward the seat quantity). Polar is the merchant of record; we never
 touch payment-method data.
 
+If you're agent, must check polar's doc for llm before making any changes.
+
+https://polar.sh/docs/llms-full.txt
+
 The integration runs on two parallel tracks against a single `polar_subscriptions`
 DB row:
 

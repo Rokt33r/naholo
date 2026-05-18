@@ -2,8 +2,12 @@ import 'server-only'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projects, projectSubscriptions } from '../db/schema'
-import type { PolarSubscriptionRow } from './polar-subscription'
+import {
+  upsertPolarSubscription,
+  type PolarSubscriptionRow,
+} from './polar-subscription'
 import { parseProjectSubscriptionMetadata } from '../billing/project-subscription-metadata'
+import { getPolarServerClient } from '../billing/polar'
 
 export type ClaimPolarProjectSubscriptionResult =
   | {
@@ -37,36 +41,99 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
     return { claimed: false, reason: 'unknown-project' }
   }
 
-  const existingProjectSubscription =
-    await db.query.projectSubscriptions.findFirst({
-      columns: { id: true },
-      where: (t, { eq }) => eq(t.projectId, projectId),
+  const projectSubscriptionId = await linkProjectSubscription({
+    projectId,
+    polarSubscriptionRowId: polarSubscriptionRow.id,
+  })
+
+  return {
+    claimed: true,
+    projectSubscriptionId,
+  }
+}
+
+export type ReconcileProjectSubscriptionResult =
+  | { found: false }
+  | {
+      found: true
+      projectSubscriptionId: string
+      polarSubscription: PolarSubscriptionRow
+      status: string
+    }
+
+export async function reconcileProjectSubscriptionFromPolar(
+  projectId: string,
+): Promise<ReconcileProjectSubscriptionResult> {
+  const polar = getPolarServerClient()
+
+  let activeSubscriptionId: string
+  try {
+    const state = await polar.customers.getStateExternal({
+      externalId: projectId,
     })
+    const [first] = state.activeSubscriptions
+    if (first == null) {
+      return { found: false }
+    }
+    activeSubscriptionId = first.id
+  } catch (error) {
+    // The Polar SDK throws on 404 when the externalId is unknown — treat as
+    // "nothing to reconcile" so a brand-new project can proceed to checkout.
+    if (isPolarNotFound(error)) {
+      return { found: false }
+    }
+    throw error
+  }
+
+  const full = await polar.subscriptions.get({ id: activeSubscriptionId })
+  const { row } = await upsertPolarSubscription(full)
+
+  const projectSubscriptionId = await linkProjectSubscription({
+    projectId,
+    polarSubscriptionRowId: row.id,
+  })
+
+  return {
+    found: true,
+    projectSubscriptionId,
+    polarSubscription: row,
+    status: row.status,
+  }
+}
+
+async function linkProjectSubscription(input: {
+  projectId: string
+  polarSubscriptionRowId: string
+}): Promise<string> {
+  const { projectId, polarSubscriptionRowId } = input
+
+  const existing = await db.query.projectSubscriptions.findFirst({
+    columns: { id: true },
+    where: (t, { eq }) => eq(t.projectId, projectId),
+  })
 
   let projectSubscriptionId: string
-  if (existingProjectSubscription == null) {
+  if (existing == null) {
     const [inserted] = await db
       .insert(projectSubscriptions)
       .values({
         projectId,
-        polarSubscriptionId: polarSubscriptionRow.id,
+        polarSubscriptionId: polarSubscriptionRowId,
       })
       .returning({ id: projectSubscriptions.id })
     if (inserted == null) {
-      throw new Error(
-        'claimPolarProjectSubscriptionFromEvent: insert returned no row',
-      )
+      throw new Error('linkProjectSubscription: insert returned no row')
     }
     projectSubscriptionId = inserted.id
   } else {
     await db
       .update(projectSubscriptions)
       .set({
-        polarSubscriptionId: polarSubscriptionRow.id,
+        polarSubscriptionId: polarSubscriptionRowId,
         updatedAt: new Date(),
       })
-      .where(eq(projectSubscriptions.id, existingProjectSubscription.id))
-    projectSubscriptionId = existingProjectSubscription.id
+      .where(eq(projectSubscriptions.id, existing.id))
+    projectSubscriptionId = existing.id
   }
 
   await db
@@ -77,8 +144,15 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
     })
     .where(eq(projects.id, projectId))
 
-  return {
-    claimed: true,
-    projectSubscriptionId,
+  return projectSubscriptionId
+}
+
+function isPolarNotFound(error: unknown): boolean {
+  if (error == null || typeof error !== 'object') {
+    return false
   }
+  const status = (error as { statusCode?: unknown; status?: unknown })
+    .statusCode
+  const altStatus = (error as { status?: unknown }).status
+  return status === 404 || altStatus === 404
 }
