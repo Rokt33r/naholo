@@ -11,7 +11,6 @@ export type ActiveProjectSubscriptionResponse = {
   subscription: {
     id: string
     projectId: string
-    createdByOperatorId: string | null
     polarSubscription: {
       id: string
       polarSubscriptionId: string
@@ -41,7 +40,6 @@ function serializeDates(
   return {
     id: subscription.id,
     projectId: subscription.projectId,
-    createdByOperatorId: subscription.createdByOperatorId,
     polarSubscription:
       subscription.polarSubscription == null
         ? null

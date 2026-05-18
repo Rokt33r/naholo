@@ -82,7 +82,6 @@ async function seedActiveSubscription(input: {
   projectId: string
   status: string
   seats: number | null
-  createdByOperatorId?: string | null
 }) {
   const polarSubId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   const [polar] = await testDb
@@ -101,7 +100,6 @@ async function seedActiveSubscription(input: {
     .values({
       projectId: input.projectId,
       polarSubscriptionId: polar.id,
-      createdByOperatorId: input.createdByOperatorId ?? null,
     })
     .returning({ id: schema.projectSubscriptions.id })
 

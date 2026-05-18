@@ -17,7 +17,6 @@ export type SubscriptionStatus =
 export type ActiveProjectSubscription = {
   id: string
   projectId: string
-  createdByOperatorId: string | null
   polarSubscription: {
     id: string
     polarSubscriptionId: string
@@ -70,7 +69,6 @@ export async function getActiveProjectSubscription(
   return {
     id: link.id,
     projectId: link.projectId,
-    createdByOperatorId: link.createdByOperatorId,
     polarSubscription: {
       id: polar.id,
       polarSubscriptionId: polar.polarSubscriptionId,

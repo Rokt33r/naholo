@@ -124,7 +124,6 @@ describe('claimPolarProjectSubscriptionFromEvent', () => {
     expect(link).not.toBeNull()
     expect(link?.projectId).toBe(projectId)
     expect(link?.polarSubscriptionId).toBe(polarRow.id)
-    expect(link?.createdByOperatorId).toBe(operatorId)
 
     const project = await testDb.query.projects.findFirst({
       where: (t, { eq }) => eq(t.id, projectId),
@@ -167,7 +166,6 @@ describe('claimPolarProjectSubscriptionFromEvent', () => {
       .where(eq(schema.projectSubscriptions.projectId, projectId))
     expect(rows).toHaveLength(1)
     expect(rows[0].polarSubscriptionId).toBe(secondPolar.id)
-    expect(rows[0].createdByOperatorId).toBe(operatorId)
 
     const project = await testDb.query.projects.findFirst({
       where: (t, { eq }) => eq(t.id, projectId),
@@ -175,32 +173,6 @@ describe('claimPolarProjectSubscriptionFromEvent', () => {
     expect(project?.activeProjectSubscriptionId).toBe(
       first.projectSubscriptionId,
     )
-  })
-
-  it('keeps the original createdByOperatorId when relinking', async () => {
-    const userId = await seedUser()
-    const otherUserId = await seedUser()
-    const projectId = await seedProject()
-    const originalOperatorId = await seedHumanOperator(projectId, userId)
-    const otherOperatorId = await seedHumanOperator(projectId, otherUserId)
-    const firstPolar = await seedPolarSubscription()
-    const secondPolar = await seedPolarSubscription()
-
-    await claimPolarProjectSubscriptionFromEvent({
-      polarSubscriptionRow: firstPolar,
-      metadata: { projectId, projectOperatorId: originalOperatorId },
-    })
-    await claimPolarProjectSubscriptionFromEvent({
-      polarSubscriptionRow: secondPolar,
-      metadata: { projectId, projectOperatorId: otherOperatorId },
-    })
-
-    const rows = await testDb
-      .select()
-      .from(schema.projectSubscriptions)
-      .where(eq(schema.projectSubscriptions.projectId, projectId))
-    expect(rows).toHaveLength(1)
-    expect(rows[0].createdByOperatorId).toBe(originalOperatorId)
   })
 
   it('skips with no-metadata when metadata is null', async () => {
@@ -214,6 +186,22 @@ describe('claimPolarProjectSubscriptionFromEvent', () => {
       return
     }
     expect(result.reason).toBe('no-metadata')
+  })
+
+  it('skips with malformed when projectId is not a uuid', async () => {
+    const polarRow = await seedPolarSubscription()
+    const result = await claimPolarProjectSubscriptionFromEvent({
+      polarSubscriptionRow: polarRow,
+      metadata: {
+        projectId: 'not-a-uuid',
+        projectOperatorId: '00000000-0000-0000-0000-000000000000',
+      },
+    })
+    expect(result.claimed).toBe(false)
+    if (result.claimed) {
+      return
+    }
+    expect(result.reason).toBe('malformed')
   })
 
   it('skips with unknown-project when projectId does not exist', async () => {

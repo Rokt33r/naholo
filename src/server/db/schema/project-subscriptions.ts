@@ -3,7 +3,6 @@ import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { polarSubscriptions } from './polar-subscriptions'
-import { projectOperators } from './project-operators'
 
 export const projectSubscriptions = pgTable(
   'project_subscriptions',
@@ -15,10 +14,6 @@ export const projectSubscriptions = pgTable(
     polarSubscriptionId: uuid('polar_subscription_id')
       .notNull()
       .references(() => polarSubscriptions.id, { onDelete: 'set null' }),
-    createdByOperatorId: uuid('created_by_operator_id').references(
-      () => projectOperators.id,
-      { onDelete: 'set null' },
-    ),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -40,10 +35,6 @@ export const projectSubscriptionsRelations = relations(
     polarSubscription: one(polarSubscriptions, {
       fields: [projectSubscriptions.polarSubscriptionId],
       references: [polarSubscriptions.id],
-    }),
-    createdByOperator: one(projectOperators, {
-      fields: [projectSubscriptions.createdByOperatorId],
-      references: [projectOperators.id],
     }),
   }),
 )

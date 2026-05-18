@@ -16,8 +16,6 @@ export type ProjectSubscriptionListItem = {
     polarSubscriptionId: string
     status: string
   } | null
-  createdByOperatorId: string | null
-  createdByOperatorName: string | null
 }
 
 export type ProjectSubscriptionDetail = {
@@ -29,10 +27,6 @@ export type ProjectSubscriptionDetail = {
     id: string
     polarSubscriptionId: string
     status: string
-  } | null
-  createdByOperator: {
-    id: string
-    userName: string | null
   } | null
 }
 
@@ -47,10 +41,6 @@ export async function listProjectSubscriptions(input: {
         project: { columns: { id: true, name: true, slug: true } },
         polarSubscription: {
           columns: { id: true, polarSubscriptionId: true, status: true },
-        },
-        createdByOperator: {
-          columns: { id: true },
-          with: { user: { columns: { id: true, name: true } } },
         },
       },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
@@ -75,8 +65,6 @@ export async function listProjectSubscriptions(input: {
               status: row.polarSubscription.status,
             }
           : null,
-      createdByOperatorId: row.createdByOperator?.id ?? null,
-      createdByOperatorName: row.createdByOperator?.user?.name ?? null,
     })),
     total,
   }
@@ -90,9 +78,6 @@ export async function getProjectSubscription(
     with: {
       project: true,
       polarSubscription: true,
-      createdByOperator: {
-        with: { user: true },
-      },
     },
   })
   if (row == null) {
@@ -113,13 +98,6 @@ export async function getProjectSubscription(
             id: row.polarSubscription.id,
             polarSubscriptionId: row.polarSubscription.polarSubscriptionId,
             status: row.polarSubscription.status,
-          }
-        : null,
-    createdByOperator:
-      row.createdByOperator != null
-        ? {
-            id: row.createdByOperator.id,
-            userName: row.createdByOperator.user?.name ?? null,
           }
         : null,
   }

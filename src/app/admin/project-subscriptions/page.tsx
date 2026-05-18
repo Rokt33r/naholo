@@ -48,8 +48,7 @@ export default async function ProjectSubscriptionsPage({
             <tr className='border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400'>
               <th className='pb-2 pr-4 font-medium'>Created</th>
               <th className='pb-2 pr-4 font-medium'>Project</th>
-              <th className='pb-2 pr-4 font-medium'>Polar</th>
-              <th className='pb-2 font-medium'>Created By</th>
+              <th className='pb-2 font-medium'>Polar</th>
             </tr>
           </thead>
           <tbody>
@@ -77,7 +76,7 @@ export default async function ProjectSubscriptionsPage({
                     </span>
                   </Link>
                 </td>
-                <td className='py-2 pr-4'>
+                <td className='py-2'>
                   {row.polarSubscription != null ? (
                     <Link
                       href={`/admin/polar-subscriptions/${row.polarSubscription.rowId}`}
@@ -90,9 +89,6 @@ export default async function ProjectSubscriptionsPage({
                   ) : (
                     <span className='text-zinc-400 dark:text-zinc-600'>—</span>
                   )}
-                </td>
-                <td className='py-2 text-zinc-600 dark:text-zinc-400'>
-                  {row.createdByOperatorName ?? '—'}
                 </td>
               </tr>
             ))}

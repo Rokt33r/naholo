@@ -9,15 +9,10 @@ export type ClaimPolarProjectSubscriptionResult =
   | {
       claimed: true
       projectSubscriptionId: string
-      createdByOperatorId: string
     }
   | {
       claimed: false
-      reason:
-        | 'no-metadata'
-        | 'malformed'
-        | 'unknown-project'
-        | 'unknown-operator'
+      reason: 'no-metadata' | 'malformed' | 'unknown-project'
     }
 
 export async function claimPolarProjectSubscriptionFromEvent(input: {
@@ -30,29 +25,21 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
   if (!parsed.ok) {
     return { claimed: false, reason: parsed.reason }
   }
-  const { projectId, projectOperatorId } = parsed.data
+  const { projectId } = parsed.data
 
   const project = await db.query.projects.findFirst({
     columns: { id: true },
     where: (t, { eq }) => eq(t.id, projectId),
   })
-  // TODO: Extremely rarely happen but we need to monitor this
+  // Unprocessable: metadata references a project that does not exist.
+  // Should be rare — surface for monitoring rather than silently dropping.
   if (project == null) {
     return { claimed: false, reason: 'unknown-project' }
   }
 
-  const operator = await db.query.projectOperators.findFirst({
-    columns: { id: true, projectId: true },
-    where: (t, { eq }) => eq(t.id, projectOperatorId),
-  })
-  // TODO: Extremely rarely happen but we need to monitor this
-  if (operator == null || operator.projectId !== projectId) {
-    return { claimed: false, reason: 'unknown-operator' }
-  }
-
   const existingProjectSubscription =
     await db.query.projectSubscriptions.findFirst({
-      columns: { id: true, createdByOperatorId: true },
+      columns: { id: true },
       where: (t, { eq }) => eq(t.projectId, projectId),
     })
 
@@ -63,7 +50,6 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
       .values({
         projectId,
         polarSubscriptionId: polarSubscriptionRow.id,
-        createdByOperatorId: projectOperatorId,
       })
       .returning({ id: projectSubscriptions.id })
     if (inserted == null) {
@@ -77,8 +63,6 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
       .update(projectSubscriptions)
       .set({
         polarSubscriptionId: polarSubscriptionRow.id,
-        createdByOperatorId:
-          existingProjectSubscription.createdByOperatorId ?? projectOperatorId,
         updatedAt: new Date(),
       })
       .where(eq(projectSubscriptions.id, existingProjectSubscription.id))
@@ -96,6 +80,5 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
   return {
     claimed: true,
     projectSubscriptionId,
-    createdByOperatorId: projectOperatorId,
   }
 }

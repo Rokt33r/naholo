@@ -40,10 +40,6 @@ export default async function ProjectSubscriptionDetailPage({
         <dd className='text-zinc-900 dark:text-zinc-100'>
           {format(sub.updatedAt, 'yyyy-MM-dd HH:mm:ss')}
         </dd>
-        <dt className='text-zinc-500 dark:text-zinc-400'>Created By</dt>
-        <dd className='text-zinc-900 dark:text-zinc-100'>
-          {sub.createdByOperator?.userName ?? '—'}
-        </dd>
       </dl>
 
       <h2 className='mt-6 text-sm font-semibold text-zinc-700 dark:text-zinc-300'>
