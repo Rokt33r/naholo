@@ -4,10 +4,6 @@ import { cache } from 'react'
 import { auth } from './auth'
 import { db } from '../db'
 import {
-  resolveProjectOperatorByApiToken,
-  touchProjectOperatorApiToken,
-} from '../services/project-operator-api-token'
-import {
   resolveProjectOperatorByUserIdAndProjectId,
   type ProjectOperator,
 } from '../services/project-operator'
@@ -225,30 +221,7 @@ async function resolveProjectOperator(
     const token = authorization.slice('Bearer '.length)
     return requireProjectOperatorByUserApiToken(projectId, token)
   }
-  if (authorization?.startsWith('Bearer naholo_')) {
-    const token = authorization.slice('Bearer '.length)
-    return requireProjectOperatorByApiToken(projectId, token)
-  }
   return requireProjectOperatorBySession(projectId)
-}
-
-async function requireProjectOperatorByApiToken(
-  projectId: string,
-  token: string,
-): Promise<ResolvedProjectOperator> {
-  const result = await resolveProjectOperatorByApiToken(token)
-
-  if (result == null) {
-    throw new Error('Unauthorized')
-  }
-  if (result.projectOperator.projectId !== projectId) {
-    throw new Error('Forbidden')
-  }
-
-  // Update lastUsedAt in the background
-  touchProjectOperatorApiToken(result.tokenId)
-
-  return { projectOperator: result.projectOperator }
 }
 
 async function requireProjectOperatorByUserApiToken(
