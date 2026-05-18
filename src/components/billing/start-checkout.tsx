@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
@@ -15,6 +16,13 @@ type CheckoutSessionResponse = {
   expiresAt: string
 }
 
+class SubscriptionAlreadyActiveError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'SubscriptionAlreadyActiveError'
+  }
+}
+
 async function createCheckoutSession(
   projectSlug: string,
 ): Promise<CheckoutSessionResponse> {
@@ -22,14 +30,25 @@ async function createCheckoutSession(
     method: 'POST',
   })
   if (!res.ok) {
+    // TODO normalize api error throw/handling so we don't have to improvise everytime handling errors.
     const body = (await res.json().catch(() => null)) as {
       error?: unknown
+      message?: unknown
     } | null
-    const message =
-      body != null && typeof body.error === 'string'
-        ? body.error
-        : `Failed to create checkout session (${res.status})`
-    throw new Error(message)
+    const messageField =
+      body != null && typeof body.message === 'string'
+        ? body.message
+        : body != null && typeof body.error === 'string'
+          ? body.error
+          : `Failed to create checkout session (${res.status})`
+    if (
+      res.status === 409 &&
+      body != null &&
+      body.error === 'subscription_already_active'
+    ) {
+      throw new SubscriptionAlreadyActiveError(messageField)
+    }
+    throw new Error(messageField)
   }
   return (await res.json()) as CheckoutSessionResponse
 }
@@ -46,6 +65,7 @@ export function StartCheckout({
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     phase: 'idle',
   })
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     onWaitingChange?.(checkoutState.phase === 'waiting')
@@ -59,6 +79,12 @@ export function StartCheckout({
       setCheckoutState({ phase: 'waiting' })
     } catch (error) {
       console.error('Failed to start checkout', error)
+      if (error instanceof SubscriptionAlreadyActiveError) {
+        queryClient.invalidateQueries({
+          queryKey: ['active-project-subscription', projectSlug],
+        })
+        return
+      }
       setCheckoutState({
         phase: 'error',
         message:

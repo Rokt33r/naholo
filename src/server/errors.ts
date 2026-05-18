@@ -42,6 +42,15 @@ export class SeatLimitExceededError extends ServiceError {
   }
 }
 
+export class SubscriptionAlreadyActiveError extends ServiceError {
+  constructor(
+    message = 'This project already has an active subscription. Refresh the page to see the current billing state.',
+  ) {
+    super(message)
+    this.name = 'SubscriptionAlreadyActiveError'
+  }
+}
+
 export function mapApiError(error: unknown): NextResponse {
   if (error instanceof SubscriptionNotReadyError) {
     return NextResponse.json(
@@ -53,6 +62,12 @@ export function mapApiError(error: unknown): NextResponse {
     return NextResponse.json(
       { error: 'seat_limit_exceeded', message: error.message },
       { status: 402 },
+    )
+  }
+  if (error instanceof SubscriptionAlreadyActiveError) {
+    return NextResponse.json(
+      { error: 'subscription_already_active', message: error.message },
+      { status: 409 },
     )
   }
   if (error instanceof ConflictError) {

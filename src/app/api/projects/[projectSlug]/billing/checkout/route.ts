@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { mapApiError } from '@/server/errors'
+import { mapApiError, SubscriptionAlreadyActiveError } from '@/server/errors'
 import {
   getAuthUser,
   requireAdminProjectOperator,
@@ -7,8 +7,12 @@ import {
 import { db } from '@/server/db'
 import { requirePolarConfig } from '@/server/config'
 import { getPolarServerClient } from '@/server/billing/polar'
-import { countActiveHumanOperators } from '@/server/services/project-subscription'
+import {
+  countActiveHumanOperators,
+  isActiveSubscriptionStatus,
+} from '@/server/services/project-subscription'
 import { formatProjectSubscriptionMetadata } from '@/server/billing/project-subscription-metadata'
+import { reconcileProjectSubscriptionFromPolar } from '@/server/services/polar-project-subscription'
 
 export async function POST(
   _request: NextRequest,
@@ -20,6 +24,11 @@ export async function POST(
       projectSlug,
       { skipSubscriptionCheck: true },
     )
+
+    const reconciled = await reconcileProjectSubscriptionFromPolar(project.id)
+    if (reconciled.found && isActiveSubscriptionStatus(reconciled.status)) {
+      throw new SubscriptionAlreadyActiveError()
+    }
 
     const existingLink = await db.query.projectSubscriptions.findFirst({
       columns: {},
