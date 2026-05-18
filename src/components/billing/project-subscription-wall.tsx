@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
+import { ManageSubscriptionBlock } from '@/components/billing/manage-subscription-block'
 import { StartCheckout } from '@/components/billing/start-checkout'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
@@ -25,9 +26,13 @@ export function ProjectSubscriptionWall({
     useActiveProjectSubscription(projectSlug, { awaitingWebhook })
 
   const isAdmin = currentOperator.role === 'admin'
-  const status = data?.subscription?.polarSubscription?.status ?? null
+  const polarSubscription = data?.subscription?.polarSubscription ?? null
+  const status = polarSubscription?.status ?? null
   const isActive =
     status === 'active' || status === 'trialing' || status === 'past_due'
+  const seatCap = polarSubscription?.seats ?? 1
+  const usedSeats = data?.usedSeats ?? 0
+  const seatsExhausted = usedSeats >= seatCap
 
   if (error != null) {
     return (
@@ -47,7 +52,7 @@ export function ProjectSubscriptionWall({
     return <div className='h-full w-full' aria-busy='true' />
   }
 
-  if (isActive) {
+  if (isActive && !seatsExhausted) {
     return <>{children}</>
   }
 
@@ -56,8 +61,9 @@ export function ProjectSubscriptionWall({
       <div className='flex h-full items-center justify-center'>
         <div className='flex max-w-md flex-col items-center gap-3 rounded-lg border p-6 text-center'>
           <p className='text-muted-foreground text-sm'>
-            Ask a project admin to set up the subscription before this project
-            becomes available.
+            {isActive && seatsExhausted
+              ? 'This project has reached its seat limit. Ask a project admin to raise the seat count.'
+              : 'Ask a project admin to set up the subscription before this project becomes available.'}
           </p>
           <Button
             variant='outline'
@@ -71,36 +77,46 @@ export function ProjectSubscriptionWall({
     )
   }
 
+  const seatLimitWall = isActive && seatsExhausted
+
   return (
     <div className='h-full overflow-y-auto'>
       <div className='mx-auto flex w-full max-w-2xl flex-col gap-6 p-6'>
         <div className='flex flex-col gap-2'>
           <h1 className='text-xl font-semibold'>
-            {status === 'incomplete' || status == null
-              ? 'Start your subscription'
-              : 'Subscription inactive'}
+            {seatLimitWall
+              ? 'Seat limit reached'
+              : status === 'incomplete' || status == null
+                ? 'Start your subscription'
+                : 'Subscription inactive'}
           </h1>
           <p className='text-muted-foreground text-sm'>
-            $5 per human operator per month + VAT. Bots are always free.
+            {seatLimitWall
+              ? 'All seats on this subscription are in use. Raise the seat count to continue using this project.'
+              : '$5 per human operator per month + VAT. Bots are always free.'}
           </p>
         </div>
 
         <SubscriptionReadout
-          polarSubscription={data.subscription?.polarSubscription ?? null}
-          usedSeats={data.usedSeats}
+          polarSubscription={polarSubscription}
+          usedSeats={usedSeats}
         />
 
-        {data.subscription?.polarSubscription != null && (
+        {polarSubscription != null && (
           <CancellationControls
             projectSlug={projectSlug}
-            polarSubscription={data.subscription.polarSubscription}
+            polarSubscription={polarSubscription}
           />
         )}
 
-        <StartCheckout
-          projectSlug={projectSlug}
-          onWaitingChange={setAwaitingWebhook}
-        />
+        {seatLimitWall ? (
+          <ManageSubscriptionBlock projectSlug={projectSlug} />
+        ) : (
+          <StartCheckout
+            projectSlug={projectSlug}
+            onWaitingChange={setAwaitingWebhook}
+          />
+        )}
       </div>
     </div>
   )

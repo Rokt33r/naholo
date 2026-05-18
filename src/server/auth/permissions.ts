@@ -200,6 +200,7 @@ export async function requireProjectOperator(
 
   const { projectOperator } = await resolveProjectOperator(project.id)
 
+  // TODO: Need to check seats exhausted. Proj subscription should manage this. Anytime member count and polar subscription update, exhausted prop must be updated.
   if (config.billing && options?.skipSubscriptionCheck !== true) {
     const projectSubscriptionStatus =
       projectRow.activeProjectSubscription?.polarSubscription?.status ?? null
