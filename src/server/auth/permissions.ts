@@ -17,10 +17,7 @@ import {
 } from '../services/user-api-token'
 import { config } from '../config'
 import { NotFoundError, SubscriptionNotReadyError } from '../errors'
-import {
-  isActiveSubscriptionStatus,
-  type SubscriptionStatus,
-} from '../services/project-subscription'
+import { isActiveSubscriptionStatus } from '../services/project-subscription'
 
 export type { ProjectOperator } from '../services/project-operator'
 

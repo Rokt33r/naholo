@@ -6,14 +6,6 @@ import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
 
-export type SubscriptionStatus =
-  | 'incomplete'
-  | 'incomplete_expired'
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'canceled'
-
 export type ActiveProjectSubscription = {
   id: string
   projectId: string
