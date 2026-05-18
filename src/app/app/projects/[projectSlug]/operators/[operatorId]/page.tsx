@@ -1,10 +1,9 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Bot, User } from 'lucide-react'
+import { ArrowLeft, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProjectContext } from '@/components/app/project-context'
-import { OperatorTokens } from '@/components/operators/operator-tokens'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useOperator } from '@/hooks/use-operators'
 
@@ -42,24 +41,11 @@ export default function OperatorDetailPage() {
         ) : (
           <div className='space-y-6 p-6'>
             <div className='flex items-center gap-3'>
-              {operator.type === 'bot' ? (
-                <Bot className='size-5 text-muted-foreground' />
-              ) : (
-                <User className='size-5 text-muted-foreground' />
-              )}
+              <User className='size-5 text-muted-foreground' />
               <div>
                 <h1 className='text-lg font-semibold'>{operator.name}</h1>
-                <p className='text-sm text-muted-foreground'>
-                  {operator.type} &middot; {operator.role}
-                </p>
+                <p className='text-sm text-muted-foreground'>{operator.role}</p>
               </div>
-            </div>
-
-            <div className='border-t pt-6'>
-              <OperatorTokens
-                projectSlug={projectSlug}
-                operatorId={operatorId}
-              />
             </div>
           </div>
         )}

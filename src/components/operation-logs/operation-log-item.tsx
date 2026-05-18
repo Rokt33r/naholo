@@ -43,8 +43,7 @@ export function OperationLogItem({
 
   const isCreating = log.id.startsWith('temp-')
   const isLoading = updateLoading || deleteLoading
-  const isBot = log.projectOperator?.type === 'bot'
-  const isReadOnly = !isOwn || isBot
+  const isReadOnly = !isOwn
 
   const handleEdit = () => {
     setContent(log.content)

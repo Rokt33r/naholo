@@ -1,12 +1,11 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { Bot, Contact, UserPlus, User } from 'lucide-react'
+import { Contact, UserPlus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useOperators } from '@/hooks/use-operators'
-import { CreateBotOperatorDialog } from './create-bot-operator-dialog'
 import { InviteUserOperatorDialog } from './invite-user-operator-dialog'
 import { cn } from '@/lib/utils'
 import type { Operator } from '@/hooks/use-operators'
@@ -43,11 +42,6 @@ export function OperatorsList({
               <UserPlus className='h-4 w-4' />
             </Button>
           </InviteUserOperatorDialog>
-          <CreateBotOperatorDialog projectSlug={projectSlug}>
-            <Button size='icon-sm' variant='ghost' title='Create bot operator'>
-              <Bot className='h-4 w-4' />
-            </Button>
-          </CreateBotOperatorDialog>
         </div>
       </div>
 
@@ -98,16 +92,10 @@ function OperatorItem({
       )}
       onClick={onClick}
     >
-      {operator.type === 'bot' ? (
-        <Bot className='size-4 text-muted-foreground' />
-      ) : (
-        <User className='size-4 text-muted-foreground' />
-      )}
+      <User className='size-4 text-muted-foreground' />
       <div className='flex-1 min-w-0'>
         <div className='truncate text-sm font-medium'>{operator.name}</div>
-        <div className='text-xs text-muted-foreground'>
-          {operator.type} &middot; {operator.role}
-        </div>
+        <div className='text-xs text-muted-foreground'>{operator.role}</div>
       </div>
     </button>
   )
