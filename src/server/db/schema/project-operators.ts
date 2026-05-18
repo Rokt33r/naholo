@@ -3,7 +3,6 @@ import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projects } from './projects'
 import { users } from './users'
-import { projectOperatorApiTokens } from './project-operator-api-tokens'
 
 export const projectOperators = pgTable('project_operators', {
   id: uuidV7IdColumn(),
@@ -19,7 +18,7 @@ export const projectOperators = pgTable('project_operators', {
 
 export const projectOperatorsRelations = relations(
   projectOperators,
-  ({ one, many }) => ({
+  ({ one }) => ({
     project: one(projects, {
       fields: [projectOperators.projectId],
       references: [projects.id],
@@ -28,6 +27,5 @@ export const projectOperatorsRelations = relations(
       fields: [projectOperators.userId],
       references: [users.id],
     }),
-    apiTokens: many(projectOperatorApiTokens),
   }),
 )
