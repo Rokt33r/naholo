@@ -93,13 +93,12 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
     return (b.cost ?? 0) - (a.cost ?? 0)
   })
 
-  let totalCost: number | null = 0
+  let totalCost: number | null = null
   for (const m of perModelRows) {
     if (m.cost == null) {
-      totalCost = null
-      break
+      continue
     }
-    totalCost += m.cost
+    totalCost = (totalCost ?? 0) + m.cost
   }
 
   return (
