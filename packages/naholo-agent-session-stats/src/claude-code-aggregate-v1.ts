@@ -34,8 +34,9 @@ export type AgentSessionStatsV1 = {
   assistantCount: number
   toolUseCount: number
   toolUseByName: Record<string, number>
-  // Raw token buckets per skill; parallel to `perModel`. Weighting is render-time.
-  bySkill: Record<string, ClaudeCodeTokenUsage>
+  // Raw token buckets per skill, broken down per model — same `{ model, usage }`
+  // element shape as the top-level `perModel`. Weighting is render-time.
+  bySkill: Record<string, PerModelTokens[]>
   perModel: PerModelTokens[]
   // Sum of gaps between consecutive transcript-entry timestamps, dropping any
   // gap longer than `CLAUDE_CODE_V1_IDLE_THRESHOLD_MS`.
@@ -73,7 +74,7 @@ export function aggregateClaudeCodeV1(
   let assistantCount = 0
   let toolUseCount = 0
   const toolUseByName: Record<string, number> = {}
-  const bySkill: Record<string, ClaudeCodeTokenUsage> = {}
+  const bySkillModelMap = new Map<string, Map<string, ClaudeCodeTokenUsage>>()
 
   const perModelMap = new Map<string, ClaudeCodeTokenUsage>()
   const seenMessageIds = new Set<string>()
@@ -119,14 +120,20 @@ export function aggregateClaudeCodeV1(
     }
 
     const skillKey = entry.attributionSkill ?? NO_SKILL
-    let skillBucket = bySkill[skillKey]
-    if (skillBucket == null) {
-      skillBucket = emptyUsage()
-      bySkill[skillKey] = skillBucket
-    }
-    addUsage(skillBucket, entry.usage)
-
     const modelKey = entry.model ?? UNKNOWN_MODEL
+
+    let skillModelMap = bySkillModelMap.get(skillKey)
+    if (skillModelMap == null) {
+      skillModelMap = new Map<string, ClaudeCodeTokenUsage>()
+      bySkillModelMap.set(skillKey, skillModelMap)
+    }
+    let skillModelBucket = skillModelMap.get(modelKey)
+    if (skillModelBucket == null) {
+      skillModelBucket = emptyUsage()
+      skillModelMap.set(modelKey, skillModelBucket)
+    }
+    addUsage(skillModelBucket, entry.usage)
+
     let modelBucket = perModelMap.get(modelKey)
     if (modelBucket == null) {
       modelBucket = emptyUsage()
@@ -138,6 +145,15 @@ export function aggregateClaudeCodeV1(
   const perModel: PerModelTokens[] = []
   for (const [model, usage] of perModelMap) {
     perModel.push({ model, usage })
+  }
+
+  const bySkill: Record<string, PerModelTokens[]> = {}
+  for (const [skill, modelMap] of bySkillModelMap) {
+    const rows: PerModelTokens[] = []
+    for (const [model, usage] of modelMap) {
+      rows.push({ model, usage })
+    }
+    bySkill[skill] = rows
   }
 
   return {
@@ -174,7 +190,7 @@ export const agentSessionStatsV1Schema: z.ZodType<AgentSessionStatsV1> =
     assistantCount: z.number(),
     toolUseCount: z.number(),
     toolUseByName: z.record(z.string(), z.number()),
-    bySkill: z.record(z.string(), claudeTokenUsageSchema),
+    bySkill: z.record(z.string(), z.array(perModelTokensSchema)),
     perModel: z.array(perModelTokensSchema),
     activeDurationMs: z.number(),
   })
