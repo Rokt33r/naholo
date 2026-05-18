@@ -51,41 +51,52 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
     return { claimed: false, reason: 'unknown-operator' }
   }
 
-  const [inserted] = await db
-    .insert(projectSubscriptions)
-    .values({
-      projectId,
-      polarSubscriptionId: polarSubscriptionRow.id,
-      createdByOperatorId: projectOperatorId,
+  const existingProjectSubscription =
+    await db.query.projectSubscriptions.findFirst({
+      columns: { id: true, createdByOperatorId: true },
+      where: (t, { eq }) => eq(t.projectId, projectId),
     })
-    .onConflictDoNothing({ target: projectSubscriptions.polarSubscriptionId })
-    .returning({ id: projectSubscriptions.id })
 
-  if (inserted == null) {
-    const existing = await db.query.projectSubscriptions.findFirst({
-      columns: { id: true },
-      where: (t, { eq }) => eq(t.polarSubscriptionId, polarSubscriptionRow.id),
-    })
-    if (existing == null) {
+  let projectSubscriptionId: string
+  if (existingProjectSubscription == null) {
+    const [inserted] = await db
+      .insert(projectSubscriptions)
+      .values({
+        projectId,
+        polarSubscriptionId: polarSubscriptionRow.id,
+        createdByOperatorId: projectOperatorId,
+      })
+      .returning({ id: projectSubscriptions.id })
+    if (inserted == null) {
       throw new Error(
-        'claimPolarProjectSubscriptionFromEvent: row vanished after conflict',
+        'claimPolarProjectSubscriptionFromEvent: insert returned no row',
       )
     }
-    return {
-      claimed: true,
-      projectSubscriptionId: existing.id,
-      createdByOperatorId: projectOperatorId,
-    }
+    projectSubscriptionId = inserted.id
+  } else {
+    await db
+      .update(projectSubscriptions)
+      .set({
+        polarSubscriptionId: polarSubscriptionRow.id,
+        createdByOperatorId:
+          existingProjectSubscription.createdByOperatorId ?? projectOperatorId,
+        updatedAt: new Date(),
+      })
+      .where(eq(projectSubscriptions.id, existingProjectSubscription.id))
+    projectSubscriptionId = existingProjectSubscription.id
   }
 
   await db
     .update(projects)
-    .set({ activeProjectSubscriptionId: inserted.id, updatedAt: new Date() })
+    .set({
+      activeProjectSubscriptionId: projectSubscriptionId,
+      updatedAt: new Date(),
+    })
     .where(eq(projects.id, projectId))
 
   return {
     claimed: true,
-    projectSubscriptionId: inserted.id,
+    projectSubscriptionId,
     createdByOperatorId: projectOperatorId,
   }
 }

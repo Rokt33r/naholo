@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "project_subscriptions_project_id_idx" ON "project_subscriptions" USING btree ("project_id");

@@ -26,6 +26,7 @@ export const projectSubscriptions = pgTable(
     uniqueIndex('project_subscriptions_polar_subscription_id_idx').on(
       table.polarSubscriptionId,
     ),
+    uniqueIndex('project_subscriptions_project_id_idx').on(table.projectId),
   ],
 )
 
