@@ -1,0 +1,16 @@
+{
+  "name": "naholo-agent-session-stats",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./transcript": "./src/transcript.ts",
+    "./claude-code-v1": "./src/claude-code-v1.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
