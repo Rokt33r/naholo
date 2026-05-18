@@ -65,25 +65,9 @@ export async function POST(
       if (user == null) {
         return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
       }
-      const notificationEmail = await db.query.userNotificationEmails.findFirst(
-        {
-          columns: { email: true },
-          where: (t, { eq }) => eq(t.userId, user.id),
-        },
-      )
-      if (notificationEmail == null) {
-        return NextResponse.json(
-          {
-            error:
-              'Configure a notification email on your account before starting checkout.',
-          },
-          { status: 422 },
-        )
-      }
 
       checkout = await polar.checkouts.create({
         products: [config.productId],
-        customerEmail: notificationEmail.email,
         externalCustomerId: project.id,
         allowDiscountCodes: true,
         minSeats,
