@@ -8,6 +8,7 @@ import { db } from '@/server/db'
 import { requirePolarConfig } from '@/server/config'
 import { getPolarServerClient } from '@/server/billing/polar'
 import { countActiveHumanOperators } from '@/server/services/project-subscription'
+import { formatProjectSubscriptionMetadata } from '@/server/billing/project-subscription-metadata'
 
 export async function POST(
   _request: NextRequest,
@@ -35,11 +36,6 @@ export async function POST(
     const polar = getPolarServerClient()
     const config = requirePolarConfig()
 
-    const baseMetadata = {
-      projectId: project.id,
-      projectOperatorId: projectOperator.id,
-    }
-
     const usedSeats = await countActiveHumanOperators(project.id)
     const minSeats = Math.max(1, usedSeats)
 
@@ -50,10 +46,10 @@ export async function POST(
         customerId: existingPolarSubscription.polarCustomerId,
         allowDiscountCodes: true,
         minSeats,
-        metadata: {
-          ...baseMetadata,
-          polarSubscriptionId: existingPolarSubscription.id,
-        },
+        metadata: formatProjectSubscriptionMetadata({
+          projectId: project.id,
+          projectOperatorId: projectOperator.id,
+        }),
       })
     } else {
       const user = await getAuthUser()
@@ -82,7 +78,10 @@ export async function POST(
         externalCustomerId: project.id,
         allowDiscountCodes: true,
         minSeats,
-        metadata: baseMetadata,
+        metadata: formatProjectSubscriptionMetadata({
+          projectId: project.id,
+          projectOperatorId: projectOperator.id,
+        }),
       })
     }
 

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projects, projectSubscriptions } from '../db/schema'
 import type { PolarSubscriptionRow } from './polar-subscription'
+import { parseProjectSubscriptionMetadata } from '../billing/project-subscription-metadata'
 
 export type ClaimPolarProjectSubscriptionResult =
   | {
@@ -25,20 +26,17 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
 }): Promise<ClaimPolarProjectSubscriptionResult> {
   const { polarSubscriptionRow, metadata } = input
 
-  if (metadata == null || typeof metadata !== 'object') {
-    return { claimed: false, reason: 'no-metadata' }
+  const parsed = parseProjectSubscriptionMetadata(metadata)
+  if (!parsed.ok) {
+    return { claimed: false, reason: parsed.reason }
   }
-  const projectId = (metadata as Record<string, unknown>).projectId
-  const projectOperatorId = (metadata as Record<string, unknown>)
-    .projectOperatorId
-  if (typeof projectId !== 'string' || typeof projectOperatorId !== 'string') {
-    return { claimed: false, reason: 'malformed' }
-  }
+  const { projectId, projectOperatorId } = parsed.data
 
   const project = await db.query.projects.findFirst({
     columns: { id: true },
     where: (t, { eq }) => eq(t.id, projectId),
   })
+  // TODO: Extremely rarely happen but we need to monitor this
   if (project == null) {
     return { claimed: false, reason: 'unknown-project' }
   }
@@ -47,6 +45,7 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
     columns: { id: true, projectId: true },
     where: (t, { eq }) => eq(t.id, projectOperatorId),
   })
+  // TODO: Extremely rarely happen but we need to monitor this
   if (operator == null || operator.projectId !== projectId) {
     return { claimed: false, reason: 'unknown-operator' }
   }
