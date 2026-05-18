@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
   ToolSidebarButton,
-  ToolSidebarSeparator,
   ToolSidebarSpacing,
 } from '@/components/ui/tool-sidebar'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
