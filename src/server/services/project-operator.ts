@@ -6,7 +6,6 @@ export type ProjectOperator = {
   id: string
   projectId: string
   userId: string | null
-  type: string
   name: string
   role: string
   createdAt: Date
@@ -16,7 +15,6 @@ export type CreateProjectOperatorInput = {
   projectId: string
   userId?: string
   name: string
-  type?: 'user' | 'bot'
   role?: 'admin' | 'member'
 }
 
@@ -32,7 +30,6 @@ export async function createProjectOperator(
       projectId: data.projectId,
       userId: data.userId,
       name: data.name,
-      type: data.type ?? 'user',
       role: data.role ?? 'member',
     })
     .returning({ id: projectOperators.id })

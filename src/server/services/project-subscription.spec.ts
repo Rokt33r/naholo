@@ -25,7 +25,7 @@ vi.mock('../db', () => ({
 
 import {
   assertSeatAvailable,
-  countActiveHumanOperators,
+  countActiveOperators,
   getActiveProjectSubscription,
   isActiveSubscriptionStatus,
 } from './project-subscription'
@@ -59,20 +59,7 @@ async function seedHumanOperator(projectId: string, userId: string) {
     .values({
       projectId,
       userId,
-      type: 'user',
       name: 'Human Op',
-    })
-    .returning({ id: schema.projectOperators.id })
-  return operator.id
-}
-
-async function seedBotOperator(projectId: string) {
-  const [operator] = await testDb
-    .insert(schema.projectOperators)
-    .values({
-      projectId,
-      type: 'bot',
-      name: 'Bot Op',
     })
     .returning({ id: schema.projectOperators.id })
   return operator.id
@@ -235,21 +222,6 @@ describe('assertSeatAvailable', () => {
 
     expect(result.success).toBe(true)
   })
-
-  it('ignores bot operators when counting seats', async () => {
-    const projectId = await seedProject()
-    await seedActiveSubscription({
-      projectId,
-      status: 'trialing',
-      seats: 1,
-    })
-    await seedBotOperator(projectId)
-    await seedBotOperator(projectId)
-
-    const result = await assertSeatAvailable(projectId)
-
-    expect(result.success).toBe(true)
-  })
 })
 
 describe('isActiveSubscriptionStatus', () => {
@@ -269,24 +241,22 @@ describe('isActiveSubscriptionStatus', () => {
   })
 })
 
-describe('countActiveHumanOperators', () => {
-  it('counts human operators only, ignoring bots', async () => {
+describe('countActiveOperators', () => {
+  it('counts every operator in the project', async () => {
     const userId = await seedUser()
     const otherUserId = await seedUser()
     const projectId = await seedProject()
 
     await seedHumanOperator(projectId, userId)
     await seedHumanOperator(projectId, otherUserId)
-    await seedBotOperator(projectId)
-    await seedBotOperator(projectId)
 
-    const total = await countActiveHumanOperators(projectId)
+    const total = await countActiveOperators(projectId)
     expect(total).toBe(2)
   })
 
   it('returns 0 when no operators exist', async () => {
     const projectId = await seedProject()
-    const total = await countActiveHumanOperators(projectId)
+    const total = await countActiveOperators(projectId)
     expect(total).toBe(0)
   })
 })

@@ -8,7 +8,7 @@ import { db } from '@/server/db'
 import { requirePolarConfig } from '@/server/config'
 import { getPolarServerClient } from '@/server/billing/polar'
 import {
-  countActiveHumanOperators,
+  countActiveOperators,
   isActiveSubscriptionStatus,
 } from '@/server/services/project-subscription'
 import { formatProjectSubscriptionMetadata } from '@/server/billing/project-subscription-metadata'
@@ -45,7 +45,7 @@ export async function POST(
     const polar = getPolarServerClient()
     const config = requirePolarConfig()
 
-    const usedSeats = await countActiveHumanOperators(project.id)
+    const usedSeats = await countActiveOperators(project.id)
     const minSeats = Math.max(1, usedSeats)
 
     let checkout

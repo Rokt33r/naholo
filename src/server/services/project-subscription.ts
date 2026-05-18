@@ -1,7 +1,7 @@
 import 'server-only'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
-import { and, count, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { SeatLimitExceededError, SubscriptionNotReadyError } from '../errors'
@@ -83,19 +83,8 @@ export async function getActiveProjectSubscription(
   }
 }
 
-export async function countActiveHumanOperators(
-  projectId: string,
-): Promise<number> {
-  const [row] = await db
-    .select({ value: count() })
-    .from(projectOperators)
-    .where(
-      and(
-        eq(projectOperators.projectId, projectId),
-        eq(projectOperators.type, 'user'),
-      ),
-    )
-  return row?.value ?? 0
+export async function countActiveOperators(projectId: string): Promise<number> {
+  return db.$count(projectOperators, eq(projectOperators.projectId, projectId))
 }
 
 export async function assertSeatAvailable(
@@ -111,8 +100,8 @@ export async function assertSeatAvailable(
   }
 
   const seatCap = subscription.polarSubscription.seats ?? 1
-  const humanCount = await countActiveHumanOperators(projectId)
-  if (humanCount >= seatCap) {
+  const usedSeats = await countActiveOperators(projectId)
+  if (usedSeats >= seatCap) {
     return err(new SeatLimitExceededError())
   }
   return ok()

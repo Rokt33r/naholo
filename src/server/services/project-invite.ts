@@ -220,7 +220,6 @@ export async function acceptProjectInvite(
     projectId,
     userId: claimerUser.id,
     name: claimerUser.name,
-    type: 'user',
     role: 'member',
   })
 

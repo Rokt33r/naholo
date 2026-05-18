@@ -32,7 +32,7 @@ export function ProjectSubscriptionWall({
     status === 'active' || status === 'trialing' || status === 'past_due'
   const seatCap = polarSubscription?.seats ?? 1
   const usedSeats = data?.usedSeats ?? 0
-  const seatsExhausted = usedSeats >= seatCap
+  const seatsExhausted = usedSeats > seatCap
 
   if (error != null) {
     return (

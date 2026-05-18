@@ -5,7 +5,6 @@ export type Operator = {
   id: string
   projectId: string
   userId: string | null
-  type: string
   name: string
   role: string
   createdAt: string

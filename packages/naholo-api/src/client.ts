@@ -3,7 +3,6 @@ import type {
   AgentSessionSummary,
   AuthUser,
   CreateObjectiveInput,
-  CreateOperatorTokenResult,
   Operation,
   OperationDetail,
   OperationListItem,
@@ -17,7 +16,6 @@ import type {
   SyncObjectivesResult,
   UpdateObjectiveInput,
   Operator,
-  OperatorToken,
 } from './types.js'
 
 export class NaholoClient {
@@ -414,42 +412,6 @@ export class NaholoClient {
     return this.request(
       'GET',
       this.projectPath(projectSlug, `/operators/${operatorId}`),
-    )
-  }
-
-  listOperatorTokens(
-    projectSlug: string,
-    operatorId: string,
-  ): Promise<OperatorToken[]> {
-    return this.request(
-      'GET',
-      this.projectPath(projectSlug, `/operators/${operatorId}/tokens`),
-    )
-  }
-
-  createOperatorToken(
-    projectSlug: string,
-    operatorId: string,
-    input: { name: string },
-  ): Promise<CreateOperatorTokenResult> {
-    return this.request(
-      'POST',
-      this.projectPath(projectSlug, `/operators/${operatorId}/tokens`),
-      input,
-    )
-  }
-
-  deleteOperatorToken(
-    projectSlug: string,
-    operatorId: string,
-    tokenId: string,
-  ): Promise<void> {
-    return this.request(
-      'DELETE',
-      this.projectPath(
-        projectSlug,
-        `/operators/${operatorId}/tokens/${tokenId}`,
-      ),
     )
   }
 }

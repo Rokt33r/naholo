@@ -11,7 +11,7 @@ import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 export type OperationLog = {
   id: string
   content: string
-  projectOperator: { id: string; name: string; type: string } | null
+  projectOperator: { id: string; name: string } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -31,7 +31,7 @@ export async function listOperationLogs(data: {
     },
     with: {
       projectOperator: {
-        columns: { id: true, name: true, type: true },
+        columns: { id: true, name: true },
       },
     },
     where: (t, { eq }) => eq(t.operationId, data.operationId),

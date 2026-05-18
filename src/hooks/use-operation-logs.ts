@@ -7,7 +7,7 @@ import { updateOperationListCache } from './use-operations'
 export type OperationLog = {
   id: string
   content: string
-  projectOperator: { id: string; name: string; type: string } | null
+  projectOperator: { id: string; name: string } | null
   createdAt: string
   updatedAt: string
 }
@@ -32,7 +32,7 @@ export function useOperationLogs(projectSlug: string, operationNumber: number) {
 export function useCreateOperationLog(
   projectSlug: string,
   operationNumber: number,
-  currentOperator: { id: string; name: string; type: string },
+  currentOperator: { id: string; name: string },
 ) {
   const queryClient = useQueryClient()
 
@@ -70,7 +70,6 @@ export function useCreateOperationLog(
         projectOperator: {
           id: currentOperator.id,
           name: currentOperator.name,
-          type: currentOperator.type,
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

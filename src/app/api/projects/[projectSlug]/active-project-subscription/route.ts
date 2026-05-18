@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import {
-  countActiveHumanOperators,
+  countActiveOperators,
   getActiveProjectSubscription,
   type ActiveProjectSubscription,
 } from '@/server/services/project-subscription'
@@ -87,7 +87,7 @@ export async function GET(
     })
 
     const subscription = await getActiveProjectSubscription(project.id)
-    const usedSeats = await countActiveHumanOperators(project.id)
+    const usedSeats = await countActiveOperators(project.id)
 
     const body: ActiveProjectSubscriptionResponse = {
       subscription: subscription == null ? null : serializeDates(subscription),

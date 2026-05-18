@@ -16,7 +16,6 @@ export type Project = {
 
 export type ProjectOperatorInfo = {
   id: string
-  type: string
   name: string
   role: string
 }
@@ -55,7 +54,6 @@ export async function listProjects(
   const workers = await db.query.projectOperators.findMany({
     columns: {
       id: true,
-      type: true,
       name: true,
       role: true,
     },
@@ -79,7 +77,6 @@ export async function listProjects(
       ...worker.project,
       projectOperatorOfCurrentUser: {
         id: worker.id,
-        type: worker.type,
         name: worker.name,
         role: worker.role,
       },

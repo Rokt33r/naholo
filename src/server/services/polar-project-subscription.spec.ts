@@ -54,7 +54,6 @@ async function seedHumanOperator(projectId: string, userId: string) {
     .values({
       projectId,
       userId,
-      type: 'user',
       name: 'Human Op',
     })
     .returning({ id: schema.projectOperators.id })

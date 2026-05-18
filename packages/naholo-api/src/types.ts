@@ -10,7 +10,6 @@ export type Project = {
 
 export type ProjectOperatorInfo = {
   id: string
-  type: string
   name: string
   role: string
 }
@@ -120,7 +119,7 @@ export type Note = {
 export type OperationLog = {
   id: string
   content: string
-  projectOperator: { id: string; name: string; type: string } | null
+  projectOperator: { id: string; name: string } | null
   createdAt: string
   updatedAt: string
 }
@@ -131,23 +130,9 @@ export type Operator = {
   id: string
   projectId: string
   userId: string | null
-  type: string
   name: string
   role: string
   createdAt: string
-}
-
-export type OperatorToken = {
-  id: string
-  name: string
-  tokenHint: string
-  lastUsedAt: string | null
-  createdAt: string
-}
-
-export type CreateOperatorTokenResult = {
-  id: string
-  token: string
 }
 
 // ---- Auth ----
