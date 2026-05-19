@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
 import { ManageSubscriptionBlock } from '@/components/billing/manage-subscription-block'
@@ -8,6 +7,7 @@ import { StartCheckout } from '@/components/billing/start-checkout'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
+import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
 import { publicConfig } from '@/lib/publicConfig'
 
 type ProjectSubscriptionWallProps = {
@@ -21,9 +21,9 @@ export function ProjectSubscriptionWall({
     return <>{children}</>
   }
   const { projectSlug, currentOperator } = useProjectContext()
-  const [awaitingWebhook, setAwaitingWebhook] = useState(false)
+  useProjectSubscriptionStream(projectSlug)
   const { data, isLoading, error, refetch, isFetching } =
-    useActiveProjectSubscription(projectSlug, { awaitingWebhook })
+    useActiveProjectSubscription(projectSlug)
 
   const isAdmin = currentOperator.role === 'admin'
   const polarSubscription = data?.subscription?.polarSubscription ?? null
@@ -112,10 +112,7 @@ export function ProjectSubscriptionWall({
         {seatLimitWall ? (
           <ManageSubscriptionBlock projectSlug={projectSlug} />
         ) : (
-          <StartCheckout
-            projectSlug={projectSlug}
-            onWaitingChange={setAwaitingWebhook}
-          />
+          <StartCheckout projectSlug={projectSlug} />
         )}
       </div>
     </div>

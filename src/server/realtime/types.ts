@@ -5,6 +5,7 @@ export type RealtimeEventType =
   | 'logs-changed'
   | 'notes-changed'
   | 'operations-list-changed'
+  | 'project-subscription-changed'
 
 export interface RealtimeEvent {
   type: RealtimeEventType

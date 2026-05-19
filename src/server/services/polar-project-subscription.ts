@@ -147,6 +147,16 @@ async function linkProjectSubscription(input: {
   return projectSubscriptionId
 }
 
+export async function findProjectIdByPolarSubscriptionRowId(
+  polarSubscriptionRowId: string,
+): Promise<string | null> {
+  const link = await db.query.projectSubscriptions.findFirst({
+    columns: { projectId: true },
+    where: (t, { eq }) => eq(t.polarSubscriptionId, polarSubscriptionRowId),
+  })
+  return link?.projectId ?? null
+}
+
 function isPolarNotFound(error: unknown): boolean {
   if (error == null || typeof error !== 'object') {
     return false

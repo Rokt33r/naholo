@@ -5,7 +5,7 @@ import {
   requireAdminProjectOperator,
 } from '@/server/auth/permissions'
 import { db } from '@/server/db'
-import { requirePolarConfig } from '@/server/config'
+import { config, requirePolarConfig } from '@/server/config'
 import { getPolarServerClient } from '@/server/billing/polar'
 import {
   countActiveOperators,
@@ -43,18 +43,20 @@ export async function POST(
     const existingPolarSubscription = existingLink?.polarSubscription ?? null
 
     const polar = getPolarServerClient()
-    const config = requirePolarConfig()
+    const polarConfig = requirePolarConfig()
 
     const usedSeats = await countActiveOperators(project.id)
     const minSeats = Math.max(1, usedSeats)
+    const successUrl = `${config.baseUrl}/app/projects/${projectSlug}/operators`
 
     let checkout
     if (existingPolarSubscription != null) {
       checkout = await polar.checkouts.create({
-        products: [config.productId],
+        products: [polarConfig.productId],
         customerId: existingPolarSubscription.polarCustomerId,
         allowDiscountCodes: true,
         minSeats,
+        successUrl,
         metadata: formatProjectSubscriptionMetadata({
           projectId: project.id,
           projectOperatorId: projectOperator.id,
@@ -67,10 +69,11 @@ export async function POST(
       }
 
       checkout = await polar.checkouts.create({
-        products: [config.productId],
+        products: [polarConfig.productId],
         externalCustomerId: project.id,
         allowDiscountCodes: true,
         minSeats,
+        successUrl,
         metadata: formatProjectSubscriptionMetadata({
           projectId: project.id,
           projectOperatorId: projectOperator.id,

@@ -11,7 +11,11 @@ import {
   upsertPolarSubscription,
   patchPolarSubscriptionBillingEmail,
 } from '@/server/services/polar-subscription'
-import { claimPolarProjectSubscriptionFromEvent } from '@/server/services/polar-project-subscription'
+import {
+  claimPolarProjectSubscriptionFromEvent,
+  findProjectIdByPolarSubscriptionRowId,
+} from '@/server/services/polar-project-subscription'
+import { publishProjectEvent } from '@/server/realtime/publish'
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
@@ -70,6 +74,10 @@ export async function POST(request: NextRequest) {
               { polarSubscriptionId: subscription.id },
             )
           }
+        }
+        const projectId = await findProjectIdByPolarSubscriptionRowId(row.id)
+        if (projectId != null) {
+          publishProjectEvent(projectId, 'project-subscription-changed')
         }
         break
       }
