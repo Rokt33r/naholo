@@ -42,11 +42,29 @@ export async function POST(
       })
     }
 
+    const currentSeats = subscription.polarSubscription.seats ?? 1
+    if (seats === currentSeats) {
+      return NextResponse.json({ ok: true, seats: currentSeats })
+    }
+    const prorationBehavior = seats > currentSeats ? 'invoice' : 'prorate'
+
     const polar = getPolarServerClient()
-    const updated = await polar.subscriptions.update({
-      id: subscription.polarSubscription.polarSubscriptionId,
-      subscriptionUpdate: { seats },
-    })
+    let updated
+    try {
+      updated = await polar.subscriptions.update({
+        id: subscription.polarSubscription.polarSubscriptionId,
+        subscriptionUpdate: { seats, prorationBehavior },
+      })
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Polar rejected the seat update.'
+      return NextResponse.json(
+        { error: 'seat_update_failed', message },
+        { status: 402 },
+      )
+    }
     const { row } = await upsertPolarSubscription(updated)
 
     return NextResponse.json({ ok: true, seats: row.seats ?? seats })

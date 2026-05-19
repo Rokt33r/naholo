@@ -8,6 +8,7 @@ import { StartCheckout } from '@/components/billing/start-checkout'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
+import { formatSeatPriceCopy } from '@/lib/billing-pricing'
 
 type SubscriptionPanelProps = {
   projectSlug: string
@@ -23,9 +24,7 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
         <CreditCard className='size-5' />
         <h2 className='text-lg font-semibold'>Subscription</h2>
       </div>
-      <p className='text-muted-foreground text-sm'>
-        $5 per human operator per month + VAT. Bots are always free.
-      </p>
+      <p className='text-muted-foreground text-sm'>{formatSeatPriceCopy()}</p>
 
       {isLoading || data == null ? (
         <div className='text-muted-foreground py-8 text-center text-sm'>
@@ -84,6 +83,8 @@ function SubscriptionPanelBody({
         projectSlug={projectSlug}
         seats={polarSubscription.seats ?? 1}
         usedSeats={usedSeats}
+        currentPeriodStart={polarSubscription.currentPeriodStart}
+        currentPeriodEnd={polarSubscription.currentPeriodEnd}
       />
       <CancellationControls
         projectSlug={projectSlug}

@@ -8,6 +8,7 @@ import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
+import { formatSeatPriceCopy } from '@/lib/billing-pricing'
 import { publicConfig } from '@/lib/publicConfig'
 
 type ProjectSubscriptionWallProps = {
@@ -93,7 +94,7 @@ export function ProjectSubscriptionWall({
           <p className='text-muted-foreground text-sm'>
             {seatLimitWall
               ? 'All seats on this subscription are in use. Raise the seat count from the operators page to continue using this project.'
-              : '$5 per human operator per month + VAT. Bots are always free.'}
+              : formatSeatPriceCopy()}
           </p>
         </div>
 

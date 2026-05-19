@@ -1,32 +1,52 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SeatChangeConfirmDialog } from '@/components/billing/seat-change-confirm-dialog'
 import { useUpdateSubscriptionSeats } from '@/hooks/use-active-project-subscription'
+import { computeProrationCents } from '@/lib/billing-pricing'
 
 type SeatQuotaControlProps = {
   projectSlug: string
   seats: number
   usedSeats: number
+  currentPeriodStart: string | null
+  currentPeriodEnd: string | null
 }
 
 export function SeatQuotaControl({
   projectSlug,
   seats,
   usedSeats,
+  currentPeriodStart,
+  currentPeriodEnd,
 }: SeatQuotaControlProps) {
   const [value, setValue] = useState<number>(seats)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const mutation = useUpdateSubscriptionSeats(projectSlug)
 
   useEffect(() => {
     setValue(seats)
   }, [seats])
 
-  const handleSave = () => {
-    mutation.mutate(value)
-  }
+  const valueHasChanged = value !== seats
+  const belowUsage = value < usedSeats
+  const isIncrease = value > seats
+
+  const prorationCents = useMemo(() => {
+    if (!isIncrease) {
+      return null
+    }
+    return computeProrationCents({
+      deltaSeats: value - seats,
+      currentPeriodStart,
+      currentPeriodEnd,
+      now: new Date(),
+    })
+  }, [isIncrease, value, seats, currentPeriodStart, currentPeriodEnd])
 
   const handleDecrement = () => {
     setValue((v) => Math.max(1, v - 1))
@@ -36,8 +56,35 @@ export function SeatQuotaControl({
     setValue((v) => v + 1)
   }
 
-  const dirty = value !== seats
-  const belowUsage = value < usedSeats
+  const handleOpenConfirm = () => {
+    if (!valueHasChanged || belowUsage) {
+      return
+    }
+    setErrorMessage(null)
+    setConfirmOpen(true)
+  }
+
+  const handleConfirm = () => {
+    setErrorMessage(null)
+    mutation.mutate(value, {
+      onSuccess: () => {
+        setConfirmOpen(false)
+      },
+      onError: (error) => {
+        setErrorMessage(error.message)
+      },
+    })
+  }
+
+  const handleOpenChange = (next: boolean) => {
+    if (mutation.isPending) {
+      return
+    }
+    if (!next) {
+      setErrorMessage(null)
+    }
+    setConfirmOpen(next)
+  }
 
   return (
     <div className='flex flex-col gap-3 rounded-lg border p-4'>
@@ -80,10 +127,10 @@ export function SeatQuotaControl({
           +
         </Button>
         <Button
-          onClick={handleSave}
-          disabled={mutation.isPending || !dirty || belowUsage}
+          onClick={handleOpenConfirm}
+          disabled={mutation.isPending || !valueHasChanged || belowUsage}
         >
-          {mutation.isPending ? 'Saving…' : 'Save'}
+          Save
         </Button>
       </div>
       {belowUsage && (
@@ -94,11 +141,16 @@ export function SeatQuotaControl({
           </AlertDescription>
         </Alert>
       )}
-      {mutation.error != null && (
-        <Alert variant='destructive'>
-          <AlertDescription>{mutation.error.message}</AlertDescription>
-        </Alert>
-      )}
+      <SeatChangeConfirmDialog
+        open={confirmOpen}
+        onOpenChange={handleOpenChange}
+        fromSeats={seats}
+        toSeats={value}
+        prorationCents={prorationCents}
+        onConfirm={handleConfirm}
+        isPending={mutation.isPending}
+        errorMessage={errorMessage}
+      />
     </div>
   )
 }

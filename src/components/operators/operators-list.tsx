@@ -38,14 +38,14 @@ export function OperatorsList({
         </h2>
         <div className='flex items-center gap-1'>
           <InviteUserOperatorDialog projectSlug={projectSlug}>
-            <Button size='icon-sm' variant='ghost' title='Invite user'>
-              <UserPlus className='h-4 w-4' />
+            <Button size='sm' variant='ghost' title='Invite user'>
+              <UserPlus className='h-4 w-4' /> Invite
             </Button>
           </InviteUserOperatorDialog>
         </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto px-2'>
+      <div className='flex-1 overflow-y-auto px-2 py-2'>
         {isLoading ? (
           <div className='p-4 text-center text-sm text-muted-foreground'>
             Loading...
