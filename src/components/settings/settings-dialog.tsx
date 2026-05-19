@@ -2,13 +2,11 @@
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, User, Terminal, CreditCard } from 'lucide-react'
+import { Pencil, User, Terminal } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
 import { ProjectSettingsTab } from '@/components/settings/project-settings-tab'
 import { UserSettingsTab } from '@/components/settings/user-settings-tab'
 import { CliInstallTab } from '@/components/settings/cli-install-tab'
-import { BillingTab } from '@/components/settings/billing-tab'
-import { publicConfig } from '@/lib/publicConfig'
 
 type SettingsDialogProps = {
   open: boolean
@@ -36,12 +34,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 Project
               </TabsTrigger>
             )}
-            {isAdmin && publicConfig.billing && (
-              <TabsTrigger value='billing'>
-                <CreditCard className='size-4' />
-                Billing
-              </TabsTrigger>
-            )}
             <TabsTrigger value='user'>
               <User className='size-4' />
               User
@@ -55,11 +47,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           {isAdmin && (
             <TabsContent value='project' className='overflow-y-auto'>
               <ProjectSettingsTab onClose={() => onOpenChange(false)} />
-            </TabsContent>
-          )}
-          {isAdmin && publicConfig.billing && (
-            <TabsContent value='billing' className='overflow-y-auto'>
-              <BillingTab />
             </TabsContent>
           )}
           <TabsContent value='user' className='overflow-y-auto'>

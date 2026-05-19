@@ -24,6 +24,27 @@ export function useInvalidateActiveProjectSubscription(projectSlug: string) {
   }
 }
 
+export function useUpdateSubscriptionSeats(projectSlug: string) {
+  const invalidate = useInvalidateActiveProjectSubscription(projectSlug)
+  return useMutation<{ ok: true; seats: number }, Error, number>({
+    mutationFn: async (seats) => {
+      const res = await mutationFetch(
+        `/api/projects/${projectSlug}/billing/seats`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seats }),
+        },
+      )
+      if (!res.ok) {
+        throw await createResponseError(res)
+      }
+      return (await res.json()) as { ok: true; seats: number }
+    },
+    onSuccess: invalidate,
+  })
+}
+
 export type SubscriptionCancellationAction = 'cancel' | 'resume'
 
 export function useUpdateSubscriptionCancellation(projectSlug: string) {

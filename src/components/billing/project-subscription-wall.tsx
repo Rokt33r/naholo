@@ -1,8 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
-import { ManageSubscriptionBlock } from '@/components/billing/manage-subscription-block'
 import { StartCheckout } from '@/components/billing/start-checkout'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
@@ -92,7 +92,7 @@ export function ProjectSubscriptionWall({
           </h1>
           <p className='text-muted-foreground text-sm'>
             {seatLimitWall
-              ? 'All seats on this subscription are in use. Raise the seat count to continue using this project.'
+              ? 'All seats on this subscription are in use. Raise the seat count from the operators page to continue using this project.'
               : '$5 per human operator per month + VAT. Bots are always free.'}
           </p>
         </div>
@@ -102,7 +102,7 @@ export function ProjectSubscriptionWall({
           usedSeats={usedSeats}
         />
 
-        {polarSubscription != null && (
+        {polarSubscription != null && !seatLimitWall && (
           <CancellationControls
             projectSlug={projectSlug}
             polarSubscription={polarSubscription}
@@ -110,7 +110,11 @@ export function ProjectSubscriptionWall({
         )}
 
         {seatLimitWall ? (
-          <ManageSubscriptionBlock projectSlug={projectSlug} />
+          <Button asChild className='self-start'>
+            <Link href={`/app/projects/${projectSlug}/operators`}>
+              Manage subscription
+            </Link>
+          </Button>
         ) : (
           <StartCheckout projectSlug={projectSlug} />
         )}

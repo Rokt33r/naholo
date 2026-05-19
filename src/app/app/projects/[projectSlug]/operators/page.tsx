@@ -1,16 +1,37 @@
 'use client'
 
-import { useIsMobile } from '@/hooks/use-is-mobile'
+import { Contact } from 'lucide-react'
+import { useProjectContext } from '@/components/app/project-context'
+import { SubscriptionPanel } from '@/components/billing/subscription-panel'
+import { InviteList } from '@/components/operators/invite-list'
+import { OperatorsList } from '@/components/operators/operators-list'
+import { publicConfig } from '@/lib/publicConfig'
 
 export default function OperatorsIndexPage() {
-  const isMobile = useIsMobile()
-  if (isMobile) {
-    return null
-  }
+  const { projectSlug, projectName, projects, currentOperator } =
+    useProjectContext()
+  const isAdmin = currentOperator.role === 'admin'
 
   return (
-    <div className='flex h-full items-center justify-center text-muted-foreground'>
-      Select or create an operator
+    <div className='mx-auto flex w-full max-w-3xl flex-col gap-8 p-6'>
+      <section className='flex flex-col gap-3'>
+        <div className='flex items-center gap-2'>
+          <Contact className='size-5' />
+          <h2 className='text-lg font-semibold'>Operators</h2>
+        </div>
+        <div className='flex max-h-[28rem] flex-col rounded-lg border'>
+          <OperatorsList
+            projectSlug={projectSlug}
+            projectName={projectName}
+            projects={projects}
+          />
+        </div>
+        <InviteList projectSlug={projectSlug} />
+      </section>
+
+      {isAdmin && publicConfig.billing && (
+        <SubscriptionPanel projectSlug={projectSlug} />
+      )}
     </div>
   )
 }
