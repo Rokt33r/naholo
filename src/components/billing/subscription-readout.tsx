@@ -1,5 +1,8 @@
 import { SubscriptionStatusBadge } from '@/components/billing/subscription-status-badge'
 import type { ActiveProjectSubscriptionResponse } from '@/hooks/use-active-project-subscription'
+import { ExternalLink } from 'lucide-react'
+import { publicConfig } from '@/lib/publicConfig'
+import { Button } from '../ui/button'
 
 type PolarSubscription = NonNullable<
   ActiveProjectSubscriptionResponse['subscription']
@@ -14,6 +17,9 @@ export function SubscriptionReadout({
 }) {
   const status = polarSubscription?.status ?? null
   const seats = polarSubscription?.seats
+
+  const portalUrl = publicConfig.polar?.portalUrl
+
   return (
     <div className='space-y-3 rounded-lg border p-4'>
       <div className='flex items-center justify-between text-sm'>
@@ -37,6 +43,19 @@ export function SubscriptionReadout({
         <span className='font-medium'>
           {formatDate(polarSubscription?.currentPeriodEnd)}
         </span>
+      </div>
+      <hr />
+      <div>
+        <Button asChild variant='outline' className='self-start mb-2'>
+          <a href={portalUrl} target='_blank' rel='noopener noreferrer'>
+            Open Polar portal
+            <ExternalLink className='size-4' />
+          </a>
+        </Button>
+        <p className='text-muted-foreground text-sm'>
+          Download invoices and change your payment method from the Polar
+          portal. Sign in with the billing email for this subscription.
+        </p>
       </div>
     </div>
   )
