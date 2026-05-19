@@ -42,6 +42,21 @@ export class SeatLimitExceededError extends ServiceError {
   }
 }
 
+// TODO: Instead of declare domain specific error, use general error, UnprocessableRequest and allow to set code(SeatDowngradeBelowUsage) and message. And make the error handler just set statusCode and response body with code and message`{code:string, message:string}`
+export class SeatDowngradeBelowUsageError extends ServiceError {
+  readonly requestedSeats: number
+  readonly usedSeats: number
+
+  constructor(input: { requestedSeats: number; usedSeats: number }) {
+    super(
+      `Cannot lower seat count to ${input.requestedSeats}; ${input.usedSeats} operators are already active on this project.`,
+    )
+    this.name = 'SeatDowngradeBelowUsageError'
+    this.requestedSeats = input.requestedSeats
+    this.usedSeats = input.usedSeats
+  }
+}
+
 export class SubscriptionAlreadyActiveError extends ServiceError {
   constructor(
     message = 'This project already has an active subscription. Refresh the page to see the current billing state.',
@@ -62,6 +77,17 @@ export function mapApiError(error: unknown): NextResponse {
     return NextResponse.json(
       { error: 'seat_limit_exceeded', message: error.message },
       { status: 402 },
+    )
+  }
+  if (error instanceof SeatDowngradeBelowUsageError) {
+    return NextResponse.json(
+      {
+        error: 'seat_downgrade_below_usage',
+        message: error.message,
+        requestedSeats: error.requestedSeats,
+        usedSeats: error.usedSeats,
+      },
+      { status: 422 },
     )
   }
   if (error instanceof SubscriptionAlreadyActiveError) {
