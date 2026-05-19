@@ -72,6 +72,7 @@ jobs:
             --build-arg NEXT_PUBLIC_BILLING=${{ secrets.NEXT_PUBLIC_BILLING }} \
             --build-arg NEXT_PUBLIC_POLAR_PRODUCT_ID=${{ secrets.NEXT_PUBLIC_POLAR_PRODUCT_ID }} \
             --build-arg NEXT_PUBLIC_POLAR_ENVIRONMENT=${{ secrets.NEXT_PUBLIC_POLAR_ENVIRONMENT }} \
+            --build-arg NEXT_PUBLIC_POLAR_ORGANIZATION_SLUG=${{ secrets.NEXT_PUBLIC_POLAR_ORGANIZATION_SLUG }} \
             --cache-from $ECR_REGISTRY/$ECR_REPOSITORY:latest \
             --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             --tag $ECR_REGISTRY/$ECR_REPOSITORY:latest \

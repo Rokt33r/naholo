@@ -44,6 +44,7 @@ src/
 Additional project rules live in [.claude/rules/](./.claude/rules/) and are loaded automatically:
 
 - [style.md](./.claude/rules/style.md) — code-style conventions
+- [env-vars.md](./.claude/rules/env-vars.md) — env var add/remove checklist (Dockerfile / deploy.yml / Terraform / `.env.example`)
 - [skill-edits.md](./.claude/rules/skill-edits.md) — routing rule for editing core skills (`/infil`, `/recon`, `/objs`, `/splash`, `/sitrep`, `/exfil`)
 
 ## Build & Test
