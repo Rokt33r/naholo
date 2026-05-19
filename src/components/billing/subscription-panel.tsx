@@ -1,6 +1,7 @@
 'use client'
 
 import { CreditCard } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
 import { SeatQuotaControl } from '@/components/billing/seat-quota-control'
 import { StartCheckout } from '@/components/billing/start-checkout'
@@ -35,6 +36,7 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           projectSlug={projectSlug}
           polarSubscription={data.subscription?.polarSubscription ?? null}
           usedSeats={data.usedSeats}
+          isSeatExhausted={data.isSeatExhausted}
         />
       )}
     </section>
@@ -49,10 +51,12 @@ function SubscriptionPanelBody({
   projectSlug,
   polarSubscription,
   usedSeats,
+  isSeatExhausted,
 }: {
   projectSlug: string
   polarSubscription: PolarSubscription | null
   usedSeats: number
+  isSeatExhausted: boolean
 }) {
   if (polarSubscription == null) {
     return (
@@ -69,6 +73,13 @@ function SubscriptionPanelBody({
         polarSubscription={polarSubscription}
         usedSeats={usedSeats}
       />
+      {isSeatExhausted && (
+        <Alert>
+          <AlertDescription>
+            Seat quota reached. Raise the seat count to add more operators.
+          </AlertDescription>
+        </Alert>
+      )}
       <SeatQuotaControl
         projectSlug={projectSlug}
         seats={polarSubscription.seats ?? 1}

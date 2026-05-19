@@ -12,8 +12,15 @@ import {
   touchUserApiToken,
 } from '../services/user-api-token'
 import { config } from '../config'
-import { NotFoundError, SubscriptionNotReadyError } from '../errors'
-import { isActiveSubscriptionStatus } from '../services/project-subscription'
+import {
+  NotFoundError,
+  SeatLimitExceededError,
+  SubscriptionNotReadyError,
+} from '../errors'
+import {
+  countActiveOperators,
+  isActiveSubscriptionStatus,
+} from '../services/project-subscription'
 
 export type { ProjectOperator } from '../services/project-operator'
 
@@ -180,7 +187,9 @@ export async function requireProjectOperator(
     columns: { id: true, slug: true },
     with: {
       activeProjectSubscription: {
-        with: { polarSubscription: { columns: { status: true } } },
+        with: {
+          polarSubscription: { columns: { status: true, seats: true } },
+        },
       },
     },
     where: (t, { eq }) => eq(t.slug, projectSlug),
@@ -193,15 +202,21 @@ export async function requireProjectOperator(
 
   const { projectOperator } = await resolveProjectOperator(project.id)
 
-  // TODO: Need to check seats exhausted. Proj subscription should manage this. Anytime member count and polar subscription update, exhausted prop must be updated.
   if (config.billing && options?.skipSubscriptionCheck !== true) {
-    const projectSubscriptionStatus =
-      projectRow.activeProjectSubscription?.polarSubscription?.status ?? null
+    const polarSubscription =
+      projectRow.activeProjectSubscription?.polarSubscription ?? null
+    const projectSubscriptionStatus = polarSubscription?.status ?? null
     if (
       projectSubscriptionStatus == null ||
       !isActiveSubscriptionStatus(projectSubscriptionStatus)
     ) {
       throw new SubscriptionNotReadyError()
+    }
+
+    const seatCap = polarSubscription?.seats ?? 1
+    const usedSeats = await countActiveOperators(project.id)
+    if (usedSeats > seatCap) {
+      throw new SeatLimitExceededError()
     }
   }
 

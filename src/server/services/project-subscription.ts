@@ -26,6 +26,8 @@ export type ActiveProjectSubscription = {
     endsAt: Date | null
     endedAt: Date | null
   } | null
+  usedSeats: number
+  isSeatExhausted: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -58,6 +60,10 @@ export async function getActiveProjectSubscription(
     return null
   }
 
+  const usedSeats = await countActiveOperators(projectId)
+  const seatCap = polar.seats ?? 1
+  const isSeatExhausted = usedSeats >= seatCap
+
   return {
     id: link.id,
     projectId: link.projectId,
@@ -78,6 +84,8 @@ export async function getActiveProjectSubscription(
       endsAt: polar.endsAt,
       endedAt: polar.endedAt,
     },
+    usedSeats,
+    isSeatExhausted,
     createdAt: link.createdAt,
     updatedAt: link.updatedAt,
   }
@@ -99,9 +107,7 @@ export async function assertSeatAvailable(
     return err(new SubscriptionNotReadyError())
   }
 
-  const seatCap = subscription.polarSubscription.seats ?? 1
-  const usedSeats = await countActiveOperators(projectId)
-  if (usedSeats >= seatCap) {
+  if (subscription.isSeatExhausted) {
     return err(new SeatLimitExceededError())
   }
   return ok()

@@ -32,6 +32,7 @@ export type ActiveProjectSubscriptionResponse = {
     updatedAt: string
   } | null
   usedSeats: number
+  isSeatExhausted: boolean
 }
 
 function serializeDates(
@@ -87,11 +88,14 @@ export async function GET(
     })
 
     const subscription = await getActiveProjectSubscription(project.id)
-    const usedSeats = await countActiveOperators(project.id)
+    const usedSeats =
+      subscription?.usedSeats ?? (await countActiveOperators(project.id))
+    const isSeatExhausted = subscription?.isSeatExhausted ?? false
 
     const body: ActiveProjectSubscriptionResponse = {
       subscription: subscription == null ? null : serializeDates(subscription),
       usedSeats,
+      isSeatExhausted,
     }
     return NextResponse.json(body)
   } catch (error) {
