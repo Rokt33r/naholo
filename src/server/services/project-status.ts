@@ -4,7 +4,7 @@ import { db } from '../db'
 import { projects, projectOperators } from '../db/schema'
 import { isActiveSubscriptionStatus } from './project-subscription'
 
-export type ProjectStatus = 'active' | 'inactive' | 'seat-exhausted'
+export type ProjectStatus = 'active' | 'inactive' | 'seats-exceeded'
 
 export function deriveProjectStatus(input: {
   polarStatus: string | null
@@ -17,7 +17,7 @@ export function deriveProjectStatus(input: {
   }
   const cap = seats ?? 1
   if (usedSeats > cap) {
-    return 'seat-exhausted'
+    return 'seats-exceeded'
   }
   return 'active'
 }

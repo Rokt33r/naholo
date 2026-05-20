@@ -195,7 +195,7 @@ export async function requireProjectOperator(
     if (projectRow.status === 'inactive') {
       throw new SubscriptionNotReadyError()
     }
-    if (projectRow.status === 'seat-exhausted') {
+    if (projectRow.status === 'seats-exceeded') {
       throw new SeatLimitExceededError()
     }
   }

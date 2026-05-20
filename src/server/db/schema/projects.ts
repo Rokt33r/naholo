@@ -16,7 +16,7 @@ import { projectSubscriptions } from './project-subscriptions'
 export const projectStatus = pgEnum('project_status', [
   'active',
   'inactive',
-  'seat-exhausted',
+  'seats-exceeded',
 ])
 
 export const projects = pgTable(
