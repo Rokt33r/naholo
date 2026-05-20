@@ -45,3 +45,6 @@ public/cli/
 
 # Local object-storage dev root (NAHOLO_STORAGE_DRIVER=fs)
 /.storage/
+
+# Sentry Config File
+.env.sentry-build-plugin
