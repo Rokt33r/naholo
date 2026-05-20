@@ -32,6 +32,11 @@ const items = [
     label: 'Project Subscriptions',
     billingOnly: true,
   },
+  {
+    href: '/admin/project-status',
+    label: 'Project Status',
+    billingOnly: true,
+  },
 ]
 
 export function AdminSidebar() {
