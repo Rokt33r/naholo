@@ -17,10 +17,6 @@ import {
   SeatLimitExceededError,
   SubscriptionNotReadyError,
 } from '../errors'
-import {
-  countActiveOperators,
-  isActiveSubscriptionStatus,
-} from '../services/project-subscription'
 
 export type { ProjectOperator } from '../services/project-operator'
 
@@ -184,14 +180,7 @@ export async function requireProjectOperator(
 ): Promise<ProjectOperatorContext> {
   // TODO: Handle api token or session first before resolving projectId. It probably better to make require*ByToken and require*BySession accept projectSlug and resolve it internally.
   const projectRow = await db.query.projects.findFirst({
-    columns: { id: true, slug: true },
-    with: {
-      activeProjectSubscription: {
-        with: {
-          polarSubscription: { columns: { status: true, seats: true } },
-        },
-      },
-    },
+    columns: { id: true, slug: true, status: true },
     where: (t, { eq }) => eq(t.slug, projectSlug),
   })
   if (projectRow == null) {
@@ -203,19 +192,10 @@ export async function requireProjectOperator(
   const { projectOperator } = await resolveProjectOperator(project.id)
 
   if (config.billing && options?.skipSubscriptionCheck !== true) {
-    const polarSubscription =
-      projectRow.activeProjectSubscription?.polarSubscription ?? null
-    const projectSubscriptionStatus = polarSubscription?.status ?? null
-    if (
-      projectSubscriptionStatus == null ||
-      !isActiveSubscriptionStatus(projectSubscriptionStatus)
-    ) {
+    if (projectRow.status === 'inactive') {
       throw new SubscriptionNotReadyError()
     }
-
-    const seatCap = polarSubscription?.seats ?? 1
-    const usedSeats = await countActiveOperators(project.id)
-    if (usedSeats > seatCap) {
+    if (projectRow.status === 'seat-exhausted') {
       throw new SeatLimitExceededError()
     }
   }

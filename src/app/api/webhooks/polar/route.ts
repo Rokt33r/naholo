@@ -15,6 +15,7 @@ import {
   claimPolarProjectSubscriptionFromEvent,
   findProjectIdByPolarSubscriptionRowId,
 } from '@/server/services/polar-project-subscription'
+import { recomputeProjectStatus } from '@/server/services/project-status'
 import { publishProjectEvent } from '@/server/realtime/publish'
 
 export async function POST(request: NextRequest) {
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
         }
         const projectId = await findProjectIdByPolarSubscriptionRowId(row.id)
         if (projectId != null) {
+          await recomputeProjectStatus(projectId)
           publishProjectEvent(projectId, 'project-subscription-changed')
         }
         break

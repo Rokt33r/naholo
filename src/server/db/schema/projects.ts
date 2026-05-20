@@ -1,4 +1,5 @@
 import {
+  pgEnum,
   pgTable,
   uuid,
   text,
@@ -11,6 +12,12 @@ import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { projectOperators } from './project-operators'
 import { projectSubscriptions } from './project-subscriptions'
+
+export const projectStatus = pgEnum('project_status', [
+  'active',
+  'inactive',
+  'seat-exhausted',
+])
 
 export const projects = pgTable(
   'projects',
@@ -25,6 +32,7 @@ export const projects = pgTable(
     ).references((): AnyPgColumn => projectSubscriptions.id, {
       onDelete: 'set null',
     }),
+    status: projectStatus('status').notNull().default('inactive'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

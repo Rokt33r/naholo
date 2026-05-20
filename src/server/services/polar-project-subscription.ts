@@ -8,10 +8,12 @@ import {
 } from './polar-subscription'
 import { parseProjectSubscriptionMetadata } from '../billing/project-subscription-metadata'
 import { getPolarServerClient } from '../billing/polar'
+import { recomputeProjectStatus } from './project-status'
 
 export type ClaimPolarProjectSubscriptionResult =
   | {
       claimed: true
+      projectId: string
       projectSubscriptionId: string
     }
   | {
@@ -48,6 +50,7 @@ export async function claimPolarProjectSubscriptionFromEvent(input: {
 
   return {
     claimed: true,
+    projectId,
     projectSubscriptionId,
   }
 }
@@ -92,6 +95,7 @@ export async function reconcileProjectSubscriptionFromPolar(
     projectId,
     polarSubscriptionRowId: row.id,
   })
+  await recomputeProjectStatus(projectId)
 
   return {
     found: true,
