@@ -53,13 +53,11 @@ ENV NEXT_PUBLIC_POLAR_ENVIRONMENT=$NEXT_PUBLIC_POLAR_ENVIRONMENT
 ARG NEXT_PUBLIC_POLAR_ORGANIZATION_SLUG
 ENV NEXT_PUBLIC_POLAR_ORGANIZATION_SLUG=$NEXT_PUBLIC_POLAR_ORGANIZATION_SLUG
 
-# Sentry auth token
-ARG SENTRY_AUTH_TOKEN
-ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
-
 # Build the Next.js application
 # Note: DATABASE_URL is not needed at build time for Next.js
-RUN pnpm build
+# SENTRY_AUTH_TOKEN is passed as a BuildKit secret to avoid baking it into image layers
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    pnpm build
 
 # Stage 3: Runner
 FROM node:22-alpine AS runner
