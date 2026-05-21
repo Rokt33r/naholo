@@ -12,7 +12,6 @@ import {
   countActiveOperators,
   getActiveProjectSubscription,
 } from '@/server/services/project-subscription'
-import { recomputeProjectStatus } from '@/server/services/project-status'
 
 const requestSchema = z.object({
   seats: z.number().int().positive(),
@@ -66,10 +65,9 @@ export async function POST(
         { status: 402 },
       )
     }
-    const { row } = await upsertPolarSubscription(updated)
-    await recomputeProjectStatus(project.id)
+    await upsertPolarSubscription(updated)
 
-    return NextResponse.json({ ok: true, seats: row.seats ?? seats })
+    return NextResponse.json({ ok: true, seats })
   } catch (error) {
     return mapApiError(error)
   }

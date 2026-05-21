@@ -11,12 +11,6 @@ import {
   upsertPolarSubscription,
   patchPolarSubscriptionBillingEmail,
 } from '@/server/services/polar-subscription'
-import {
-  claimPolarProjectSubscriptionFromEvent,
-  findProjectIdByPolarSubscriptionRowId,
-} from '@/server/services/polar-project-subscription'
-import { recomputeProjectStatus } from '@/server/services/project-status'
-import { publishProjectEvent } from '@/server/realtime/publish'
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
@@ -61,26 +55,7 @@ export async function POST(request: NextRequest) {
       case 'subscription.uncanceled':
       case 'subscription.past_due':
       case 'subscription.revoked': {
-        const subscription = event.data as Subscription
-        const { row } = await upsertPolarSubscription(subscription)
-        if (event.type === 'subscription.created') {
-          const claim = await claimPolarProjectSubscriptionFromEvent({
-            polarSubscriptionRow: row,
-            metadata: subscription.metadata,
-          })
-          if (!claim.claimed) {
-            console.warn(
-              'Polar subscription.created claim skipped:',
-              claim.reason,
-              { polarSubscriptionId: subscription.id },
-            )
-          }
-        }
-        const projectId = await findProjectIdByPolarSubscriptionRowId(row.id)
-        if (projectId != null) {
-          await recomputeProjectStatus(projectId)
-          publishProjectEvent(projectId, 'project-subscription-changed')
-        }
+        await upsertPolarSubscription(event.data as Subscription)
         break
       }
       case 'customer.created':

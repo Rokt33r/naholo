@@ -5,7 +5,6 @@ import { requireAdminProjectOperator } from '@/server/auth/permissions'
 import { getPolarServerClient } from '@/server/billing/polar'
 import { upsertPolarSubscription } from '@/server/services/polar-subscription'
 import { getActiveProjectSubscription } from '@/server/services/project-subscription'
-import { recomputeProjectStatus } from '@/server/services/project-status'
 
 export async function POST(
   request: NextRequest,
@@ -33,7 +32,6 @@ export async function POST(
       subscriptionUpdate: { cancelAtPeriodEnd: action === 'cancel' },
     })
     await upsertPolarSubscription(updated)
-    await recomputeProjectStatus(project.id)
 
     return NextResponse.json({ ok: true })
   } catch (error) {
