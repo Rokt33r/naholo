@@ -98,10 +98,17 @@ export async function upsertPolarSubscription(
     projectOperators,
     eq(projectOperators.projectId, projectId),
   )
-  const status = deriveProjectStatus({
+  const projectTrial = await db.query.projectTrials.findFirst({
+    columns: { expiresAt: true },
+    where: (t, { eq }) => eq(t.projectId, projectId),
+    orderBy: (t, { desc }) => desc(t.createdAt),
+  })
+
+  const { status, trialUntil } = deriveProjectStatus({
     polarStatus: polarSubscription.status,
     seats: polarSubscription.seats,
     usedSeats,
+    trial: projectTrial ?? null,
   })
 
   await db
@@ -109,6 +116,7 @@ export async function upsertPolarSubscription(
     .set({
       activeProjectSubscriptionId: projectSubscriptionId,
       status,
+      trialUntil,
       updatedAt: new Date(),
     })
     .where(eq(projects.id, projectId))

@@ -1,7 +1,6 @@
 import 'server-only'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
-import { recomputeProjectStatus } from './project-status'
 
 export type ProjectOperator = {
   id: string
@@ -34,8 +33,6 @@ export async function createProjectOperator(
       role: data.role ?? 'member',
     })
     .returning({ id: projectOperators.id })
-
-  await recomputeProjectStatus(data.projectId)
 
   return { id: operator.id }
 }
