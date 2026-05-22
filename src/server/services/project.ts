@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError, ConflictError } from '../errors'
+import { isUniqueViolationError } from '../db/utils'
 
 export type Project = {
   id: string
@@ -160,11 +161,7 @@ export async function updateProject(
       .returning({ id: projects.id })
     project = row
   } catch (error) {
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as { code: string }).code === '23505'
-    ) {
+    if (isUniqueViolationError(error)) {
       return err(
         new ConflictError({
           code: 'project_slug_taken',

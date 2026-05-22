@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projects, projectTrials, projectOperators } from '../db/schema'
 import { ConflictError } from '../errors'
+import { isUniqueViolationError } from '../db/utils'
 import { deriveProjectStatus } from './project-status'
 
 export const TRIAL_DURATION_DAYS = 30
@@ -52,12 +53,7 @@ export async function claimProjectTrial(input: {
         expiresAt,
       })
     } catch (error) {
-      if (
-        error != null &&
-        typeof error === 'object' &&
-        'code' in error &&
-        (error as { code: string }).code === '23505'
-      ) {
+      if (isUniqueViolationError(error)) {
         throw new ConflictError({
           code: 'trial_already_used',
           message: 'This account has already used its free trial.',
