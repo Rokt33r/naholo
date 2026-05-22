@@ -18,9 +18,12 @@ export class NotFoundError extends ServiceError {
 }
 
 export class ConflictError extends ServiceError {
-  constructor(message: string) {
-    super(message)
+  readonly code: string
+
+  constructor(input: { code: string; message: string }) {
+    super(input.message)
     this.name = 'ConflictError'
+    this.code = input.code
   }
 }
 
@@ -98,7 +101,7 @@ export function mapApiError(error: unknown): NextResponse {
   }
   if (error instanceof ConflictError) {
     return NextResponse.json(
-      { error: 'conflict', message: error.message },
+      { error: 'conflict', code: error.code, message: error.message },
       { status: 409 },
     )
   }

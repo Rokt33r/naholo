@@ -213,7 +213,10 @@ export async function acceptProjectInvite(
     .returning({ id: projectInvites.id })
 
   if (updated == null) {
-    throw new ConflictError('Invite could not be accepted')
+    throw new ConflictError({
+      code: 'invite_not_acceptable',
+      message: 'Invite could not be accepted',
+    })
   }
 
   const operator = await createProjectOperator({

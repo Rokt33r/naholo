@@ -134,7 +134,10 @@ export async function getAgentSessionTranscriptText(params: {
     throw new NotFoundError('agent_session')
   }
   if (!row.hasTranscript) {
-    throw new ConflictError('Agent session has no transcript')
+    throw new ConflictError({
+      code: 'agent_session_no_transcript',
+      message: 'Agent session has no transcript',
+    })
   }
 
   const key = `agent-session-transcripts/${params.projectId}/${params.operationId}/${row.sessionId}`

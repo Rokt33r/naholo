@@ -165,7 +165,12 @@ export async function updateProject(
       'code' in error &&
       (error as { code: string }).code === '23505'
     ) {
-      return err(new ConflictError('A project with this slug already exists'))
+      return err(
+        new ConflictError({
+          code: 'project_slug_taken',
+          message: 'A project with this slug already exists',
+        }),
+      )
     }
     throw error
   }
