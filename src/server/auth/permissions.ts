@@ -2,7 +2,9 @@ import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
 import { auth } from './auth'
+import { eq } from 'drizzle-orm'
 import { db } from '../db'
+import { projects } from '../db/schema/projects'
 import {
   resolveProjectOperatorByUserIdAndProjectId,
   type ProjectOperator,
@@ -179,23 +181,34 @@ export async function requireProjectOperator(
   options?: RequireProjectOperatorOptions,
 ): Promise<ProjectOperatorContext> {
   // TODO: Handle api token or session first before resolving projectId. It probably better to make require*ByToken and require*BySession accept projectSlug and resolve it internally.
-  const projectRow = await db.query.projects.findFirst({
-    columns: { id: true, slug: true, status: true },
+  const project = await db.query.projects.findFirst({
+    columns: { id: true, slug: true, status: true, trialUntil: true },
     where: (t, { eq }) => eq(t.slug, projectSlug),
   })
-  if (projectRow == null) {
+  if (project == null) {
     throw new NotFoundError('Project')
   }
 
-  const project = { id: projectRow.id, slug: projectRow.slug }
-
   const { projectOperator } = await resolveProjectOperator(project.id)
 
+  let status = project.status
+  if (
+    status === 'trial' &&
+    project.trialUntil != null &&
+    project.trialUntil.getTime() <= Date.now()
+  ) {
+    await db
+      .update(projects)
+      .set({ status: 'inactive', trialUntil: null })
+      .where(eq(projects.id, project.id))
+    status = 'inactive'
+  }
+
   if (config.billing && options?.skipSubscriptionCheck !== true) {
-    if (projectRow.status === 'inactive') {
+    if (status === 'inactive') {
       throw new SubscriptionNotReadyError()
     }
-    if (projectRow.status === 'seats-exceeded') {
+    if (status === 'seats-exceeded') {
       throw new SeatLimitExceededError()
     }
   }
