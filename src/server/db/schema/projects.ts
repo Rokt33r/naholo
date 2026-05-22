@@ -15,6 +15,7 @@ import { projectSubscriptions } from './project-subscriptions'
 
 export const projectStatus = pgEnum('project_status', [
   'active',
+  'trial',
   'inactive',
   'seats-exceeded',
 ])
@@ -33,6 +34,7 @@ export const projects = pgTable(
       onDelete: 'set null',
     }),
     status: projectStatus('status').notNull().default('inactive'),
+    trialUntil: timestamp('trial_until'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

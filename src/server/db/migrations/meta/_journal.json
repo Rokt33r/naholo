@@ -337,6 +337,13 @@
       "when": 1779246191017,
       "tag": "0047_past_changeling",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1779406935908,
+      "tag": "0048_brave_sugar_man",
+      "breakpoints": true
     }
   ]
 }
