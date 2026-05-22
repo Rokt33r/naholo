@@ -18,6 +18,10 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
   useProjectSubscriptionStream(projectSlug)
   const { data, isLoading, error } = useActiveProjectSubscription(projectSlug)
 
+  const polarSubscription = data?.subscription?.polarSubscription ?? null
+  const usedSeats = data?.usedSeats ?? 0
+  const isSeatExhausted = data?.isSeatExhausted ?? false
+
   return (
     <section className='flex flex-col gap-3'>
       <div className='flex items-center gap-2'>
@@ -30,66 +34,37 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
         <div className='text-muted-foreground py-8 text-center text-sm'>
           {error != null ? 'Failed to load subscription.' : 'Loading…'}
         </div>
+      ) : polarSubscription == null ? (
+        <div className='flex flex-col gap-3'>
+          <SubscriptionReadout polarSubscription={null} usedSeats={usedSeats} />
+          <StartCheckout projectSlug={projectSlug} />
+        </div>
       ) : (
-        <SubscriptionPanelBody
-          projectSlug={projectSlug}
-          polarSubscription={data.subscription?.polarSubscription ?? null}
-          usedSeats={data.usedSeats}
-          isSeatExhausted={data.isSeatExhausted}
-        />
+        <div className='flex flex-col gap-3'>
+          <SubscriptionReadout
+            polarSubscription={polarSubscription}
+            usedSeats={usedSeats}
+          />
+          {isSeatExhausted && (
+            <Alert>
+              <AlertDescription>
+                Seat quota reached. Raise the seat count to add more operators.
+              </AlertDescription>
+            </Alert>
+          )}
+          <SeatQuotaControl
+            projectSlug={projectSlug}
+            seats={polarSubscription.seats ?? 1}
+            usedSeats={usedSeats}
+            currentPeriodStart={polarSubscription.currentPeriodStart}
+            currentPeriodEnd={polarSubscription.currentPeriodEnd}
+          />
+          <CancellationControls
+            projectSlug={projectSlug}
+            polarSubscription={polarSubscription}
+          />
+        </div>
       )}
     </section>
-  )
-}
-
-type PolarSubscription = NonNullable<
-  Parameters<typeof SubscriptionReadout>[0]['polarSubscription']
->
-
-function SubscriptionPanelBody({
-  projectSlug,
-  polarSubscription,
-  usedSeats,
-  isSeatExhausted,
-}: {
-  projectSlug: string
-  polarSubscription: PolarSubscription | null
-  usedSeats: number
-  isSeatExhausted: boolean
-}) {
-  if (polarSubscription == null) {
-    return (
-      <div className='flex flex-col gap-3'>
-        <SubscriptionReadout polarSubscription={null} usedSeats={usedSeats} />
-        <StartCheckout projectSlug={projectSlug} />
-      </div>
-    )
-  }
-
-  return (
-    <div className='flex flex-col gap-3'>
-      <SubscriptionReadout
-        polarSubscription={polarSubscription}
-        usedSeats={usedSeats}
-      />
-      {isSeatExhausted && (
-        <Alert>
-          <AlertDescription>
-            Seat quota reached. Raise the seat count to add more operators.
-          </AlertDescription>
-        </Alert>
-      )}
-      <SeatQuotaControl
-        projectSlug={projectSlug}
-        seats={polarSubscription.seats ?? 1}
-        usedSeats={usedSeats}
-        currentPeriodStart={polarSubscription.currentPeriodStart}
-        currentPeriodEnd={polarSubscription.currentPeriodEnd}
-      />
-      <CancellationControls
-        projectSlug={projectSlug}
-        polarSubscription={polarSubscription}
-      />
-    </div>
   )
 }

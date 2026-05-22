@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
 import { StartCheckout } from '@/components/billing/start-checkout'
+import { StartTrial } from '@/components/billing/start-trial'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
@@ -29,11 +30,11 @@ export function ProjectSubscriptionWall({
   const isAdmin = currentOperator.role === 'admin'
   const polarSubscription = data?.subscription?.polarSubscription ?? null
   const status = polarSubscription?.status ?? null
-  const isActive =
-    status === 'active' || status === 'trialing' || status === 'past_due'
-  const seatCap = polarSubscription?.seats ?? 1
+  const projectStatus = data?.projectStatus ?? 'inactive'
+  const isActive = projectStatus === 'active' || projectStatus === 'trial'
+  const seatsExhausted = projectStatus === 'seats-exceeded'
   const usedSeats = data?.usedSeats ?? 0
-  const seatsExhausted = usedSeats > seatCap
+  const trialCredit = data?.currentUserTrialCredit ?? 'spent'
 
   if (error != null) {
     return (
@@ -62,7 +63,7 @@ export function ProjectSubscriptionWall({
       <div className='flex h-full items-center justify-center'>
         <div className='flex max-w-md flex-col items-center gap-3 rounded-lg border p-6 text-center'>
           <p className='text-muted-foreground text-sm'>
-            {isActive && seatsExhausted
+            {seatsExhausted
               ? 'This project has reached its seat limit. Ask a project admin to raise the seat count.'
               : 'Ask a project admin to set up the subscription before this project becomes available.'}
           </p>
@@ -78,7 +79,7 @@ export function ProjectSubscriptionWall({
     )
   }
 
-  const seatLimitWall = isActive && seatsExhausted
+  const seatLimitWall = seatsExhausted
 
   return (
     <div className='h-full overflow-y-auto'>
@@ -117,7 +118,12 @@ export function ProjectSubscriptionWall({
             </Link>
           </Button>
         ) : (
-          <StartCheckout projectSlug={projectSlug} />
+          <>
+            {trialCredit === 'unused' && (
+              <StartTrial projectSlug={projectSlug} />
+            )}
+            <StartCheckout projectSlug={projectSlug} />
+          </>
         )}
       </div>
     </div>
