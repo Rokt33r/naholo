@@ -5,6 +5,7 @@ import { auth } from './auth'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projects } from '../db/schema/projects'
+import type { ProjectStatus } from '../services/project-status'
 import {
   resolveProjectOperatorByUserIdAndProjectId,
   type ProjectOperator,
@@ -28,7 +29,12 @@ export type RequireProjectOperatorOptions = {
 
 export type ProjectOperatorContext = {
   projectOperator: ProjectOperator
-  project: { id: string; slug: string }
+  project: {
+    id: string
+    slug: string
+    status: ProjectStatus
+    trialUntil: Date | null
+  }
 }
 
 type AuthMethod = 'session' | 'user-api-token'
@@ -191,9 +197,8 @@ export async function requireProjectOperator(
 
   const { projectOperator } = await resolveProjectOperator(project.id)
 
-  let status = project.status
   if (
-    status === 'trial' &&
+    project.status === 'trial' &&
     project.trialUntil != null &&
     project.trialUntil.getTime() <= Date.now()
   ) {
@@ -201,14 +206,15 @@ export async function requireProjectOperator(
       .update(projects)
       .set({ status: 'inactive', trialUntil: null })
       .where(eq(projects.id, project.id))
-    status = 'inactive'
+    project.status = 'inactive'
+    project.trialUntil = null
   }
 
   if (config.billing && options?.skipSubscriptionCheck !== true) {
-    if (status === 'inactive') {
+    if (project.status === 'inactive') {
       throw new SubscriptionNotReadyError()
     }
-    if (status === 'seats-exceeded') {
+    if (project.status === 'seats-exceeded') {
       throw new SeatLimitExceededError()
     }
   }

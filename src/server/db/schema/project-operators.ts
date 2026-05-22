@@ -9,7 +9,9 @@ export const projectOperators = pgTable('project_operators', {
   projectId: uuid('project_id')
     .notNull()
     .references(() => projects.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   role: text('role').notNull().default('member'), // 'admin' | 'member'
   createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -5,7 +5,7 @@ import { projectOperators } from '../db/schema'
 export type ProjectOperator = {
   id: string
   projectId: string
-  userId: string | null
+  userId: string
   name: string
   role: string
   createdAt: Date
@@ -13,7 +13,7 @@ export type ProjectOperator = {
 
 export type CreateProjectOperatorInput = {
   projectId: string
-  userId?: string
+  userId: string
   name: string
   role?: 'admin' | 'member'
 }
