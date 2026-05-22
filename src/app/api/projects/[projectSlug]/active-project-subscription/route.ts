@@ -6,6 +6,7 @@ import {
   getActiveProjectSubscription,
   type ActiveProjectSubscription,
 } from '@/server/services/project-subscription'
+import { getProjectTrialForUser } from '@/server/services/project-trial'
 
 export type ActiveProjectSubscriptionResponse = {
   subscription: {
@@ -33,6 +34,8 @@ export type ActiveProjectSubscriptionResponse = {
   } | null
   usedSeats: number
   isSeatExhausted: boolean
+  trial: { expiresAt: string } | null
+  currentUserTrialCredit: 'unused' | 'spent'
 }
 
 function serializeDates(
@@ -83,19 +86,29 @@ export async function GET(
 ) {
   try {
     const { projectSlug } = await params
-    const { project } = await requireProjectOperator(projectSlug, {
-      skipSubscriptionCheck: true,
-    })
+    const { project, projectOperator } = await requireProjectOperator(
+      projectSlug,
+      { skipSubscriptionCheck: true },
+    )
 
     const subscription = await getActiveProjectSubscription(project.id)
     const usedSeats =
       subscription?.usedSeats ?? (await countActiveOperators(project.id))
     const isSeatExhausted = subscription?.isSeatExhausted ?? false
 
+    const userTrial = await getProjectTrialForUser(projectOperator.userId)
+
+    const trial =
+      project.status === 'trial' && project.trialUntil != null
+        ? { expiresAt: project.trialUntil.toISOString() }
+        : null
+
     const body: ActiveProjectSubscriptionResponse = {
       subscription: subscription == null ? null : serializeDates(subscription),
       usedSeats,
       isSeatExhausted,
+      trial,
+      currentUserTrialCredit: userTrial == null ? 'unused' : 'spent',
     }
     return NextResponse.json(body)
   } catch (error) {
