@@ -10,19 +10,12 @@ import { useOperators, useRemoveProjectOperator } from '@/hooks/use-operators'
 import { InviteUserOperatorDialog } from './invite-user-operator-dialog'
 import { cn } from '@/lib/utils'
 import type { Operator } from '@/hooks/use-operators'
-import type { Project } from 'naholo-api/types'
 
 type OperatorsListProps = {
   projectSlug: string
-  projectName: string
-  projects: Project[]
 }
 
-export function OperatorsList({
-  projectSlug,
-  projectName,
-  projects,
-}: OperatorsListProps) {
+export function OperatorsList({ projectSlug }: OperatorsListProps) {
   const router = useRouter()
   const params = useParams()
   const currentOperatorId = params.operatorId as string | undefined

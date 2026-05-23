@@ -8,8 +8,7 @@ import { OperatorsList } from '@/components/operators/operators-list'
 import { publicConfig } from '@/lib/publicConfig'
 
 export default function OperatorsIndexPage() {
-  const { projectSlug, projectName, projects, currentOperator } =
-    useProjectContext()
+  const { projectSlug, currentOperator } = useProjectContext()
   const isAdmin = currentOperator.role === 'admin'
 
   return (
@@ -20,11 +19,7 @@ export default function OperatorsIndexPage() {
           <h2 className='text-lg font-semibold'>Operators</h2>
         </div>
         <div className='flex max-h-[28rem] flex-col rounded-lg border'>
-          <OperatorsList
-            projectSlug={projectSlug}
-            projectName={projectName}
-            projects={projects}
-          />
+          <OperatorsList projectSlug={projectSlug} />
         </div>
         <InviteList projectSlug={projectSlug} />
       </section>
