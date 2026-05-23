@@ -16,14 +16,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useCreateProjectInvite } from '@/hooks/use-project-invites'
-import { InviteList } from './invite-list'
 
 type InviteUserOperatorDialogProps = {
   projectSlug: string
   children: React.ReactNode
 }
 
-export function InviteUserOperatorDialog({
+export function InviteProjectOperatorDialog({
   projectSlug,
   children,
 }: InviteUserOperatorDialogProps) {
@@ -131,7 +130,6 @@ export function InviteUserOperatorDialog({
                 </Button>
               </DialogFooter>
             </form>
-            <InviteList projectSlug={projectSlug} />
           </>
         )}
       </DialogContent>

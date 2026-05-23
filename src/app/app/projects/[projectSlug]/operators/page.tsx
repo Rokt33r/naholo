@@ -4,7 +4,7 @@ import { Contact, UserPlus } from 'lucide-react'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useProjectContext } from '@/components/app/project-context'
 import { InviteList } from '@/components/operators/invite-list'
-import { InviteUserOperatorDialog } from '@/components/operators/invite-user-operator-dialog'
+import { InviteProjectOperatorDialog } from '@/components/operators/invite-project-operator-dialog'
 import { OperatorsList } from '@/components/operators/operators-list'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -30,11 +30,11 @@ export default function OperatorsIndexPage() {
           <section className='flex flex-col gap-3'>
             <div className='flex items-center justify-between gap-2'>
               <h3 className='text-sm font-medium'>Invites</h3>
-              <InviteUserOperatorDialog projectSlug={projectSlug}>
+              <InviteProjectOperatorDialog projectSlug={projectSlug}>
                 <Button size='sm' variant='ghost' title='Invite user'>
                   <UserPlus className='size-4' /> Invite
                 </Button>
-              </InviteUserOperatorDialog>
+              </InviteProjectOperatorDialog>
             </div>
             <InviteList projectSlug={projectSlug} />
           </section>
