@@ -1,13 +1,13 @@
 ---
 name: infil
-description: Infil a Naholo operation — fetch objectives, notes, and logs locally for offline-first workflow.
+description: Infil a Naholo operation — fetch tasks, notes, and logs locally for offline-first workflow.
 argument-hint: '[{operationNumber}]'
 model: sonnet
 ---
 
 # Infil — Infil Operation
 
-Fetch an operation's full context from Naholo and set up a local working directory for the `/recon` → `/splash` → `/sitrep` (mid-session) → `/exfil` (done) workflow.
+Fetch an operation's full context from Naholo and set up a local working directory for the `/warno` → `/splash` → `/sitrep` (mid-session) → `/exfil` (done) workflow.
 
 Infil is a one-way bring-down from server to local. It never pushes. If `OPERATION.md` or `TIMELINE.md` need to be created, they are written locally only — the user runs `/sitrep` or `/exfil` later to sync upstream.
 
@@ -37,7 +37,7 @@ Optional operation number (e.g., `42`).
 
 5. **Handle OPERATION.md** (using the context from step 4):
 
-   OPERATION.md is the single live document for the OP (see manual for the full schema). `/infil` only seeds `## SITUATION` when generating from scratch; `## MISSION` is appended later by `/recon`, `## EXECUTION` by `/objs`.
+   OPERATION.md is the single live document for the OP (see manual for the full schema). `/infil` only seeds `## SITUATION` when generating from scratch; `## MISSION` is appended later by `/warno`, `## EXECUTION` by `/opord`.
 
    **If `{operationDir}/notes/OPERATION.md` does not exist**:
    - Write it locally via the `Write` tool. Do NOT push during infil.
@@ -66,22 +66,22 @@ Optional operation number (e.g., `42`).
      - One-line summary of a non-blocking constraint, related operation, stakeholder mention, or prior-art pointer. Point at `notes/*.md` or `LOGS.yml` for detail.
      ```
 
-   - **Pain**: keep brief — ≤3 sentences. Details land in MISSION during `/recon`.
+   - **Pain**: keep brief — ≤3 sentences. Details land in MISSION during `/warno`.
    - **Suggested solution**: include only if logs/notes hint at a solution; otherwise omit the heading entirely. No `N/A` filler.
    - **Notes**: include only if logs/notes surface info worth flagging that doesn't fit Pain or Suggested solution (non-blocking constraints, related operations, stakeholder mentions, prior-art pointers); one-line bullets, no nested detail; otherwise omit the heading entirely.
    - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") inside SITUATION subsections where relevant.
-   - Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` and `/objs` append those when they run.
+   - Do NOT write `## MISSION` or `## EXECUTION` headings — `/warno` and `/opord` append those when they run.
 
    **If OPERATION.md already exists** (common case: a prior `/sitrep` or `/exfil` already pushed it, and this is a fresh infil after a mid-cycle exfil — e.g., the OP was paused waiting on a prerequisite OP):
    - Diff server state against local notes:
      - **New logs**: LOGS.yml entries with `createdAt` later than the last TIMELINE bullet.
      - **Note changes**: created/updated, from infil's CLI report.
    - **Skip sync-summary logs** (strict signal — do not pattern-guess): any LOGS.yml entry whose `content` first line begins with `**sitrep** —` or `**exfil** —` is a sync recap emitted by those skills. Its information is already encoded in the TIMELINE bullets that were just pulled — re-mirroring it would duplicate. Ignore these entries entirely when computing "what's new."
-   - **What counts as significant**: genuine new human comms (user notes, teammate questions, decision flips), substantive note edits a teammate made server-side, or new objectives — NOT sitrep/exfil echoes.
+   - **What counts as significant**: genuine new human comms (user notes, teammate questions, decision flips), substantive note edits a teammate made server-side, or new tasks — NOT sitrep/exfil echoes.
    - If nothing significant → note "OPERATION.md is up to date" in the summary; do not touch TIMELINE or SITUATION.
    - If something significant → summarize it (e.g., "2 new user notes, `research.md` updated server-side"), then:
      - Append one TIMELINE bullet per significant event (no user confirmation needed for routine new logs; ask only if a SITUATION rewrite is on the table).
-     - If the new info materially changes `### Pain`, `### Suggested solution`, or `### Notes` under SITUATION (e.g., user pivoted the problem, added a hard constraint), patch SITUATION in place. Leave MISSION and EXECUTION alone — those are owned by `/recon` and `/objs`.
+     - If the new info materially changes `### Pain`, `### Suggested solution`, or `### Notes` under SITUATION (e.g., user pivoted the problem, added a hard constraint), patch SITUATION in place. Leave MISSION and EXECUTION alone — those are owned by `/warno` and `/opord`.
 
 6. **Handle TIMELINE.md** (sibling of OPERATION.md):
 
@@ -99,29 +99,29 @@ Optional operation number (e.g., `42`).
 
    **If TIMELINE.md already exists**: leave it alone (re-runs of infil are handled via the OPERATION.md "what changed" branch above).
 
-7. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → OBJECTIVES → TIMELINE, then other notes alphabetically.
+7. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
 
    If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
    Example (printed directly, not fenced):
 
    Infiled operation #42: "Implement user auth"
-   - Objectives: 0 (none yet — to be defined in `/recon`)
+   - Tasks: 0 (none yet — to be defined in `/warno`)
    - Notes: OPERATION [created], TIMELINE [created], api-design, research
    - Logs: 8 entries
    - Local: [{operationDir}/]({operationDir}/)
    - Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
    - Timeline: [TIMELINE.md]({operationDir}/notes/TIMELINE.md)
 
-   Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line. Include the CLI output details (objectives updated/inserted, notes merged) in the summary.
+   Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line. Include the CLI output details (tasks updated/inserted, notes merged) in the summary.
 
 ## Rules
 
-- **Use `naholo agent infil` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync objectives/notes. The CLI handles all of that.
+- **Use `naholo agent infil` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync tasks/notes. The CLI handles all of that.
 - **Infil never pushes**. If OPERATION.md or TIMELINE.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.
-- Do NOT write `## MISSION` or `## EXECUTION` headings — `/recon` appends MISSION, `/objs` appends EXECUTION.
-- Objective notes from the server should be folded into OPERATION.md SITUATION context, NOT written to OBJECTIVES.md (OBJECTIVES.md is a pure checklist, populated by `/recon`).
+- Do NOT write `## MISSION` or `## EXECUTION` headings — `/warno` appends MISSION, `/opord` appends EXECUTION.
+- Task notes from the server should be folded into OPERATION.md SITUATION context, NOT written to TASKS.md (TASKS.md is a pure checklist, populated by `/warno`).
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from infil's `Local:` line.
