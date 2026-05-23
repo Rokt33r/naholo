@@ -1,4 +1,5 @@
 import 'server-only'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
 
@@ -78,6 +79,26 @@ export async function getProjectOperatorByUserId(
   })
 
   return operator ?? null
+}
+
+/**
+ * Delete a project operator by ID, scoped to its project.
+ */
+export async function deleteProjectOperator(
+  operatorId: string,
+  projectId: string,
+): Promise<{ deleted: boolean }> {
+  const rows = await db
+    .delete(projectOperators)
+    .where(
+      and(
+        eq(projectOperators.id, operatorId),
+        eq(projectOperators.projectId, projectId),
+      ),
+    )
+    .returning({ id: projectOperators.id })
+
+  return { deleted: rows.length > 0 }
 }
 
 /**

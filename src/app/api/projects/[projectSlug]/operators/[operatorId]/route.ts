@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mapApiError } from '@/server/errors'
-import { requireProjectOperator } from '@/server/auth/permissions'
-import { getProjectOperator } from '@/server/services/project-operator'
+import {
+  requireAdminProjectOperator,
+  requireProjectOperator,
+} from '@/server/auth/permissions'
+import {
+  deleteProjectOperator,
+  getProjectOperator,
+} from '@/server/services/project-operator'
 
 export async function GET(
   _request: NextRequest,
@@ -18,6 +24,25 @@ export async function GET(
     }
 
     return NextResponse.json(operator)
+  } catch (error) {
+    return mapApiError(error)
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ projectSlug: string; operatorId: string }> },
+) {
+  try {
+    const { projectSlug, operatorId } = await params
+    const { project } = await requireAdminProjectOperator(projectSlug)
+
+    const { deleted } = await deleteProjectOperator(operatorId, project.id)
+    if (!deleted) {
+      return NextResponse.json({ error: 'Operator not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ ok: true })
   } catch (error) {
     return mapApiError(error)
   }
