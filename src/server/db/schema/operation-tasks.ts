@@ -13,7 +13,7 @@ import { operations } from './operations'
 import { projects } from './projects'
 import { projectOperators } from './project-operators'
 
-export const operationObjectives = pgTable('operation_objectives', {
+export const operationTasks = pgTable('operation_tasks', {
   id: uuidV7IdColumn(),
   projectId: uuid('project_id')
     .notNull()
@@ -25,26 +25,23 @@ export const operationObjectives = pgTable('operation_objectives', {
     () => projectOperators.id,
     { onDelete: 'set null' },
   ),
-  parentObjectiveId: uuid('parent_objective_id').references(
-    (): AnyPgColumn => operationObjectives.id,
+  parentTaskId: uuid('parent_task_id').references(
+    (): AnyPgColumn => operationTasks.id,
     {
       onDelete: 'cascade',
     },
-  ), // self-referencing for hierarchy
-  name: text('name').notNull(), // objective name (single line)
-  note: text('note'), // additional notes (markdown)
+  ),
+  name: text('name').notNull(),
+  note: text('note'),
   done: boolean('done').notNull().default(false),
-  position: integer('position').notNull().default(0), // for ordering
+  position: integer('position').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
-export const operationObjectivesRelations = relations(
-  operationObjectives,
-  ({ one }) => ({
-    operation: one(operations, {
-      fields: [operationObjectives.operationId],
-      references: [operations.id],
-    }),
+export const operationTasksRelations = relations(operationTasks, ({ one }) => ({
+  operation: one(operations, {
+    fields: [operationTasks.operationId],
+    references: [operations.id],
   }),
-)
+}))
