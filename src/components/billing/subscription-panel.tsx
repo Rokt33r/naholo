@@ -24,10 +24,6 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
 
   return (
     <section className='flex flex-col gap-3'>
-      <div className='flex items-center gap-2'>
-        <CreditCard className='size-5' />
-        <h2 className='text-lg font-semibold'>Subscription</h2>
-      </div>
       <p className='text-muted-foreground text-sm'>{formatSeatPriceCopy()}</p>
 
       {isLoading || data == null ? (
