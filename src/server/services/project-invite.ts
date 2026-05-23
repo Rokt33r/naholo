@@ -19,12 +19,17 @@ export type ProjectInvite = {
   updatedAt: Date
 }
 
+export type ClaimerIdentifier = {
+  method: 'Google' | 'Email'
+  label: string
+}
+
 export type ProjectInviteWithDetails = ProjectInvite & {
   project: { id: string; name: string; slug: string }
   claimerUser: {
     id: string
     name: string
-    identifiers: { type: string; value: string }[]
+    identifiers: ClaimerIdentifier[]
     notificationEmail: { email: string } | null
   } | null
   inviterOperatorName: string | null
@@ -65,7 +70,7 @@ export async function getProjectInvite(
       claimerUser: {
         with: {
           identifiers: {
-            columns: { type: true, value: true },
+            columns: { type: true, value: true, data: true },
           },
           notificationEmail: {
             columns: { email: true },
@@ -92,7 +97,8 @@ export async function listProjectInvites(
   projectId: string,
 ): Promise<ProjectInviteWithDetails[]> {
   const results = await db.query.projectInvites.findMany({
-    where: (t, { eq }) => eq(t.projectId, projectId),
+    where: (t, { eq, and, ne }) =>
+      and(eq(t.projectId, projectId), ne(t.status, 'accepted')),
     orderBy: (t, { desc }) => desc(t.createdAt),
     with: {
       project: {
@@ -101,7 +107,7 @@ export async function listProjectInvites(
       claimerUser: {
         with: {
           identifiers: {
-            columns: { type: true, value: true },
+            columns: { type: true, value: true, data: true },
           },
           notificationEmail: {
             columns: { email: true },
@@ -130,7 +136,7 @@ function mapInviteResult(result: {
   claimerUser: {
     id: string
     name: string
-    identifiers: { type: string; value: string }[]
+    identifiers: { type: string; value: string; data: unknown }[]
     notificationEmail: { email: string } | null
   } | null
   inviterProjectOperator: { name: string } | null
@@ -145,9 +151,36 @@ function mapInviteResult(result: {
     createdAt: result.createdAt,
     updatedAt: result.updatedAt,
     project: result.project,
-    claimerUser: result.claimerUser,
+    claimerUser:
+      result.claimerUser == null
+        ? null
+        : {
+            id: result.claimerUser.id,
+            name: result.claimerUser.name,
+            identifiers:
+              result.claimerUser.identifiers.map(toClaimerIdentifier),
+            notificationEmail: result.claimerUser.notificationEmail,
+          },
     inviterOperatorName: result.inviterProjectOperator?.name ?? null,
   }
+}
+
+function toClaimerIdentifier(identifier: {
+  type: string
+  value: string
+  data: unknown
+}): ClaimerIdentifier {
+  if (identifier.type === 'google-oauth') {
+    const email =
+      typeof identifier.data === 'object' &&
+      identifier.data != null &&
+      'email' in identifier.data &&
+      typeof (identifier.data as { email: unknown }).email === 'string'
+        ? (identifier.data as { email: string }).email
+        : identifier.value
+    return { method: 'Google', label: email }
+  }
+  return { method: 'Email', label: identifier.value }
 }
 
 /**

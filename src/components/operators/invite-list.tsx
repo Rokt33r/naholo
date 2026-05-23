@@ -1,6 +1,7 @@
 'use client'
 
 import { Check, X, Copy, Loader2 } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,7 +9,6 @@ import {
   useAcceptProjectInvite,
   useRejectProjectInvite,
 } from '@/hooks/use-project-invites'
-import { formatIssueDate } from '@/lib/date-utils'
 import type { ProjectInvite } from '@/hooks/use-project-invites'
 
 type InviteListProps = {
@@ -69,21 +69,25 @@ function InviteCard({
         <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
           <StatusLabel status={invite.status} />
           {invite.claimerUser != null && (
-            <span className='truncate'>
-              &middot; {invite.claimerUser.name}
-              {invite.claimerUser.identifiers.length > 0 && (
-                <span className='ml-1'>
-                  (
-                  {invite.claimerUser.identifiers
-                    .map((i) => i.value)
-                    .join(', ')}
-                  )
-                </span>
-              )}
-            </span>
+            <span className='truncate'>&middot; {invite.claimerUser.name}</span>
           )}
-          <span>&middot; {formatIssueDate(invite.createdAt)}</span>
+          <span>
+            &middot;{' '}
+            {formatDistanceToNow(new Date(invite.createdAt), {
+              addSuffix: true,
+            })}
+          </span>
         </div>
+        {invite.claimerUser != null &&
+          invite.claimerUser.identifiers.length > 0 && (
+            <div className='mt-0.5 flex flex-col text-xs text-muted-foreground'>
+              {invite.claimerUser.identifiers.map((identifier, index) => (
+                <span key={index} className='truncate'>
+                  {identifier.method} &middot; {identifier.label}
+                </span>
+              ))}
+            </div>
+          )}
       </div>
       <div className='flex items-center gap-1 shrink-0'>
         {invite.status === 'claimed' && (

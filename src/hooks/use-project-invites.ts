@@ -2,6 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { fetcher, createResponseError } from '@/lib/fetcher'
 
+export type ClaimerIdentifier = {
+  method: 'Google' | 'Email'
+  label: string
+}
+
 export type ProjectInvite = {
   id: string
   email: string
@@ -9,7 +14,7 @@ export type ProjectInvite = {
   claimerUser: {
     id: string
     name: string
-    identifiers: { type: string; value: string }[]
+    identifiers: ClaimerIdentifier[]
   } | null
   inviterWorkerName: string | null
   createdAt: string
