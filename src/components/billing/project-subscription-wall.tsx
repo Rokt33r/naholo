@@ -1,15 +1,11 @@
 'use client'
 
-import Link from 'next/link'
+import { useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { CancellationControls } from '@/components/billing/cancellation-controls'
-import { StartCheckout } from '@/components/billing/start-checkout'
-import { StartTrial } from '@/components/billing/start-trial'
-import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useProjectContext } from '@/components/app/project-context'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
-import { formatSeatPriceCopy } from '@/lib/billing-pricing'
 import { publicConfig } from '@/lib/publicConfig'
 
 type ProjectSubscriptionWallProps = {
@@ -23,18 +19,26 @@ export function ProjectSubscriptionWall({
     return <>{children}</>
   }
   const { projectSlug, currentOperator } = useProjectContext()
+  const router = useRouter()
+  const pathname = usePathname()
+  const subscriptionPath = `/app/projects/${projectSlug}/subscription`
+  const isOnSubscriptionPage = pathname === subscriptionPath
+
   useProjectSubscriptionStream(projectSlug)
   const { data, isLoading, error, refetch, isFetching } =
     useActiveProjectSubscription(projectSlug)
 
   const isAdmin = currentOperator.role === 'admin'
-  const polarSubscription = data?.subscription?.polarSubscription ?? null
-  const status = polarSubscription?.status ?? null
   const projectStatus = data?.projectStatus ?? 'inactive'
   const isActive = projectStatus === 'active' || projectStatus === 'trial'
   const seatsExhausted = projectStatus === 'seats-exceeded'
-  const usedSeats = data?.usedSeats ?? 0
-  const trialCredit = data?.currentUserTrialCredit ?? 'spent'
+  const shouldGate = data != null && (!isActive || seatsExhausted)
+
+  useEffect(() => {
+    if (shouldGate && isAdmin && !isOnSubscriptionPage) {
+      router.replace(subscriptionPath)
+    }
+  }, [shouldGate, isAdmin, isOnSubscriptionPage, router, subscriptionPath])
 
   if (error != null) {
     return (
@@ -55,6 +59,10 @@ export function ProjectSubscriptionWall({
   }
 
   if (isActive && !seatsExhausted) {
+    return <>{children}</>
+  }
+
+  if (isOnSubscriptionPage) {
     return <>{children}</>
   }
 
@@ -79,53 +87,5 @@ export function ProjectSubscriptionWall({
     )
   }
 
-  const seatLimitWall = seatsExhausted
-
-  return (
-    <div className='h-full overflow-y-auto'>
-      <div className='mx-auto flex w-full max-w-2xl flex-col gap-6 p-6'>
-        <div className='flex flex-col gap-2'>
-          <h1 className='text-xl font-semibold'>
-            {seatLimitWall
-              ? 'Seat limit reached'
-              : status === 'incomplete' || status == null
-                ? 'Start your subscription'
-                : 'Subscription inactive'}
-          </h1>
-          <p className='text-muted-foreground text-sm'>
-            {seatLimitWall
-              ? 'All seats on this subscription are in use. Raise the seat count from the operators page to continue using this project.'
-              : formatSeatPriceCopy()}
-          </p>
-        </div>
-
-        <SubscriptionReadout
-          polarSubscription={polarSubscription}
-          usedSeats={usedSeats}
-        />
-
-        {polarSubscription != null && !seatLimitWall && (
-          <CancellationControls
-            projectSlug={projectSlug}
-            polarSubscription={polarSubscription}
-          />
-        )}
-
-        {seatLimitWall ? (
-          <Button asChild className='self-start'>
-            <Link href={`/app/projects/${projectSlug}/operators`}>
-              Manage subscription
-            </Link>
-          </Button>
-        ) : (
-          <>
-            {trialCredit === 'unused' && (
-              <StartTrial projectSlug={projectSlug} />
-            )}
-            <StartCheckout projectSlug={projectSlug} />
-          </>
-        )}
-      </div>
-    </div>
-  )
+  return <div className='h-full w-full' aria-busy='true' />
 }
