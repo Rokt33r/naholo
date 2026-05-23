@@ -1,49 +1,26 @@
 import { cn } from '@/lib/utils'
+import type { ActiveProjectSubscriptionResponse } from '@/hooks/use-active-project-subscription'
 
-export type PolarSubscriptionStatus =
-  | 'incomplete'
-  | 'incomplete_expired'
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'canceled'
+type ProjectStatus = ActiveProjectSubscriptionResponse['projectStatus']
 
-const STATUS_STYLES: Record<PolarSubscriptionStatus | 'none', string> = {
-  none: 'bg-muted text-muted-foreground',
-  incomplete:
-    'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
-  incomplete_expired: 'bg-muted text-muted-foreground',
-  trialing: 'bg-blue-100 text-blue-900 dark:bg-blue-950/40 dark:text-blue-200',
+const STATUS_STYLES: Record<ProjectStatus, string> = {
   active:
     'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200',
-  past_due: 'bg-red-100 text-red-900 dark:bg-red-950/40 dark:text-red-200',
-  canceled: 'bg-muted text-muted-foreground',
+  trial: 'bg-blue-100 text-blue-900 dark:bg-blue-950/40 dark:text-blue-200',
+  inactive: 'bg-muted text-muted-foreground',
+  'seats-exceeded':
+    'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
 }
 
-const STATUS_LABELS: Record<PolarSubscriptionStatus | 'none', string> = {
-  none: 'No subscription',
-  incomplete: 'Incomplete',
-  incomplete_expired: 'Incomplete (expired)',
-  trialing: 'Trialing',
+const STATUS_LABELS: Record<ProjectStatus, string> = {
   active: 'Active',
-  past_due: 'Past due',
-  canceled: 'Canceled',
-}
-
-function normalizeStatus(
-  status: string | null,
-): PolarSubscriptionStatus | 'none' {
-  if (status == null) {
-    return 'none'
-  }
-  if (status in STATUS_STYLES) {
-    return status as PolarSubscriptionStatus
-  }
-  return 'none'
+  trial: 'Trial',
+  inactive: 'Inactive',
+  'seats-exceeded': 'Seats exceeded',
 }
 
 type SubscriptionStatusBadgeProps = {
-  status: string | null
+  status: ProjectStatus
   className?: string
 }
 
@@ -51,16 +28,15 @@ export function SubscriptionStatusBadge({
   status,
   className,
 }: SubscriptionStatusBadgeProps) {
-  const key = normalizeStatus(status)
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-        STATUS_STYLES[key],
+        STATUS_STYLES[status],
         className,
       )}
     >
-      {STATUS_LABELS[key]}
+      {STATUS_LABELS[status]}
     </span>
   )
 }

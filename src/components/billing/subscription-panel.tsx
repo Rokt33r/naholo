@@ -22,6 +22,8 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
   const usedSeats = data?.usedSeats ?? 0
   const isSeatExhausted = data?.isSeatExhausted ?? false
   const trialCredit = data?.currentUserTrialCredit ?? 'spent'
+  const projectStatus = data?.projectStatus ?? 'inactive'
+  const trialUntil = data?.trialUntil ?? null
 
   return (
     <section className='flex flex-col gap-3'>
@@ -32,7 +34,12 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           {error != null ? 'Failed to load subscription.' : 'Loading…'}
         </div>
       ) : polarSubscription == null ? (
-        <SubscriptionReadout polarSubscription={null} usedSeats={usedSeats}>
+        <SubscriptionReadout
+          polarSubscription={null}
+          usedSeats={usedSeats}
+          projectStatus={projectStatus}
+          trialUntil={trialUntil}
+        >
           <div className='grid gap-3 sm:grid-cols-2'>
             {trialCredit === 'unused' && (
               <StartTrial projectSlug={projectSlug} />
@@ -45,6 +52,8 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           <SubscriptionReadout
             polarSubscription={polarSubscription}
             usedSeats={usedSeats}
+            projectStatus={projectStatus}
+            trialUntil={trialUntil}
           />
           {isSeatExhausted && (
             <Alert>

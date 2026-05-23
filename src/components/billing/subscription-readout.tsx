@@ -8,16 +8,21 @@ type PolarSubscription = NonNullable<
   ActiveProjectSubscriptionResponse['subscription']
 >['polarSubscription']
 
+type ProjectStatus = ActiveProjectSubscriptionResponse['projectStatus']
+
 export function SubscriptionReadout({
   polarSubscription,
   usedSeats,
+  projectStatus,
+  trialUntil,
   children,
 }: {
   polarSubscription: PolarSubscription | null
   usedSeats: number
+  projectStatus: ProjectStatus
+  trialUntil: string | null
   children?: React.ReactNode
 }) {
-  const status = polarSubscription?.status ?? null
   const seats = polarSubscription?.seats
 
   const portalUrl = publicConfig.polar?.portalUrl
@@ -26,7 +31,7 @@ export function SubscriptionReadout({
     <div className='space-y-3 rounded-lg border p-4'>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Status</span>
-        <SubscriptionStatusBadge status={status} />
+        <SubscriptionStatusBadge status={projectStatus} />
       </div>
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Seats</span>
@@ -34,31 +39,35 @@ export function SubscriptionReadout({
           {usedSeats} / {seats ?? '—'} used
         </span>
       </div>
-      <div className='flex items-center justify-between text-sm'>
-        <span className='text-muted-foreground'>Trial ends</span>
-        <span className='font-medium'>
-          {formatDate(polarSubscription?.trialEnd)}
-        </span>
-      </div>
+      {projectStatus === 'trial' && (
+        <div className='flex items-center justify-between text-sm'>
+          <span className='text-muted-foreground'>Trial ends</span>
+          <span className='font-medium'>{formatDate(trialUntil)}</span>
+        </div>
+      )}
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Next billing</span>
         <span className='font-medium'>
           {formatDate(polarSubscription?.currentPeriodEnd)}
         </span>
       </div>
-      <hr />
-      <div>
-        <Button asChild variant='outline' className='self-start mb-2'>
-          <a href={portalUrl} target='_blank' rel='noopener noreferrer'>
-            Open Polar portal
-            <ExternalLink className='size-4' />
-          </a>
-        </Button>
-        <p className='text-muted-foreground text-sm'>
-          Download invoices and change your payment method from the Polar
-          portal. Sign in with the billing email for this subscription.
-        </p>
-      </div>
+      {polarSubscription != null && (
+        <>
+          <hr />
+          <div>
+            <Button asChild variant='outline' className='self-start mb-2'>
+              <a href={portalUrl} target='_blank' rel='noopener noreferrer'>
+                Open Polar portal
+                <ExternalLink className='size-4' />
+              </a>
+            </Button>
+            <p className='text-muted-foreground text-sm'>
+              Download invoices and change your payment method from the Polar
+              portal. Sign in with the billing email for this subscription.
+            </p>
+          </div>
+        </>
+      )}
       {children != null && (
         <>
           <hr />

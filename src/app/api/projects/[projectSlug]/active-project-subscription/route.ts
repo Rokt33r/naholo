@@ -37,6 +37,7 @@ export type ActiveProjectSubscriptionResponse = {
   isSeatExhausted: boolean
   projectStatus: ProjectStatus
   currentUserTrialCredit: 'unused' | 'spent'
+  trialUntil: string | null
 }
 
 function serializeDates(
@@ -105,6 +106,7 @@ export async function GET(
       isSeatExhausted,
       projectStatus: project.status,
       currentUserTrialCredit: userTrial == null ? 'unused' : 'spent',
+      trialUntil: project.trialUntil?.toISOString() ?? null,
     }
     return NextResponse.json(body)
   } catch (error) {
