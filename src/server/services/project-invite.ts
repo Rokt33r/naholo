@@ -1,5 +1,5 @@
 import 'server-only'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, isNull, inArray } from 'drizzle-orm'
 import { db } from '../db'
 import { projectInvites } from '../db/schema'
 import { createProjectOperator } from './project-operator'
@@ -97,8 +97,11 @@ export async function listProjectInvites(
   projectId: string,
 ): Promise<ProjectInviteWithDetails[]> {
   const results = await db.query.projectInvites.findMany({
-    where: (t, { eq, and, ne }) =>
-      and(eq(t.projectId, projectId), ne(t.status, 'accepted')),
+    where: (t, { eq, and, notInArray }) =>
+      and(
+        eq(t.projectId, projectId),
+        notInArray(t.status, ['accepted', 'rejected']),
+      ),
     orderBy: (t, { desc }) => desc(t.createdAt),
     with: {
       project: {
@@ -216,7 +219,7 @@ export async function rejectProjectInvite(inviteId: string): Promise<void> {
     .where(
       and(
         eq(projectInvites.id, inviteId),
-        eq(projectInvites.status, 'claimed'),
+        inArray(projectInvites.status, ['pending', 'claimed']),
       ),
     )
 }

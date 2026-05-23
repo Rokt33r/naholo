@@ -113,14 +113,25 @@ function InviteCard({
           </>
         )}
         {invite.status === 'pending' && (
-          <Button
-            size='icon-sm'
-            variant='ghost'
-            onClick={handleCopyLink}
-            title='Copy invite link'
-          >
-            <Copy className='size-4' />
-          </Button>
+          <>
+            <Button
+              size='icon-sm'
+              variant='ghost'
+              onClick={() => reject(invite.id)}
+              disabled={isBusy}
+              title='Reject'
+            >
+              <X className='size-4' />
+            </Button>
+            <Button
+              size='icon-sm'
+              variant='ghost'
+              onClick={handleCopyLink}
+              title='Copy invite link'
+            >
+              <Copy className='size-4' />
+            </Button>
+          </>
         )}
       </div>
     </div>
