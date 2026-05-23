@@ -1,7 +1,7 @@
 export const SEAT_UNIT_PRICE_CENTS = 500
 
 export function formatSeatPriceCopy(): string {
-  return '$5 per human operator per month + VAT. Bots are always free.'
+  return '$5 per operator per month + VAT.'
 }
 
 export function computeProrationCents(input: {

@@ -1,10 +1,10 @@
 'use client'
 
-import { CreditCard } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
 import { SeatQuotaControl } from '@/components/billing/seat-quota-control'
 import { StartCheckout } from '@/components/billing/start-checkout'
+import { StartTrial } from '@/components/billing/start-trial'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
@@ -21,6 +21,7 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
   const polarSubscription = data?.subscription?.polarSubscription ?? null
   const usedSeats = data?.usedSeats ?? 0
   const isSeatExhausted = data?.isSeatExhausted ?? false
+  const trialCredit = data?.currentUserTrialCredit ?? 'spent'
 
   return (
     <section className='flex flex-col gap-3'>
@@ -31,10 +32,14 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           {error != null ? 'Failed to load subscription.' : 'Loading…'}
         </div>
       ) : polarSubscription == null ? (
-        <div className='flex flex-col gap-3'>
-          <SubscriptionReadout polarSubscription={null} usedSeats={usedSeats} />
-          <StartCheckout projectSlug={projectSlug} />
-        </div>
+        <SubscriptionReadout polarSubscription={null} usedSeats={usedSeats}>
+          <div className='grid gap-3 sm:grid-cols-2'>
+            {trialCredit === 'unused' && (
+              <StartTrial projectSlug={projectSlug} />
+            )}
+            <StartCheckout projectSlug={projectSlug} />
+          </div>
+        </SubscriptionReadout>
       ) : (
         <div className='flex flex-col gap-3'>
           <SubscriptionReadout

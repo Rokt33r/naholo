@@ -11,9 +11,11 @@ type PolarSubscription = NonNullable<
 export function SubscriptionReadout({
   polarSubscription,
   usedSeats,
+  children,
 }: {
   polarSubscription: PolarSubscription | null
   usedSeats: number
+  children?: React.ReactNode
 }) {
   const status = polarSubscription?.status ?? null
   const seats = polarSubscription?.seats
@@ -57,6 +59,12 @@ export function SubscriptionReadout({
           portal. Sign in with the billing email for this subscription.
         </p>
       </div>
+      {children != null && (
+        <>
+          <hr />
+          <div className='flex flex-col gap-3'>{children}</div>
+        </>
+      )}
     </div>
   )
 }

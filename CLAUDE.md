@@ -60,7 +60,7 @@ Additional project rules live in [.claude/rules/](./.claude/rules/) and are load
 - **Project** → has many **Operations**
 - **Operation** → has many **Objectives** (hierarchical via `parentObjectiveId`), **Notes** (tabbed docs), **Operation Logs** (comms)
 - **Objective** → `name` (single-line), `note` (markdown), `done`, `position`, self-referencing `parentObjectiveId`
-- **Project** → has many **Operators** (users/bots with access)
+- **Project** → has many **Operators** (users with access)
 - **Project** → has many **Skill Loadouts** → each has many **Skills**
 
 ## Architecture Patterns

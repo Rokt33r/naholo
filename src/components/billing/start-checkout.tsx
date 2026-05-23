@@ -94,7 +94,14 @@ export function StartCheckout({
   }
 
   return (
-    <div className='flex flex-col gap-3 rounded-lg border p-4'>
+    <div className='flex h-full flex-col gap-3 rounded-lg border p-4'>
+      <div className='flex flex-col gap-1'>
+        <h4 className='text-sm font-semibold'>Subscribe</h4>
+        <p className='text-muted-foreground text-sm'>
+          $5 per operator per month + VAT. Add teammates and scale seats
+          anytime.
+        </p>
+      </div>
       {checkoutState.phase === 'error' && (
         <Alert variant='destructive'>
           <AlertDescription>{checkoutState.message}</AlertDescription>
@@ -113,13 +120,13 @@ export function StartCheckout({
         disabled={
           checkoutState.phase === 'issuing' || checkoutState.phase === 'waiting'
         }
-        className='self-start'
+        className='mt-auto self-start'
       >
         {checkoutState.phase === 'issuing'
           ? 'Starting…'
           : checkoutState.phase === 'waiting'
             ? 'Waiting for payment…'
-            : 'Start checkout'}
+            : 'Subscribe now'}
       </Button>
     </div>
   )

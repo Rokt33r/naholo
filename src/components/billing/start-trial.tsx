@@ -16,7 +16,14 @@ export function StartTrial({ projectSlug }: StartTrialProps) {
   }
 
   return (
-    <div className='flex flex-col gap-3 rounded-lg border p-4'>
+    <div className='flex h-full flex-col gap-3 rounded-lg border p-4'>
+      <div className='flex flex-col gap-1'>
+        <h4 className='text-sm font-semibold'>Try it free</h4>
+        <p className='text-muted-foreground text-sm'>
+          Use Naholo free for 30 days. Single operator only — No credit card
+          required.
+        </p>
+      </div>
       {claimProjectTrial.error != null && (
         <Alert variant='destructive'>
           <AlertDescription>{claimProjectTrial.error.message}</AlertDescription>
@@ -26,11 +33,9 @@ export function StartTrial({ projectSlug }: StartTrialProps) {
         variant='outline'
         onClick={handleClick}
         disabled={claimProjectTrial.isPending}
-        className='self-start'
+        className='mt-auto self-start'
       >
-        {claimProjectTrial.isPending
-          ? 'Starting trial…'
-          : 'Start 1-month free trial'}
+        {claimProjectTrial.isPending ? 'Starting trial…' : 'Start free trial'}
       </Button>
     </div>
   )
