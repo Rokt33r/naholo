@@ -1,16 +1,16 @@
-import type { SyncObjectiveNode, Objective } from 'naholo-api/types'
+import type { SyncTaskNode, Task } from 'naholo-api/types'
 
-const OBJECTIVE_LINE_RE =
-  /^(\s*)- \[([ x])\] (.+?)(?:\s+\[ref\]\(naholo:\/\/(?:objectives|tasks)\/([^)]+)\))?$/
+const TASK_LINE_RE =
+  /^(\s*)- \[([ x])\] (.+?)(?:\s+\[ref\]\(naholo:\/\/tasks\/([^)]+)\))?$/
 
-export function parseObjectivesMarkdown(markdown: string): SyncObjectiveNode[] {
+export function parseTasksMarkdown(markdown: string): SyncTaskNode[] {
   const lines = markdown.split('\n')
-  const root: SyncObjectiveNode[] = []
+  const root: SyncTaskNode[] = []
   // Stack tracks { node, depth } for nesting
-  const stack: { node: SyncObjectiveNode; depth: number }[] = []
+  const stack: { node: SyncTaskNode; depth: number }[] = []
 
   for (const line of lines) {
-    const match = OBJECTIVE_LINE_RE.exec(line)
+    const match = TASK_LINE_RE.exec(line)
     if (match == null) {
       continue
     }
@@ -18,11 +18,11 @@ export function parseObjectivesMarkdown(markdown: string): SyncObjectiveNode[] {
     const indent = match[1].length
     const done = match[2] === 'x'
     const name = match[3].trim()
-    const objectiveId = match[4] // undefined if no [ref]
+    const taskId = match[4] // undefined if no [ref]
     const depth = Math.floor(indent / 2)
 
-    const node: SyncObjectiveNode = {
-      ...(objectiveId != null ? { id: objectiveId } : {}),
+    const node: SyncTaskNode = {
+      ...(taskId != null ? { id: taskId } : {}),
       name,
       ...(done ? { done: true } : {}),
     }
@@ -38,10 +38,10 @@ export function parseObjectivesMarkdown(markdown: string): SyncObjectiveNode[] {
     } else {
       // Child of the last item on the stack
       const parent = stack[stack.length - 1].node
-      if (parent.childObjectives == null) {
-        parent.childObjectives = []
+      if (parent.childTasks == null) {
+        parent.childTasks = []
       }
-      parent.childObjectives.push(node)
+      parent.childTasks.push(node)
     }
 
     stack.push({ node, depth })
@@ -50,15 +50,15 @@ export function parseObjectivesMarkdown(markdown: string): SyncObjectiveNode[] {
   return root
 }
 
-export function formatObjectivesMarkdown(objectives: Objective[]): string {
-  const childrenMap = new Map<string | null, Objective[]>()
-  for (const objective of objectives) {
-    const key = objective.parentObjectiveId
+export function formatTasksMarkdown(tasks: Task[]): string {
+  const childrenMap = new Map<string | null, Task[]>()
+  for (const task of tasks) {
+    const key = task.parentTaskId
     const group = childrenMap.get(key)
     if (group != null) {
-      group.push(objective)
+      group.push(task)
     } else {
-      childrenMap.set(key, [objective])
+      childrenMap.set(key, [task])
     }
   }
 
@@ -74,13 +74,13 @@ export function formatObjectivesMarkdown(objectives: Objective[]): string {
     if (children == null) {
       return
     }
-    for (const objective of children) {
+    for (const task of children) {
       const indent = '  '.repeat(depth)
-      const checkbox = objective.done ? '[x]' : '[ ]'
+      const checkbox = task.done ? '[x]' : '[ ]'
       lines.push(
-        `${indent}- ${checkbox} ${objective.name} [ref](naholo://objectives/${objective.id})`,
+        `${indent}- ${checkbox} ${task.name} [ref](naholo://tasks/${task.id})`,
       )
-      render(objective.id, depth + 1)
+      render(task.id, depth + 1)
     }
   }
 

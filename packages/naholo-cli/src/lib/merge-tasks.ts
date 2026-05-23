@@ -1,41 +1,41 @@
-import type { Objective } from 'naholo-api/types'
-import { parseObjectivesMarkdown } from './objectives-markdown.js'
+import type { Task } from 'naholo-api/types'
+import { parseTasksMarkdown } from './tasks-markdown.js'
 
-export interface MergeObjectivesResult {
+export interface MergeTasksResult {
   merged: string
   updated: number
   inserted: number
 }
 
-interface LocalObjective {
+interface LocalTask {
   name: string
   done: boolean
   id: string | undefined
-  children: LocalObjective[]
+  children: LocalTask[]
 }
 
 /**
- * Merge server objectives into a local OBJECTIVES.md.
+ * Merge server tasks into a local TASKS.md.
  *
- * For each server objective:
- * - If a local objective with the same [ref] ID exists, update its name
+ * For each server task:
+ * - If a local task with the same [ref] ID exists, update its name
  *   (server is authoritative for names). Preserve local done state.
  * - If no local match by ID, insert at the bottom of the parent's children.
  *
- * Local-only objectives (no [ref] or ID not on server) are preserved.
+ * Local-only tasks (no [ref] or ID not on server) are preserved.
  */
-export function mergeObjectives(
+export function mergeTasks(
   operationNumber: number,
   localMarkdown: string,
-  serverObjectives: Objective[],
-): MergeObjectivesResult {
+  serverTasks: Task[],
+): MergeTasksResult {
   const localTree = buildLocalTree(localMarkdown)
   const localById = indexById(localTree)
 
   // Build server parent→children map
-  const serverChildrenMap = new Map<string | null, Objective[]>()
-  for (const obj of serverObjectives) {
-    const key = obj.parentObjectiveId
+  const serverChildrenMap = new Map<string | null, Task[]>()
+  for (const obj of serverTasks) {
+    const key = obj.parentTaskId
     const group = serverChildrenMap.get(key)
     if (group != null) {
       group.push(obj)
@@ -51,7 +51,7 @@ export function mergeObjectives(
   let inserted = 0
 
   function mergeLevel(
-    localChildren: LocalObjective[],
+    localChildren: LocalTask[],
     serverParentId: string | null,
   ): void {
     const serverChildren = serverChildrenMap.get(serverParentId) ?? []
@@ -67,8 +67,8 @@ export function mergeObjectives(
         // Recurse into children
         mergeLevel(localMatch.children, serverObj.id)
       } else {
-        // Insert new objective at the bottom of this level
-        const newObj: LocalObjective = {
+        // Insert new task at the bottom of this level
+        const newObj: LocalTask = {
           name: serverObj.name,
           done: serverObj.done,
           id: serverObj.id,
@@ -77,7 +77,7 @@ export function mergeObjectives(
         localChildren.push(newObj)
         localById.set(serverObj.id, newObj)
         inserted++
-        // Recurse to pick up any children of this new objective
+        // Recurse to pick up any children of this new task
         mergeLevel(newObj.children, serverObj.id)
       }
     }
@@ -90,32 +90,32 @@ export function mergeObjectives(
   return { merged, updated, inserted }
 }
 
-function buildLocalTree(markdown: string): LocalObjective[] {
-  const parsed = parseObjectivesMarkdown(markdown)
+function buildLocalTree(markdown: string): LocalTask[] {
+  const parsed = parseTasksMarkdown(markdown)
 
   function convert(
     nodes: {
       id?: string
       name: string
       done?: boolean
-      childObjectives?: any[]
+      childTasks?: any[]
     }[],
-  ): LocalObjective[] {
+  ): LocalTask[] {
     return nodes.map((n) => ({
       name: n.name,
       done: n.done === true,
       id: n.id,
-      children: convert(n.childObjectives ?? []),
+      children: convert(n.childTasks ?? []),
     }))
   }
 
   return convert(parsed)
 }
 
-function indexById(tree: LocalObjective[]): Map<string, LocalObjective> {
-  const map = new Map<string, LocalObjective>()
+function indexById(tree: LocalTask[]): Map<string, LocalTask> {
+  const map = new Map<string, LocalTask>()
 
-  function walk(nodes: LocalObjective[]): void {
+  function walk(nodes: LocalTask[]): void {
     for (const node of nodes) {
       if (node.id != null) {
         map.set(node.id, node)
@@ -128,22 +128,21 @@ function indexById(tree: LocalObjective[]): Map<string, LocalObjective> {
   return map
 }
 
-function renderTree(operationNumber: number, tree: LocalObjective[]): string {
-  const lines: string[] = [`# OBJECTIVES — OP #${operationNumber}`, '']
+function renderTree(operationNumber: number, tree: LocalTask[]): string {
+  const lines: string[] = [`# TASKS — OP #${operationNumber}`, '']
 
-  function render(nodes: LocalObjective[], depth: number): void {
+  function render(nodes: LocalTask[], depth: number): void {
     for (const node of nodes) {
       const indent = '  '.repeat(depth)
       const checkbox = node.done ? '[x]' : '[ ]'
-      const ref =
-        node.id != null ? ` [ref](naholo://objectives/${node.id})` : ''
+      const ref = node.id != null ? ` [ref](naholo://tasks/${node.id})` : ''
       lines.push(`${indent}- ${checkbox} ${node.name}${ref}`)
       render(node.children, depth + 1)
     }
   }
 
   if (tree.length === 0) {
-    lines.push('_(no objectives yet)_')
+    lines.push('_(no tasks yet)_')
   } else {
     render(tree, 0)
   }

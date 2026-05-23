@@ -4,15 +4,15 @@ import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
-import { mergeObjectives } from '../../lib/merge-objectives.js'
-import { formatObjectivesMarkdown } from '../../lib/objectives-markdown.js'
+import { mergeTasks } from '../../lib/merge-tasks.js'
+import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
 import { threeWayMerge } from '../../lib/three-way-merge.js'
 import {
   getLocalOperationDir,
   getNotesDir,
   getBaseNotesDir,
-  getObjectivesPath,
-  getBaseObjectivesPath,
+  getTasksPath,
+  getBaseTasksPath,
   readOpYml,
   writeOpYml,
 } from '../../lib/local-operations.js'
@@ -49,10 +49,10 @@ export const pullCommand = new Command('pull')
       const opNum = opYml.number
 
       const { client, projectSlug } = getCliContext()
-      const [serverOperation, serverObjectives, serverNotes, serverLogs] =
+      const [serverOperation, serverTasks, serverNotes, serverLogs] =
         await Promise.all([
           client.getOperation(projectSlug, opNum),
-          client.listObjectives(projectSlug, opNum),
+          client.listTasks(projectSlug, opNum),
           client.listNotes(projectSlug, opNum),
           client.listOperationLogs(projectSlug, opNum),
         ])
@@ -64,23 +64,19 @@ export const pullCommand = new Command('pull')
       fs.mkdirSync(notesDir, { recursive: true })
       fs.mkdirSync(baseNotesDir, { recursive: true })
 
-      // --- Merge OBJECTIVES.md (structured, not text merge) ---
-      const objectivesPath = getObjectivesPath()
-      const localObjectivesMd = fs.existsSync(objectivesPath)
-        ? fs.readFileSync(objectivesPath, 'utf-8')
+      // --- Merge TASKS.md (structured, not text merge) ---
+      const tasksPath = getTasksPath()
+      const localTasksMd = fs.existsSync(tasksPath)
+        ? fs.readFileSync(tasksPath, 'utf-8')
         : ''
-      const objMerge = mergeObjectives(
-        opNum,
-        localObjectivesMd,
-        serverObjectives,
-      )
-      fs.writeFileSync(objectivesPath, objMerge.merged)
+      const taskMerge = mergeTasks(opNum, localTasksMd, serverTasks)
+      fs.writeFileSync(tasksPath, taskMerge.merged)
 
       // Server state for .base/ baseline
-      const serverObjectivesMd =
-        serverObjectives.length > 0
-          ? `# OBJECTIVES — OP #${opNum}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
-          : `# OBJECTIVES — OP #${opNum}\n\n_(no objectives yet)_\n`
+      const serverTasksMd =
+        serverTasks.length > 0
+          ? `# TASKS — OP #${opNum}\n\n${formatTasksMarkdown(serverTasks)}\n`
+          : `# TASKS — OP #${opNum}\n\n_(no tasks yet)_\n`
 
       // --- Merge notes ---
       const noteResults: { name: string; action: string }[] = []
@@ -106,7 +102,7 @@ export const pullCommand = new Command('pull')
       }
 
       // Update .base/ with server state
-      fs.writeFileSync(getBaseObjectivesPath(), serverObjectivesMd)
+      fs.writeFileSync(getBaseTasksPath(), serverTasksMd)
       for (const serverNote of serverNotes) {
         fs.writeFileSync(
           path.join(baseNotesDir, `${serverNote.name}.md`),
@@ -124,7 +120,7 @@ export const pullCommand = new Command('pull')
         `Pulled operation #${opNum}: "${serverOperation.title}" (re-run)`,
       )
       console.log(
-        `  Objectives: ${serverObjectives.length} on server — ${objMerge.updated} updated, ${objMerge.inserted} inserted`,
+        `  Tasks: ${serverTasks.length} on server — ${taskMerge.updated} updated, ${taskMerge.inserted} inserted`,
       )
 
       const counts = noteResults.reduce(

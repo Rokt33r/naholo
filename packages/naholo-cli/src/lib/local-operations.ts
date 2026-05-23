@@ -30,12 +30,12 @@ export function getBaseNotesDir(): string {
   return path.join(getBaseDir(), 'notes')
 }
 
-export function getObjectivesPath(): string {
-  return path.join(getLocalOperationDir(), 'OBJECTIVES.md')
+export function getTasksPath(): string {
+  return path.join(getLocalOperationDir(), 'TASKS.md')
 }
 
-export function getBaseObjectivesPath(): string {
-  return path.join(getBaseDir(), 'OBJECTIVES.md')
+export function getBaseTasksPath(): string {
+  return path.join(getBaseDir(), 'TASKS.md')
 }
 
 export interface OpYml {

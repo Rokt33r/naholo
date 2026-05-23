@@ -4,7 +4,7 @@ import {
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
 import { readOpYml } from '../lib/local-operations.js'
-import { formatObjectivesMarkdown } from '../lib/objectives-markdown.js'
+import { formatTasksMarkdown } from '../lib/tasks-markdown.js'
 import { getActiveProfile } from '../profile.js'
 
 export function registerResources(
@@ -54,17 +54,17 @@ export function registerResources(
       list: undefined,
     }),
     {
-      description: 'Full operation context (objectives + notes + recent logs)',
+      description: 'Full operation context (tasks + notes + recent logs)',
     },
     async (uri, variables) => {
       const operationNumber = variables.operationNumber as string
-      const [operation, objectives, notes, logs] = await Promise.all([
+      const [operation, tasks, notes, logs] = await Promise.all([
         client.getOperation(projectSlug, operationNumber),
-        client.listObjectives(projectSlug, operationNumber),
+        client.listTasks(projectSlug, operationNumber),
         client.listNotes(projectSlug, operationNumber),
         client.listOperationLogs(projectSlug, operationNumber),
       ])
-      const data = { operation, objectives, notes, logs }
+      const data = { operation, tasks, notes, logs }
       return {
         contents: [
           {
@@ -78,23 +78,20 @@ export function registerResources(
   )
 
   server.registerResource(
-    'objectives',
-    new ResourceTemplate('naholo://operations/{operationNumber}/objectives', {
+    'tasks',
+    new ResourceTemplate('naholo://operations/{operationNumber}/tasks', {
       list: undefined,
     }),
-    { description: 'All objectives for an operation' },
+    { description: 'All tasks for an operation' },
     async (uri, variables) => {
       const operationNumber = variables.operationNumber as string
-      const objectives = await client.listObjectives(
-        projectSlug,
-        operationNumber,
-      )
+      const tasks = await client.listTasks(projectSlug, operationNumber)
       return {
         contents: [
           {
             uri: uri.href,
             mimeType: 'text/markdown',
-            text: formatObjectivesMarkdown(objectives),
+            text: formatTasksMarkdown(tasks),
           },
         ],
       }

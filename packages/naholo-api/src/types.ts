@@ -39,8 +39,8 @@ export type OperationListItem = {
   closedAt: string | null
   updatedAt: string
   lastOperationLogPreview: string | null
-  totalObjectives: number
-  completedObjectives: number
+  totalTasks: number
+  completedTasks: number
 }
 
 export type OperationDetail = Pick<
@@ -55,11 +55,11 @@ export type OperationDetail = Pick<
   | 'updatedAt'
 >
 
-// ---- Objective ----
+// ---- Task ----
 
-export type Objective = {
+export type Task = {
   id: string
-  parentObjectiveId: string | null
+  parentTaskId: string | null
   name: string
   note: string | null
   done: boolean
@@ -68,37 +68,37 @@ export type Objective = {
   updatedAt: string
 }
 
-export type CreateObjectiveInput = {
+export type CreateTaskInput = {
   name: string
   note?: string | null
-  parentObjectiveId?: string | null
+  parentTaskId?: string | null
   position?: number
 }
 
-export type UpdateObjectiveInput = {
+export type UpdateTaskInput = {
   name?: string
   note?: string | null
   done?: boolean
 }
 
-export type MoveObjectiveInput = {
-  parentObjectiveId?: string | null
+export type MoveTaskInput = {
+  parentTaskId?: string | null
   position: number
 }
 
-export type SyncObjectiveNode = {
+export type SyncTaskNode = {
   id?: string
   name: string
   done?: boolean
-  childObjectives?: SyncObjectiveNode[]
+  childTasks?: SyncTaskNode[]
 }
 
-export type SyncObjectivesInput = {
-  objectives: SyncObjectiveNode[]
-  objectiveIdsToDelete?: string[]
+export type SyncTasksInput = {
+  tasks: SyncTaskNode[]
+  taskIdsToDelete?: string[]
 }
 
-export type SyncObjectivesResult = {
+export type SyncTasksResult = {
   created: { id: string; name: string }[]
 }
 

@@ -31,10 +31,7 @@ export const dumpOpCommand = new Command('dump-op')
       })
 
       const operation = await client.getOperation(projectSlug, operationNumber)
-      const objectives = await client.listObjectives(
-        projectSlug,
-        operationNumber,
-      )
+      const tasks = await client.listTasks(projectSlug, operationNumber)
       const notes = await client.listNotes(projectSlug, operationNumber)
       const logs = await client.listOperationLogs(projectSlug, operationNumber)
       const sessions = await client.listAgentSessions(
@@ -57,8 +54,8 @@ export const dumpOpCommand = new Command('dump-op')
       )
 
       fs.writeFileSync(
-        path.join(absDumpDir, 'objectives.json'),
-        JSON.stringify(objectives),
+        path.join(absDumpDir, 'tasks.json'),
+        JSON.stringify(tasks),
       )
 
       fs.writeFileSync(
@@ -94,7 +91,7 @@ export const dumpOpCommand = new Command('dump-op')
         `Dumped ${projectSlug}/#${operation.number} "${operation.title}" → ${absDumpDir}`,
       )
       console.log(
-        `  ${objectives.length} objective(s), ${notes.length} note(s), ${logs.length} log(s), ${sessions.length} session(s), ${transcriptCount} transcript(s)`,
+        `  ${tasks.length} task(s), ${notes.length} note(s), ${logs.length} log(s), ${sessions.length} session(s), ${transcriptCount} transcript(s)`,
       )
     }),
   )

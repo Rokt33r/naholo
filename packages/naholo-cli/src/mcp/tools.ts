@@ -40,64 +40,60 @@ export function registerTools(
   )
 
   server.registerTool(
-    'create_objective',
+    'create_task',
     {
-      description: 'Create a new objective in an operation',
+      description: 'Create a new task in an operation',
       inputSchema: {
         operationNumber: z
           .number()
           .int()
           .positive()
           .describe('Operation number (e.g. 3)'),
-        name: z.string().describe('Objective name'),
-        note: z.string().optional().describe('Objective note (markdown)'),
-        parentObjectiveId: z
+        name: z.string().describe('Task name'),
+        note: z.string().optional().describe('Task note (markdown)'),
+        parentTaskId: z
           .string()
           .optional()
-          .describe('Parent objective ID for nesting'),
+          .describe('Parent task ID for nesting'),
         position: z.number().optional().describe('Position index'),
       },
     },
-    async ({ operationNumber, name, note, parentObjectiveId, position }) => {
-      const objective = await client.createObjective(
-        projectSlug,
-        operationNumber,
-        {
-          name,
-          note,
-          parentObjectiveId,
-          position,
-        },
-      )
+    async ({ operationNumber, name, note, parentTaskId, position }) => {
+      const task = await client.createTask(projectSlug, operationNumber, {
+        name,
+        note,
+        parentTaskId,
+        position,
+      })
       return {
-        content: [{ type: 'text', text: JSON.stringify(objective, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(task, null, 2) }],
       }
     },
   )
 
   server.registerTool(
-    'update_objective',
+    'update_task',
     {
-      description: 'Update an objective (name, note, or done status)',
+      description: 'Update a task (name, note, or done status)',
       inputSchema: {
         operationNumber: z
           .number()
           .int()
           .positive()
           .describe('Operation number (e.g. 3)'),
-        objectiveId: z.string().describe('Objective ID'),
-        name: z.string().optional().describe('New objective name'),
-        note: z.string().optional().describe('New objective note'),
-        done: z.boolean().optional().describe('Mark objective done/undone'),
+        taskId: z.string().describe('Task ID'),
+        name: z.string().optional().describe('New task name'),
+        note: z.string().optional().describe('New task note'),
+        done: z.boolean().optional().describe('Mark task done/undone'),
       },
     },
-    async ({ operationNumber, objectiveId, name, note, done }) => {
-      await client.updateObjective(projectSlug, operationNumber, objectiveId, {
+    async ({ operationNumber, taskId, name, note, done }) => {
+      await client.updateTask(projectSlug, operationNumber, taskId, {
         name,
         note,
         done,
       })
-      return { content: [{ type: 'text', text: 'Objective updated.' }] }
+      return { content: [{ type: 'text', text: 'Task updated.' }] }
     },
   )
 

@@ -3,13 +3,13 @@ import path from 'node:path'
 import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
-import { parseObjectivesMarkdown } from '../../lib/objectives-markdown.js'
+import { parseTasksMarkdown } from '../../lib/tasks-markdown.js'
 import {
   getLocalOperationDir,
   getNotesDir,
   getBaseNotesDir,
-  getObjectivesPath,
-  getBaseObjectivesPath,
+  getTasksPath,
+  getBaseTasksPath,
   readOpYml,
 } from '../../lib/local-operations.js'
 
@@ -27,19 +27,19 @@ export const pushCommand = new Command('push')
       const { client, projectSlug } = getCliContext()
       const localDir = getLocalOperationDir()
 
-      // --- Sync objectives ---
-      const objectivesPath = getObjectivesPath()
-      const objectivesMd = fs.readFileSync(objectivesPath, 'utf-8')
-      const objectives = parseObjectivesMarkdown(objectivesMd)
+      // --- Sync tasks ---
+      const tasksPath = getTasksPath()
+      const tasksMd = fs.readFileSync(tasksPath, 'utf-8')
+      const tasks = parseTasksMarkdown(tasksMd)
 
-      const syncResult = await client.syncObjectives(projectSlug, opNum, {
-        objectives,
-        objectiveIdsToDelete: [],
+      const syncResult = await client.syncTasks(projectSlug, opNum, {
+        tasks,
+        taskIdsToDelete: [],
       })
 
-      // Patch [ref] links for newly created objectives
+      // Patch [ref] links for newly created tasks
       if (syncResult.created.length > 0) {
-        let updatedMd = objectivesMd
+        let updatedMd = tasksMd
         for (const created of syncResult.created) {
           // Find line matching the name without a [ref] link and add one
           const escapedName = created.name.replace(
@@ -49,10 +49,10 @@ export const pushCommand = new Command('push')
           const lineRe = new RegExp(`^(\\s*- \\[[ x]\\] ${escapedName})$`, 'm')
           updatedMd = updatedMd.replace(
             lineRe,
-            `$1 [ref](naholo://objectives/${created.id})`,
+            `$1 [ref](naholo://tasks/${created.id})`,
           )
         }
-        fs.writeFileSync(objectivesPath, updatedMd)
+        fs.writeFileSync(tasksPath, updatedMd)
       }
 
       // --- Sync notes ---
@@ -84,12 +84,12 @@ export const pushCommand = new Command('push')
       }
 
       // --- Update .base/ ---
-      const baseObjectivesPath = getBaseObjectivesPath()
+      const baseObjectivesPath = getBaseTasksPath()
       const baseNotesDir = getBaseNotesDir()
       fs.mkdirSync(baseNotesDir, { recursive: true })
 
       // .base/ = current local state (what was just pushed)
-      const currentObjectivesMd = fs.readFileSync(objectivesPath, 'utf-8')
+      const currentObjectivesMd = fs.readFileSync(tasksPath, 'utf-8')
       fs.writeFileSync(baseObjectivesPath, currentObjectivesMd)
 
       for (const file of localNoteFiles) {
@@ -100,7 +100,7 @@ export const pushCommand = new Command('push')
       // --- Report ---
       console.log(`Pushed operation #${opNum}`)
       console.log(
-        `  Objectives: ${objectives.length} synced, ${syncResult.created.length} created`,
+        `  Tasks: ${tasks.length} synced, ${syncResult.created.length} created`,
       )
       if (syncResult.created.length > 0) {
         for (const c of syncResult.created) {

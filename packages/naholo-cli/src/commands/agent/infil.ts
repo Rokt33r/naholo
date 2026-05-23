@@ -4,13 +4,13 @@ import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
-import { formatObjectivesMarkdown } from '../../lib/objectives-markdown.js'
+import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
 import {
   getBaseNotesDir,
-  getBaseObjectivesPath,
+  getBaseTasksPath,
   getLocalOperationDir,
   getNotesDir,
-  getObjectivesPath,
+  getTasksPath,
   writeOpYml,
 } from '../../lib/local-operations.js'
 
@@ -37,10 +37,10 @@ export const infilCommand = new Command('infil')
 
       const { client, projectSlug } = getCliContext()
 
-      const [serverOperation, serverObjectives, serverNotes, serverLogs] =
+      const [serverOperation, serverTasks, serverNotes, serverLogs] =
         await Promise.all([
           client.getOperation(projectSlug, opNum),
-          client.listObjectives(projectSlug, opNum),
+          client.listTasks(projectSlug, opNum),
           client.listNotes(projectSlug, opNum),
           client.listOperationLogs(projectSlug, opNum),
         ])
@@ -51,13 +51,13 @@ export const infilCommand = new Command('infil')
       fs.mkdirSync(notesDir, { recursive: true })
       fs.mkdirSync(baseNotesDir, { recursive: true })
 
-      const objectivesMd =
-        serverObjectives.length > 0
-          ? `# OBJECTIVES — OP #${opNum}\n\n${formatObjectivesMarkdown(serverObjectives)}\n`
-          : `# OBJECTIVES — OP #${opNum}\n\n_(no objectives yet)_\n`
+      const tasksMd =
+        serverTasks.length > 0
+          ? `# TASKS — OP #${opNum}\n\n${formatTasksMarkdown(serverTasks)}\n`
+          : `# TASKS — OP #${opNum}\n\n_(no tasks yet)_\n`
 
-      fs.writeFileSync(getObjectivesPath(), objectivesMd)
-      fs.writeFileSync(getBaseObjectivesPath(), objectivesMd)
+      fs.writeFileSync(getTasksPath(), tasksMd)
+      fs.writeFileSync(getBaseTasksPath(), tasksMd)
 
       for (const note of serverNotes) {
         const filename = `${note.name}.md`
@@ -78,11 +78,11 @@ export const infilCommand = new Command('infil')
 
       writeOpYml({ number: opNum, title: serverOperation.title })
 
-      const doneCount = serverObjectives.filter((o) => o.done).length
+      const doneCount = serverTasks.filter((o) => o.done).length
       console.log(`Infiled operation #${opNum}`)
       console.log(`  Title: ${serverOperation.title}`)
       console.log(
-        `  Objectives: ${serverObjectives.length} (${doneCount} done, ${serverObjectives.length - doneCount} remaining)`,
+        `  Tasks: ${serverTasks.length} (${doneCount} done, ${serverTasks.length - doneCount} remaining)`,
       )
       console.log(
         `  Notes: ${serverNotes.length}${serverNotes.length > 0 ? ` (${serverNotes.map((n) => n.name).join(', ')})` : ''}`,

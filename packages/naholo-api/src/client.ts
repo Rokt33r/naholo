@@ -2,19 +2,19 @@ import type {
   AgentSessionPayload,
   AgentSessionSummary,
   AuthUser,
-  CreateObjectiveInput,
+  CreateTaskInput,
   Operation,
   OperationDetail,
   OperationListItem,
   OperationLog,
-  MoveObjectiveInput,
+  MoveTaskInput,
   Note,
   Project,
   ProjectWithOperator,
-  Objective,
-  SyncObjectivesInput,
-  SyncObjectivesResult,
-  UpdateObjectiveInput,
+  Task,
+  SyncTasksInput,
+  SyncTasksResult,
+  UpdateTaskInput,
   Operator,
 } from './types.js'
 
@@ -175,87 +175,75 @@ export class NaholoClient {
     )
   }
 
-  // ---- Objectives ----
+  // ---- Tasks ----
 
-  listObjectives(
+  listTasks(
     projectSlug: string,
     operationNumber: number | string,
-  ): Promise<Objective[]> {
+  ): Promise<Task[]> {
     return this.request(
       'GET',
-      this.operationPath(projectSlug, operationNumber, '/objectives'),
+      this.operationPath(projectSlug, operationNumber, '/tasks'),
     )
   }
 
-  createObjective(
+  createTask(
     projectSlug: string,
     operationNumber: number | string,
-    input: CreateObjectiveInput,
-  ): Promise<Objective> {
+    input: CreateTaskInput,
+  ): Promise<Task> {
     return this.request(
       'POST',
-      this.operationPath(projectSlug, operationNumber, '/objectives'),
+      this.operationPath(projectSlug, operationNumber, '/tasks'),
       input,
     )
   }
 
-  updateObjective(
+  updateTask(
     projectSlug: string,
     operationNumber: number | string,
-    objectiveId: string,
-    input: UpdateObjectiveInput,
-  ): Promise<Objective> {
+    taskId: string,
+    input: UpdateTaskInput,
+  ): Promise<Task> {
     return this.request(
       'PATCH',
-      this.operationPath(
-        projectSlug,
-        operationNumber,
-        `/objectives/${objectiveId}`,
-      ),
+      this.operationPath(projectSlug, operationNumber, `/tasks/${taskId}`),
       input,
     )
   }
 
-  deleteObjective(
+  deleteTask(
     projectSlug: string,
     operationNumber: number | string,
-    objectiveId: string,
+    taskId: string,
   ): Promise<void> {
     return this.request(
       'DELETE',
-      this.operationPath(
-        projectSlug,
-        operationNumber,
-        `/objectives/${objectiveId}`,
-      ),
+      this.operationPath(projectSlug, operationNumber, `/tasks/${taskId}`),
     )
   }
 
-  moveObjective(
+  moveTask(
     projectSlug: string,
     operationNumber: number | string,
-    objectiveId: string,
-    input: MoveObjectiveInput,
-  ): Promise<Objective> {
+    taskId: string,
+    input: MoveTaskInput,
+  ): Promise<Task> {
     return this.request(
       'POST',
-      this.operationPath(
-        projectSlug,
-        operationNumber,
-        `/objectives/${objectiveId}/move`,
-      ),
+      this.operationPath(projectSlug, operationNumber, `/tasks/${taskId}/move`),
       input,
     )
   }
 
-  syncObjectives(
+  syncTasks(
     projectSlug: string,
     operationNumber: number | string,
-    input: SyncObjectivesInput,
-  ): Promise<SyncObjectivesResult> {
+    input: SyncTasksInput,
+  ): Promise<SyncTasksResult> {
     return this.request(
       'PUT',
-      this.operationPath(projectSlug, operationNumber, '/objectives'),
+      this.operationPath(projectSlug, operationNumber, '/tasks'),
       input,
     )
   }
