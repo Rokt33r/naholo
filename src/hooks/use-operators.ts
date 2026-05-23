@@ -54,20 +54,3 @@ export function useRemoveProjectOperator(projectSlug: string) {
     },
   })
 }
-
-/**
- * Hook to fetch a single operator
- */
-export function useOperator(projectSlug: string, operatorId: string) {
-  const query = useQuery({
-    queryKey: ['operator', projectSlug, operatorId],
-    queryFn: () =>
-      fetcher<Operator>(`/api/projects/${projectSlug}/operators/${operatorId}`),
-  })
-
-  return {
-    operator: query.data,
-    isLoading: query.isLoading,
-    error: query.error,
-  }
-}

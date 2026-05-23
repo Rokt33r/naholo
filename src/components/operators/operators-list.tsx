@@ -1,6 +1,5 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
 import { Contact, UserPlus, User, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
@@ -8,7 +7,6 @@ import { useProjectContext } from '@/components/app/project-context'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useOperators, useRemoveProjectOperator } from '@/hooks/use-operators'
 import { InviteUserOperatorDialog } from './invite-user-operator-dialog'
-import { cn } from '@/lib/utils'
 import type { Operator } from '@/hooks/use-operators'
 
 type OperatorsListProps = {
@@ -16,9 +14,6 @@ type OperatorsListProps = {
 }
 
 export function OperatorsList({ projectSlug }: OperatorsListProps) {
-  const router = useRouter()
-  const params = useParams()
-  const currentOperatorId = params.operatorId as string | undefined
   const isMobile = useIsMobile()
   const { currentOperator } = useProjectContext()
   const isAdmin = currentOperator.role === 'admin'
@@ -68,13 +63,7 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
               <OperatorItem
                 key={operator.id}
                 operator={operator}
-                isActive={operator.id === currentOperatorId}
                 canRemove={isAdmin}
-                onClick={() =>
-                  router.push(
-                    `/app/projects/${projectSlug}/operators/${operator.id}`,
-                  )
-                }
                 onRemove={() => handleRemove(operator)}
               />
             ))}
@@ -87,41 +76,26 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
 
 function OperatorItem({
   operator,
-  isActive,
   canRemove,
-  onClick,
   onRemove,
 }: {
   operator: Operator
-  isActive: boolean
   canRemove: boolean
-  onClick: () => void
   onRemove: () => void
 }) {
   return (
-    <div
-      className={cn(
-        'group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-accent',
-        isActive && 'bg-accent',
-      )}
-    >
-      <button
-        className='flex flex-1 items-center gap-3 text-left min-w-0'
-        onClick={onClick}
-      >
-        <User className='size-4 text-muted-foreground' />
-        <div className='flex-1 min-w-0'>
-          <div className='truncate text-sm font-medium'>{operator.name}</div>
-          <div className='text-xs text-muted-foreground'>{operator.role}</div>
-        </div>
-      </button>
+    <div className='flex w-full items-center gap-3 rounded-md px-2 py-2 text-left'>
+      <User className='size-4 text-muted-foreground' />
+      <div className='flex-1 min-w-0'>
+        <div className='truncate text-sm font-medium'>{operator.name}</div>
+        <div className='text-xs text-muted-foreground'>{operator.role}</div>
+      </div>
       {canRemove && (
         <Button
           variant='ghost'
           size='icon'
           className='size-7 text-red-600'
           title='Remove operator'
-          tabIndex={-1}
           onClick={onRemove}
         >
           <Trash2 className='size-5' />
