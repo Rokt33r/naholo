@@ -1,15 +1,15 @@
 import 'server-only'
 import { db } from '../db'
-import { operationObjectives, operations } from '../db/schema'
+import { operationTasks, operations } from '../db/schema'
 import { eq, and, isNull, gt, gte, lt, lte, sql, inArray } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from '../errors'
 import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 
-export type Objective = {
+export type Task = {
   id: string
-  parentObjectiveId: string | null
+  parentTaskId: string | null
   name: string
   note: string | null
   done: boolean
@@ -18,16 +18,13 @@ export type Objective = {
   updatedAt: Date
 }
 
-/**
- * List operationObjectives for an operation (hierarchical)
- */
-export async function listObjectives(data: {
+export async function listTasks(data: {
   operationId: string
-}): Promise<Objective[]> {
-  return db.query.operationObjectives.findMany({
+}): Promise<Task[]> {
+  return db.query.operationTasks.findMany({
     columns: {
       id: true,
-      parentObjectiveId: true,
+      parentTaskId: true,
       name: true,
       note: true,
       done: true,
@@ -40,120 +37,107 @@ export async function listObjectives(data: {
   })
 }
 
-/**
- * Create a new objective. If position is provided, shifts existing operationObjectives at or after that position.
- * Otherwise appends to the end.
- */
-export async function createObjective(data: {
+export async function createTask(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
   name: string
   note?: string | null
-  parentObjectiveId?: string | null
+  parentTaskId?: string | null
   position?: number
   sourceClientId?: string
 }): Promise<ReturnResult<{ id: string }>> {
-  const parentObjectiveId = data.parentObjectiveId ?? null
+  const parentTaskId = data.parentTaskId ?? null
 
   let position: number
   if (data.position !== undefined) {
-    // Shift existing operationObjectives at or after the target position
     await db
-      .update(operationObjectives)
+      .update(operationTasks)
       .set({
-        position: sql`${operationObjectives.position} + 1`,
+        position: sql`${operationTasks.position} + 1`,
       })
       .where(
         and(
-          eq(operationObjectives.operationId, data.operationId),
-          parentObjectiveId
-            ? eq(operationObjectives.parentObjectiveId, parentObjectiveId)
-            : isNull(operationObjectives.parentObjectiveId),
-          gte(operationObjectives.position, data.position),
+          eq(operationTasks.operationId, data.operationId),
+          parentTaskId
+            ? eq(operationTasks.parentTaskId, parentTaskId)
+            : isNull(operationTasks.parentTaskId),
+          gte(operationTasks.position, data.position),
         ),
       )
     position = data.position
   } else {
-    // Get the maximum position for operationObjectives at this level
-    const existingObjectives = await db.query.operationObjectives.findMany({
+    const existingTasks = await db.query.operationTasks.findMany({
       columns: { position: true },
       where: (t, { eq, and, isNull }) =>
         and(
           eq(t.operationId, data.operationId),
-          parentObjectiveId
-            ? eq(t.parentObjectiveId, parentObjectiveId)
-            : isNull(t.parentObjectiveId),
+          parentTaskId
+            ? eq(t.parentTaskId, parentTaskId)
+            : isNull(t.parentTaskId),
         ),
       orderBy: (t, { asc }) => asc(t.position),
     })
 
     const maxPosition =
-      existingObjectives.length > 0
-        ? Math.max(...existingObjectives.map((t) => t.position))
+      existingTasks.length > 0
+        ? Math.max(...existingTasks.map((t) => t.position))
         : -1
     position = maxPosition + 1
   }
 
-  const [objective] = await db
-    .insert(operationObjectives)
+  const [task] = await db
+    .insert(operationTasks)
     .values({
       projectId: data.projectId,
       operationId: data.operationId,
       projectOperatorId: data.projectOperatorId,
-      parentObjectiveId,
+      parentTaskId,
       name: data.name,
       note: data.note ?? null,
       position,
     })
-    .returning({ id: operationObjectives.id })
+    .returning({ id: operationTasks.id })
 
   await db
     .update(operations)
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',
     data.sourceClientId,
   )
 
-  return ok({ id: objective.id })
+  return ok({ id: task.id })
 }
 
-/**
- * Update an objective.
- */
-export async function updateObjective(data: {
+export async function updateTask(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
-  objectiveId: string
+  taskId: string
   name: string
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  const [objective] = await db
-    .update(operationObjectives)
+  const [task] = await db
+    .update(operationTasks)
     .set({
       name: data.name,
       updatedAt: new Date(),
     })
     .where(
       and(
-        eq(operationObjectives.id, data.objectiveId),
-        eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+        eq(operationTasks.id, data.taskId),
+        eq(operationTasks.projectOperatorId, data.projectOperatorId),
       ),
     )
-    .returning({ id: operationObjectives.id })
+    .returning({ id: operationTasks.id })
 
-  if (!objective) {
-    return err(new NotFoundError('Objective'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
   }
 
   await db
@@ -161,11 +145,7 @@ export async function updateObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',
@@ -175,33 +155,30 @@ export async function updateObjective(data: {
   return ok()
 }
 
-/**
- * Set an objective's done status.
- */
-export async function setObjectiveDone(data: {
+export async function setTaskDone(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
-  objectiveId: string
+  taskId: string
   done: boolean
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  const [objective] = await db
-    .update(operationObjectives)
+  const [task] = await db
+    .update(operationTasks)
     .set({
       done: data.done,
       updatedAt: new Date(),
     })
     .where(
       and(
-        eq(operationObjectives.id, data.objectiveId),
-        eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+        eq(operationTasks.id, data.taskId),
+        eq(operationTasks.projectOperatorId, data.projectOperatorId),
       ),
     )
-    .returning({ id: operationObjectives.id })
+    .returning({ id: operationTasks.id })
 
-  if (!objective) {
-    return err(new NotFoundError('Objective'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
   }
 
   await db
@@ -209,11 +186,7 @@ export async function setObjectiveDone(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',
@@ -223,33 +196,30 @@ export async function setObjectiveDone(data: {
   return ok()
 }
 
-/**
- * Update an objective's note.
- */
-export async function updateObjectiveNote(data: {
+export async function updateTaskNote(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
-  objectiveId: string
+  taskId: string
   note: string | null
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  const [objective] = await db
-    .update(operationObjectives)
+  const [task] = await db
+    .update(operationTasks)
     .set({
       note: data.note,
       updatedAt: new Date(),
     })
     .where(
       and(
-        eq(operationObjectives.id, data.objectiveId),
-        eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+        eq(operationTasks.id, data.taskId),
+        eq(operationTasks.projectOperatorId, data.projectOperatorId),
       ),
     )
-    .returning({ id: operationObjectives.id })
+    .returning({ id: operationTasks.id })
 
-  if (!objective) {
-    return err(new NotFoundError('Objective'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
   }
 
   await db
@@ -257,11 +227,7 @@ export async function updateObjectiveNote(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',
@@ -271,28 +237,25 @@ export async function updateObjectiveNote(data: {
   return ok()
 }
 
-/**
- * Delete an objective.
- */
-export async function deleteObjective(data: {
+export async function deleteTask(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
-  objectiveId: string
+  taskId: string
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  const [objective] = await db
-    .delete(operationObjectives)
+  const [task] = await db
+    .delete(operationTasks)
     .where(
       and(
-        eq(operationObjectives.id, data.objectiveId),
-        eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+        eq(operationTasks.id, data.taskId),
+        eq(operationTasks.projectOperatorId, data.projectOperatorId),
       ),
     )
-    .returning({ id: operationObjectives.id })
+    .returning({ id: operationTasks.id })
 
-  if (!objective) {
-    return err(new NotFoundError('Objective'))
+  if (!task) {
+    return err(new NotFoundError('Task'))
   }
 
   await db
@@ -300,11 +263,7 @@ export async function deleteObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',
@@ -314,43 +273,38 @@ export async function deleteObjective(data: {
   return ok()
 }
 
-/**
- * Move an objective to a new parent and/or position.
- */
-export async function moveObjective(data: {
+export async function moveTask(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
-  objectiveId: string
-  newParentObjectiveId: string | null
+  taskId: string
+  newParentTaskId: string | null
   newPosition: number
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  // Get the current objective
-  const currentObjective = await db.query.operationObjectives.findFirst({
+  const currentTask = await db.query.operationTasks.findFirst({
     columns: {
       id: true,
-      parentObjectiveId: true,
+      parentTaskId: true,
       position: true,
     },
     where: (t, { eq, and }) =>
       and(
-        eq(t.id, data.objectiveId),
+        eq(t.id, data.taskId),
         eq(t.projectOperatorId, data.projectOperatorId),
         eq(t.operationId, data.operationId),
       ),
   })
 
-  if (!currentObjective) {
-    return err(new NotFoundError('Objective'))
+  if (!currentTask) {
+    return err(new NotFoundError('Task'))
   }
 
-  const oldParentId = currentObjective.parentObjectiveId
-  const oldPosition = currentObjective.position
-  const newParentId = data.newParentObjectiveId
+  const oldParentId = currentTask.parentTaskId
+  const oldPosition = currentTask.position
+  const newParentId = data.newParentTaskId
   const newPosition = data.newPosition
 
-  // Check if we're moving to the same place
   if (oldParentId === newParentId && oldPosition === newPosition) {
     return ok()
   }
@@ -358,93 +312,86 @@ export async function moveObjective(data: {
   const sameParent = oldParentId === newParentId
 
   if (sameParent) {
-    // Moving within the same parent - just reorder
     if (oldPosition < newPosition) {
-      // Moving down: shift operationObjectives between old and new position up
       await db
-        .update(operationObjectives)
+        .update(operationTasks)
         .set({
-          position: sql`${operationObjectives.position} - 1`,
+          position: sql`${operationTasks.position} - 1`,
         })
         .where(
           and(
-            eq(operationObjectives.operationId, data.operationId),
-            eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+            eq(operationTasks.operationId, data.operationId),
+            eq(operationTasks.projectOperatorId, data.projectOperatorId),
             oldParentId
-              ? eq(operationObjectives.parentObjectiveId, oldParentId)
-              : isNull(operationObjectives.parentObjectiveId),
-            gt(operationObjectives.position, oldPosition),
-            lte(operationObjectives.position, newPosition),
+              ? eq(operationTasks.parentTaskId, oldParentId)
+              : isNull(operationTasks.parentTaskId),
+            gt(operationTasks.position, oldPosition),
+            lte(operationTasks.position, newPosition),
           ),
         )
     } else {
-      // Moving up: shift operationObjectives between new and old position down
       await db
-        .update(operationObjectives)
+        .update(operationTasks)
         .set({
-          position: sql`${operationObjectives.position} + 1`,
+          position: sql`${operationTasks.position} + 1`,
         })
         .where(
           and(
-            eq(operationObjectives.operationId, data.operationId),
-            eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+            eq(operationTasks.operationId, data.operationId),
+            eq(operationTasks.projectOperatorId, data.projectOperatorId),
             oldParentId
-              ? eq(operationObjectives.parentObjectiveId, oldParentId)
-              : isNull(operationObjectives.parentObjectiveId),
-            gte(operationObjectives.position, newPosition),
-            lt(operationObjectives.position, oldPosition),
+              ? eq(operationTasks.parentTaskId, oldParentId)
+              : isNull(operationTasks.parentTaskId),
+            gte(operationTasks.position, newPosition),
+            lt(operationTasks.position, oldPosition),
           ),
         )
     }
   } else {
-    // Moving to a different parent
-    // 1. Close the gap at the old location
     await db
-      .update(operationObjectives)
+      .update(operationTasks)
       .set({
-        position: sql`${operationObjectives.position} - 1`,
+        position: sql`${operationTasks.position} - 1`,
       })
       .where(
         and(
-          eq(operationObjectives.operationId, data.operationId),
-          eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+          eq(operationTasks.operationId, data.operationId),
+          eq(operationTasks.projectOperatorId, data.projectOperatorId),
           oldParentId
-            ? eq(operationObjectives.parentObjectiveId, oldParentId)
-            : isNull(operationObjectives.parentObjectiveId),
-          gt(operationObjectives.position, oldPosition),
+            ? eq(operationTasks.parentTaskId, oldParentId)
+            : isNull(operationTasks.parentTaskId),
+          gt(operationTasks.position, oldPosition),
         ),
       )
 
-    // 2. Make room at the new location
     await db
-      .update(operationObjectives)
+      .update(operationTasks)
       .set({
-        position: sql`${operationObjectives.position} + 1`,
+        position: sql`${operationTasks.position} + 1`,
       })
       .where(
         and(
-          eq(operationObjectives.operationId, data.operationId),
-          eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+          eq(operationTasks.operationId, data.operationId),
+          eq(operationTasks.projectOperatorId, data.projectOperatorId),
           newParentId
-            ? eq(operationObjectives.parentObjectiveId, newParentId)
-            : isNull(operationObjectives.parentObjectiveId),
-          gte(operationObjectives.position, newPosition),
+            ? eq(operationTasks.parentTaskId, newParentId)
+            : isNull(operationTasks.parentTaskId),
+          gte(operationTasks.position, newPosition),
         ),
       )
   }
 
-  // Update the objective's position and parent
   await db
-    .update(operationObjectives)
+    .update(operationTasks)
     .set({
-      parentObjectiveId: newParentId,
+      parentTaskId: newParentId,
       position: newPosition,
       updatedAt: new Date(),
     })
     .where(
       and(
-        eq(operationObjectives.id, data.objectiveId),
-        eq(operationObjectives.projectOperatorId, data.projectOperatorId),
+        eq(operationTasks.id, data.taskId),
+        eq(operationTasks.projectOperatorId, data.projectOperatorId),
       ),
     )
 
@@ -453,11 +400,7 @@ export async function moveObjective(data: {
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',
@@ -469,63 +412,49 @@ export async function moveObjective(data: {
 
 // ---- Sync (bulk) ----
 
-export type SyncObjectiveNode = {
+export type SyncTaskNode = {
   id?: string
   name: string
   done?: boolean
-  childObjectives?: SyncObjectiveNode[]
+  childTasks?: SyncTaskNode[]
 }
 
-/**
- * Sync the full objective tree for an operation.
- * Accepts the complete objective tree and a list of objective IDs to delete.
- * Resolves positions from array order, creates new operationObjectives, updates existing,
- * and preserves orphans (server operationObjectives not in the tree) at the top.
- *
- * Executes in 3 mutations + 1 read:
- *   1. DELETE operationObjectives in objectiveIdsToDelete
- *   2. INSERT all new operationObjectives (name + done only)
- *   3. UPDATE all operationObjectives with resolved position, parentObjectiveId, name, done
- */
-export async function syncObjectives(data: {
+export async function syncTasks(data: {
   projectOperatorId: string
   projectId: string
   operationId: string
-  objectives: SyncObjectiveNode[]
-  objectiveIdsToDelete: string[]
+  tasks: SyncTaskNode[]
+  taskIdsToDelete: string[]
   sourceClientId?: string
 }): Promise<ReturnResult<{ created: { id: string; name: string }[] }>> {
-  // Mutation 1 — Delete (before read so orphan detection doesn't need deleteSet)
-  if (data.objectiveIdsToDelete.length > 0) {
+  if (data.taskIdsToDelete.length > 0) {
     await db
-      .delete(operationObjectives)
+      .delete(operationTasks)
       .where(
         and(
-          eq(operationObjectives.operationId, data.operationId),
-          inArray(operationObjectives.id, data.objectiveIdsToDelete),
+          eq(operationTasks.operationId, data.operationId),
+          inArray(operationTasks.id, data.taskIdsToDelete),
         ),
       )
   }
 
-  // Collect input objective IDs
   const inputIds = new Set<string>()
-  function collectIds(nodes: SyncObjectiveNode[]): void {
+  function collectIds(nodes: SyncTaskNode[]): void {
     for (const node of nodes) {
       if (node.id != null) {
         inputIds.add(node.id)
       }
-      if (node.childObjectives != null) {
-        collectIds(node.childObjectives)
+      if (node.childTasks != null) {
+        collectIds(node.childTasks)
       }
     }
   }
-  collectIds(data.objectives)
+  collectIds(data.tasks)
 
-  // Read existing operationObjectives (post-delete)
-  const existingObjectives = await db.query.operationObjectives.findMany({
+  const existingTasks = await db.query.operationTasks.findMany({
     columns: {
       id: true,
-      parentObjectiveId: true,
+      parentTaskId: true,
       name: true,
       done: true,
       position: true,
@@ -533,35 +462,31 @@ export async function syncObjectives(data: {
     where: (t, { eq }) => eq(t.operationId, data.operationId),
     orderBy: (t, { asc }) => asc(t.position),
   })
-  const existingMap = new Map(existingObjectives.map((t) => [t.id, t]))
+  const existingMap = new Map(existingTasks.map((t) => [t.id, t]))
 
-  // Identify orphans (exist on server, not in input tree)
   const orphanIdSet = new Set<string>()
-  for (const t of existingObjectives) {
+  for (const t of existingTasks) {
     if (!inputIds.has(t.id)) {
       orphanIdSet.add(t.id)
     }
   }
 
-  // Root orphans: parent is null or parent is not an orphan
   const rootOrphanIds = [...orphanIdSet].filter((id) => {
     const t = existingMap.get(id)!
-    return t.parentObjectiveId == null || !orphanIdSet.has(t.parentObjectiveId)
+    return t.parentTaskId == null || !orphanIdSet.has(t.parentTaskId)
   })
 
-  // Walk tree, collect desired state for every objective
-  type DesiredObjective = {
+  type DesiredTask = {
     tempId: string
-    existingId: string | null // null = new objective
+    existingId: string | null
     parentTempId: string | null
     name: string
     done: boolean
     position: number
   }
-  const desired: DesiredObjective[] = []
+  const desired: DesiredTask[] = []
   let tempCounter = 0
 
-  // Root orphans go first (position 0..N-1)
   for (let i = 0; i < rootOrphanIds.length; i++) {
     const t = existingMap.get(rootOrphanIds[i])!
     desired.push({
@@ -575,7 +500,7 @@ export async function syncObjectives(data: {
   }
 
   function walkTree(
-    nodes: SyncObjectiveNode[],
+    nodes: SyncTaskNode[],
     parentTempId: string | null,
     posOffset: number,
   ): void {
@@ -593,47 +518,44 @@ export async function syncObjectives(data: {
         position: i + posOffset,
       })
 
-      if (node.childObjectives != null) {
-        walkTree(node.childObjectives, tempId, 0)
+      if (node.childTasks != null) {
+        walkTree(node.childTasks, tempId, 0)
       }
     }
   }
-  walkTree(data.objectives, null, rootOrphanIds.length)
+  walkTree(data.tasks, null, rootOrphanIds.length)
 
-  // Mutation 2 — Bulk insert new operationObjectives
   const tempToReal = new Map<string, string>()
   const created: { id: string; name: string }[] = []
 
-  // Map existing operationObjectives' tempId → real ID
   for (const d of desired) {
     if (d.existingId != null) {
       tempToReal.set(d.tempId, d.existingId)
     }
   }
 
-  const newObjectives = desired.filter((d) => d.existingId == null)
-  if (newObjectives.length > 0) {
+  const newTasks = desired.filter((d) => d.existingId == null)
+  if (newTasks.length > 0) {
     const inserted = await db
-      .insert(operationObjectives)
+      .insert(operationTasks)
       .values(
-        newObjectives.map((t) => ({
+        newTasks.map((t) => ({
           projectId: data.projectId,
           operationId: data.operationId,
           projectOperatorId: data.projectOperatorId,
           name: t.name,
           done: t.done,
-          position: 0, // placeholder — resolved in mutation 3
+          position: 0,
         })),
       )
-      .returning({ id: operationObjectives.id })
+      .returning({ id: operationTasks.id })
 
-    for (let i = 0; i < newObjectives.length; i++) {
-      tempToReal.set(newObjectives[i].tempId, inserted[i].id)
-      created.push({ id: inserted[i].id, name: newObjectives[i].name })
+    for (let i = 0; i < newTasks.length; i++) {
+      tempToReal.set(newTasks[i].tempId, inserted[i].id)
+      created.push({ id: inserted[i].id, name: newTasks[i].name })
     }
   }
 
-  // Mutation 3 — Bulk update all operationObjectives with resolved position + parentObjectiveId
   if (desired.length > 0) {
     const values = desired.map((d) => {
       const realId = tempToReal.get(d.tempId)!
@@ -644,39 +566,34 @@ export async function syncObjectives(data: {
         name: d.name,
         done: d.done,
         position: d.position,
-        parentObjectiveId: parentRealId,
+        parentTaskId: parentRealId,
       }
     })
 
     await db.execute(
-      sql`UPDATE operation_objectives AS t SET
+      sql`UPDATE operation_tasks AS t SET
         name = v.name,
         done = v.done,
         position = v.position,
-        parent_objective_id = v.parent_objective_id,
+        parent_task_id = v.parent_task_id,
         updated_at = NOW()
       FROM (VALUES ${sql.join(
         values.map(
           (v) =>
-            sql`(${v.id}::uuid, ${v.name}::text, ${v.done}::boolean, ${v.position}::integer, ${v.parentObjectiveId == null ? sql`NULL` : sql`${v.parentObjectiveId}`}::uuid)`,
+            sql`(${v.id}::uuid, ${v.name}::text, ${v.done}::boolean, ${v.position}::integer, ${v.parentTaskId == null ? sql`NULL` : sql`${v.parentTaskId}`}::uuid)`,
         ),
         sql`, `,
-      )}) AS v(id, name, done, position, parent_objective_id)
+      )}) AS v(id, name, done, position, parent_task_id)
       WHERE t.id = v.id AND t.operation_id = ${data.operationId}::uuid`,
     )
   }
 
-  // Touch operation
   await db
     .update(operations)
     .set({ updatedAt: new Date() })
     .where(eq(operations.id, data.operationId))
 
-  publishOperationEvent(
-    data.operationId,
-    'objectives-changed',
-    data.sourceClientId,
-  )
+  publishOperationEvent(data.operationId, 'tasks-changed', data.sourceClientId)
   publishProjectEvent(
     data.projectId,
     'operations-list-changed',

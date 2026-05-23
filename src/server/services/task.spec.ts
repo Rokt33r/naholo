@@ -25,7 +25,7 @@ vi.mock('../db', () => ({
   },
 }))
 
-import { syncObjectives } from './objective'
+import { syncTasks } from './task'
 
 let pool: Pool
 let client: PoolClient
@@ -76,17 +76,17 @@ async function seedOperation(projectId: string) {
   return operation
 }
 
-async function seedObjective(data: {
+async function seedTask(data: {
   projectId: string
   operationId: string
   projectOperatorId: string
   name: string
   position: number
   done?: boolean
-  parentObjectiveId?: string | null
+  parentTaskId?: string | null
 }) {
-  const [objective] = await testDb
-    .insert(schema.operationObjectives)
+  const [task] = await testDb
+    .insert(schema.operationTasks)
     .values({
       projectId: data.projectId,
       operationId: data.operationId,
@@ -94,10 +94,10 @@ async function seedObjective(data: {
       name: data.name,
       position: data.position,
       done: data.done ?? false,
-      parentObjectiveId: data.parentObjectiveId ?? null,
+      parentTaskId: data.parentTaskId ?? null,
     })
-    .returning({ id: schema.operationObjectives.id })
-  return objective.id
+    .returning({ id: schema.operationTasks.id })
+  return task.id
 }
 
 async function seedBase() {
@@ -108,17 +108,17 @@ async function seedBase() {
   return { projectId, projectOperatorId, operationId: operation.id }
 }
 
-async function queryObjectives(operationId: string) {
-  return testDb.query.operationObjectives.findMany({
+async function queryTasks(operationId: string) {
+  return testDb.query.operationTasks.findMany({
     columns: {
       id: true,
       name: true,
       done: true,
       position: true,
-      parentObjectiveId: true,
+      parentTaskId: true,
     },
     where: (t, { eq }) => eq(t.operationId, operationId),
-    orderBy: (t, { asc }) => [asc(t.parentObjectiveId), asc(t.position)],
+    orderBy: (t, { asc }) => [asc(t.parentTaskId), asc(t.position)],
   })
 }
 
@@ -147,19 +147,16 @@ afterAll(async () => {
   await pool.end()
 })
 
-describe('syncObjectives', () => {
-  it('creates all objectives when no existing objectives', async () => {
+describe('syncTasks', () => {
+  it('creates all tasks when no existing tasks', async () => {
     const { projectId, projectOperatorId, operationId } = await seedBase()
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       projectOperatorId,
       projectId,
       operationId,
-      objectives: [
-        { name: 'Objective A' },
-        { name: 'Objective B', done: true },
-      ],
-      objectiveIdsToDelete: [],
+      tasks: [{ name: 'Task A' }, { name: 'Task B', done: true }],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -168,34 +165,34 @@ describe('syncObjectives', () => {
     }
 
     expect(result.data.created).toHaveLength(2)
-    expect(result.data.created[0].name).toBe('Objective A')
-    expect(result.data.created[1].name).toBe('Objective B')
+    expect(result.data.created[0].name).toBe('Task A')
+    expect(result.data.created[1].name).toBe('Task B')
 
-    const rows = await queryObjectives(operationId)
+    const rows = await queryTasks(operationId)
     expect(rows).toHaveLength(2)
 
-    const objA = rows.find((r) => r.name === 'Objective A')!
+    const objA = rows.find((r) => r.name === 'Task A')!
     expect(objA.position).toBe(0)
     expect(objA.done).toBe(false)
-    expect(objA.parentObjectiveId).toBeNull()
+    expect(objA.parentTaskId).toBeNull()
 
-    const objB = rows.find((r) => r.name === 'Objective B')!
+    const objB = rows.find((r) => r.name === 'Task B')!
     expect(objB.position).toBe(1)
     expect(objB.done).toBe(true)
   })
 
-  it('updates existing objectives without creating new ones', async () => {
+  it('updates existing tasks without creating new ones', async () => {
     const base = await seedBase()
-    const e1 = await seedObjective({ ...base, name: 'Old A', position: 0 })
-    const e2 = await seedObjective({ ...base, name: 'Old B', position: 1 })
+    const e1 = await seedTask({ ...base, name: 'Old A', position: 0 })
+    const e2 = await seedTask({ ...base, name: 'Old B', position: 1 })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [
+      tasks: [
         { id: e1, name: 'New A' },
         { id: e2, name: 'New B', done: true },
       ],
-      objectiveIdsToDelete: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -204,75 +201,75 @@ describe('syncObjectives', () => {
     }
     expect(result.data.created).toHaveLength(0)
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows.find((r) => r.id === e1)!.name).toBe('New A')
     expect(rows.find((r) => r.id === e2)!.name).toBe('New B')
     expect(rows.find((r) => r.id === e2)!.done).toBe(true)
   })
 
-  it('deletes specified objectives', async () => {
+  it('deletes specified tasks', async () => {
     const base = await seedBase()
-    const keep = await seedObjective({ ...base, name: 'Keep', position: 0 })
-    const del = await seedObjective({
+    const keep = await seedTask({ ...base, name: 'Keep', position: 0 })
+    const del = await seedTask({
       ...base,
       name: 'Delete Me',
       position: 1,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [{ id: keep, name: 'Keep' }],
-      objectiveIdsToDelete: [del],
+      tasks: [{ id: keep, name: 'Keep' }],
+      taskIdsToDelete: [del],
     })
 
     expect(result.success).toBe(true)
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(1)
     expect(rows[0].id).toBe(keep)
   })
 
-  it('handles empty objectiveIdsToDelete', async () => {
+  it('handles empty taskIdsToDelete', async () => {
     const base = await seedBase()
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [{ name: 'Solo' }],
-      objectiveIdsToDelete: [],
+      tasks: [{ name: 'Solo' }],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(1)
     expect(rows[0].name).toBe('Solo')
   })
 
   it('preserves orphans by prepending to root', async () => {
     const base = await seedBase()
-    const orphan1 = await seedObjective({
+    const orphan1 = await seedTask({
       ...base,
       name: 'Orphan A',
       position: 0,
     })
-    const orphan2 = await seedObjective({
+    const orphan2 = await seedTask({
       ...base,
       name: 'Orphan B',
       position: 1,
     })
-    const referenced = await seedObjective({
+    const referenced = await seedTask({
       ...base,
       name: 'Referenced',
       position: 2,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [{ id: referenced, name: 'Referenced' }],
-      objectiveIdsToDelete: [],
+      tasks: [{ id: referenced, name: 'Referenced' }],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(3)
 
     const ref = rows.find((r) => r.id === referenced)!
@@ -284,18 +281,18 @@ describe('syncObjectives', () => {
     expect(ref.position).toBe(2)
   })
 
-  it('creates nested objectives with correct parent references', async () => {
+  it('creates nested tasks with correct parent references', async () => {
     const base = await seedBase()
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [
+      tasks: [
         {
           name: 'Parent',
-          childObjectives: [{ name: 'Child 1' }, { name: 'Child 2' }],
+          childTasks: [{ name: 'Child 1' }, { name: 'Child 2' }],
         },
       ],
-      objectiveIdsToDelete: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -304,37 +301,37 @@ describe('syncObjectives', () => {
     }
     expect(result.data.created).toHaveLength(3)
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     const parent = rows.find((r) => r.name === 'Parent')!
     const child1 = rows.find((r) => r.name === 'Child 1')!
     const child2 = rows.find((r) => r.name === 'Child 2')!
 
-    expect(parent.parentObjectiveId).toBeNull()
+    expect(parent.parentTaskId).toBeNull()
     expect(parent.position).toBe(0)
-    expect(child1.parentObjectiveId).toBe(parent.id)
+    expect(child1.parentTaskId).toBe(parent.id)
     expect(child1.position).toBe(0)
-    expect(child2.parentObjectiveId).toBe(parent.id)
+    expect(child2.parentTaskId).toBe(parent.id)
     expect(child2.position).toBe(1)
   })
 
-  it('handles mixed existing and new objectives with nesting', async () => {
+  it('handles mixed existing and new tasks with nesting', async () => {
     const base = await seedBase()
-    const existingId = await seedObjective({
+    const existingId = await seedTask({
       ...base,
       name: 'Existing Parent',
       position: 0,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [
+      tasks: [
         {
           id: existingId,
           name: 'Existing Parent',
-          childObjectives: [{ name: 'New Child' }],
+          childTasks: [{ name: 'New Child' }],
         },
       ],
-      objectiveIdsToDelete: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -344,26 +341,26 @@ describe('syncObjectives', () => {
     expect(result.data.created).toHaveLength(1)
     expect(result.data.created[0].name).toBe('New Child')
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     const child = rows.find((r) => r.name === 'New Child')!
-    expect(child.parentObjectiveId).toBe(existingId)
+    expect(child.parentTaskId).toBe(existingId)
   })
 
-  it('treats invalid IDs as new objectives', async () => {
+  it('treats invalid IDs as new tasks', async () => {
     const base = await seedBase()
-    const realId = await seedObjective({
+    const realId = await seedTask({
       ...base,
       name: 'Real',
       position: 0,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [
+      tasks: [
         { id: realId, name: 'Real' },
         { id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', name: 'Ghost' },
       ],
-      objectiveIdsToDelete: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -373,7 +370,7 @@ describe('syncObjectives', () => {
     expect(result.data.created).toHaveLength(1)
     expect(result.data.created[0].name).toBe('Ghost')
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(2)
     expect(rows.find((r) => r.id === realId)).toBeDefined()
 
@@ -381,13 +378,13 @@ describe('syncObjectives', () => {
     expect(ghost.id).not.toBe('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')
   })
 
-  it('handles empty objective tree', async () => {
+  it('handles empty task tree', async () => {
     const base = await seedBase()
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [],
-      objectiveIdsToDelete: [],
+      tasks: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -396,56 +393,56 @@ describe('syncObjectives', () => {
     }
     expect(result.data.created).toHaveLength(0)
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(0)
   })
 
   it('preserves orphans when input tree is empty', async () => {
     const base = await seedBase()
-    const orphanId = await seedObjective({
+    const orphanId = await seedTask({
       ...base,
       name: 'Orphan',
       position: 0,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [],
-      objectiveIdsToDelete: [],
+      tasks: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(1)
     expect(rows[0].id).toBe(orphanId)
   })
 
   it('preserves orphan hierarchy (child stays under parent orphan)', async () => {
     const base = await seedBase()
-    const orphanParent = await seedObjective({
+    const orphanParent = await seedTask({
       ...base,
       name: 'Orphan Parent',
       position: 0,
     })
-    await seedObjective({
+    await seedTask({
       ...base,
       name: 'Orphan Child',
       position: 0,
-      parentObjectiveId: orphanParent,
+      parentTaskId: orphanParent,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [{ name: 'New Objective' }],
-      objectiveIdsToDelete: [],
+      tasks: [{ name: 'New Task' }],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(3)
 
     const orphanChild = rows.find((r) => r.name === 'Orphan Child')!
-    expect(orphanChild.parentObjectiveId).toBe(orphanParent)
+    expect(orphanChild.parentTaskId).toBe(orphanParent)
   })
 
   it('touches operation updatedAt', async () => {
@@ -456,12 +453,12 @@ describe('syncObjectives', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10))
 
-    await syncObjectives({
+    await syncTasks({
       projectOperatorId,
       projectId,
       operationId: operation.id,
-      objectives: [{ name: 'Objective' }],
-      objectiveIdsToDelete: [],
+      tasks: [{ name: 'Task' }],
+      taskIdsToDelete: [],
     })
 
     const [after] = await testDb
@@ -474,28 +471,28 @@ describe('syncObjectives', () => {
     )
   })
 
-  it('handles deeply nested objectives (4 levels)', async () => {
+  it('handles deeply nested tasks (4 levels)', async () => {
     const base = await seedBase()
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [
+      tasks: [
         {
           name: 'L0',
-          childObjectives: [
+          childTasks: [
             {
               name: 'L1',
-              childObjectives: [
+              childTasks: [
                 {
                   name: 'L2',
-                  childObjectives: [{ name: 'L3' }],
+                  childTasks: [{ name: 'L3' }],
                 },
               ],
             },
           ],
         },
       ],
-      objectiveIdsToDelete: [],
+      taskIdsToDelete: [],
     })
 
     expect(result.success).toBe(true)
@@ -504,35 +501,35 @@ describe('syncObjectives', () => {
     }
     expect(result.data.created).toHaveLength(4)
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     const l0 = rows.find((r) => r.name === 'L0')!
     const l1 = rows.find((r) => r.name === 'L1')!
     const l2 = rows.find((r) => r.name === 'L2')!
     const l3 = rows.find((r) => r.name === 'L3')!
 
-    expect(l0.parentObjectiveId).toBeNull()
-    expect(l1.parentObjectiveId).toBe(l0.id)
-    expect(l2.parentObjectiveId).toBe(l1.id)
-    expect(l3.parentObjectiveId).toBe(l2.id)
+    expect(l0.parentTaskId).toBeNull()
+    expect(l1.parentTaskId).toBe(l0.id)
+    expect(l2.parentTaskId).toBe(l1.id)
+    expect(l3.parentTaskId).toBe(l2.id)
   })
 
   it('handles delete + create + update in one call', async () => {
     const base = await seedBase()
-    const existingId = await seedObjective({
+    const existingId = await seedTask({
       ...base,
       name: 'Existing',
       position: 0,
     })
-    const toDeleteId = await seedObjective({
+    const toDeleteId = await seedTask({
       ...base,
       name: 'To Delete',
       position: 1,
     })
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       ...base,
-      objectives: [{ id: existingId, name: 'Updated' }, { name: 'Brand New' }],
-      objectiveIdsToDelete: [toDeleteId],
+      tasks: [{ id: existingId, name: 'Updated' }, { name: 'Brand New' }],
+      taskIdsToDelete: [toDeleteId],
     })
 
     expect(result.success).toBe(true)
@@ -542,7 +539,7 @@ describe('syncObjectives', () => {
     expect(result.data.created).toHaveLength(1)
     expect(result.data.created[0].name).toBe('Brand New')
 
-    const rows = await queryObjectives(base.operationId)
+    const rows = await queryTasks(base.operationId)
     expect(rows).toHaveLength(2)
     expect(rows.find((r) => r.id === toDeleteId)).toBeUndefined()
     expect(rows.find((r) => r.id === existingId)!.name).toBe('Updated')

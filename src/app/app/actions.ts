@@ -19,11 +19,11 @@ import { createProjectOperator } from '@/server/services/project-operator'
 import { createOperation } from '@/server/services/operation'
 import { createOperationLog } from '@/server/services/operation-log'
 import {
-  createObjective,
-  updateObjective,
-  setObjectiveDone,
-  deleteObjective,
-} from '@/server/services/objective'
+  createTask,
+  updateTask,
+  setTaskDone,
+  deleteTask,
+} from '@/server/services/task'
 
 export async function refreshSessionAction() {
   return auth.refreshSession()
@@ -142,26 +142,26 @@ export async function createOperationLogAction(
 }
 
 /**
- * Objectives
+ * Tasks
  */
 
-export async function createObjectiveAction(
+export async function createTaskAction(
   projectSlug: string,
   operationNumber: number,
   name: string,
-  parentObjectiveId?: string,
+  parentTaskId?: string,
 ): Promise<ReturnResult<{ id: string }>> {
   const { projectOperator, project, operation } = await requireOperationAccess(
     projectSlug,
     operationNumber,
   )
 
-  const result = await createObjective({
+  const result = await createTask({
     projectOperatorId: projectOperator.id,
     projectId: project.id,
     operationId: operation.id,
     name,
-    parentObjectiveId,
+    parentTaskId,
   })
   if (result.success) {
     revalidatePath(`/app/projects/${projectSlug}/operations/${operationNumber}`)
@@ -170,7 +170,7 @@ export async function createObjectiveAction(
   return result
 }
 
-export async function updateObjectiveAction(
+export async function updateTaskAction(
   projectSlug: string,
   operationNumber: number,
   id: string,
@@ -181,11 +181,11 @@ export async function updateObjectiveAction(
     operationNumber,
   )
 
-  const result = await updateObjective({
+  const result = await updateTask({
     projectOperatorId: projectOperator.id,
     projectId: project.id,
     operationId: operation.id,
-    objectiveId: id,
+    taskId: id,
     name,
   })
 
@@ -196,7 +196,7 @@ export async function updateObjectiveAction(
   return result
 }
 
-export async function setObjectiveDoneAction(
+export async function setTaskDoneAction(
   projectSlug: string,
   operationNumber: number,
   id: string,
@@ -207,11 +207,11 @@ export async function setObjectiveDoneAction(
     operationNumber,
   )
 
-  const result = await setObjectiveDone({
+  const result = await setTaskDone({
     projectOperatorId: projectOperator.id,
     projectId: project.id,
     operationId: operation.id,
-    objectiveId: id,
+    taskId: id,
     done,
   })
 
@@ -222,7 +222,7 @@ export async function setObjectiveDoneAction(
   return result
 }
 
-export async function deleteObjectiveAction(
+export async function deleteTaskAction(
   projectSlug: string,
   operationNumber: number,
   id: string,
@@ -232,11 +232,11 @@ export async function deleteObjectiveAction(
     operationNumber,
   )
 
-  const result = await deleteObjective({
+  const result = await deleteTask({
     projectOperatorId: projectOperator.id,
     projectId: project.id,
     operationId: operation.id,
-    objectiveId: id,
+    taskId: id,
   })
 
   if (result.success) {

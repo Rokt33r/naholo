@@ -1,6 +1,6 @@
 import 'server-only'
 import { db } from '../db'
-import { operations, operationObjectives, projects } from '../db/schema'
+import { operations, operationTasks, projects } from '../db/schema'
 import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -27,8 +27,8 @@ export type OperationWithStats = {
   closedAt: Date | null
   createdAt: Date
   updatedAt: Date
-  totalObjectives: number
-  completedObjectives: number
+  totalTasks: number
+  completedTasks: number
 }
 
 /**
@@ -62,7 +62,7 @@ export async function getOperation(data: {
 }
 
 /**
- * List operations for a project with objective statistics
+ * List operations for a project with task statistics
  */
 export async function listOperations(data: {
   projectId: string
@@ -80,16 +80,13 @@ export async function listOperations(data: {
       closedAt: operations.closedAt,
       createdAt: operations.createdAt,
       updatedAt: operations.updatedAt,
-      totalObjectives: count(operationObjectives.id).as('total_objectives'),
-      completedObjectives: sum(
-        sql`CASE WHEN ${operationObjectives.done} THEN 1 ELSE 0 END`,
-      ).as('completed_objectives'),
+      totalTasks: count(operationTasks.id).as('total_tasks'),
+      completedTasks: sum(
+        sql`CASE WHEN ${operationTasks.done} THEN 1 ELSE 0 END`,
+      ).as('completed_tasks'),
     })
     .from(operations)
-    .leftJoin(
-      operationObjectives,
-      eq(operationObjectives.operationId, operations.id),
-    )
+    .leftJoin(operationTasks, eq(operationTasks.operationId, operations.id))
     .where(
       and(
         eq(operations.projectId, data.projectId),
@@ -102,7 +99,7 @@ export async function listOperations(data: {
   // Convert sum result (string | null) to number
   return rows.map((row) => ({
     ...row,
-    completedObjectives: Number(row.completedObjectives ?? 0),
+    completedTasks: Number(row.completedTasks ?? 0),
   }))
 }
 
@@ -290,7 +287,7 @@ export async function deleteOperation(data: {
 }
 
 /**
- * Update operation's updatedAt timestamp. Used internally by log/objective/note services.
+ * Update operation's updatedAt timestamp. Used internally by log/task/note services.
  */
 export async function touchOperation(operationId: string): Promise<void> {
   await db

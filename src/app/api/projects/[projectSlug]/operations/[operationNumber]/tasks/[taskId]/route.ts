@@ -1,42 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
-import { requireOperationObjectiveAccess } from '@/server/auth/permissions'
+import { requireOperationTaskAccess } from '@/server/auth/permissions'
 import {
-  updateObjective,
-  updateObjectiveNote,
-  setObjectiveDone,
-  deleteObjective,
-} from '@/server/services/objective'
+  updateTask,
+  updateTaskNote,
+  setTaskDone,
+  deleteTask,
+} from '@/server/services/task'
 import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
     projectSlug: string
     operationNumber: string
-    objectiveId: string
+    taskId: string
   }>
 }
 
-const updateObjectiveSchema = z.object({
+const updateTaskSchema = z.object({
   name: z.string().min(1, 'Name is required').trim().optional(),
   note: z.string().trim().nullable().optional(),
   done: z.boolean().optional(),
 })
 
-/**
- * PATCH /api/projects/[projectSlug]/operations/[operationNumber]/objectives/[objectiveId]
- * Update an objective
- */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const { projectSlug, operationNumber, objectiveId } = await context.params
+    const { projectSlug, operationNumber, taskId } = await context.params
     const { projectOperator, project, operation } =
-      await requireOperationObjectiveAccess(
-        projectSlug,
-        operationNumber,
-        objectiveId,
-      )
+      await requireOperationTaskAccess(projectSlug, operationNumber, taskId)
 
     let body
     try {
@@ -45,7 +37,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = updateObjectiveSchema.safeParse(body)
+    const validation = updateTaskSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -56,13 +48,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { name, note, done } = validation.data
     const sourceClientId = getSourceClientId(request)
 
-    // Handle name update
     if (name !== undefined) {
-      const result = await updateObjective({
+      const result = await updateTask({
         projectOperatorId: projectOperator.id,
         projectId: project.id,
         operationId: operation.id,
-        objectiveId,
+        taskId,
         name,
         sourceClientId,
       })
@@ -74,13 +65,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
     }
 
-    // Handle note update
     if (note !== undefined) {
-      const result = await updateObjectiveNote({
+      const result = await updateTaskNote({
         projectOperatorId: projectOperator.id,
         projectId: project.id,
         operationId: operation.id,
-        objectiveId,
+        taskId,
         note,
         sourceClientId,
       })
@@ -92,13 +82,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
     }
 
-    // Handle done status update
     if (done !== undefined) {
-      const result = await setObjectiveDone({
+      const result = await setTaskDone({
         projectOperatorId: projectOperator.id,
         projectId: project.id,
         operationId: operation.id,
-        objectiveId,
+        taskId,
         done,
         sourceClientId,
       })
@@ -116,27 +105,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 }
 
-/**
- * DELETE /api/projects/[projectSlug]/operations/[operationNumber]/objectives/[objectiveId]
- * Delete an objective
- */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { projectSlug, operationNumber, objectiveId } = await context.params
+    const { projectSlug, operationNumber, taskId } = await context.params
     const { projectOperator, project, operation } =
-      await requireOperationObjectiveAccess(
-        projectSlug,
-        operationNumber,
-        objectiveId,
-      )
+      await requireOperationTaskAccess(projectSlug, operationNumber, taskId)
 
     const sourceClientId = getSourceClientId(request)
 
-    const result = await deleteObjective({
+    const result = await deleteTask({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
-      objectiveId,
+      taskId,
       sourceClientId,
     })
 

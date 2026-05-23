@@ -1,7 +1,7 @@
 export type RealtimeEventType =
   | 'operation-updated'
   | 'operation-deleted'
-  | 'objectives-changed'
+  | 'tasks-changed'
   | 'logs-changed'
   | 'notes-changed'
   | 'operations-list-changed'

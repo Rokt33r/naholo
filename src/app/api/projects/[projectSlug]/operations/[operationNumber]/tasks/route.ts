@@ -3,11 +3,11 @@ import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import {
-  listObjectives,
-  createObjective,
-  syncObjectives,
-  type SyncObjectiveNode,
-} from '@/server/services/objective'
+  listTasks,
+  createTask,
+  syncTasks,
+  type SyncTaskNode,
+} from '@/server/services/task'
 import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
@@ -17,10 +17,6 @@ type RouteContext = {
   }>
 }
 
-/**
- * GET /api/projects/[projectSlug]/operations/[operationNumber]/objectives
- * List objectives for an operation
- */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber } = await context.params
@@ -29,25 +25,21 @@ export async function GET(request: NextRequest, context: RouteContext) {
       operationNumber,
     )
 
-    const objectives = await listObjectives({ operationId: operation.id })
+    const tasks = await listTasks({ operationId: operation.id })
 
-    return NextResponse.json(objectives)
+    return NextResponse.json(tasks)
   } catch (error) {
     return mapApiError(error)
   }
 }
 
-const createObjectiveSchema = z.object({
+const createTaskSchema = z.object({
   name: z.string().min(1, 'Name is required').trim(),
   note: z.string().trim().nullable().optional(),
-  parentObjectiveId: z.string().nullable().optional(),
+  parentTaskId: z.string().nullable().optional(),
   position: z.number().int().min(0).optional(),
 })
 
-/**
- * POST /api/projects/[projectSlug]/operations/[operationNumber]/objectives
- * Create a new objective
- */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber } = await context.params
@@ -59,7 +51,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = createObjectiveSchema.safeParse(body)
+    const validation = createTaskSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -67,20 +59,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { name, note, parentObjectiveId, position } = validation.data
+    const { name, note, parentTaskId, position } = validation.data
 
     const { projectOperator, project, operation } =
       await requireOperationAccess(projectSlug, operationNumber)
 
     const sourceClientId = getSourceClientId(request)
 
-    const result = await createObjective({
+    const result = await createTask({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
       name,
       note,
-      parentObjectiveId,
+      parentTaskId,
       position,
       sourceClientId,
     })
@@ -95,24 +87,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 }
 
-const syncObjectiveNodeSchema: z.ZodType<SyncObjectiveNode> = z.lazy(() =>
+const syncTaskNodeSchema: z.ZodType<SyncTaskNode> = z.lazy(() =>
   z.object({
     id: z.string().optional(),
     name: z.string().min(1).trim(),
     done: z.boolean().optional(),
-    childObjectives: z.array(syncObjectiveNodeSchema).optional(),
+    childTasks: z.array(syncTaskNodeSchema).optional(),
   }),
 )
 
-const syncObjectivesSchema = z.object({
-  objectives: z.array(syncObjectiveNodeSchema),
-  objectiveIdsToDelete: z.array(z.string()).optional(),
+const syncTasksSchema = z.object({
+  tasks: z.array(syncTaskNodeSchema),
+  taskIdsToDelete: z.array(z.string()).optional(),
 })
 
-/**
- * PUT /api/projects/[projectSlug]/operations/[operationNumber]/objectives
- * Sync the full objective tree for an operation
- */
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber } = await context.params
@@ -124,7 +112,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = syncObjectivesSchema.safeParse(body)
+    const validation = syncTasksSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -132,19 +120,19 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { objectives: objectiveNodes, objectiveIdsToDelete } = validation.data
+    const { tasks: taskNodes, taskIdsToDelete } = validation.data
 
     const { projectOperator, project, operation } =
       await requireOperationAccess(projectSlug, operationNumber)
 
     const sourceClientId = getSourceClientId(request)
 
-    const result = await syncObjectives({
+    const result = await syncTasks({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
-      objectives: objectiveNodes,
-      objectiveIdsToDelete: objectiveIdsToDelete ?? [],
+      tasks: taskNodes,
+      taskIdsToDelete: taskIdsToDelete ?? [],
       sourceClientId,
     })
 

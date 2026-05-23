@@ -284,7 +284,7 @@ async function requireProjectOperatorBySession(
 
 /**
  * Requires project operator access AND verifies operation belongs to project.
- * Use for routes that operate on operation-level resources (logs, notes, objectives).
+ * Use for routes that operate on operation-level resources (logs, notes, tasks).
  */
 export async function requireOperationAccess(
   projectSlug: string,
@@ -385,17 +385,17 @@ export async function requireOperationNoteAccess(
 }
 
 /**
- * Requires operation access AND verifies objective belongs to operation.
+ * Requires operation access AND verifies task belongs to operation.
  */
-export async function requireOperationObjectiveAccess(
+export async function requireOperationTaskAccess(
   projectSlug: string,
   operationNumber: number | string,
-  objectiveId: string,
+  taskId: string,
   options?: RequireProjectOperatorOptions,
 ): Promise<
   ProjectOperatorContext & {
     operation: { id: string; number: number }
-    objective: { id: string }
+    task: { id: string }
   }
 > {
   const { projectOperator, project, operation } = await requireOperationAccess(
@@ -404,20 +404,20 @@ export async function requireOperationObjectiveAccess(
     options,
   )
 
-  const objective = await db.query.operationObjectives.findFirst({
+  const task = await db.query.operationTasks.findFirst({
     columns: { id: true },
     where: (t, { eq, and }) =>
-      and(eq(t.id, objectiveId), eq(t.operationId, operation.id)),
+      and(eq(t.id, taskId), eq(t.operationId, operation.id)),
   })
 
-  if (objective == null) {
-    throw new NotFoundError('Objective')
+  if (task == null) {
+    throw new NotFoundError('Task')
   }
 
   return {
     projectOperator,
     project,
     operation,
-    objective,
+    task,
   }
 }

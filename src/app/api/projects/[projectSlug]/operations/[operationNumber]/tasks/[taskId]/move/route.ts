@@ -1,36 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
-import { requireOperationObjectiveAccess } from '@/server/auth/permissions'
-import { moveObjective } from '@/server/services/objective'
+import { requireOperationTaskAccess } from '@/server/auth/permissions'
+import { moveTask } from '@/server/services/task'
 import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
   params: Promise<{
     projectSlug: string
     operationNumber: string
-    objectiveId: string
+    taskId: string
   }>
 }
 
-const moveObjectiveSchema = z.object({
-  newParentObjectiveId: z.string().nullable(),
+const moveTaskSchema = z.object({
+  newParentTaskId: z.string().nullable(),
   newPosition: z.number().int().min(0),
 })
 
-/**
- * POST /api/projects/[projectSlug]/operations/[operationNumber]/objectives/[objectiveId]/move
- * Move an objective to a new parent and/or position
- */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { projectSlug, operationNumber, objectiveId } = await context.params
+    const { projectSlug, operationNumber, taskId } = await context.params
     const { projectOperator, project, operation } =
-      await requireOperationObjectiveAccess(
-        projectSlug,
-        operationNumber,
-        objectiveId,
-      )
+      await requireOperationTaskAccess(projectSlug, operationNumber, taskId)
 
     let body
     try {
@@ -39,7 +31,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = moveObjectiveSchema.safeParse(body)
+    const validation = moveTaskSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -47,16 +39,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { newParentObjectiveId, newPosition } = validation.data
+    const { newParentTaskId, newPosition } = validation.data
 
     const sourceClientId = getSourceClientId(request)
 
-    const result = await moveObjective({
+    const result = await moveTask({
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       operationId: operation.id,
-      objectiveId,
-      newParentObjectiveId,
+      taskId,
+      newParentTaskId,
       newPosition,
       sourceClientId,
     })
