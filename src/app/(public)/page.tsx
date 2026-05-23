@@ -13,7 +13,7 @@ import { getAuthUser } from '@/server/auth/permissions'
 export const metadata: Metadata = {
   title: 'naholo — task force for your codebase',
   description:
-    'Brief the objective, execute the plan, exfil with the diff. naholo runs your coding operations end to end.',
+    'Brief the task, execute the plan, exfil with the diff. naholo runs your coding operations end to end.',
 }
 
 export default async function LandingPage() {

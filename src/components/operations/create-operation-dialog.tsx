@@ -63,7 +63,7 @@ export function CreateOperationDialog({
           <DialogHeader>
             <DialogTitle>Create Operation</DialogTitle>
             <DialogDescription>
-              Create a new operation to track discussions and objectives.
+              Create a new operation to track discussions and tasks.
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-4 py-4'>

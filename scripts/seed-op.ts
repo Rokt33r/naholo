@@ -10,8 +10,8 @@ import {
   setAgentSessionHasTranscript,
   upsertAgentSession,
 } from '../src/server/services/agent-session'
-import { createObjective } from '../src/server/services/objective'
-import { setObjectiveDone } from '../src/server/services/objective'
+import { createTask } from '../src/server/services/task'
+import { setTaskDone } from '../src/server/services/task'
 import { createNote } from '../src/server/services/note'
 import { createOperationLog } from '../src/server/services/operation-log'
 import { getFileStorageAdapter } from '../src/server/file-storage'
@@ -26,9 +26,9 @@ type SourceAgentSession = {
   transcriptSizeBytes: number
 }
 
-type SourceObjective = {
+type SourceTask = {
   id: string
-  parentObjectiveId: string | null
+  parentTaskId: string | null
   name: string
   note: string | null
   done: boolean
@@ -81,9 +81,9 @@ async function main() {
     const operation = JSON.parse(
       fs.readFileSync(path.join(tmpDir, 'operation.json'), 'utf-8'),
     ) as OperationDump
-    const objectives = JSON.parse(
-      fs.readFileSync(path.join(tmpDir, 'objectives.json'), 'utf-8'),
-    ) as SourceObjective[]
+    const tasks = JSON.parse(
+      fs.readFileSync(path.join(tmpDir, 'tasks.json'), 'utf-8'),
+    ) as SourceTask[]
     const notes = JSON.parse(
       fs.readFileSync(path.join(tmpDir, 'notes.json'), 'utf-8'),
     ) as SourceNote[]
@@ -124,68 +124,63 @@ async function main() {
     const destOperationId = created.data.id
     const destOperationNumber = created.data.number
 
-    const sortedObjectives = [...objectives].sort(
-      (a, b) => a.position - b.position,
-    )
-    const objectiveIdMap = new Map<string, string>()
-    let objectivesCreated = 0
-    const remaining = new Set(sortedObjectives.map((o) => o.id))
+    const sortedTasks = [...tasks].sort((a, b) => a.position - b.position)
+    const taskIdMap = new Map<string, string>()
+    let tasksCreated = 0
+    const remaining = new Set(sortedTasks.map((o) => o.id))
     let progress = true
     while (remaining.size > 0 && progress) {
       progress = false
-      for (const obj of sortedObjectives) {
+      for (const obj of sortedTasks) {
         if (!remaining.has(obj.id)) {
           continue
         }
-        if (
-          obj.parentObjectiveId != null &&
-          !objectiveIdMap.has(obj.parentObjectiveId)
-        ) {
+        if (obj.parentTaskId != null && !taskIdMap.has(obj.parentTaskId)) {
           continue
         }
         const parentId =
-          obj.parentObjectiveId == null
+          obj.parentTaskId == null
             ? null
-            : (objectiveIdMap.get(obj.parentObjectiveId) ?? null)
-        const created = await createObjective({
+            : (taskIdMap.get(obj.parentTaskId) ?? null)
+        const created = await createTask({
           projectId: destProject.id,
           operationId: destOperationId,
           projectOperatorId: destOperator.id,
           name: obj.name,
           note: obj.note,
-          parentObjectiveId: parentId,
+          parentTaskId: parentId,
           position: obj.position,
         })
         if (!created.success) {
           console.error(
-            `Failed to create objective "${obj.name}": ${created.error.message}`,
+            `Failed to create task "${obj.name}": ${created.error.message}`,
           )
           remaining.delete(obj.id)
           continue
         }
-        objectiveIdMap.set(obj.id, created.data.id)
+        taskIdMap.set(obj.id, created.data.id)
         if (obj.done) {
-          const flagged = await setObjectiveDone({
+          const flagged = await setTaskDone({
             projectId: destProject.id,
             operationId: destOperationId,
             projectOperatorId: destOperator.id,
-            objectiveId: created.data.id,
+            taskId: created.data.id,
             done: true,
           })
           if (!flagged.success) {
             console.error(
-              `Failed to flag objective "${obj.name}" done: ${flagged.error.message}`,
+              `Failed to flag task "${obj.name}" done: ${flagged.error.message}`,
             )
           }
         }
-        objectivesCreated += 1
+        tasksCreated += 1
         remaining.delete(obj.id)
         progress = true
       }
     }
     if (remaining.size > 0) {
       console.warn(
-        `  ! ${remaining.size} objective(s) skipped — parent objective missing or failed`,
+        `  ! ${remaining.size} task(s) skipped — parent task missing or failed`,
       )
     }
 
@@ -280,7 +275,7 @@ async function main() {
       `Seeded ${operation.projectSlug}#${operation.number} → ${destProjSlug}#${destOperationNumber}`,
     )
     console.log(
-      `  ${objectivesCreated}/${objectives.length} objective(s), ${notesCreated}/${notes.length} note(s), ${logsCreated}/${logs.length} log(s), ${sessionsCreated}/${sessions.length} session(s), ${transcriptsCopied} transcript(s)`,
+      `  ${tasksCreated}/${tasks.length} task(s), ${notesCreated}/${notes.length} note(s), ${logsCreated}/${logs.length} log(s), ${sessionsCreated}/${sessions.length} session(s), ${transcriptsCopied} transcript(s)`,
     )
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true })

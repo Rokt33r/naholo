@@ -3,31 +3,30 @@
 import { KeyboardEvent, useRef, useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
-import { useObjectiveContext } from './objective-context'
+import { useTaskContext } from './task-context'
 
-type NewObjectiveItemProps = {
+type NewTaskItemProps = {
   depth: number
-  parentObjectiveId: string | null
-  afterObjectiveId: string | null
+  parentTaskId: string | null
+  afterTaskId: string | null
 }
 
-export function NewObjectiveItem({
+export function NewTaskItem({
   depth,
-  parentObjectiveId,
-  afterObjectiveId,
-}: NewObjectiveItemProps) {
+  parentTaskId,
+  afterTaskId,
+}: NewTaskItemProps) {
   const {
-    createObjective,
-    getChildObjectives,
-    getRootObjectives,
-    closeNewObjectiveItem,
-    updateNewObjectiveItemAfterObjectiveId,
-    setFocusedObjectiveId,
-    newObjectiveItemState,
-  } = useObjectiveContext()
+    createTask,
+    getChildTasks,
+    getRootTasks,
+    closeNewTaskItem,
+    updateNewTaskItemAfterTaskId,
+    setFocusedTaskId,
+    newTaskItemState,
+  } = useTaskContext()
 
-  const previousFocusedObjectiveId =
-    newObjectiveItemState?.previousFocusedObjectiveId ?? null
+  const previousFocusedTaskId = newTaskItemState?.previousFocusedTaskId ?? null
 
   const [name, setName] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -38,50 +37,49 @@ export function NewObjectiveItem({
   }, [])
 
   const getPosition = () => {
-    if (afterObjectiveId) {
-      const siblings = parentObjectiveId
-        ? getChildObjectives(parentObjectiveId)
-        : getRootObjectives()
-      const afterObjective = siblings.find((t) => t.id === afterObjectiveId)
-      return afterObjective ? afterObjective.position + 1 : 0
+    if (afterTaskId) {
+      const siblings = parentTaskId
+        ? getChildTasks(parentTaskId)
+        : getRootTasks()
+      const afterTask = siblings.find((t) => t.id === afterTaskId)
+      return afterTask ? afterTask.position + 1 : 0
     }
     return 0
   }
 
-  const lastCreatedObjectiveIdRef = useRef<string | null>(null)
+  const lastCreatedTaskIdRef = useRef<string | null>(null)
 
   const handleContinuousCreate = async () => {
     const trimmed = name.trim()
     if (!trimmed) return
-    const newObjectiveId = await createObjective(
+    const newTaskId = await createTask(
       trimmed,
       null,
-      parentObjectiveId,
+      parentTaskId,
       getPosition(),
     )
-    if (newObjectiveId) {
+    if (newTaskId) {
       setName('')
-      lastCreatedObjectiveIdRef.current = newObjectiveId
-      updateNewObjectiveItemAfterObjectiveId(newObjectiveId)
+      lastCreatedTaskIdRef.current = newTaskId
+      updateNewTaskItemAfterTaskId(newTaskId)
     }
   }
 
   const handleSaveQuiet = async () => {
     const trimmed = name.trim()
     if (!trimmed) return
-    await createObjective(trimmed, null, parentObjectiveId, getPosition())
-    closeNewObjectiveItem()
+    await createTask(trimmed, null, parentTaskId, getPosition())
+    closeNewTaskItem()
   }
 
   const handleCancelAndRestore = () => {
-    closeNewObjectiveItem()
-    const restoreId =
-      lastCreatedObjectiveIdRef.current ?? previousFocusedObjectiveId
+    closeNewTaskItem()
+    const restoreId = lastCreatedTaskIdRef.current ?? previousFocusedTaskId
     if (restoreId) {
-      setFocusedObjectiveId(restoreId)
+      setFocusedTaskId(restoreId)
       requestAnimationFrame(() => {
         const el = document.querySelector(
-          `[data-objective-id="${restoreId}"]`,
+          `[data-task-id="${restoreId}"]`,
         ) as HTMLElement | null
         el?.focus()
       })
@@ -128,10 +126,10 @@ export function NewObjectiveItem({
               if (name.trim()) {
                 handleSaveQuiet()
               } else {
-                closeNewObjectiveItem()
+                closeNewTaskItem()
               }
             }}
-            placeholder='New objective...'
+            placeholder='New task...'
             className='block w-full border-0 bg-transparent p-0 leading-6 outline-none'
           />
         </div>

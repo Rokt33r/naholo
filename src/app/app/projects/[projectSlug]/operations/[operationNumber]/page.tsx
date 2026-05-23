@@ -13,12 +13,12 @@ import { useLocalStorage } from '@/hooks/use-local-storage'
 import { useOperation } from '@/hooks/use-operations'
 import { useOperationLogs } from '@/hooks/use-operation-logs'
 import { useNotes } from '@/hooks/use-notes'
-import { useObjectives } from '@/hooks/use-objectives'
+import { useTasks } from '@/hooks/use-tasks'
 import { useOperationStream } from '@/hooks/use-operation-stream'
 import { ListTodo } from 'lucide-react'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { OperationDetail } from '@/components/operations/operation-detail'
-import { ObjectivesList } from '@/components/objectives/objectives-list'
+import { TasksList } from '@/components/tasks/tasks-list'
 
 type ActiveTab =
   | { type: 'comms' }
@@ -52,8 +52,8 @@ export default function OperationPage() {
   const containerWidth = useContainerWidth(containerRef)
   const isMobile = useIsMobile()
   const isWideScreen = containerWidth >= 768
-  const [objectivesPanelWidth, setObjectivesPanelWidth] = useLocalStorage(
-    'objectives-panel-width',
+  const [tasksPanelWidth, setTasksPanelWidth] = useLocalStorage(
+    'tasks-panel-width',
     320,
   )
 
@@ -63,17 +63,15 @@ export default function OperationPage() {
     operationNumber,
   )
   const { data: notes = [] } = useNotes(projectSlug, operationNumber)
-  const { data: objectives = [] } = useObjectives(projectSlug, operationNumber)
+  const { data: tasks = [] } = useTasks(projectSlug, operationNumber)
 
   useOperationStream(projectSlug, operationNumber)
 
-  const objectivesDoneCount = objectives.filter((o) => o.done).length
-  const objectivesTotalCount = objectives.length
-  const objectivesPct =
-    objectivesTotalCount === 0
-      ? 0
-      : (objectivesDoneCount / objectivesTotalCount) * 100
-  const objectivesLabel = `${objectivesDoneCount}/${objectivesTotalCount} · ${objectivesPct.toFixed(1)}%`
+  const tasksDoneCount = tasks.filter((o) => o.done).length
+  const tasksTotalCount = tasks.length
+  const tasksPct =
+    tasksTotalCount === 0 ? 0 : (tasksDoneCount / tasksTotalCount) * 100
+  const tasksLabel = `${tasksDoneCount}/${tasksTotalCount} · ${tasksPct.toFixed(1)}%`
 
   const activeTab = parseActiveTab(searchParams.get('tab'))
 
@@ -112,14 +110,14 @@ export default function OperationPage() {
               onTabChange={handleTabChange}
               isWideScreen={isWideScreen}
               isMobile={isMobile}
-              objectivesDoneCount={objectivesDoneCount}
-              objectivesTotalCount={objectivesTotalCount}
+              tasksDoneCount={tasksDoneCount}
+              tasksTotalCount={tasksTotalCount}
             />
           </div>
           {isWideScreen && (
             <ResizablePanel
-              width={objectivesPanelWidth}
-              onWidthChange={setObjectivesPanelWidth}
+              width={tasksPanelWidth}
+              onWidthChange={setTasksPanelWidth}
               minWidth={240}
               maxWidth={600}
               side='right'
@@ -129,11 +127,11 @@ export default function OperationPage() {
                 <div className='flex items-center gap-2 px-3 pt-2'>
                   <h2 className='flex items-center gap-1.5 text-md font-medium h-9'>
                     <ListTodo className='size-5' />
-                    Objectives ({objectivesLabel})
+                    Tasks ({tasksLabel})
                   </h2>
                 </div>
                 <div className='flex-1 overflow-hidden'>
-                  <ObjectivesList
+                  <TasksList
                     projectSlug={projectSlug}
                     operationNumber={operationNumber}
                   />

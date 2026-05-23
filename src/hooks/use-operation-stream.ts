@@ -36,9 +36,9 @@ export function useOperationStream(
             queryKey: ['operation', projectSlug, operationNumber],
           })
           break
-        case 'objectives-changed':
+        case 'tasks-changed':
           queryClient.invalidateQueries({
-            queryKey: ['objectives', operationNumber],
+            queryKey: ['tasks', operationNumber],
           })
           break
         case 'logs-changed':
@@ -59,7 +59,7 @@ export function useOperationStream(
         queryKey: ['operation', projectSlug, operationNumber],
       })
       queryClient.invalidateQueries({
-        queryKey: ['objectives', operationNumber],
+        queryKey: ['tasks', operationNumber],
       })
       queryClient.invalidateQueries({
         queryKey: ['operationLogs', operationNumber],

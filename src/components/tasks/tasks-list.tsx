@@ -1,38 +1,32 @@
 'use client'
 
 import { useRef, type FocusEvent } from 'react'
-import { ObjectiveProvider, useObjectiveContext } from './objective-context'
-import { ObjectiveItem } from './objective-item'
-import { NewObjectiveItem } from './new-objective-item'
+import { TaskProvider, useTaskContext } from './task-context'
+import { TaskItem } from './task-item'
+import { NewTaskItem } from './new-task-item'
 
-type ObjectivesListProps = {
+type TasksListProps = {
   projectSlug: string
   operationNumber: number
 }
 
-export function ObjectivesList({
-  projectSlug,
-  operationNumber,
-}: ObjectivesListProps) {
+export function TasksList({ projectSlug, operationNumber }: TasksListProps) {
   return (
-    <ObjectiveProvider
-      projectSlug={projectSlug}
-      operationNumber={operationNumber}
-    >
-      <ObjectivesListContent />
-    </ObjectiveProvider>
+    <TaskProvider projectSlug={projectSlug} operationNumber={operationNumber}>
+      <TasksListContent />
+    </TaskProvider>
   )
 }
 
-function ObjectivesListContent() {
+function TasksListContent() {
   const {
     isLoading,
-    getFlattenedObjectives,
-    getRootObjectives,
+    getFlattenedTasks,
+    getRootTasks,
     setIsListFocused,
-    newObjectiveItemState,
-    openNewObjectiveItem,
-  } = useObjectiveContext()
+    newTaskItemState,
+    openNewTaskItem,
+  } = useTaskContext()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -51,49 +45,49 @@ function ObjectivesListContent() {
     setIsListFocused(false)
   }
 
-  const flattenedObjectives = getFlattenedObjectives()
-  const rootObjectives = getRootObjectives()
+  const flattenedTasks = getFlattenedTasks()
+  const rootTasks = getRootTasks()
 
   const handleBottomClick = () => {
-    if (!newObjectiveItemState) {
-      const lastRootObjective = rootObjectives[rootObjectives.length - 1]
-      openNewObjectiveItem(null, lastRootObjective?.id ?? null)
+    if (!newTaskItemState) {
+      const lastRootTask = rootTasks[rootTasks.length - 1]
+      openNewTaskItem(null, lastRootTask?.id ?? null)
     }
   }
 
-  // Build the flat render list: objectives + optional creation input
+  // Build the flat render list: tasks + optional creation input
   const renderItems: Array<
     | {
-        type: 'objective'
-        objective: (typeof flattenedObjectives)[0]['objective']
+        type: 'task'
+        task: (typeof flattenedTasks)[0]['task']
         depth: number
         key: string
       }
     | {
         type: 'creation'
         depth: number
-        parentObjectiveId: string | null
-        afterObjectiveId: string | null
+        parentTaskId: string | null
+        afterTaskId: string | null
         key: string
       }
   > = []
 
-  for (const { objective, depth } of flattenedObjectives) {
-    renderItems.push({ type: 'objective', objective, depth, key: objective.id })
+  for (const { task, depth } of flattenedTasks) {
+    renderItems.push({ type: 'task', task, depth, key: task.id })
   }
 
   // Insert creation input at the right position
-  if (newObjectiveItemState) {
-    const { parentObjectiveId, afterObjectiveId } = newObjectiveItemState
-    const creationDepth = parentObjectiveId
-      ? (flattenedObjectives.find((ft) => ft.objective.id === parentObjectiveId)
-          ?.depth ?? 0) + 1
+  if (newTaskItemState) {
+    const { parentTaskId, afterTaskId } = newTaskItemState
+    const creationDepth = parentTaskId
+      ? (flattenedTasks.find((ft) => ft.task.id === parentTaskId)?.depth ?? 0) +
+        1
       : 0
 
-    if (afterObjectiveId) {
-      // Find the index after the afterObjective and all its descendants
+    if (afterTaskId) {
+      // Find the index after the afterTask and all its descendants
       const afterIndex = renderItems.findIndex(
-        (item) => item.type === 'objective' && item.key === afterObjectiveId,
+        (item) => item.type === 'task' && item.key === afterTaskId,
       )
       if (afterIndex !== -1) {
         // Skip past all descendants (items with greater depth immediately after)
@@ -108,31 +102,31 @@ function ObjectivesListContent() {
         renderItems.splice(insertIndex, 0, {
           type: 'creation',
           depth: creationDepth,
-          parentObjectiveId,
-          afterObjectiveId,
+          parentTaskId,
+          afterTaskId,
           key: 'creation-input',
         })
       } else {
-        // afterObjective not visible (collapsed), append at end
+        // afterTask not visible (collapsed), append at end
         renderItems.push({
           type: 'creation',
           depth: creationDepth,
-          parentObjectiveId,
-          afterObjectiveId,
+          parentTaskId,
+          afterTaskId,
           key: 'creation-input',
         })
       }
     } else {
-      // No afterObjectiveId — insert at beginning of parent's children
-      if (parentObjectiveId) {
+      // No afterTaskId — insert at beginning of parent's children
+      if (parentTaskId) {
         const parentIndex = renderItems.findIndex(
-          (item) => item.type === 'objective' && item.key === parentObjectiveId,
+          (item) => item.type === 'task' && item.key === parentTaskId,
         )
         renderItems.splice(parentIndex + 1, 0, {
           type: 'creation',
           depth: creationDepth,
-          parentObjectiveId,
-          afterObjectiveId,
+          parentTaskId,
+          afterTaskId,
           key: 'creation-input',
         })
       } else {
@@ -140,26 +134,22 @@ function ObjectivesListContent() {
         renderItems.splice(0, 0, {
           type: 'creation',
           depth: 0,
-          parentObjectiveId: null,
-          afterObjectiveId: null,
+          parentTaskId: null,
+          afterTaskId: null,
           key: 'creation-input',
         })
       }
     }
   }
 
-  if (
-    !isLoading &&
-    flattenedObjectives.length === 0 &&
-    !newObjectiveItemState
-  ) {
+  if (!isLoading && flattenedTasks.length === 0 && !newTaskItemState) {
     return (
       <div
         className='flex h-full flex-col items-center justify-center px-2 py-2 text-center cursor-text'
-        onClick={() => openNewObjectiveItem(null, null)}
+        onClick={() => openNewTaskItem(null, null)}
       >
         <p className='text-sm text-zinc-500'>
-          Click here to break this operation into objectives
+          Click here to break this operation into tasks
         </p>
       </div>
     )
@@ -170,7 +160,7 @@ function ObjectivesListContent() {
       <div className='p-4'>
         <div className='mb-3'>
           <h2 className='text-sm font-semibold uppercase tracking-wide text-zinc-500'>
-            Objectives
+            Tasks
           </h2>
         </div>
         <div className='py-8 text-center text-sm text-zinc-500'>Loading...</div>
@@ -187,21 +177,17 @@ function ObjectivesListContent() {
     >
       <div>
         {renderItems.map((item) => {
-          if (item.type === 'objective') {
+          if (item.type === 'task') {
             return (
-              <ObjectiveItem
-                key={item.key}
-                objective={item.objective}
-                depth={item.depth}
-              />
+              <TaskItem key={item.key} task={item.task} depth={item.depth} />
             )
           }
           return (
-            <NewObjectiveItem
+            <NewTaskItem
               key={item.key}
               depth={item.depth}
-              parentObjectiveId={item.parentObjectiveId}
-              afterObjectiveId={item.afterObjectiveId}
+              parentTaskId={item.parentTaskId}
+              afterTaskId={item.afterTaskId}
             />
           )
         })}

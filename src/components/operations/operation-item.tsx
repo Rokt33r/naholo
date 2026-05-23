@@ -28,8 +28,8 @@ export function OperationItem({
     )
   }
 
-  const completedCount = operation.completedObjectives
-  const totalCount = operation.totalObjectives || 0
+  const completedCount = operation.completedTasks
+  const totalCount = operation.totalTasks || 0
 
   return (
     <button

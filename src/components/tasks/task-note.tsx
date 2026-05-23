@@ -9,12 +9,12 @@ import {
 } from 'react'
 import { cn } from '@/lib/utils'
 import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
-import { useObjectiveContext } from './objective-context'
+import { useTaskContext } from './task-context'
 import { MarkdownView } from '@/components/ui/markdown-view'
-import type { Objective } from '@/hooks/use-objectives'
+import type { Task } from '@/hooks/use-tasks'
 
-type ObjectiveNoteProps = {
-  objective: Objective
+type TaskNoteProps = {
+  task: Task
   isFocused: boolean
   isEditingNote: boolean
   setIsEditingNote: (editing: boolean) => void
@@ -22,27 +22,27 @@ type ObjectiveNoteProps = {
   rowRef: RefObject<HTMLDivElement | null>
 }
 
-export function ObjectiveNote({
-  objective,
+export function TaskNote({
+  task,
   isFocused,
   isEditingNote,
   setIsEditingNote,
   onStartEditingName,
   rowRef,
-}: ObjectiveNoteProps) {
-  const { updateObjectiveNote } = useObjectiveContext()
+}: TaskNoteProps) {
+  const { updateTaskNote } = useTaskContext()
 
-  const [noteContent, setNoteContent] = useState(objective.note ?? '')
+  const [noteContent, setNoteContent] = useState(task.note ?? '')
   const [isLoading, setIsLoading] = useState(false)
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null)
   const skipBlurSaveRef = useRef(false)
 
-  // Sync noteContent when objective.note changes externally
+  // Sync noteContent when task.note changes externally
   useEffect(() => {
     if (!isEditingNote) {
-      setNoteContent(objective.note ?? '')
+      setNoteContent(task.note ?? '')
     }
-  }, [objective.note, isEditingNote])
+  }, [task.note, isEditingNote])
 
   // Focus note textarea when editing starts
   useEffect(() => {
@@ -59,10 +59,10 @@ export function ObjectiveNote({
   const handleSaveNote = async () => {
     const trimmed = noteContent.trim()
     const newNote = trimmed || null
-    if (newNote !== objective.note) {
+    if (newNote !== task.note) {
       setIsLoading(true)
       try {
-        await updateObjectiveNote(objective.id, newNote)
+        await updateTaskNote(task.id, newNote)
       } finally {
         setIsLoading(false)
       }
@@ -77,8 +77,8 @@ export function ObjectiveNote({
       skipBlurSaveRef.current = true
       const trimmed = noteContent.trim()
       const newNote = trimmed || null
-      if (newNote !== objective.note) {
-        updateObjectiveNote(objective.id, newNote)
+      if (newNote !== task.note) {
+        updateTaskNote(task.id, newNote)
       }
       setIsEditingNote(false)
       rowRef.current?.focus()
@@ -88,15 +88,15 @@ export function ObjectiveNote({
       skipBlurSaveRef.current = true
       const trimmed = noteContent.trim()
       const newNote = trimmed || null
-      if (newNote !== objective.note) {
-        updateObjectiveNote(objective.id, newNote)
+      if (newNote !== task.note) {
+        updateTaskNote(task.id, newNote)
       }
       setIsEditingNote(false)
       onStartEditingName()
     }
   }
 
-  const showTextarea = isEditingNote || (isFocused && !objective.note)
+  const showTextarea = isEditingNote || (isFocused && !task.note)
 
   return (
     <>
@@ -104,9 +104,7 @@ export function ObjectiveNote({
       <div
         className={cn(
           'grid transition-[grid-template-rows] duration-200 ease-out',
-          objective.note && !isEditingNote
-            ? 'grid-rows-[1fr]'
-            : 'grid-rows-[0fr]',
+          task.note && !isEditingNote ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
         )}
       >
         <div className='overflow-hidden'>
@@ -119,7 +117,7 @@ export function ObjectiveNote({
             className='px-2 py-1 text-muted-foreground'
           >
             <MarkdownView className='text-sm py-[3px] prose-muted'>
-              {objective.note ?? ''}
+              {task.note ?? ''}
             </MarkdownView>
           </div>
         </div>
@@ -147,7 +145,7 @@ export function ObjectiveNote({
                 handleSaveNote()
               }}
               onKeyDown={handleNoteKeyDown}
-              placeholder='Objective note... (Markdown supported)'
+              placeholder='Task note... (Markdown supported)'
               className='w-full resize-none rounded text-sm text-muted-foreground outline-none placeholder:text-muted-foreground'
             />
           </div>

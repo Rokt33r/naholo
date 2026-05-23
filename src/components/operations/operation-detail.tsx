@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { OperationLogsList } from '@/components/operation-logs/operation-logs-list'
 import type { OperationLog } from '@/hooks/use-operation-logs'
-import { ObjectivesList } from '@/components/objectives/objectives-list'
+import { TasksList } from '@/components/tasks/tasks-list'
 import { NoteView } from '@/components/notes/note-view'
 import { useOperationsList } from './operations-list-context'
 import { OperationTabs } from './operation-tabs'
@@ -55,11 +55,11 @@ type OperationDetailProps = {
   onTabChange: (tab: ActiveTab) => void
   isWideScreen: boolean
   isMobile: boolean
-  objectivesDoneCount: number
-  objectivesTotalCount: number
+  tasksDoneCount: number
+  tasksTotalCount: number
 }
 
-function formatObjectivesCount(done: number, total: number) {
+function formatTasksCount(done: number, total: number) {
   const pct = total === 0 ? 0 : (done / total) * 100
   return `${done}/${total}`
 }
@@ -73,8 +73,8 @@ export function OperationDetail({
   onTabChange,
   isWideScreen,
   isMobile,
-  objectivesDoneCount,
-  objectivesTotalCount,
+  tasksDoneCount,
+  tasksTotalCount,
 }: OperationDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -83,7 +83,7 @@ export function OperationDetail({
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showObjectivesDialog, setShowObjectivesDialog] = useState(false)
+  const [showTasksDialog, setShowTasksDialog] = useState(false)
 
   const { data: agentSessions } = useAgentSessions(projectSlug, operationNumber)
   const hasAgentSessions = (agentSessions?.length ?? 0) > 0
@@ -251,12 +251,11 @@ export function OperationDetail({
         <div className='flex items-center gap-1'>
           {!isWideScreen && (
             <Button
-              variant={showObjectivesDialog ? 'secondary' : 'ghost'}
-              onClick={() => setShowObjectivesDialog(!showObjectivesDialog)}
+              variant={showTasksDialog ? 'secondary' : 'ghost'}
+              onClick={() => setShowTasksDialog(!showTasksDialog)}
             >
               <ListTodo className='mr-1 size-5' />(
-              {formatObjectivesCount(objectivesDoneCount, objectivesTotalCount)}
-              )
+              {formatTasksCount(tasksDoneCount, tasksTotalCount)})
             </Button>
           )}
           <DropdownMenu>
@@ -331,12 +330,9 @@ export function OperationDetail({
           })()}
       </div>
 
-      {/* Mobile objectives dialog */}
+      {/* Mobile tasks dialog */}
       {!isWideScreen && (
-        <Dialog
-          open={showObjectivesDialog}
-          onOpenChange={setShowObjectivesDialog}
-        >
+        <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
           <DialogContent
             className='flex h-[80vh] max-w-lg flex-col p-0'
             onOpenAutoFocus={(e) => e.preventDefault()}
@@ -344,16 +340,11 @@ export function OperationDetail({
             <DialogHeader className='px-4 pt-4'>
               <DialogTitle className='flex items-center gap-1.5'>
                 <ListTodo className='size-5' />
-                Objectives (
-                {formatObjectivesCount(
-                  objectivesDoneCount,
-                  objectivesTotalCount,
-                )}
-                )
+                Tasks ({formatTasksCount(tasksDoneCount, tasksTotalCount)})
               </DialogTitle>
             </DialogHeader>
             <div className='flex-1 overflow-hidden'>
-              <ObjectivesList
+              <TasksList
                 projectSlug={projectSlug}
                 operationNumber={operation.number}
               />

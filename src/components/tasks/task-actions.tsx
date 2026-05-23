@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-type ObjectiveActionsProps = {
+type TaskActionsProps = {
   isCreating: boolean
   isLoading: boolean
   canIndent: boolean
@@ -24,7 +24,7 @@ type ObjectiveActionsProps = {
   onOutdent: () => void
 }
 
-export function ObjectiveActions({
+export function TaskActions({
   isCreating,
   isLoading,
   canIndent,
@@ -36,7 +36,7 @@ export function ObjectiveActions({
   onMoveDown,
   onIndent,
   onOutdent,
-}: ObjectiveActionsProps) {
+}: TaskActionsProps) {
   return (
     <div className='absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1'>
       {isCreating || isLoading ? (

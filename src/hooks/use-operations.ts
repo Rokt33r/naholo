@@ -15,8 +15,8 @@ export type OperationListItem = {
   closedAt: string | null
   updatedAt: string
   lastOperationLogPreview: string | null
-  totalObjectives: number
-  completedObjectives: number
+  totalTasks: number
+  completedTasks: number
 }
 
 export type OperationDetail = {

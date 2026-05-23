@@ -14,7 +14,7 @@ const FEATURES: Feature[] = [
     bullets: [
       'Logs — intel collection and activity record per operation',
       'Notes — tabbed documentation per operation',
-      'Objectives — hierarchical task tracking',
+      'Tasks — hierarchical task tracking',
       'Loadouts — customize a set of skills for your AI agent',
     ],
     Icon: SatelliteDish,
@@ -22,7 +22,7 @@ const FEATURES: Feature[] = [
   {
     title: 'Field kit (CLI)',
     bullets: [
-      'Infil — load intel (logs, notes, objectives) from HQ and set up operation',
+      'Infil — load intel (logs, notes, tasks) from HQ and set up operation',
       'Loadouts — inject skills into agent session, default loadout provided',
       'Sitrep / Exfil — report to server via agent, no manual sync needed',
     ],
