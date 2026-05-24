@@ -82,29 +82,29 @@ Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
 ### 9. Write OPERATION.md EXECUTION
 
-One `### TASK N — Title` subsection per task, in order. Each task section has three subsections — **`#### Goal`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
+One `### TASK N — Title` subsection per task, in order. Each task section has three subsections — **`#### Intent`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
 
-- `#### Goal` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from COA). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Goal is the skim-anchor — concrete shapes are reviewed in SOM, concrete steps in COA. Examples:
+- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from COA). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Intent is the skim-anchor — concrete shapes are reviewed in SOM, concrete steps in COA. Examples:
 
   ```
-  #### Goal
+  #### Intent
 
   Add an env-selected storage adapter with S3 and local-FS drivers so later tasks can write blobs without knowing where they land.
   ```
 
   ```
-  #### Goal
+  #### Intent
 
   Swap the agent-session schema from inline transcript columns to a `has_transcript` flag and move transcript writes into the record endpoint via the storage adapter.
   ```
 
   ```
-  #### Goal
+  #### Intent
 
   Slim `stats-record` to a `sessions.yml` upsert; transport moves out of the Stop hook entirely.
   ```
 
-- `#### Scheme of Maneuver` (optional, but **required** when the task introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, **DB schema (table column lists), DTOs, or API request/response shapes**). The Goal must stay a one-or-two-sentence success criterion — if the task ships a structure (columns, fields, signature), the structure goes here, not in the Goal. Use code-fenced ASCII for visual artifacts:
+- `#### Scheme of Maneuver` (optional, but **required** when the task introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, **DB schema (table column lists), DTOs, or API request/response shapes**). The Intent must stay a one-or-two-sentence success criterion — if the task ships a structure (columns, fields, signature), the structure goes here, not in the Goal. Use code-fenced ASCII for visual artifacts:
   - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches. Untagged fence.
   - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions. Untagged fence.
   - **Schema layout**: a fenced block listing each column with its type, constraints, and FK relationships (one column per line). Tag with `sql` if you're writing literal DDL; otherwise leave the fence untagged.
@@ -213,10 +213,10 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
 ORP sizing rules:
 
 - Each task should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
-- **Goal is the approach summary only.** Concrete shapes live in SOM, concrete steps live in COA — Goal must stay a single skim-readable headline.
+- **Intent is the approach summary only.** Concrete shapes live in SOM, concrete steps live in COA — Intent must stay a single skim-readable headline.
 - No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (Course of Action sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
-- A goal that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/warno` to add the decision if it's missing).
+- An intent that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/warno` to add the decision if it's missing).
 
 ### 10. Mirror to TASKS.md
 
@@ -256,7 +256,7 @@ Next:
 - **MISSION must exist**: abort with a "run `/warno` first" message if MISSION is absent or missing required subsections.
 - **No sub-tasks**: every task is flat. If you feel the urge to sub-bullet, split into two tasks.
 - **Completed tasks are immutable**: a task with a `#### After-Action Report` heading MUST NOT be edited, renumbered, or removed.
-- **Decisions commit to one path**: every task Goal headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/warno` to add the missing Warning Order.
+- **Decisions commit to one path**: every task Intent headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/warno` to add the missing Warning Order.
 - **Preserve `[ref]` links** in TASKS.md.
 - **Respect existing done states**: don't uncheck `[x]` items in TASKS.md.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.

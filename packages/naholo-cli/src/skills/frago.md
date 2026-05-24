@@ -1,12 +1,12 @@
 ---
 name: frago
-description: Insert a single new task next to the last completed one — write the task section in OPERATION.md, mirror to TASKS.md, optionally revise the immediately downstream unfinished tasks.
+description: Insert a single new task with a letter-suffix number (TASK 3a) next to a target task — write the task section in OPERATION.md, mirror to TASKS.md, optionally revise the immediately downstream unfinished tasks. Never renumbers.
 argument-hint: '"freeform instructions for the new task"'
 ---
 
-# Frago — Insert One Task Next to the Last Shipped
+# Frago — Insert One Task Next to a Target
 
-FRAGO-style insertion skill. Drops exactly one new `### TASK N — Title` section into `## EXECUTION` immediately after the last completed task (or at a user-specified position), mirrors the new task into `TASKS.md`, and — only when the new task's outputs change what a downstream unfinished task must do — revises those downstream tasks in place. Never edits completed tasks. For multi-task revisions or full plan rewrites, use `/opord` instead.
+FRAGO-style insertion skill. Drops exactly one new `### TASK Na — Title` section into `## EXECUTION` immediately after an anchor task (or the last completed task if no anchor named), mirrors the new task into `TASKS.md`, and — only when the new task's outputs change what a downstream unfinished task must do — revises those downstream tasks in place. **Never renumbers any task**; the new task gets the next free letter suffix in the anchor's sequence. **The suffix is positional, not hierarchical** — `3a` is a sibling of `TASK 3`, not a child of it. Never edits completed tasks. For multi-task revisions or full plan rewrites, use `/opord` instead.
 
 The skill name is the unambiguous "where are we" signal: re-running `/frago` is for slotting in another follow-up task between `/splash` runs. Cutting the plan from scratch is `/opord`'s job; rewriting MISSION is `/warno`'s.
 
@@ -17,12 +17,29 @@ No operation number — the skill resolves the active operation via `naholo agen
 A freeform string describing the task to insert is **required**. Common patterns:
 
 - `/frago "add a backfill script for the renamed column"` — append after the last completed task.
-- `/frago "between TASK 3 and TASK 4: emit a deprecation log for the old route"` — explicit position.
-- `/frago "follow-up to TASK 5: also clear the CDN cache"` — implicit position right after the named task.
+- `/frago "follow-up to TASK 3: emit a deprecation log for the old route"` — explicit anchor.
+- `/frago "after TASK 5: also clear the CDN cache"` — same effect, different phrasing.
 
 If no freeform string is provided, stop and ask the user what to insert.
 
 MISSION-shaped requests (Concept of Operations rewrite, new Warning Order) belong to `/warno`. Multi-task revisions or full restarts belong to `/opord`.
+
+## Numbering doctrine
+
+`/frago` never renumbers. A FRAGO insertion takes a **positional letter suffix** keyed to an anchor task. The suffix is a label, not a hierarchy — `3a` and `TASK 3` are flat siblings in the task list, related only by adjacency:
+
+- First FRAGO anchored at TASK 3 → `### TASK 3a`.
+- Second FRAGO anchored at TASK 3 → `### TASK 3b`.
+- And so on through the alphabet: `3c`, `3d`, … `3z`. After `3z` the suffix rolls over to two letters: `3aa`, `3ab`, …, `3az`, `3ba`, …, `3zz`, then three letters (`3aaa`, …). Same scheme as spreadsheet columns — bijective base-26 — so the sequence is effectively unbounded.
+
+Rules of the sequence:
+
+1. **No child tasks. Ever.** This workflow uses a flat task list. The `3` in `3a` is a positional cue (insert near TASK 3), not a parent reference. When `/frago` writes to the server via `naholo agent push`, the new task is created at **top level** (no `parentTaskId`). Naholo's data model supports child tasks, but this skill set does not use them.
+2. **The anchor is always a top-level integer task** (`TASK 3`, never `TASK 3a`). If the user says "after TASK 3a", treat it as "in TASK 3's sequence" — pick the next free letter in the 3-sequence (e.g., `3c`).
+3. **Letter is the next free in the sequence**, not the position. If TASK 3's sequence already has `3a` and `3b`, the next FRAGO anchored at TASK 3 is `3c`, even if the user asks to slot it between `3a` and `3b` in EXECUTION order.
+4. **Position in EXECUTION reflects insertion order**, not the letter. Insert the new section immediately after the user's named slot (or after the anchor's last existing sequence entry). Letter order and position may diverge — that's fine; `TASKS.md` is rendered in EXECUTION order, not letter order.
+5. **No renumbering, ever.** Downstream unfinished tasks keep their numbers.
+6. **Completed tasks are immutable.** A task whose `### TASK N — Title` section contains `#### After-Action Report` cannot be edited, renumbered, or deleted — and `/frago` doesn't need to, since the doctrine never renumbers.
 
 ## What to do
 
@@ -54,21 +71,21 @@ Read if you haven't read:
 
 `## EXECUTION` must already exist with at least one `### TASK N — Title` section. If EXECUTION is absent, tell the user to run `/opord` first (and `/warno` first if MISSION is also absent) and stop. `/frago` inserts into an existing plan — it does not create one from scratch.
 
-### 7. Resolve insertion position
+### 7. Resolve anchor + insertion slot
 
-Pick the insertion slot:
+Identify the **anchor task** (a top-level integer — the `N` in `N{suffix}`) and the **insertion slot** (the EXECUTION position the new section lands in):
 
-- **User named an explicit position** (e.g., "between TASK 3 and TASK 4") → insert as `TASK 4`; renumber every subsequent unfinished task.
-- **User said "follow-up to TASK N"** → insert as `TASK N+1`; renumber every subsequent unfinished task.
-- **No position named** → insert immediately after the last task whose `#### After-Action Report` heading is present, i.e. after the last completed task. The new task slots in at the position of the first currently-unfinished task; renumber every subsequent unfinished task.
+- **User named a top-level anchor** (`/frago "after TASK 3 …"` or `"follow-up to TASK 3 …"`) → anchor is TASK 3. Slot is immediately after TASK 3's last existing sequence entry (TASK 3, then `3a`, `3b`, … if any).
+- **User named a FRAGO entry** (`/frago "after TASK 3a …"`) → anchor is still TASK 3 (suffixes always key off a top-level integer). Slot is immediately after TASK 3a in EXECUTION order.
+- **No anchor named** → anchor is the last completed top-level task (the highest integer N where `### TASK N` has a `#### After-Action Report` heading). Slot is immediately after that task's last sequence entry.
 
-A completed task is one whose `### TASK N — Title` section contains a `#### After-Action Report` heading. Completed tasks are immutable — never edit, renumber, or delete them. If renumbering would move a completed task's number, stop and tell the user — `/frago` cannot insert in a position that requires moving a shipped task.
+Then pick the **letter suffix**: walk TASK N's sequence in EXECUTION and find the next unused suffix in spreadsheet-column order — `a`, `b`, …, `z`, `aa`, `ab`, …, `az`, `ba`, …, `zz`, `aaa`, and so on. The new section is `### TASK N{suffix}`.
 
 ### 8. Write the new task section
 
-Append the new `### TASK N — Title` to OPERATION.md at the resolved insertion position. Same per-task template as `/opord` — three subsections in order:
+Insert `### TASK N{letter} — Title` into OPERATION.md at the resolved slot. Same per-task template as `/opord` — three subsections in order:
 
-- `#### Goal` — one sentence, ≤ ~25 words, naming the approach.
+- `#### Intent` — one sentence, ≤ ~25 words, naming the approach.
 - `#### Scheme of Maneuver` (optional, but required when the task introduces or modifies control flow / UI / signatures / DB schema / DTOs / API shapes).
 - `#### Course of Action` — atomic Add / Edit / Move / Delete / Run / Manual steps with exported-symbol sub-bullets where appropriate.
 
@@ -76,7 +93,7 @@ See `/opord` (or the agent manual) for the full template, fence-tagging rules, a
 
 ### 9. Revise downstream unfinished tasks (only when needed)
 
-If the new task changes what a downstream unfinished task must do — renames a path it edits, replaces a function it calls, shifts a precondition — revise that downstream task in place. Edit the affected `#### Course of Action` bullets, refresh `#### Scheme of Maneuver` if the structure shifted, and update `#### Goal` only when the headline approach itself changed.
+If the new task changes what a downstream unfinished task must do — renames a path it edits, replaces a function it calls, shifts a precondition — revise that downstream task in place. Edit the affected `#### Course of Action` bullets, refresh `#### Scheme of Maneuver` if the structure shifted, and update `#### Intent` only when the headline approach itself changed.
 
 **Touch only what the FRAGO actually affects.** Do not rewrite downstream tasks to match a new style, refactor unrelated COA bullets, or restructure tasks that the new work doesn't change. If more than a small handful of downstream tasks need revision, stop and redirect the user to `/opord` — large plan rewrites are out of scope.
 
@@ -87,16 +104,15 @@ If the new task changes what a downstream unfinished task must do — renames a 
 Sync `TASKS.md` to match the new EXECUTION task list:
 
 - Heading stays `# TASKS — OP #{n}`.
-- Insert the new task as `- [ ] N. Title` at the resolved position.
-- Renumber subsequent unfinished tasks; preserve their `[ref](naholo://tasks/{id})` links and `[x]` done states.
-- Never re-check a `[ ]` task or uncheck a `[x]` task. Never move or renumber a completed task.
+- Insert `- [ ] N{letter}. Title` at the slot matching its EXECUTION position (typically immediately after the last existing family-N entry, before the next top-level integer).
+- **Do not touch any other line.** No renumbering, no re-ordering, no checkbox flips. Existing `[ref](naholo://tasks/{id})` links and `[x]` done states stay put.
 
 ### 11. Append TIMELINE bullet
 
 Append one bullet to `{operationDir}/notes/TIMELINE.md`:
 
 ```
-- **{YYYY-MM-DD HH:MM} — frago**: Inserted TASK N — "{title}" ({summary of why + any downstream revisions}).
+- **{YYYY-MM-DD HH:MM} — frago**: Inserted TASK N{letter} — "{title}" ({summary of why + any downstream revisions}).
 ```
 
 ### 12. Print summary
@@ -107,12 +123,12 @@ Example (printed directly, not fenced):
 
 FRAGO complete for OP #42: "Implement user auth"
 
-- Inserted: [TASK 4]({operationDir}/notes/OPERATION.md#L<line>) ("Backfill `users.email_verified` for legacy rows")
-- Revised: 1 downstream task (TASK 5's COA updated to consume the backfill)
+- Inserted: [TASK 3a]({operationDir}/notes/OPERATION.md#L<line>) ("Backfill `users.email_verified` for legacy rows")
+- Revised: 1 downstream task (TASK 4's COA updated to consume the backfill)
 - Tasks: 7 total (3 done, 4 remaining)
 - Tasks: [TASKS.md]({operationDir}/TASKS.md)
 
-Resolve `<line>` by reading back `OPERATION.md` after writing the new task and locating its `### TASK N — Title` heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
+Resolve `<line>` by reading back `OPERATION.md` after writing the new task and locating its `### TASK N{letter} — Title` heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
 
 Next:
 
@@ -123,11 +139,15 @@ Next:
 ## Rules
 
 - **One insertion per invocation**: insert exactly one new task, then stop.
+- **Never renumber**: the letter-suffix doctrine exists to make renumbering unnecessary. If you find yourself rewriting another task's number, you've made a mistake — back out.
+- **Flat task list, no children**: the suffix is positional, not hierarchical. `3a` is a top-level sibling of `TASK 3`; when pushed to the server, it must have no `parentTaskId`. Naholo supports child tasks, but this workflow does not use them.
+- **Letter is per-sequence, not global**: TASK 3's suffixes (`3a`, `3b`, …) are independent of TASK 5's (`5a`, `5b`, …). Each sequence starts at `a`.
+- **Anchor is always a top-level integer**: `/frago "after TASK 3a"` still files in the 3-sequence.
 - **Completed tasks are immutable**: never edit, renumber, or delete a task with a `#### After-Action Report` heading.
 - **Downstream revisions are surgical, not stylistic**: only revise unfinished tasks whose contract the new task actually changes. Hand the user to `/opord` if the blast radius grows beyond a small handful.
 - **Plan-level rewrites belong to `/opord`**: if the request is "rewrite EXECUTION" or "drop TASK 7 and add three new ones", redirect to `/opord` and stop.
 - **MISSION changes belong to `/warno`**: do not touch `## MISSION` from this skill.
-- **TASKS.md mirror is mandatory**: every `/frago` adds one `- [ ]` line and renumbers the downstream unfinished tasks.
+- **TASKS.md mirror is mandatory**: every `/frago` adds exactly one `- [ ]` line and touches nothing else.
 - **TIMELINE.md gets exactly one bullet per `/frago` invocation**.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else.
 - **Do NOT implement any code** — only edit `OPERATION.md`, `TASKS.md`, and `TIMELINE.md`.

@@ -46,7 +46,7 @@ If no instructions given, ask the user whether to close.
 
    **If `naholo agent push` fails (non-zero exit code) → STOP. Do NOT proceed to step 8.** Print the error and preserve local data (see step 11 failure path).
 
-8. **Post summary log**: Post via `create_operation_log` MCP tool. Format is **header line + one short bullet per task (≤1 sentence each)**, paraphrased from each task's `#### Goal` and `#### Course of Action` in `{operationDir}/notes/OPERATION.md` (and the AAR's `**Deviations**` when the task shipped with non-trivial deviations). Don't re-narrate; compress aggressively. If the user gave freeform context, append it after the bullets.
+8. **Post summary log**: Post via `create_operation_log` MCP tool. Format is **header line + one short bullet per task (≤1 sentence each)**, paraphrased from each task's `#### Intent` and `#### Course of Action` in `{operationDir}/notes/OPERATION.md` (and the AAR's `**Deviations**` when the task shipped with non-trivial deviations). Don't re-narrate; compress aggressively. If the user gave freeform context, append it after the bullets.
 
    **The first line MUST start with the literal sync signal `**exfil** — ` (bold word, em-dash, single space).** `/infil` keys off this prefix to detect and skip sync echoes on re-infil — without it, the next infil will re-mirror this log as a new TIMELINE bullet (duplicate info).
 
@@ -103,6 +103,6 @@ If no instructions given, ask the user whether to close.
 - **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing tasks or notes, or manage `.base/` files. The CLI handles all of this.
 - **TIMELINE.md is the only file that gets the new bullet** — OPERATION.md keeps SITUATION / MISSION / EXECUTION only.
 - **Always post the summary log** before closing or cleaning up — the log is the permanent record of what happened during this infil session.
-- **Summary log = header line + one short bullet per task (≤1 sentence each).** Paraphrase from each task's Goal + Course of Action (plus AAR Deviations when relevant); don't re-narrate the task. Short and forgettable beats comprehensive.
+- **Summary log = header line + one short bullet per task (≤1 sentence each).** Paraphrase from each task's Intent + Course of Action (plus AAR Deviations when relevant); don't re-narrate the task. Short and forgettable beats comprehensive.
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[preserved at](/Users/.../infiled/)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`. (The `op-url` web link in the success summary is a real `https://` URL and is exempt.)

@@ -4,7 +4,7 @@ description: Ship one task from an infiled Naholo operation — implement code, 
 argument-hint: '[N] ["freeform"]'
 ---
 
-# Splash — Ship One task
+# Splash — Ship One Task
 
 Implement exactly one task from `OPERATION.md` `## EXECUTION`, write the After-Action Report into the same task section, flip the TASKS.md checkbox, and stop. The user reviews the AAR, then re-runs `/splash` for the next task.
 
@@ -62,12 +62,12 @@ If the targeted task already has a `#### After-Action Report` heading with a non
 
 From OPERATION.md `### TASK N — Title`:
 
-- `#### Goal` — the success criterion.
+- `#### Intent` — the success criterion.
 - `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI / signature changes; treat as authoritative shape for the splash.
 - `#### Course of Action` — the planned action list (Add / Edit / Move / Delete / Run / Manual).
 - Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 9.
 
-If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the task goal specifies — if they ask for more than, or different from, what the task goal covers, **stop before implementing** and surface two options to the user:
+If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the task intent specifies — if they ask for more than, or different from, what the task intent covers, **stop before implementing** and surface two options to the user:
 
 1. **Run `/opord` first** — modify the undone task to absorb the new scope, or create a new task for it (FRAGO). Pick this when the change is large enough to deserve its own review checkpoint, or when it should be a separate splash.
 2. **Splash anyway, capture in AAR** — proceed with the expanded scope this run, and document the deviation explicitly in the `#### After-Action Report` (what was added beyond the original goal, why, and any follow-up implications). Pick this when the change is small and naturally lives with the current task.
@@ -76,7 +76,7 @@ Wait for the user to choose before continuing.
 
 ### 8. Implement (fresh splash path)
 
-Implement the code changes that satisfy the task goal:
+Implement the code changes that satisfy the task intent:
 
 - Execute the steps listed in Course of Action — modify or create files for `Add` / `Edit`, relocate files for `Move` (use `git mv` when the file is git-tracked, plain `mv` otherwise), remove files for `Delete`, run shell commands for `Run`.
 - For `Manual:` items, **do not execute**. Pause and surface every `Manual:` step in this task via `AskUserQuestion` (one question per step, batched up to four per call; fall back to sequential calls when the task has more than four). Each question uses header `"Manual step"`, the COA line itself as the question text, and exactly these two options:
@@ -174,7 +174,7 @@ If the user should review before the next splash, mention it. If all tasks are n
 
 - **One task per invocation**: ship exactly one, then stop. The user re-runs `/splash` for the next.
 - **AAR is overwritten in place on revision** — never add a second AAR section to an task.
-- **Stay in scope**: the task goal is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
+- **Stay in scope**: the task intent is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
 - **Don't touch other tasks**: do not edit other tasks' Course of Action, AARs, or Goals. If the work reveals that another task needs revision, surface it — don't silently rewrite.
 - **TASKS.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next task.
 - **TIMELINE.md gets exactly one bullet per splash invocation**.
