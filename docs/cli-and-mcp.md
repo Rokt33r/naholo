@@ -60,33 +60,32 @@ After init, the MCP server is automatically available to Claude Code.
 
 Write actions available to the agent:
 
-| Tool                   | Input                                                                                                     | Description                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `create_operation`     | `{ title: string }`                                                                                       | Create a new operation in the current project |
-| `close_operation`      | `{ operationNumber: number }`                                                                             | Close an operation                            |
-| `create_objective`     | `{ operationNumber: number, name: string, note?: string, parentObjectiveId?: string, position?: number }` | Create an objective in an operation           |
-| `update_objective`     | `{ operationNumber: number, objectiveId: string, name?: string, note?: string, done?: boolean }`          | Update an objective (any combination)         |
-| `create_note`          | `{ operationNumber: number, name: string, content: string }`                                              | Create a note on an operation                 |
-| `update_note`          | `{ operationNumber: number, noteName: string, name?: string, content?: string }`                          | Update a note on an operation                 |
-| `create_operation_log` | `{ operationNumber: number, content: string }`                                                            | Create a log entry (markdown)                 |
-| `sync_objectives`      | `{ operationNumber: number, objectivesMarkdown: string }`                                                 | Sync full objective tree from OBJECTIVES.md   |
+| Tool                   | Input                                                                                                | Description                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `create_operation`     | `{ title: string }`                                                                                  | Create a new operation in the current project |
+| `close_operation`      | `{ operationNumber: number }`                                                                        | Close an operation                            |
+| `create_task`          | `{ operationNumber: number, name: string, note?: string, parentTaskId?: string, position?: number }` | Create a task in an operation                 |
+| `update_task`          | `{ operationNumber: number, taskId: string, name?: string, note?: string, done?: boolean }`          | Update a task (any combination)               |
+| `create_note`          | `{ operationNumber: number, name: string, content: string }`                                         | Create a note on an operation                 |
+| `update_note`          | `{ operationNumber: number, noteName: string, name?: string, content?: string }`                     | Update a note on an operation                 |
+| `create_operation_log` | `{ operationNumber: number, content: string }`                                                       | Create a log entry (markdown)                 |
 
 ## MCP Resources
 
 Read-only context available to the agent:
 
-| URI                                                | Description                                                                            |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `naholo://project`                                 | Current project details (JSON)                                                         |
-| `naholo://operations`                              | All open operations (JSON array)                                                       |
-| `naholo://operations/{operationNumber}`            | Full operation context: metadata + objectives + notes + logs (all fetched in parallel) |
-| `naholo://operations/{operationNumber}/objectives` | All objectives for an operation (markdown)                                             |
-| `naholo://operations/{operationNumber}/notes`      | All notes for an operation (JSON)                                                      |
-| `naholo://local/operations`                        | List of locally infiled operations                                                     |
-| `naholo://soul`                                    | Personality / soul text for the current bot operator (markdown)                        |
+| URI                                           | Description                                                                       |
+| --------------------------------------------- | --------------------------------------------------------------------------------- |
+| `naholo://project`                            | Current project details (JSON)                                                    |
+| `naholo://operations`                         | All open operations (JSON array)                                                  |
+| `naholo://operations/{operationNumber}`       | Full operation context: metadata + tasks + notes + logs (all fetched in parallel) |
+| `naholo://operations/{operationNumber}/tasks` | All tasks for an operation (markdown)                                             |
+| `naholo://operations/{operationNumber}/notes` | All notes for an operation (JSON)                                                 |
+| `naholo://local/infiled`                      | The currently infiled operation (JSON), or null                                   |
+| `naholo://soul`                               | Personality / soul text for the current bot operator (markdown)                   |
 
 ### Reading a resource in Claude Code
 
-MCP resources are available as context when the MCP server is running. The agent can read them to understand what operations exist, what objectives need to be done, and what context has been captured.
+MCP resources are available as context when the MCP server is running. The agent can read them to understand what operations exist, what tasks need to be done, and what context has been captured.
 
-The `naholo://operations/{operationNumber}` resource is the most useful — it returns everything about an operation in one call: the operation itself, all objectives (with hierarchy), all notes (with content), and all logs (with authors).
+The `naholo://operations/{operationNumber}` resource is the most useful — it returns everything about an operation in one call: the operation itself, all tasks (with hierarchy), all notes (with content), and all logs (with authors).

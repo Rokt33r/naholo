@@ -1,6 +1,6 @@
 # Naholo — AI-Assisted Development Workflow
 
-Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via six skills: `/infil` → `/recon` → `/objs` → `/splash` → `/sitrep` → `/exfil`.
+Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via seven skills: `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil`, plus `/frago` for mid-cycle task insertion.
 
 ## Workflow
 
@@ -17,52 +17,62 @@ This is the brainstorming phase. The operation accumulates everything needed to 
 
 Fetch the operation locally for offline-first work. Only one op can be infiled at a time; the local data lives at a fixed `.naholo/local/infiled/` path with op identity stored in `op.yml`.
 
-- **Fresh infil (`/infil {N}`)**: `naholo agent infil {N}` creates the infiled directory, writes `op.yml` (`{ number, title }`), and pulls `OBJECTIVES.md` plus all existing `notes/*.md` from the server, then prints the absolute directory path on stdout — the `/infil` agent reads that line and does not need a separate `op-path` call. Errors with "Already infiled" if an op is already infiled
+- **Fresh infil (`/infil {N}`)**: `naholo agent infil {N}` creates the infiled directory, writes `op.yml` (`{ number, title }`), and pulls `TASKS.md` plus all existing `notes/*.md` from the server, then prints the absolute directory path on stdout — the `/infil` agent reads that line and does not need a separate `op-path` call. Errors with "Already infiled" if an op is already infiled
 - **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merge against the server) — no need to exfil first to pick up new server-side changes
 - The agent then generates the two workflow notes if missing (server-authored copies are preserved on re-runs):
   - `notes/OPERATION.md` — the single live document for the OP. Three top-level sections, written incrementally by their owning skills:
     - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes`
-    - `## MISSION` — `### Concept of Operations`, `### Prerequisites`, `### Warning Orders`, `### Target Reference Points` (absent after infil; appended by `/recon`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet. TRP is a flat bullet list of files / folders / glob patterns (each `` `path` — tag ``) — a curated map a fresh `/objs` session uses to skip re-walking the codebase
-    - `## EXECUTION` — one `### OBJ N — Title` section per objective with `#### Goal`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and a `#### After-Action Report` added by `/splash` when the OBJ ships (absent after infil; appended by `/objs`)
+    - `## MISSION` — `### Concept of Operations`, `### Warning Orders`, `### Target Reference Points` (absent after infil; appended by `/warno`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet. TRP is a flat bullet list of files / folders / glob patterns (each `` `path` — tag ``) — a curated map a fresh `/opord` session uses to skip re-walking the codebase
+    - `## EXECUTION` — one `### TASK N — Title` section per task with `#### Intent`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and a `#### After-Action Report` added by `/splash` when the task ships (absent after infil; appended by `/opord`)
   - `notes/TIMELINE.md` — chronological event log (one bullet per existing server log)
-- `OBJECTIVES.md` stays as pulled (empty list until `/objs` populates it); other `notes/*.md` are whatever the operation already had
+- `TASKS.md` stays as pulled (empty list until `/opord` populates it); other `notes/*.md` are whatever the operation already had
 - On re-infil, `naholo agent pull` performs a 3-way merge (local vs server vs baseline) — never silently overwrites local changes
 
-### Phase 3: Recon (`/recon ["freeform"]`)
+### Phase 3: Warno (`/warno ["freeform"]`)
 
-Research the codebase and define the mission.
+Research the codebase and write the mission.
 
-- Appends `## MISSION` to `OPERATION.md` with four subsections: `### Concept of Operations` (two-or-three-sentence overview tying the chosen approach to `SITUATION.Pain`), `### Prerequisites` (bullet list of what must exist before any OBJ can ship), `### Warning Orders` (flat bulleted decisions, one per line, with optional `- Rejected: …` sub-bullets), and `### Target Reference Points` (flat list of `` `path-or-glob` — tag `` entries — the curated codebase map a fresh `/objs` session reads instead of re-researching)
+- Appends `## MISSION` to `OPERATION.md` with three subsections: `### Concept of Operations` (two-or-three-sentence overview tying the chosen approach to `SITUATION.Pain`), `### Warning Orders` (flat bulleted decisions, one per line, with optional `- Rejected: …` sub-bullets), and `### Target Reference Points` (flat list of `` `path-or-glob` — tag `` entries — the curated codebase map a fresh `/opord` session reads instead of re-researching)
 - May add a `- ? <prompt> (a / b) >` sub-bullet under a Warning Order, but only when the user has named viable options without picking one, or when a well-known alternative is definitively better than the committed path. Otherwise commits to the most viable option found and lets the user override on review. Most operations have none
 - Resumable — re-running picks up where the previous run left off; freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, etc.)
-- Does NOT write `## EXECUTION` or mirror to `OBJECTIVES.md` — those belong to `/objs`
+- Does NOT write `## EXECUTION` or mirror to `TASKS.md` — those belong to `/opord`
 
-### Phase 4: Objs (`/objs ["freeform"]`)
+### Phase 4: Opord (`/opord ["freeform"]`)
 
-Cut the recon'd MISSION into ORP-sized OBJs.
+Cut the warno'd MISSION into ORP-sized tasks.
 
 - Reads the populated `## MISSION` and resolves any `- ? <prompt> (a / b) >` sub-bullets under Warning Orders: empty answer collapses the alts into `- Rejected: a, b`; an answer matching an alt swaps the WO bold label and moves the original chosen path into `- Rejected:`
-- Appends `## EXECUTION` with one `### OBJ N — Title` section per OBJ. Each OBJ has a `#### Goal` (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI / signature changes), and a `#### Course of Action` listing atomic Add / Edit / Move / Delete / Run / Manual steps with top-level-export sub-bullets. The `#### After-Action Report` heading is NOT written by `/objs` — `/splash` adds it when the OBJ ships
-- Mirrors the OBJ list into `OBJECTIVES.md` as a flat `- [ ] N. Title` checklist (no sub-objectives)
+- Appends `## EXECUTION` with one `### TASK N — Title` section per task. Each task has a `#### Intent` (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI / signature changes), and a `#### Course of Action` listing atomic Add / Edit / Move / Delete / Run / Manual steps with top-level-export sub-bullets. The `#### After-Action Report` heading is NOT written by `/opord` — `/splash` adds it when the task ships
+- Mirrors the task list into `TASKS.md` as a flat `- [ ] N. Title` checklist (no sub-tasks)
 - Resumable — re-running picks up the partial EXECUTION state and continues
-- **FRAGO mode**: `/objs "freeform text"` treats the args as edit instructions for unfinished OBJs (split, merge, retitle, insert, drop). Completed OBJs (those with a `#### After-Action Report` heading) are immutable; new objectives are inserted as new `### OBJ N` sections
+- **Plan revisions**: `/opord "freeform text"` treats the args as edit instructions for unfinished tasks (split, merge, retitle, drop). Completed tasks (those with a `#### After-Action Report` heading) are immutable. Single-task insertions are `/frago`'s job
 
-The bar is "could a fresh `/splash` session ship one OBJ by reading only that OBJ's section in OPERATION.md and the project conventions?"
+The bar is "could a fresh `/splash` session ship one task by reading only that task's section in OPERATION.md and the project conventions?"
+
+### Phase 4.5: Frago (`/frago "freeform"`)
+
+Insert a single new task mid-cycle without renumbering downstream.
+
+- Picks an anchor task (the top-level integer in the suffix, e.g. `TASK 3` → `TASK 3a`) and inserts a new `### TASK Na — Title` section immediately after it in `## EXECUTION`. Re-running on the same anchor produces `3b`, `3c`, …, `3z`, `3aa`, `3ab`, … (bijective base-26 / spreadsheet-column scheme; unbounded)
+- **Suffix is positional, not hierarchical**: `TASK 3a` is a flat top-level sibling of `TASK 3`, not a child of it. The agent skill set operates on a flat task list — no `parentTaskId` is set when the new task is pushed
+- Mirrors the new entry into `TASKS.md` as `- [ ] 3a. Title`
+- May revise immediately downstream unfinished tasks whose contract the new task changes; never edits completed tasks
+- For broader plan rewrites (multi-task revisions, retitles, deletions), re-run `/opord` instead
 
 ### Phase 5: Splash (`/splash [N] ["freeform"]`)
 
-Implement one OBJ per invocation.
+Implement one task per invocation.
 
-- With `N`, ships OBJ N. Without `N`, picks the next unchecked OBJ from `OBJECTIVES.md`
-- Reads the Goal + Course of Action from the OBJ's `### OBJ N` section in OPERATION.md
+- With `N`, ships TASK N. Without `N`, picks the next unchecked task from `TASKS.md`
+- Reads the Intent + Course of Action from the task's `### TASK N` section in OPERATION.md
 - Implements the code changes
 - Runs formatter and type checker
-- Adds the `#### After-Action Report` heading + body to the same OBJ section: deviations, notes (COA stats — planned / done / deviations — are printed in the chat summary, not written to the AAR)
-- Flips `- [ ]` → `- [x]` for that OBJ in `OBJECTIVES.md`
+- Adds the `#### After-Action Report` heading + body to the same task section: deviations, notes (COA stats — planned / done / deviations — are printed in the chat summary, not written to the AAR)
+- Flips `- [ ]` → `- [x]` for that task in `TASKS.md`
 - Appends a `- **{datetime} — splash**: …` bullet to `TIMELINE.md`
-- Stops after one OBJ — the user reviews the AAR, then runs `/splash` again for the next
+- Stops after one task — the user reviews the AAR, then runs `/splash` again for the next
 
-Re-running `/splash N` on an already-shipped OBJ overwrites the AAR body in place rather than appending. Use this for follow-up tweaks on the same OBJ.
+Re-running `/splash N` on an already-shipped task overwrites the AAR body in place rather than appending. Use this for follow-up tweaks on the same task.
 
 ### Phase 6: Sync & Close
 
@@ -70,7 +80,7 @@ Two skills for different stages:
 
 **`/sitrep ["freeform"]`** — mid-session checkpoint:
 
-- Syncs objectives and all notes (including `TIMELINE.md`) to server via `naholo agent push`
+- Syncs tasks and all notes (including `TIMELINE.md`) to server via `naholo agent push`
 - Posts a summary log entry via `create_operation_log`
 - Appends `- **{datetime} — sitrep**: …` bullet to `TIMELINE.md`
 - Leaves local directory intact for continued work
@@ -87,22 +97,23 @@ Two skills for different stages:
 
 Only `/infil` takes the operation number, and only on a fresh infil. Every other skill resolves the active operation via `naholo agent op` (which reads `op.yml` and prints `#{N} {title}`).
 
-| Skill     | First arg shape                | Meaning                                                       |
-| --------- | ------------------------------ | ------------------------------------------------------------- |
-| `/infil`  | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)      |
-| `/recon`  | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs      |
-| `/objs`   | `"freeform"` (optional)        | FRAGO instructions to revise unfinished OBJs (split / insert) |
-| `/splash` | `N` or `"freeform"` (optional) | OBJ number; or extra context for the next-unchecked OBJ       |
-| `/sitrep` | `"freeform"` (optional)        | Extra context for the summary log                             |
-| `/exfil`  | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                     |
+| Skill     | First arg shape                | Meaning                                                                    |
+| --------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `/infil`  | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)                   |
+| `/warno`  | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs                   |
+| `/opord`  | `"freeform"` (optional)        | Plan-revision instructions for unfinished tasks (split / retitle / drop)   |
+| `/frago`  | `"freeform"` (required)        | Insertion instruction — describes the new task and (optionally) its anchor |
+| `/splash` | `N` or `"freeform"` (optional) | Task number; or extra context for the next-unchecked task                  |
+| `/sitrep` | `"freeform"` (optional)        | Extra context for the summary log                                          |
+| `/exfil`  | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                                  |
 
 ## Key Files
 
-| File            | Role                                                                                                                | Owned by                                                                                       |
-| --------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `OPERATION.md`  | Single live document — SITUATION, MISSION, EXECUTION (with per-OBJ Goal, Scheme of Maneuver, Course of Action, AAR) | `/infil` creates SITUATION, `/recon` adds MISSION, `/objs` adds EXECUTION, `/splash` adds AARs |
-| `OBJECTIVES.md` | Flat checkbox list mirroring the EXECUTION OBJ headings                                                             | `/objs` structures, `/splash` checks off                                                       |
-| `TIMELINE.md`   | Chronological event log; pushed as just-another-note                                                                | `/infil` seeds, all skills append                                                              |
+| File           | Role                                                                                                                   | Owned by                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `OPERATION.md` | Single live document — SITUATION, MISSION, EXECUTION (with per-task Intent, Scheme of Maneuver, Course of Action, AAR) | `/infil` creates SITUATION, `/warno` adds MISSION, `/opord` adds EXECUTION, `/splash` adds AARs |
+| `TASKS.md`     | Flat checkbox list mirroring the EXECUTION TASK headings                                                               | `/opord` structures, `/frago` inserts, `/splash` checks off                                     |
+| `TIMELINE.md`  | Chronological event log; pushed as just-another-note                                                                   | `/infil` seeds, all skills append                                                               |
 
 ## MCP Integration
 
@@ -111,4 +122,4 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 | `create_operation_log` | `/sitrep`, `/exfil` | Post summary log entries    |
 | `close_operation`      | `/exfil`            | Close a completed operation |
 
-Objective and note syncing flows through the `naholo agent infil` / `naholo agent pull` / `naholo agent push` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.
+Task and note syncing flows through the `naholo agent infil` / `naholo agent pull` / `naholo agent push` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.

@@ -1,6 +1,6 @@
 # Naholo
 
-Operation/objective management web app for documenting work, managing hierarchical objectives, and keeping comms logs.
+Operation/task management web app for documenting work, managing tasks, and keeping comms logs.
 
 ## Tech Stack
 
@@ -18,16 +18,16 @@ src/
 │ │ └── projects/[projectSlug]/operations/[operationNumber]/
 │ └── api/ # REST API (mirrors app routes)
 ├── components/
-│ ├── objectives/ # Objective list, item, note, actions, context
+│ ├── tasks/ # Task list, item, note, actions, context
 │ ├── operations/ # Operation page components
 │ ├── operation-logs/ # Comms log list and editor
 │ ├── notes/ # Note tabs (per-operation documentation)
 │ └── ui/ # Shared UI primitives (Radix-based)
-├── hooks/ # React Query hooks (use-objectives, use-operations, etc.)
+├── hooks/ # React Query hooks (use-tasks, use-operations, etc.)
 ├── lib/ # Utilities (fetcher, utils, date-utils)
 └── server/
 ├── db/schema/ # Drizzle table definitions
-└── services/ # Business logic (objective, operation, note, operation-log)
+└── services/ # Business logic (task, operation, note, operation-log)
 
 ## Key Conventions
 
@@ -45,7 +45,7 @@ Additional project rules live in [.claude/rules/](./.claude/rules/) and are load
 
 - [style.md](./.claude/rules/style.md) — code-style conventions
 - [env-vars.md](./.claude/rules/env-vars.md) — env var add/remove checklist (Dockerfile / deploy.yml / Terraform / `.env.example`)
-- [skill-edits.md](./.claude/rules/skill-edits.md) — routing rule for editing core skills (`/infil`, `/recon`, `/objs`, `/splash`, `/sitrep`, `/exfil`)
+- [skill-edits.md](./.claude/rules/skill-edits.md) — routing rule for editing core skills (`/infil`, `/warno`, `/opord`, `/frago`, `/splash`, `/sitrep`, `/exfil`)
 
 ## Build & Test
 
@@ -58,28 +58,14 @@ Additional project rules live in [.claude/rules/](./.claude/rules/) and are load
 ## Domain Model
 
 - **Project** → has many **Operations**
-- **Operation** → has many **Objectives** (hierarchical via `parentObjectiveId`), **Notes** (tabbed docs), **Operation Logs** (comms)
-- **Objective** → `name` (single-line), `note` (markdown), `done`, `position`, self-referencing `parentObjectiveId`
+- **Operation** → has many **Tasks** (flat list — no parent/child nesting in the agent workflow), **Notes** (tabbed docs), **Operation Logs** (comms)
+- **Task** → `name` (single-line), `note` (markdown), `done`, `position`, self-referencing `parentTaskId` (supported by the schema but unused by the skill set)
 - **Project** → has many **Operators** (users with access)
 - **Project** → has many **Skill Loadouts** → each has many **Skills**
 
 ## Architecture Patterns
 
-- Objective list renders as flat array with depth, not recursive components
-- Objective keyboard nav: depth-first traversal with DOM queries for visibility
+- Task list renders as flat array with depth, not recursive components
+- Task keyboard nav: depth-first traversal with DOM queries for visibility
 - Animated expand/collapse: CSS grid-rows transition (`grid-rows-[0fr]` ↔ `grid-rows-[1fr]`)
-- Focus management: centralized in objective-context.tsx (`focusedObjectiveId`, `isListFocused`)
-
-## Terminology
-
-Old → New mapping (for agents encountering legacy references):
-
-| Old Term         | New Term      | Notes                                        |
-| ---------------- | ------------- | -------------------------------------------- |
-| issue            | operation     | DB table, types, routes, components          |
-| task             | objective     | DB table, types, routes, components          |
-| worker           | operator      | DB table, types, routes, components          |
-| skill set        | skill loadout | Container for skills                         |
-| skill            | skill         | **Unchanged**                                |
-| Logs (tab label) | Comms         | UI label only; code entity is `operationLog` |
-| notes            | notes         | **Unchanged**                                |
+- Focus management: centralized in task-context.tsx (`focusedTaskId`, `isListFocused`)
