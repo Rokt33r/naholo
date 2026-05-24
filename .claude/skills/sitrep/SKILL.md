@@ -1,6 +1,6 @@
 ---
 name: sitrep
-description: Sync local progress to Naholo — push objectives and notes (including TIMELINE.md), post summary log. Does not close.
+description: Sync local progress to Naholo — push tasks and notes (including TIMELINE.md), post summary log. Does not close.
 argument-hint: '["freeform"]'
 model: sonnet
 ---
@@ -26,7 +26,7 @@ Anything in quotes is optional freeform context that informs the summary log (e.
 4. **Resolve operation directory**: Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`.
 
 5. **Read local state** (for context when generating the summary log):
-   - `{operationDir}/OBJECTIVES.md`
+   - `{operationDir}/TASKS.md`
    - `{operationDir}/notes/OPERATION.md`
    - `{operationDir}/notes/TIMELINE.md`
 
@@ -39,22 +39,22 @@ Anything in quotes is optional freeform context that informs the summary log (e.
    Format:
 
    ```
-   **sitrep** — {one-sentence headline: synced {N} objectives, {N} notes; what's the state}
+   **sitrep** — {one-sentence headline: synced {N} tasks, {N} notes; what's the state}
 
-   - {optional bullets: objectives completed, objectives added/revised, notes touched, code-change summary from `git diff --stat` or OPERATION.md AARs}
+   - {optional bullets: tasks completed, tasks added/revised, notes touched, code-change summary from `git diff --stat` or OPERATION.md AARs}
    - {any freeform context the user provided}
    ```
 
-8. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — sitrep**: Synced {N} objectives, {N} notes. {brief summary}`. Do NOT append to OPERATION.md — TIMELINE.md is the only file that gets chronological bullets.
+8. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — sitrep**: Synced {N} tasks, {N} notes. {brief summary}`. Do NOT append to OPERATION.md — TIMELINE.md is the only file that gets chronological bullets.
 
-9. **Print summary**: Output what was synced to chat. Use markdown link syntax with the absolute paths so the user can click to open them. When listing notes, use the fixed order: OPERATION → OBJECTIVES → TIMELINE first, then other notes alphabetically. Print as raw markdown — no surrounding fence.
+9. **Print summary**: Output what was synced to chat. Use markdown link syntax with the absolute paths so the user can click to open them. When listing notes, use the fixed order: OPERATION → TASKS → TIMELINE first, then other notes alphabetically. Print as raw markdown — no surrounding fence.
 
 ## Rules
 
 - **Do NOT close the operation** — sitrep is a checkpoint, not a finish line.
 - **Do NOT clean up the local directory** — leave `{operationDir}` intact for continued work.
 - **Do NOT modify source files** — sitrep is a sync operation only.
-- **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing objectives or notes, or manage `.base/` files. The CLI handles all of this.
+- **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing tasks or notes, or manage `.base/` files. The CLI handles all of this.
 - **TIMELINE.md is the only file that gets the new bullet** — OPERATION.md keeps SITUATION / MISSION / EXECUTION only.
 - **Always post the summary log** — the log is the checkpoint record.
 - Print the summary as raw markdown — no surrounding fence.

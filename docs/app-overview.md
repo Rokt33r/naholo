@@ -85,7 +85,7 @@ Skills are reusable Claude Code instruction files managed centrally in the web U
 - Organized into **Skill Sets** (name + slug, unique per project)
 - Each skill has a name, markdown content, and full revision history
 - Content uses YAML frontmatter for metadata (e.g., description)
-- Install locally via CLI: `naholo skills install` writes `.claude/skills/{name}/SKILL.md`
+- Install locally via CLI: `naholo install-skills` writes `.claude/skills/{name}/SKILL.md`
 - Upload from local: `naholo skills upsert <skillSetSlug> <skillName> <filePath>`
 
 ## Auth

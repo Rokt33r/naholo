@@ -33,7 +33,7 @@ After init, the MCP server is automatically available to Claude Code.
 | `naholo status`                                          | Show current project and operator                                                     |
 | `naholo whoami`                                          | Show logged-in user info                                                              |
 | `naholo mcp`                                             | Start MCP server (stdio transport)                                                    |
-| `naholo skills install`                                  | Interactively pick a skill loadout, install as `.claude/skills/{name}/SKILL.md` files |
+| `naholo install-skills`                                  | Interactively pick a skill loadout, install as `.claude/skills/{name}/SKILL.md` files |
 | `naholo skills upsert <loadoutSlug> <name> <file>`       | Upload a local file as a skill (create or update)                                     |
 | `naholo skills loadouts create --name <n> --slug <s>`    | Create a new skill loadout                                                            |
 | `naholo skills loadouts update <slug> [--name] [--slug]` | Update a skill loadout                                                                |

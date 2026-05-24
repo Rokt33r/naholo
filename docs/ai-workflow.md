@@ -1,6 +1,6 @@
 # Naholo — AI-Assisted Development Workflow
 
-Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via seven skills: `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil`, plus `/frago` for mid-cycle task insertion.
+Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via six skills: `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil`.
 
 ## Workflow
 
@@ -45,19 +45,9 @@ Cut the warno'd MISSION into ORP-sized tasks.
 - Appends `## EXECUTION` with one `### TASK N — Title` section per task. Each task has a `#### Intent` (success criterion), an optional `#### Scheme of Maneuver` (ASCII diagram for control flow / UI / signature changes), and a `#### Course of Action` listing atomic Add / Edit / Move / Delete / Run / Manual steps with top-level-export sub-bullets. The `#### After-Action Report` heading is NOT written by `/opord` — `/splash` adds it when the task ships
 - Mirrors the task list into `TASKS.md` as a flat `- [ ] N. Title` checklist (no sub-tasks)
 - Resumable — re-running picks up the partial EXECUTION state and continues
-- **Plan revisions**: `/opord "freeform text"` treats the args as edit instructions for unfinished tasks (split, merge, retitle, drop). Completed tasks (those with a `#### After-Action Report` heading) are immutable. Single-task insertions are `/frago`'s job
+- **Plan revisions**: when `## EXECUTION` is already present, `/opord "freeform text"` treats the args as edit instructions for unfinished tasks — insert, drop, split, merge, retitle, rewrite. New tasks append at the next free integer; existing tasks are never re-slotted. Completed tasks (those with a `#### After-Action Report` heading) are immutable
 
 The bar is "could a fresh `/splash` session ship one task by reading only that task's section in OPERATION.md and the project conventions?"
-
-### Phase 4.5: Frago (`/frago "freeform"`)
-
-Insert a single new task mid-cycle without renumbering downstream.
-
-- Picks an anchor task (the top-level integer in the suffix, e.g. `TASK 3` → `TASK 3a`) and inserts a new `### TASK Na — Title` section immediately after it in `## EXECUTION`. Re-running on the same anchor produces `3b`, `3c`, …, `3z`, `3aa`, `3ab`, … (bijective base-26 / spreadsheet-column scheme; unbounded)
-- **Suffix is positional, not hierarchical**: `TASK 3a` is a flat top-level sibling of `TASK 3`, not a child of it. The agent skill set operates on a flat task list — no `parentTaskId` is set when the new task is pushed
-- Mirrors the new entry into `TASKS.md` as `- [ ] 3a. Title`
-- May revise immediately downstream unfinished tasks whose contract the new task changes; never edits completed tasks
-- For broader plan rewrites (multi-task revisions, retitles, deletions), re-run `/opord` instead
 
 ### Phase 5: Splash (`/splash [N] ["freeform"]`)
 
@@ -97,22 +87,21 @@ Two skills for different stages:
 
 Only `/infil` takes the operation number, and only on a fresh infil. Every other skill resolves the active operation via `naholo agent op` (which reads `op.yml` and prints `#{N} {title}`).
 
-| Skill     | First arg shape                | Meaning                                                                    |
-| --------- | ------------------------------ | -------------------------------------------------------------------------- |
-| `/infil`  | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)                   |
-| `/warno`  | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs                   |
-| `/opord`  | `"freeform"` (optional)        | Plan-revision instructions for unfinished tasks (split / retitle / drop)   |
-| `/frago`  | `"freeform"` (required)        | Insertion instruction — describes the new task and (optionally) its anchor |
-| `/splash` | `N` or `"freeform"` (optional) | Task number; or extra context for the next-unchecked task                  |
-| `/sitrep` | `"freeform"` (optional)        | Extra context for the summary log                                          |
-| `/exfil`  | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                                  |
+| Skill     | First arg shape                | Meaning                                                                           |
+| --------- | ------------------------------ | --------------------------------------------------------------------------------- |
+| `/infil`  | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)                          |
+| `/warno`  | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs                          |
+| `/opord`  | `"freeform"` (optional)        | Plan-revision instructions for unfinished tasks (insert / split / retitle / drop) |
+| `/splash` | `N` or `"freeform"` (optional) | Task number; or extra context for the next-unchecked task                         |
+| `/sitrep` | `"freeform"` (optional)        | Extra context for the summary log                                                 |
+| `/exfil`  | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                                         |
 
 ## Key Files
 
 | File           | Role                                                                                                                   | Owned by                                                                                        |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `OPERATION.md` | Single live document — SITUATION, MISSION, EXECUTION (with per-task Intent, Scheme of Maneuver, Course of Action, AAR) | `/infil` creates SITUATION, `/warno` adds MISSION, `/opord` adds EXECUTION, `/splash` adds AARs |
-| `TASKS.md`     | Flat checkbox list mirroring the EXECUTION TASK headings                                                               | `/opord` structures, `/frago` inserts, `/splash` checks off                                     |
+| `TASKS.md`     | Flat checkbox list mirroring the EXECUTION TASK headings                                                               | `/opord` structures + inserts, `/splash` checks off                                             |
 | `TIMELINE.md`  | Chronological event log; pushed as just-another-note                                                                   | `/infil` seeds, all skills append                                                               |
 
 ## MCP Integration

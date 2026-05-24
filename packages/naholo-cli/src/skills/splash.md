@@ -69,7 +69,7 @@ From OPERATION.md `### TASK N — Title`:
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the task intent specifies — if they ask for more than, or different from, what the task intent covers, **stop before implementing** and surface two options to the user:
 
-1. **Run `/opord` first** — modify the undone task to absorb the new scope, or create a new task for it (FRAGO). Pick this when the change is large enough to deserve its own review checkpoint, or when it should be a separate splash.
+1. **Run `/opord` first** — modify the undone task to absorb the new scope, or insert a new task for it. Pick this when the change is large enough to deserve its own review checkpoint, or when it should be a separate splash.
 2. **Splash anyway, capture in AAR** — proceed with the expanded scope this run, and document the deviation explicitly in the `#### After-Action Report` (what was added beyond the original goal, why, and any follow-up implications). Pick this when the change is small and naturally lives with the current task.
 
 Wait for the user to choose before continuing.
