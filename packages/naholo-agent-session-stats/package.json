@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./transcript": "./src/transcript.ts",
-    "./claude-code-v1": "./src/claude-code-v1.ts"
+    "./claude-code": "./src/claude-code/index.ts"
+  },
+  "scripts": {
+    "inspect-transcript": "tsx scripts/inspect-transcript.ts"
   },
   "dependencies": {
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
