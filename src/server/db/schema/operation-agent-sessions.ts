@@ -5,8 +5,13 @@ import {
   timestamp,
   boolean,
   integer,
+  jsonb,
   unique,
 } from 'drizzle-orm/pg-core'
+import type {
+  AgentSessionStatsV1,
+  AgentSessionStatsError,
+} from 'naholo-agent-session-stats/claude-code'
 import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { operations } from './operations'
@@ -33,6 +38,9 @@ export const operationAgentSessions = pgTable(
     endedAt: timestamp('ended_at').notNull(),
     hasTranscript: boolean('has_transcript').notNull().default(false),
     transcriptSizeBytes: integer('transcript_size_bytes').notNull(),
+    stats: jsonb('stats').$type<AgentSessionStatsV1>(),
+    statsFormat: text('stats_format').$type<'claude-code-v1'>(),
+    statsError: jsonb('stats_error').$type<AgentSessionStatsError>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

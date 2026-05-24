@@ -116,6 +116,9 @@ importers:
       lucide-react:
         specifier: ^0.553.0
         version: 0.553.0(react@19.2.0)
+      naholo-agent-session-stats:
+        specifier: workspace:*
+        version: link:packages/naholo-agent-session-stats
       naholo-api:
         specifier: workspace:*
         version: link:packages/naholo-api
