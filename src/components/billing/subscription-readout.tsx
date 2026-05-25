@@ -15,12 +15,14 @@ export function SubscriptionReadout({
   usedSeats,
   projectStatus,
   trialUntil,
+  hidePortalLink = false,
   children,
 }: {
   polarSubscription: PolarSubscription | null
   usedSeats: number
   projectStatus: ProjectStatus
   trialUntil: string | null
+  hidePortalLink?: boolean
   children?: React.ReactNode
 }) {
   const seats = polarSubscription?.seats
@@ -51,7 +53,7 @@ export function SubscriptionReadout({
           {formatDate(polarSubscription?.currentPeriodEnd)}
         </span>
       </div>
-      {polarSubscription != null && (
+      {polarSubscription != null && !hidePortalLink && (
         <>
           <hr />
           <div>

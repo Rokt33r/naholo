@@ -1,15 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useAction } from '@/lib/use-action'
 import { updateProjectAction } from '@/app/app/actions'
 import { useProjectContext } from '@/components/app/project-context'
+import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjects } from '@/hooks/use-projects'
+import { publicConfig } from '@/lib/publicConfig'
 
 type ProjectSettingsTabProps = {
   onClose: () => void
@@ -86,6 +91,10 @@ export function ProjectSettingsTab({ onClose }: ProjectSettingsTabProps) {
 
   return (
     <div className='space-y-6'>
+      {publicConfig.billing && (
+        <SubscriptionSection projectSlug={projectSlug} onNavigate={onClose} />
+      )}
+
       <div>
         <h3 className='text-lg font-semibold'>Project Settings</h3>
         <p className='text-muted-foreground text-sm'>
@@ -157,6 +166,44 @@ export function ProjectSettingsTab({ onClose }: ProjectSettingsTabProps) {
             </Button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+function SubscriptionSection({
+  projectSlug,
+  onNavigate,
+}: {
+  projectSlug: string
+  onNavigate: () => void
+}) {
+  const { data, isLoading } = useActiveProjectSubscription(projectSlug)
+
+  if (isLoading || data == null) {
+    return null
+  }
+
+  return (
+    <div className='space-y-3'>
+      <h3 className='text-lg font-semibold'>Subscription</h3>
+      <SubscriptionReadout
+        polarSubscription={data.subscription?.polarSubscription ?? null}
+        usedSeats={data.usedSeats}
+        projectStatus={data.projectStatus}
+        trialUntil={data.trialUntil ?? null}
+        hidePortalLink
+      />
+      <div className='flex justify-end'>
+        <Button asChild variant='outline'>
+          <Link
+            href={`/app/projects/${projectSlug}/subscription`}
+            onClick={onNavigate}
+          >
+            Open subscription page
+            <ArrowRight className='size-4' />
+          </Link>
+        </Button>
       </div>
     </div>
   )
