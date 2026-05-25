@@ -40,9 +40,10 @@ export type AgentSessionStatsV1 = {
 
 // ---- Aggregator ----
 
-export type AggregateClaudeCodeV1Result =
-  | { ok: true; stats: AgentSessionStatsV1 }
-  | { ok: false; error: AgentSessionStatsError }
+export type AggregateClaudeCodeV1Result = {
+  stats: AgentSessionStatsV1
+  errors: AgentSessionStatsError[]
+}
 
 export function aggregateClaudeCodeV1(
   jsonl: string,
@@ -55,10 +56,6 @@ export function aggregateClaudeCodeV1(
     },
   })
   const result = parser.process(jsonl)
-
-  if (result.errors.length > 0) {
-    return { ok: false, error: envelopeFromError(result.errors[0]) }
-  }
 
   const stats = newEmptyMutableStatsV1()
   for (const entry of result.entries) {
@@ -78,7 +75,10 @@ export function aggregateClaudeCodeV1(
         break
     }
   }
-  return { ok: true, stats: finalizeV1(stats) }
+  return {
+    stats: finalizeV1(stats),
+    errors: result.errors.map(envelopeFromError),
+  }
 }
 
 // ---- Mutable accumulator ----

@@ -40,7 +40,7 @@ export const operationAgentSessions = pgTable(
     transcriptSizeBytes: integer('transcript_size_bytes').notNull(),
     stats: jsonb('stats').$type<AgentSessionStatsV1>(),
     statsFormat: text('stats_format').$type<'claude-code-v1'>(),
-    statsError: jsonb('stats_error').$type<AgentSessionStatsError>(),
+    statsError: jsonb('stats_error').$type<AgentSessionStatsError[]>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
