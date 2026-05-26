@@ -77,51 +77,39 @@ export async function setAgentSessionStats(params: {
     )
 }
 
-export async function reprocessUnparsedAgentSessions(): Promise<{
-  processed: number
-  failed: number
-}> {
-  const rows = await db
-    .select({
-      id: operationAgentSessions.id,
-      operationId: operationAgentSessions.operationId,
-      projectId: operationAgentSessions.projectId,
-      sessionId: operationAgentSessions.sessionId,
-      hasTranscript: operationAgentSessions.hasTranscript,
-    })
-    .from(operationAgentSessions)
-    .where(
-      and(
-        isNull(operationAgentSessions.stats),
-        isNull(operationAgentSessions.statsError),
-      ),
-    )
+export type ReprocessAgentSessionResult =
+  | { ok: true; hasStats: boolean; errorCount: number }
+  | { ok: false; reason: 'not_found' | 'no_transcript' }
 
-  const storage = getFileStorageAdapter()
-  let processed = 0
-  let failed = 0
-  for (const row of rows) {
-    if (!row.hasTranscript) {
-      continue
-    }
-    try {
-      const key = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.sessionId}`
-      const transcript = await storage.getObject(key)
-      const { stats, errors } = aggregateClaudeCodeV1(transcript)
-      await setAgentSessionStats({
-        operationId: row.operationId,
-        agentSessionSessionId: row.sessionId,
-        stats,
-        statsFormat: CLAUDE_CODE_V1,
-        statsError: errors.length > 0 ? errors : null,
-      })
-      processed += 1
-    } catch (error) {
-      console.error(`reprocess: session ${row.sessionId} failed`, error)
-      failed += 1
-    }
+export async function reprocessAgentSession(
+  agentSessionSessionId: string,
+): Promise<ReprocessAgentSessionResult> {
+  const row = await db.query.operationAgentSessions.findFirst({
+    where: eq(operationAgentSessions.sessionId, agentSessionSessionId),
+  })
+  if (row == null) {
+    return { ok: false, reason: 'not_found' }
   }
-  return { processed, failed }
+  if (!row.hasTranscript) {
+    return { ok: false, reason: 'no_transcript' }
+  }
+
+  const key = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.sessionId}`
+  const transcript = await getFileStorageAdapter().getObject(key)
+  const { stats, errors } = aggregateClaudeCodeV1(transcript)
+  await setAgentSessionStats({
+    operationId: row.operationId,
+    agentSessionSessionId: row.sessionId,
+    stats,
+    statsFormat: CLAUDE_CODE_V1,
+    statsError: errors.length > 0 ? errors : null,
+  })
+
+  return {
+    ok: true,
+    hasStats: stats != null,
+    errorCount: errors.length,
+  }
 }
 
 export function pruneTranscriptForDownload(transcriptText: string): string {

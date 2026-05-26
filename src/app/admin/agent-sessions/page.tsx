@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { z } from 'zod'
 import { listAgentSessionsByStatsErrorState } from '@/server/admin/agent-session-stats'
-import { ReprocessButton } from './_components/reprocess-button'
+import { ReprocessRowButton } from './_components/reprocess-row-button'
 
 const searchParamsSchema = z.object({
   filter: z.enum(['any', 'null']).catch('any'),
@@ -23,7 +23,6 @@ export default async function AgentSessionsAdminPage({
         <h1 className='text-xl font-semibold text-zinc-900 dark:text-zinc-50'>
           Agent Sessions
         </h1>
-        <ReprocessButton />
       </div>
 
       <div className='mt-4 flex items-center gap-2 text-sm'>
@@ -72,12 +71,17 @@ export default async function AgentSessionsAdminPage({
                     {row.errorCount}
                   </td>
                   <td className='py-2'>
-                    <Link
-                      href={`/api/admin/agent-sessions/${row.sessionId}/pruned-transcript`}
-                      className='text-zinc-600 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100'
-                    >
-                      Download pruned
-                    </Link>
+                    <div className='flex items-center gap-3'>
+                      <Link
+                        href={`/api/admin/agent-sessions/${row.sessionId}/pruned-transcript`}
+                        className='text-zinc-600 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100'
+                      >
+                        Download pruned
+                      </Link>
+                      <ReprocessRowButton
+                        agentSessionSessionId={row.sessionId}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))
