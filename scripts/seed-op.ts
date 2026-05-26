@@ -6,10 +6,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../src/server/db'
 import { projects, projectOperators } from '../src/server/db/schema'
 import { createOperation } from '../src/server/services/operation'
-import {
-  setAgentSessionHasTranscript,
-  upsertAgentSession,
-} from '../src/server/services/agent-session'
+import { upsertAgentSession } from '../src/server/services/agent-session'
 import { createTask } from '../src/server/services/task'
 import { setTaskDone } from '../src/server/services/task'
 import { createNote } from '../src/server/services/note'
@@ -222,24 +219,7 @@ async function main() {
     let transcriptsCopied = 0
 
     for (const session of sessions) {
-      const upserted = await upsertAgentSession({
-        projectId: destProject.id,
-        operationId: destOperationId,
-        projectOperatorId: destOperator.id,
-        sessionId: session.sessionId,
-        title: session.title,
-        startedAt: new Date(session.startedAt),
-        endedAt: new Date(session.endedAt),
-        transcriptSizeBytes: session.transcriptSizeBytes,
-      })
-      if (!upserted.success) {
-        console.error(
-          `Failed to upsert session ${session.sessionId}: ${upserted.error.message}`,
-        )
-        continue
-      }
-      sessionsCreated += 1
-
+      let transcript: string | null = null
       if (session.hasTranscript) {
         const transcriptPath = path.join(
           tmpDir,
@@ -252,23 +232,32 @@ async function main() {
           )
           continue
         }
-        const transcript = fs.readFileSync(transcriptPath, 'utf-8')
+        transcript = fs.readFileSync(transcriptPath, 'utf-8')
         await fileStorage.putObject(
           `agent-session-transcripts/${destProject.id}/${destOperationId}/${session.sessionId}`,
           transcript,
         )
-        const flagged = await setAgentSessionHasTranscript({
-          operationId: destOperationId,
-          agentSessionSessionId: session.sessionId,
-        })
-        if (!flagged.success) {
-          console.error(
-            `Failed to flag transcript for ${session.sessionId}: ${flagged.error.message}`,
-          )
-          continue
-        }
         transcriptsCopied += 1
       }
+
+      const upserted = await upsertAgentSession({
+        projectId: destProject.id,
+        operationId: destOperationId,
+        projectOperatorId: destOperator.id,
+        sessionId: session.sessionId,
+        title: session.title,
+        startedAt: new Date(session.startedAt),
+        endedAt: new Date(session.endedAt),
+        transcriptSizeBytes: session.transcriptSizeBytes,
+        transcriptText: transcript,
+      })
+      if (!upserted.success) {
+        console.error(
+          `Failed to upsert session ${session.sessionId}: ${upserted.error.message}`,
+        )
+        continue
+      }
+      sessionsCreated += 1
     }
 
     console.log(

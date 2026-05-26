@@ -4,7 +4,6 @@ import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import {
   getAgentSessionBySessionId,
-  setAgentSessionHasTranscript,
   upsertAgentSession,
 } from '@/server/services/agent-session'
 import { getFileStorageAdapter } from '@/server/file-storage'
@@ -72,6 +71,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { project, operation, projectOperator } =
       await requireOperationAccess(projectSlug, operationNumber)
 
+    const transcript = validation.data.transcript
+    if (transcript != null) {
+      const fileStorage = getFileStorageAdapter()
+      await fileStorage.putObject(
+        `agent-session-transcripts/${project.id}/${operation.id}/${agentSessionSessionId}`,
+        transcript,
+      )
+    }
+
     const upserted = await upsertAgentSession({
       projectId: project.id,
       operationId: operation.id,
@@ -81,32 +89,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       startedAt: new Date(validation.data.startedAt),
       endedAt: new Date(validation.data.endedAt),
       transcriptSizeBytes: validation.data.transcriptSizeBytes,
+      transcriptText: transcript,
     })
     if (!upserted.success) {
       return NextResponse.json(
         { error: upserted.error.message },
         { status: 500 },
       )
-    }
-
-    const transcript = validation.data.transcript
-    if (transcript != null) {
-      const fileStorage = getFileStorageAdapter()
-      await fileStorage.putObject(
-        `agent-session-transcripts/${project.id}/${operation.id}/${agentSessionSessionId}`,
-        transcript,
-      )
-
-      const flagged = await setAgentSessionHasTranscript({
-        operationId: operation.id,
-        agentSessionSessionId: agentSessionSessionId,
-      })
-      if (!flagged.success) {
-        return NextResponse.json(
-          { error: flagged.error.message },
-          { status: 500 },
-        )
-      }
     }
 
     return NextResponse.json(upserted.data, { status: 200 })

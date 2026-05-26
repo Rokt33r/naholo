@@ -1,5 +1,13 @@
 import 'server-only'
 import { and, asc, eq } from 'drizzle-orm'
+import type {
+  AgentSessionStatsError,
+  AgentSessionStatsV1,
+} from 'naholo-agent-session-stats/claude-code'
+import {
+  CLAUDE_CODE_V1,
+  aggregateClaudeCodeV1,
+} from 'naholo-agent-session-stats/claude-code'
 import { db } from '../db'
 import { operationAgentSessions } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
@@ -46,7 +54,10 @@ export async function upsertAgentSession(data: {
   startedAt: Date
   endedAt: Date
   transcriptSizeBytes: number
+  transcriptText: string | null
 }): Promise<ReturnResult<{ id: string }>> {
+  const transcriptColumns = computeTranscriptColumns(data.transcriptText)
+
   const [row] = await db
     .insert(operationAgentSessions)
     .values({
@@ -58,6 +69,10 @@ export async function upsertAgentSession(data: {
       startedAt: data.startedAt,
       endedAt: data.endedAt,
       transcriptSizeBytes: data.transcriptSizeBytes,
+      hasTranscript: transcriptColumns.hasTranscript,
+      stats: transcriptColumns.stats,
+      statsFormat: transcriptColumns.statsFormat,
+      statsError: transcriptColumns.statsError,
     })
     .onConflictDoUpdate({
       target: [
@@ -71,29 +86,16 @@ export async function upsertAgentSession(data: {
         startedAt: data.startedAt,
         endedAt: data.endedAt,
         transcriptSizeBytes: data.transcriptSizeBytes,
+        hasTranscript: transcriptColumns.hasTranscript,
+        stats: transcriptColumns.stats,
+        statsFormat: transcriptColumns.statsFormat,
+        statsError: transcriptColumns.statsError,
         updatedAt: new Date(),
       },
     })
     .returning({ id: operationAgentSessions.id })
 
   return ok({ id: row.id })
-}
-
-export async function setAgentSessionHasTranscript(params: {
-  operationId: string
-  agentSessionSessionId: string
-}): Promise<ReturnResult<void>> {
-  await db
-    .update(operationAgentSessions)
-    .set({ hasTranscript: true, updatedAt: new Date() })
-    .where(
-      and(
-        eq(operationAgentSessions.operationId, params.operationId),
-        eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
-      ),
-    )
-
-  return ok(undefined)
 }
 
 export async function listAgentSessionsByOperation(
@@ -142,4 +144,27 @@ export async function getAgentSessionTranscriptText(params: {
 
   const key = `agent-session-transcripts/${params.projectId}/${params.operationId}/${row.sessionId}`
   return await getFileStorageAdapter().getObject(key)
+}
+
+function computeTranscriptColumns(transcriptText: string | null): {
+  hasTranscript: boolean
+  stats: AgentSessionStatsV1 | null
+  statsFormat: 'claude-code-v1' | null
+  statsError: AgentSessionStatsError[] | null
+} {
+  if (transcriptText == null) {
+    return {
+      hasTranscript: false,
+      stats: null,
+      statsFormat: null,
+      statsError: null,
+    }
+  }
+  const { stats, errors } = aggregateClaudeCodeV1(transcriptText)
+  return {
+    hasTranscript: true,
+    stats,
+    statsFormat: CLAUDE_CODE_V1,
+    statsError: errors.length > 0 ? errors : null,
+  }
 }
