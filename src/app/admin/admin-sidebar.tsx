@@ -18,6 +18,11 @@ import { publicConfig } from '@/lib/publicConfig'
 const items = [
   { href: '/admin/users', label: 'Users', billingOnly: false },
   {
+    href: '/admin/agent-sessions',
+    label: 'Agent Sessions',
+    billingOnly: false,
+  },
+  {
     href: '/admin/polar-webhook-events',
     label: 'Polar Webhook Events',
     billingOnly: true,
