@@ -7,10 +7,14 @@ export interface ClaudeCodeLastPromptEntry
   type: 'last-prompt'
 }
 
-const lastPromptRowSchema = z.object({
-  type: z.literal('last-prompt'),
-  timestamp: z.string().optional(),
-})
+const lastPromptRowSchema = z
+  .object({
+    type: z.literal('last-prompt'),
+    lastPrompt: z.unknown().optional(),
+    leafUuid: z.unknown().optional(),
+    sessionId: z.unknown().optional(),
+  })
+  .strict()
 
 export const mapLastPromptEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = lastPromptRowSchema.safeParse(raw)
@@ -20,7 +24,7 @@ export const mapLastPromptEntry: TranscriptMapper = (raw, ctx) => {
   const entry: ClaudeCodeLastPromptEntry = {
     index: ctx.index,
     type: 'last-prompt',
-    timestamp: parsed.data.timestamp ?? null,
+    timestamp: null,
     raw,
   }
   return entry

@@ -6,11 +6,13 @@ export interface ClaudeCodeSummaryEntry extends ClaudeCodeTranscriptEntryBase {
   type: 'summary'
 }
 
-const summaryRowSchema = z.object({
-  type: z.literal('summary'),
-  timestamp: z.string().optional(),
-  summary: z.string(),
-})
+const summaryRowSchema = z
+  .object({
+    type: z.literal('summary'),
+    summary: z.string(),
+    timestamp: z.string().optional(),
+  })
+  .strict()
 
 export const mapSummaryEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = summaryRowSchema.safeParse(raw)

@@ -6,10 +6,30 @@ export interface ClaudeCodeSystemEntry extends ClaudeCodeTranscriptEntryBase {
   type: 'system'
 }
 
-const systemRowSchema = z.object({
-  type: z.literal('system'),
-  timestamp: z.string().optional(),
-})
+const systemRowSchema = z
+  .object({
+    type: z.literal('system'),
+    timestamp: z.string(),
+    subtype: z.unknown().optional(),
+    level: z.unknown().optional(),
+    hasOutput: z.unknown().optional(),
+    hookCount: z.unknown().optional(),
+    hookErrors: z.unknown().optional(),
+    hookInfos: z.unknown().optional(),
+    preventedContinuation: z.unknown().optional(),
+    stopReason: z.unknown().optional(),
+    toolUseID: z.unknown().optional(),
+    parentUuid: z.unknown().optional(),
+    isSidechain: z.unknown().optional(),
+    cwd: z.unknown().optional(),
+    entrypoint: z.unknown().optional(),
+    gitBranch: z.unknown().optional(),
+    sessionId: z.unknown().optional(),
+    userType: z.unknown().optional(),
+    uuid: z.unknown().optional(),
+    version: z.unknown().optional(),
+  })
+  .strict()
 
 export const mapSystemEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = systemRowSchema.safeParse(raw)
@@ -19,7 +39,7 @@ export const mapSystemEntry: TranscriptMapper = (raw, ctx) => {
   const entry: ClaudeCodeSystemEntry = {
     index: ctx.index,
     type: 'system',
-    timestamp: parsed.data.timestamp ?? null,
+    timestamp: parsed.data.timestamp,
     raw,
   }
   return entry

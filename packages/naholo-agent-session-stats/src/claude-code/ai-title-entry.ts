@@ -6,10 +6,13 @@ export interface ClaudeCodeAiTitleEntry extends ClaudeCodeTranscriptEntryBase {
   type: 'ai-title'
 }
 
-const aiTitleRowSchema = z.object({
-  type: z.literal('ai-title'),
-  timestamp: z.string().optional(),
-})
+const aiTitleRowSchema = z
+  .object({
+    type: z.literal('ai-title'),
+    aiTitle: z.unknown().optional(),
+    sessionId: z.unknown().optional(),
+  })
+  .strict()
 
 export const mapAiTitleEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = aiTitleRowSchema.safeParse(raw)
@@ -19,7 +22,7 @@ export const mapAiTitleEntry: TranscriptMapper = (raw, ctx) => {
   const entry: ClaudeCodeAiTitleEntry = {
     index: ctx.index,
     type: 'ai-title',
-    timestamp: parsed.data.timestamp ?? null,
+    timestamp: null,
     raw,
   }
   return entry

@@ -7,10 +7,14 @@ export interface ClaudeCodeQueueOperationEntry
   type: 'queue-operation'
 }
 
-const queueOperationRowSchema = z.object({
-  type: z.literal('queue-operation'),
-  timestamp: z.string().optional(),
-})
+const queueOperationRowSchema = z
+  .object({
+    type: z.literal('queue-operation'),
+    timestamp: z.string(),
+    operation: z.unknown().optional(),
+    sessionId: z.unknown().optional(),
+  })
+  .strict()
 
 export const mapQueueOperationEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = queueOperationRowSchema.safeParse(raw)
@@ -20,7 +24,7 @@ export const mapQueueOperationEntry: TranscriptMapper = (raw, ctx) => {
   const entry: ClaudeCodeQueueOperationEntry = {
     index: ctx.index,
     type: 'queue-operation',
-    timestamp: parsed.data.timestamp ?? null,
+    timestamp: parsed.data.timestamp,
     raw,
   }
   return entry

@@ -7,10 +7,14 @@ export interface ClaudeCodeFileHistorySnapshotEntry
   type: 'file-history-snapshot'
 }
 
-const fileHistorySnapshotRowSchema = z.object({
-  type: z.literal('file-history-snapshot'),
-  timestamp: z.string().optional(),
-})
+const fileHistorySnapshotRowSchema = z
+  .object({
+    type: z.literal('file-history-snapshot'),
+    messageId: z.unknown().optional(),
+    snapshot: z.unknown().optional(),
+    isSnapshotUpdate: z.unknown().optional(),
+  })
+  .strict()
 
 export const mapFileHistorySnapshotEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = fileHistorySnapshotRowSchema.safeParse(raw)
@@ -20,7 +24,7 @@ export const mapFileHistorySnapshotEntry: TranscriptMapper = (raw, ctx) => {
   const entry: ClaudeCodeFileHistorySnapshotEntry = {
     index: ctx.index,
     type: 'file-history-snapshot',
-    timestamp: parsed.data.timestamp ?? null,
+    timestamp: null,
     raw,
   }
   return entry

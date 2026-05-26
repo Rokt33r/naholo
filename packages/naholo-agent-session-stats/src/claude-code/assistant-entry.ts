@@ -16,51 +16,74 @@ export interface ClaudeCodeAssistantEntry
   usage: ClaudeCodeTokenUsage
 }
 
-const assistantRowSchema = z.object({
-  type: z.literal('assistant'),
-  timestamp: z.string().optional(),
-  attributionSkill: z.string().optional(),
-  message: z.object({
-    id: z.string(),
-    model: z.string(),
-    content: z
-      .union([
-        z.string(),
-        z.array(
-          z.discriminatedUnion('type', [
-            z.object({ type: z.literal('text'), text: z.string().optional() }),
-            z.object({
-              type: z.literal('thinking'),
-              thinking: z.string().optional(),
-            }),
-            z.object({
-              type: z.literal('tool_use'),
-              name: z.string().optional(),
-            }),
-            z.object({ type: z.literal('tool_result') }),
-          ]),
-        ),
-      ])
-      .optional(),
-    usage: z
+const assistantRowSchema = z
+  .object({
+    type: z.literal('assistant'),
+    timestamp: z.string(),
+    attributionSkill: z.string().optional(),
+    requestId: z.unknown().optional(),
+    parentUuid: z.unknown().optional(),
+    isSidechain: z.unknown().optional(),
+    cwd: z.unknown().optional(),
+    entrypoint: z.unknown().optional(),
+    gitBranch: z.unknown().optional(),
+    sessionId: z.unknown().optional(),
+    userType: z.unknown().optional(),
+    uuid: z.unknown().optional(),
+    version: z.unknown().optional(),
+    message: z
       .object({
-        input_tokens: z.number().int().nonnegative(),
-        output_tokens: z.number().int().nonnegative(),
-        cache_creation: z.object({
-          ephemeral_5m_input_tokens: z.number().int().nonnegative(),
-          ephemeral_1h_input_tokens: z.number().int().nonnegative(),
-        }),
-        cache_read_input_tokens: z.number().int().nonnegative(),
-        cache_creation_input_tokens: z.unknown().optional(),
-        service_tier: z.unknown().optional(),
-        server_tool_use: z.unknown().optional(),
-        inference_geo: z.unknown().optional(),
-        iterations: z.unknown().optional(),
-        speed: z.unknown().optional(),
+        id: z.string(),
+        model: z.string(),
+        type: z.unknown().optional(),
+        role: z.unknown().optional(),
+        diagnostics: z.unknown().optional(),
+        stop_details: z.unknown().optional(),
+        stop_reason: z.unknown().optional(),
+        stop_sequence: z.unknown().optional(),
+        content: z
+          .union([
+            z.string(),
+            z.array(
+              z.discriminatedUnion('type', [
+                z.object({
+                  type: z.literal('text'),
+                  text: z.string().optional(),
+                }),
+                z.object({
+                  type: z.literal('thinking'),
+                  thinking: z.string().optional(),
+                }),
+                z.object({
+                  type: z.literal('tool_use'),
+                  name: z.string().optional(),
+                }),
+                z.object({ type: z.literal('tool_result') }),
+              ]),
+            ),
+          ])
+          .optional(),
+        usage: z
+          .object({
+            input_tokens: z.number().int().nonnegative(),
+            output_tokens: z.number().int().nonnegative(),
+            cache_creation: z.object({
+              ephemeral_5m_input_tokens: z.number().int().nonnegative(),
+              ephemeral_1h_input_tokens: z.number().int().nonnegative(),
+            }),
+            cache_read_input_tokens: z.number().int().nonnegative(),
+            cache_creation_input_tokens: z.unknown().optional(),
+            service_tier: z.unknown().optional(),
+            server_tool_use: z.unknown().optional(),
+            inference_geo: z.unknown().optional(),
+            iterations: z.unknown().optional(),
+            speed: z.unknown().optional(),
+          })
+          .strict(),
       })
       .strict(),
-  }),
-})
+  })
+  .strict()
 
 export const mapAssistantEntry: TranscriptMapper = (raw, ctx) => {
   const parsed = assistantRowSchema.safeParse(raw)
@@ -72,7 +95,7 @@ export const mapAssistantEntry: TranscriptMapper = (raw, ctx) => {
   const entry: ClaudeCodeAssistantEntry = {
     index: ctx.index,
     type: 'assistant',
-    timestamp: row.timestamp ?? null,
+    timestamp: row.timestamp,
     raw,
     messageId: row.message.id,
     model: row.message.model,
