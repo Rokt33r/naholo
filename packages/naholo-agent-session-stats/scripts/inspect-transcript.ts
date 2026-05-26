@@ -4,6 +4,12 @@ import { ClaudeCodeTranscriptParser } from '../src/claude-code/index.js'
 import { mapUserEntry } from '../src/claude-code/user-entry.js'
 import { mapAssistantEntry } from '../src/claude-code/assistant-entry.js'
 import { mapSummaryEntry } from '../src/claude-code/summary-entry.js'
+import { mapAiTitleEntry } from '../src/claude-code/ai-title-entry.js'
+import { mapAttachmentEntry } from '../src/claude-code/attachment-entry.js'
+import { mapFileHistorySnapshotEntry } from '../src/claude-code/file-history-snapshot-entry.js'
+import { mapLastPromptEntry } from '../src/claude-code/last-prompt-entry.js'
+import { mapQueueOperationEntry } from '../src/claude-code/queue-operation-entry.js'
+import { mapSystemEntry } from '../src/claude-code/system-entry.js'
 import type { AgentSessionStatsError } from '../src/claude-code/types.js'
 
 function main(): void {
@@ -25,6 +31,12 @@ function main(): void {
       user: mapUserEntry,
       assistant: mapAssistantEntry,
       summary: mapSummaryEntry,
+      'ai-title': mapAiTitleEntry,
+      attachment: mapAttachmentEntry,
+      'file-history-snapshot': mapFileHistorySnapshotEntry,
+      'last-prompt': mapLastPromptEntry,
+      'queue-operation': mapQueueOperationEntry,
+      system: mapSystemEntry,
     },
   })
   const result = parser.process(text)

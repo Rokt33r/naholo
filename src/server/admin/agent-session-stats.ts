@@ -144,40 +144,97 @@ function prunedRow(raw: unknown): unknown {
   if (!isObjectRecord(raw)) {
     return { pruneError: 'non_object' }
   }
-  const pruned: Record<string, unknown> = {}
-  if (typeof raw.type === 'string') {
-    pruned.type = raw.type
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(raw)) {
+    out[key] = redactTopLevel(key, value)
   }
-  if (typeof raw.timestamp === 'string') {
-    pruned.timestamp = raw.timestamp
+  return out
+}
+
+function redactTopLevel(key: string, value: unknown): unknown {
+  if (key === 'summary' || key === 'lastPrompt' || key === 'prompt') {
+    return typeof value === 'string' ? redactString(value) : value
   }
-  if (typeof raw.attributionSkill === 'string') {
-    pruned.attributionSkill = raw.attributionSkill
+  if (key === 'message' && isObjectRecord(value)) {
+    return redactMessage(value)
   }
-  const message = raw.message
-  if (isObjectRecord(message)) {
-    const prunedMessage: Record<string, unknown> = {}
-    if (typeof message.id === 'string') {
-      prunedMessage.id = message.id
-    }
-    if (typeof message.model === 'string') {
-      prunedMessage.model = message.model
-    }
-    if (isObjectRecord(message.usage)) {
-      prunedMessage.usage = message.usage
-    }
-    if (Array.isArray(message.content)) {
-      prunedMessage.content = message.content.map((part) =>
-        isObjectRecord(part) && typeof part.type === 'string'
-          ? { type: part.type }
-          : { type: 'unknown' },
-      )
-    }
-    pruned.message = prunedMessage
+  if (key === 'attachment' && isObjectRecord(value)) {
+    return redactAttachment(value)
   }
-  return pruned
+  return value
+}
+
+function redactMessage(
+  message: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(message)) {
+    out[key] = key === 'content' ? redactMessageContent(value) : value
+  }
+  return out
+}
+
+function redactMessageContent(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return redactString(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map(redactMessageContentPart)
+  }
+  return value
+}
+
+function redactMessageContentPart(part: unknown): unknown {
+  if (typeof part === 'string') {
+    return redactString(part)
+  }
+  if (!isObjectRecord(part)) {
+    return part
+  }
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(part)) {
+    if (key === 'text' || key === 'thinking') {
+      out[key] = typeof value === 'string' ? redactString(value) : value
+    } else if (key === 'input') {
+      out[key] = redactInput(value)
+    } else if (key === 'content') {
+      out[key] = redactMessageContent(value)
+    } else {
+      out[key] = value
+    }
+  }
+  return out
+}
+
+function redactInput(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return redactString(value)
+  }
+  if (value != null && typeof value === 'object') {
+    return REDACTION_SENTINEL
+  }
+  return value
+}
+
+function redactAttachment(
+  attachment: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(attachment)) {
+    out[key] =
+      key === 'content' && typeof value === 'string'
+        ? redactString(value)
+        : value
+  }
+  return out
+}
+
+function redactString(value: string): string {
+  return value.length === 0 ? '' : REDACTION_SENTINEL
 }
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === 'object'
 }
+
+const REDACTION_SENTINEL = '_redacted_'
