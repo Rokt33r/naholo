@@ -4,7 +4,7 @@ import { requireAppAdmin } from '@/server/auth/permissions'
 import { db } from '@/server/db'
 import { operationAgentSessions } from '@/server/db/schema'
 import { getFileStorageAdapter } from '@/server/file-storage'
-import { pruneTranscriptForDownload } from '@/server/admin/agent-session-stats'
+import { pruneTranscriptForDownload } from '@/server/admin/prune-transcript'
 
 export async function GET(
   _request: Request,
