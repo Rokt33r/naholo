@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm'
+import { and, asc, eq, isNotNull, isNull, or } from 'drizzle-orm'
 import {
   type AgentSessionStatsError,
   type AgentSessionStatsV1,
@@ -10,18 +10,27 @@ import { db } from '../db'
 import { operationAgentSessions, operations, projects } from '../db/schema'
 import { getFileStorageAdapter } from '../file-storage'
 
-export type AgentSessionStatsErrorListItem = {
+export type AgentSessionAdminListItem = {
   id: string
   sessionId: string
   projectSlug: string
   operationNumber: number
+  statsFormat: 'claude-code-v1' | null
   hasStats: boolean
   errorCount: number
 }
 
-export async function listAgentSessionsByStatsErrorState(
-  filter: 'any' | 'null',
-): Promise<AgentSessionStatsErrorListItem[]> {
+export async function listAgentSessionsForAdmin(
+  filter: 'unprocessed' | 'processed',
+): Promise<AgentSessionAdminListItem[]> {
+  const whereProcessed = and(
+    isNotNull(operationAgentSessions.stats),
+    isNull(operationAgentSessions.statsError),
+  )
+  const whereUnprocessed = or(
+    isNull(operationAgentSessions.stats),
+    isNotNull(operationAgentSessions.statsError),
+  )
   const rows = await db
     .select({
       id: operationAgentSessions.id,
@@ -29,6 +38,7 @@ export async function listAgentSessionsByStatsErrorState(
       projectSlug: projects.slug,
       operationNumber: operations.number,
       stats: operationAgentSessions.stats,
+      statsFormat: operationAgentSessions.statsFormat,
       statsError: operationAgentSessions.statsError,
     })
     .from(operationAgentSessions)
@@ -37,11 +47,7 @@ export async function listAgentSessionsByStatsErrorState(
       eq(operations.id, operationAgentSessions.operationId),
     )
     .innerJoin(projects, eq(projects.id, operationAgentSessions.projectId))
-    .where(
-      filter === 'any'
-        ? isNotNull(operationAgentSessions.statsError)
-        : isNull(operationAgentSessions.statsError),
-    )
+    .where(filter === 'processed' ? whereProcessed : whereUnprocessed)
     .orderBy(asc(operationAgentSessions.createdAt))
 
   return rows.map((row) => ({
@@ -49,6 +55,7 @@ export async function listAgentSessionsByStatsErrorState(
     sessionId: row.sessionId,
     projectSlug: row.projectSlug,
     operationNumber: row.operationNumber,
+    statsFormat: row.statsFormat,
     hasStats: row.stats != null,
     errorCount: row.statsError?.length ?? 0,
   }))

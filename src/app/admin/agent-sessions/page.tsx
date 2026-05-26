@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { z } from 'zod'
-import { listAgentSessionsByStatsErrorState } from '@/server/admin/agent-session-stats'
+import { listAgentSessionsForAdmin } from '@/server/admin/agent-session-stats'
 import { ReprocessRowButton } from './_components/reprocess-row-button'
 
 const searchParamsSchema = z.object({
-  filter: z.enum(['any', 'null']).catch('any'),
+  filter: z.enum(['unprocessed', 'processed']).catch('unprocessed'),
 })
 
 export default async function AgentSessionsAdminPage({
@@ -13,9 +13,11 @@ export default async function AgentSessionsAdminPage({
   searchParams: Promise<{ filter?: string }>
 }) {
   const raw = await searchParams
-  const { filter } = searchParamsSchema.parse({ filter: raw.filter ?? 'any' })
+  const { filter } = searchParamsSchema.parse({
+    filter: raw.filter ?? 'unprocessed',
+  })
 
-  const rows = await listAgentSessionsByStatsErrorState(filter)
+  const rows = await listAgentSessionsForAdmin(filter)
 
   return (
     <div className='p-6'>
@@ -27,8 +29,8 @@ export default async function AgentSessionsAdminPage({
 
       <div className='mt-4 flex items-center gap-2 text-sm'>
         <span className='text-zinc-500 dark:text-zinc-400'>Filter:</span>
-        <FilterLink current={filter} value='any' label='any errors' />
-        <FilterLink current={filter} value='null' label='clean (null)' />
+        <FilterLink current={filter} value='unprocessed' label='unprocessed' />
+        <FilterLink current={filter} value='processed' label='processed' />
       </div>
 
       <div className='mt-4 overflow-x-auto'>
@@ -37,6 +39,7 @@ export default async function AgentSessionsAdminPage({
             <tr className='border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400'>
               <th className='pb-2 pr-4 font-medium'>Session ID</th>
               <th className='pb-2 pr-4 font-medium'>Project / Op</th>
+              <th className='pb-2 pr-4 font-medium'>Format</th>
               <th className='pb-2 pr-4 font-medium'>Stats</th>
               <th className='pb-2 pr-4 font-medium'># Errors</th>
               <th className='pb-2 font-medium'></th>
@@ -46,7 +49,7 @@ export default async function AgentSessionsAdminPage({
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className='py-4 text-center text-zinc-500 dark:text-zinc-400'
                 >
                   No rows.
@@ -63,6 +66,9 @@ export default async function AgentSessionsAdminPage({
                   </td>
                   <td className='py-2 pr-4 text-zinc-600 dark:text-zinc-400'>
                     {row.projectSlug} #{row.operationNumber}
+                  </td>
+                  <td className='py-2 pr-4 font-mono text-xs text-zinc-600 dark:text-zinc-400'>
+                    {row.statsFormat ?? '—'}
                   </td>
                   <td className='py-2 pr-4'>
                     <StatsBadge hasStats={row.hasStats} />
@@ -98,8 +104,8 @@ function FilterLink({
   value,
   label,
 }: {
-  current: 'any' | 'null'
-  value: 'any' | 'null'
+  current: 'unprocessed' | 'processed'
+  value: 'unprocessed' | 'processed'
   label: string
 }) {
   const isActive = current === value
