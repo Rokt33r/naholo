@@ -30,6 +30,10 @@ const assistantRowSchema = z.object({
           z.discriminatedUnion('type', [
             z.object({ type: z.literal('text'), text: z.string().optional() }),
             z.object({
+              type: z.literal('thinking'),
+              thinking: z.string().optional(),
+            }),
+            z.object({
               type: z.literal('tool_use'),
               name: z.string().optional(),
             }),
@@ -50,6 +54,9 @@ const assistantRowSchema = z.object({
         cache_creation_input_tokens: z.unknown().optional(),
         service_tier: z.unknown().optional(),
         server_tool_use: z.unknown().optional(),
+        inference_geo: z.unknown().optional(),
+        iterations: z.unknown().optional(),
+        speed: z.unknown().optional(),
       })
       .strict(),
   }),

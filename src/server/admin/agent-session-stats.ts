@@ -152,7 +152,15 @@ function prunedRow(raw: unknown): unknown {
 }
 
 function redactTopLevel(key: string, value: unknown): unknown {
-  if (key === 'summary' || key === 'lastPrompt' || key === 'prompt') {
+  if (
+    key === 'summary' ||
+    key === 'lastPrompt' ||
+    key === 'prompt' ||
+    key === 'cwd' ||
+    key === 'stdout' ||
+    key === 'aiTitle' ||
+    key === 'gitBranch'
+  ) {
     return typeof value === 'string' ? redactString(value) : value
   }
   if (key === 'message' && isObjectRecord(value)) {
@@ -161,7 +169,37 @@ function redactTopLevel(key: string, value: unknown): unknown {
   if (key === 'attachment' && isObjectRecord(value)) {
     return redactAttachment(value)
   }
+  if (key === 'toolUseResult') {
+    if (typeof value === 'string') {
+      return redactString(value)
+    }
+    if (isObjectRecord(value)) {
+      return redactToolUseResult(value)
+    }
+  }
+  if (key === 'hookErrors' && Array.isArray(value)) {
+    return value.map((entry) =>
+      typeof entry === 'string' ? redactString(entry) : entry,
+    )
+  }
+  if (key === 'hookInfos' && Array.isArray(value)) {
+    return value.map(redactHookInfo)
+  }
   return value
+}
+
+function redactHookInfo(info: unknown): unknown {
+  if (!isObjectRecord(info)) {
+    return info
+  }
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(info)) {
+    out[key] =
+      key === 'command' && typeof value === 'string'
+        ? redactString(value)
+        : value
+  }
+  return out
 }
 
 function redactMessage(
@@ -193,7 +231,7 @@ function redactMessageContentPart(part: unknown): unknown {
   }
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(part)) {
-    if (key === 'text' || key === 'thinking') {
+    if (key === 'text' || key === 'thinking' || key === 'signature') {
       out[key] = typeof value === 'string' ? redactString(value) : value
     } else if (key === 'input') {
       out[key] = redactInput(value)
@@ -216,15 +254,83 @@ function redactInput(value: unknown): unknown {
   return value
 }
 
+function redactToolUseResult(
+  toolUseResult: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(toolUseResult)) {
+    out[key] = redactToolUseResultField(key, value)
+  }
+  return out
+}
+
+function redactToolUseResultField(key: string, value: unknown): unknown {
+  if (key === 'content') {
+    if (typeof value === 'string') {
+      return redactString(value)
+    }
+    return redactMessageContent(value)
+  }
+  if (
+    (key === 'filePath' ||
+      key === 'stdout' ||
+      key === 'stderr' ||
+      key === 'text' ||
+      key === 'oldString' ||
+      key === 'newString' ||
+      key === 'originalFile') &&
+    typeof value === 'string'
+  ) {
+    return redactString(value)
+  }
+  if (key === 'lines') {
+    return redactAllStrings(value)
+  }
+  if (isObjectRecord(value)) {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = redactToolUseResultField(k, v)
+    }
+    return out
+  }
+  return value
+}
+
+function redactAllStrings(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return redactString(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map(redactAllStrings)
+  }
+  if (isObjectRecord(value)) {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = redactAllStrings(v)
+    }
+    return out
+  }
+  return value
+}
+
 function redactAttachment(
   attachment: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(attachment)) {
-    out[key] =
-      key === 'content' && typeof value === 'string'
-        ? redactString(value)
-        : value
+    if (
+      (key === 'content' ||
+        key === 'filename' ||
+        key === 'snippet' ||
+        key === 'stdout' ||
+        key === 'stderr' ||
+        key === 'command') &&
+      typeof value === 'string'
+    ) {
+      out[key] = redactString(value)
+    } else {
+      out[key] = value
+    }
   }
   return out
 }
