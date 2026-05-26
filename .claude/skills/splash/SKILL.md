@@ -14,8 +14,8 @@ No operation number — the skill resolves the active operation via `naholo agen
 
 First positional token (optional):
 
-- **Integer `N`** — ship TASK N specifically. Required when multiple unchecked tasks exist and you want to skip ahead, or when re-running on an already-shipped task to revise its AAR.
-- **No integer** — ship the next unchecked task from `TASKS.md`.
+- **Integer `N`** — ship TASK N specifically. Required to skip ahead past earlier unchecked tasks, or to re-run on an already-shipped task and revise its AAR. Even when the user just inserted a new task via `/opord`, the default is still first-unchecked — they must pass `N` to target it.
+- **No integer** — ship the **first** unchecked task in `TASKS.md`, top to bottom. Task numbers define order; never reorder based on recency, recent `/opord` activity, or implied intent.
 
 Anything in quotes after is freeform context for the splash. Common patterns:
 
@@ -54,7 +54,7 @@ Validate: `## EXECUTION` must exist and contain at least one `### TASK N — Tit
 ### 6. Pick the target task
 
 - If `N` was provided → target TASK N. If no matching `### TASK N` section exists, stop and tell the user.
-- Otherwise → target the first unchecked task in TASKS.md, top to bottom. If all are `[x]`, tell the user there's nothing left and suggest `/exfil`.
+- Otherwise → target the **first** unchecked task in TASKS.md, top to bottom. Task numbers are the order. Do **not** infer a different target from session context (e.g. a task the user just inserted via `/opord`) — without an explicit `N`, first-unchecked wins. If all are `[x]`, tell the user there's nothing left and suggest `/exfil`.
 
 If the targeted task already has a `#### After-Action Report` heading with a non-empty body, this is a **revision splash** — see step 9 (AAR update path). If the task has no `#### After-Action Report` heading at all, this is a **fresh splash** — `/splash` adds the heading itself when shipping.
 
