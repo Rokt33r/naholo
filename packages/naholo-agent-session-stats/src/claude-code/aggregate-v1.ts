@@ -1,11 +1,11 @@
-import type { AgentSessionStatsError, ClaudeCodeTokenUsage } from './types.js'
-import { ClaudeCodeTranscriptParser } from './parser.js'
+import type { AgentSessionStatsError, ClaudeCodeTokenUsage } from './types'
+import { ClaudeCodeTranscriptParser } from './parser'
 import {
   type ClaudeCodeAssistantEntry,
   mapAssistantEntry,
-} from './assistant-entry.js'
-import { mapUserEntry } from './user-entry.js'
-import { mapSummaryEntry } from './summary-entry.js'
+} from './assistant-entry'
+import { mapUserEntry } from './user-entry'
+import { mapSummaryEntry } from './summary-entry'
 
 // ---- Format identifier ----
 

@@ -3,8 +3,8 @@ import type {
   ClaudeCodeTokenUsage,
   ClaudeCodeTranscriptEntryBase,
   TranscriptMapper,
-} from './types.js'
-import { mapValidationError } from './utils.js'
+} from './types'
+import { mapValidationError } from './utils'
 
 export interface ClaudeCodeAssistantEntry
   extends ClaudeCodeTranscriptEntryBase {

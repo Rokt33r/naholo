@@ -3,7 +3,7 @@ import type {
   ClaudeCodeTranscriptParserMappers,
   ClaudeCodeTranscriptParserOptions,
   ClaudeCodeTranscriptParserResult,
-} from './types.js'
+} from './types'
 
 export class ClaudeCodeTranscriptParser {
   private readonly mappers: ClaudeCodeTranscriptParserMappers

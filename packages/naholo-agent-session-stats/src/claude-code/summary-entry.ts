@@ -1,9 +1,6 @@
 import { z } from 'zod'
-import type {
-  ClaudeCodeTranscriptEntryBase,
-  TranscriptMapper,
-} from './types.js'
-import { mapValidationError } from './utils.js'
+import type { ClaudeCodeTranscriptEntryBase, TranscriptMapper } from './types'
+import { mapValidationError } from './utils'
 
 export interface ClaudeCodeSummaryEntry extends ClaudeCodeTranscriptEntryBase {
   type: 'summary'
