@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import type { AgentSessionStatsV1 } from 'naholo-agent-session-stats/claude-code'
 import { fetcher } from '@/lib/fetcher'
 
 export type AgentSessionSummary = {
@@ -9,6 +10,9 @@ export type AgentSessionSummary = {
   endedAt: string
   hasTranscript: boolean
   transcriptSizeBytes: number
+  stats: AgentSessionStatsV1 | null
+  statsFormat: 'claude-code-v1' | null
+  statsErrored: boolean
 }
 
 export function useAgentSessions(projectSlug: string, operationNumber: number) {

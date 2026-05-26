@@ -23,6 +23,9 @@ export type AgentSessionSummary = {
   endedAt: string
   hasTranscript: boolean
   transcriptSizeBytes: number
+  stats: AgentSessionStatsV1 | null
+  statsFormat: 'claude-code-v1' | null
+  statsErrored: boolean
 }
 
 function toSummary(row: {
@@ -33,6 +36,9 @@ function toSummary(row: {
   endedAt: Date
   hasTranscript: boolean
   transcriptSizeBytes: number
+  stats: AgentSessionStatsV1 | null
+  statsFormat: 'claude-code-v1' | null
+  statsError: AgentSessionStatsError[] | null
 }): AgentSessionSummary {
   return {
     id: row.id,
@@ -42,6 +48,9 @@ function toSummary(row: {
     endedAt: row.endedAt.toISOString(),
     hasTranscript: row.hasTranscript,
     transcriptSizeBytes: row.transcriptSizeBytes,
+    stats: row.stats,
+    statsFormat: row.statsFormat,
+    statsErrored: row.statsError != null && row.statsError.length > 0,
   }
 }
 

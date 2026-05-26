@@ -1,4 +1,9 @@
-import { calculateCost, getModelPricing } from '@/lib/agent-session-pricing'
+import type { PerModelTokens } from 'naholo-agent-session-stats/claude-code'
+import {
+  calculateCost,
+  calculateWeightedTokens,
+  getModelPricing,
+} from '@/lib/agent-session-pricing'
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +20,25 @@ type StatsTotalsProps = {
   rows: SessionRowStats[]
 }
 
+type Usage = {
+  inputTokens: number
+  outputTokens: number
+  cacheCreation5mInputTokens: number
+  cacheCreation1hInputTokens: number
+  cacheReadInputTokens: number
+}
+
+type PerSkillModelRow = {
+  model: string
+  weightedTokens: number
+}
+
+type SkillRow = {
+  skill: string
+  perModel: PerSkillModelRow[]
+  totalWeightedTokens: number
+}
+
 export function StatsTotals({ rows }: StatsTotalsProps) {
   const sessionCount = rows.length
 
@@ -24,11 +48,14 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
   let durationMs = 0
   let toolUseCount = 0
   const toolUseByName: Record<string, number> = {}
-  const bySkill: Record<string, number> = {}
+  const bySkillModelUsage = new Map<string, Map<string, Usage>>()
 
   const perModelMap = new Map<string, PerModelTotals>()
 
   for (const row of rows) {
+    if (row.stats == null) {
+      continue
+    }
     messageCount += row.messageCount
     userCount += row.userCount
     assistantCount += row.assistantCount
@@ -37,8 +64,15 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
     for (const [name, count] of Object.entries(row.toolUseByName)) {
       toolUseByName[name] = (toolUseByName[name] ?? 0) + count
     }
-    for (const [skill, count] of Object.entries(row.bySkill)) {
-      bySkill[skill] = (bySkill[skill] ?? 0) + count
+    for (const [skill, perModelList] of Object.entries(row.bySkill)) {
+      let modelMap = bySkillModelUsage.get(skill)
+      if (modelMap == null) {
+        modelMap = new Map<string, Usage>()
+        bySkillModelUsage.set(skill, modelMap)
+      }
+      for (const pm of perModelList) {
+        addUsageInto(modelMap, pm.model, pm.usage)
+      }
     }
     for (const m of row.perModel) {
       const existing = perModelMap.get(m.model)
@@ -57,14 +91,31 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
   const toolNamesSorted = Object.entries(toolUseByName).sort(
     (a, b) => b[1] - a[1],
   )
-  const skillsSorted = Object.entries(bySkill).sort((a, b) => {
-    if (a[0] === NO_SKILL) {
+
+  const skillsSorted: SkillRow[] = []
+  for (const [skill, modelMap] of bySkillModelUsage) {
+    const perModel: PerSkillModelRow[] = []
+    let totalWeighted = 0
+    for (const [model, usage] of modelMap) {
+      const weighted = calculateWeightedTokens(usage, model)
+      perModel.push({ model, weightedTokens: weighted })
+      totalWeighted += weighted
+    }
+    perModel.sort((a, b) => b.weightedTokens - a.weightedTokens)
+    skillsSorted.push({
+      skill,
+      perModel,
+      totalWeightedTokens: totalWeighted,
+    })
+  }
+  skillsSorted.sort((a, b) => {
+    if (a.skill === NO_SKILL) {
       return 1
     }
-    if (b[0] === NO_SKILL) {
+    if (b.skill === NO_SKILL) {
       return -1
     }
-    return b[1] - a[1]
+    return b.totalWeightedTokens - a.totalWeightedTokens
   })
 
   const perModelRows = Array.from(perModelMap.values()).map((m) => ({
@@ -134,17 +185,25 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
               <span className='w-12 shrink-0 text-muted-foreground'>
                 Skills
               </span>
-              <div className='flex flex-col gap-0.5'>
-                <span className='text-muted-foreground'>
-                  {skillsSorted
-                    .map(
-                      ([skill, weighted]) =>
-                        `${skill} ${formatCompact(weighted)}`,
-                    )
-                    .join(' · ')}
-                </span>
+              <div className='flex flex-col gap-1'>
+                {skillsSorted.map((skillRow) => (
+                  <div
+                    key={skillRow.skill}
+                    className='flex flex-wrap items-baseline gap-x-2'
+                  >
+                    <span className='font-medium'>{skillRow.skill}</span>
+                    <span className='text-muted-foreground'>
+                      {skillRow.perModel
+                        .map(
+                          (pm) =>
+                            `${pm.model} ${formatCompact(pm.weightedTokens)}`,
+                        )
+                        .join(' · ')}
+                    </span>
+                  </div>
+                ))}
                 <span className='text-[10px] text-muted-foreground/70'>
-                  weighted tokens attributed to each skill
+                  weighted tokens attributed to each (skill, model)
                 </span>
               </div>
             </div>
@@ -241,6 +300,29 @@ function Stat({ label, value }: { label: string; value: string }) {
       <span className='font-medium'>{value}</span>
     </div>
   )
+}
+
+function addUsageInto(
+  modelMap: Map<string, Usage>,
+  model: string,
+  usage: PerModelTokens['usage'],
+): void {
+  let bucket = modelMap.get(model)
+  if (bucket == null) {
+    bucket = {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreation5mInputTokens: 0,
+      cacheCreation1hInputTokens: 0,
+      cacheReadInputTokens: 0,
+    }
+    modelMap.set(model, bucket)
+  }
+  bucket.inputTokens += usage.inputTokens
+  bucket.outputTokens += usage.outputTokens
+  bucket.cacheCreation5mInputTokens += usage.cacheCreation5mInputTokens
+  bucket.cacheCreation1hInputTokens += usage.cacheCreation1hInputTokens
+  bucket.cacheReadInputTokens += usage.cacheReadInputTokens
 }
 
 function formatInt(value: number): string {

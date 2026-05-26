@@ -31,7 +31,9 @@ export function StatsSessionsTable({
         </thead>
         <tbody>
           {rows.map((row) => {
-            const canOpen = row.agentSession.hasTranscript
+            const hasStats = row.stats != null
+            const fullFailure = !hasStats && row.statsErrored
+            const canOpen = hasStats && row.agentSession.hasTranscript
             return (
               <tr
                 key={row.agentSession.sessionId}
@@ -53,13 +55,31 @@ export function StatsSessionsTable({
                   )}
                 </Td>
                 <Td className='text-right tabular-nums'>
-                  {row.isLoading ? '…' : row.messageCount.toLocaleString()}
+                  {hasStats ? row.messageCount.toLocaleString() : '—'}
                 </Td>
                 <Td className='text-right tabular-nums'>
-                  {formatDurationHMS(row.durationMs)}
+                  {hasStats ? formatDurationHMS(row.durationMs) : '—'}
                 </Td>
                 <Td className='text-right tabular-nums'>
-                  {row.isLoading ? '…' : formatUSD(row.totalCost)}
+                  {fullFailure ? (
+                    <span className='text-amber-600 dark:text-amber-400'>
+                      failed to process transcript
+                    </span>
+                  ) : hasStats ? (
+                    <span className='inline-flex items-center justify-end gap-2'>
+                      <span>{formatUSD(row.totalCost)}</span>
+                      {row.statsErrored ? (
+                        <span
+                          title='Some transcript entries failed to parse — totals may be incomplete.'
+                          className='text-amber-600 dark:text-amber-400'
+                        >
+                          ⚠ partial parse
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : (
+                    '—'
+                  )}
                 </Td>
               </tr>
             )

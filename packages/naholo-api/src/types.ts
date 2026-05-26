@@ -153,6 +153,8 @@ export type UserApiToken = {
 
 // ---- Agent sessions ----
 
+import type { AgentSessionStatsV1 } from 'naholo-agent-session-stats/claude-code'
+
 export type AgentSessionSummary = {
   id: string
   sessionId: string
@@ -161,6 +163,9 @@ export type AgentSessionSummary = {
   endedAt: string // ISO 8601
   hasTranscript: boolean
   transcriptSizeBytes: number
+  stats: AgentSessionStatsV1 | null
+  statsFormat: 'claude-code-v1' | null
+  statsErrored: boolean
 }
 
 export type AgentSessionPayload = {

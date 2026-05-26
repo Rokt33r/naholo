@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useQueries } from '@tanstack/react-query'
-import { createResponseError } from '@/lib/fetcher'
 import {
-  parseTranscript,
-  type TranscriptEntry,
-} from '@/lib/agent-session-transcript'
+  CLAUDE_CODE_V1,
+  type AgentSessionStatsV1,
+  type PerModelTokens,
+} from 'naholo-agent-session-stats/claude-code'
 import {
   calculateCost,
   calculateWeightedTokens,
@@ -35,6 +34,8 @@ export type PerModelTotals = {
 
 export type SessionRowStats = {
   agentSession: AgentSessionSummary
+  stats: AgentSessionStatsV1 | null
+  statsErrored: boolean
   durationMs: number
   messageCount: number
   userCount: number
@@ -43,21 +44,12 @@ export type SessionRowStats = {
   totalCost: number | null
   toolUseCount: number
   toolUseByName: Record<string, number>
-  bySkill: Record<string, number>
-  isLoading: boolean
+  bySkill: Record<string, PerModelTokens[]>
 }
 
 type StatsViewProps = {
   projectSlug: string
   operationNumber: number
-}
-
-async function fetchTranscriptText(url: string): Promise<string> {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw await createResponseError(response)
-  }
-  return await response.text()
 }
 
 export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
@@ -69,38 +61,7 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
     string | null
   >(null)
 
-  const transcriptQueries = useQueries({
-    queries: agentSessions.map((agentSession) => ({
-      queryKey: [
-        'agent-session-transcript',
-        projectSlug,
-        operationNumber,
-        agentSession.sessionId,
-      ],
-      queryFn: () =>
-        fetchTranscriptText(
-          `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSession.sessionId}/transcript`,
-        ),
-      select: (jsonl: string): TranscriptEntry[] => parseTranscript(jsonl),
-      enabled: agentSession.hasTranscript,
-      staleTime: 1000 * 60,
-    })),
-  })
-
-  const rows: SessionRowStats[] = agentSessions.map((agentSession, i) => {
-    const query = transcriptQueries[i]
-    const durationMs =
-      new Date(agentSession.endedAt).getTime() -
-      new Date(agentSession.startedAt).getTime()
-    const entries = query?.data ?? []
-    const stats = aggregateEntries(entries)
-    return {
-      agentSession,
-      durationMs,
-      isLoading: agentSession.hasTranscript && query?.isLoading === true,
-      ...stats,
-    }
-  })
+  const rows: SessionRowStats[] = agentSessions.map(buildSessionRow)
 
   if (isLoading) {
     return (
@@ -145,99 +106,68 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
   )
 }
 
-function aggregateEntries(entries: TranscriptEntry[]) {
-  let messageCount = 0
-  let userCount = 0
-  let assistantCount = 0
-  let toolUseCount = 0
-  const toolUseByName: Record<string, number> = {}
-  const bySkill: Record<string, number> = {}
-
-  const perModelMap = new Map<
-    string,
-    {
-      inputTokens: number
-      outputTokens: number
-      cacheCreation5mInputTokens: number
-      cacheCreation1hInputTokens: number
-      cacheReadInputTokens: number
+function buildSessionRow(agentSession: AgentSessionSummary): SessionRowStats {
+  const stats =
+    agentSession.statsFormat === CLAUDE_CODE_V1 ? agentSession.stats : null
+  if (stats == null) {
+    return {
+      agentSession,
+      stats: null,
+      statsErrored: agentSession.statsErrored,
+      durationMs: 0,
+      messageCount: 0,
+      userCount: 0,
+      assistantCount: 0,
+      perModel: [],
+      totalCost: null,
+      toolUseCount: 0,
+      toolUseByName: {},
+      bySkill: {},
     }
-  >()
-  const seenMessageIds = new Set<string>()
-
-  for (const entry of entries) {
-    if (entry.type === 'user' || entry.type === 'assistant') {
-      messageCount += 1
-      if (entry.type === 'user') {
-        userCount += 1
-      } else {
-        assistantCount += 1
-      }
-    }
-    for (const name of entry.toolUses) {
-      toolUseCount += 1
-      toolUseByName[name] = (toolUseByName[name] ?? 0) + 1
-    }
-    if (entry.usage == null) {
-      continue
-    }
-    if (entry.messageId != null) {
-      if (seenMessageIds.has(entry.messageId)) {
-        continue
-      }
-      seenMessageIds.add(entry.messageId)
-    }
-    const skillKey = entry.attributionSkill ?? NO_SKILL
-    bySkill[skillKey] =
-      (bySkill[skillKey] ?? 0) +
-      calculateWeightedTokens(entry.usage, entry.model)
-    const modelKey = entry.model ?? UNKNOWN_MODEL
-    let bucket = perModelMap.get(modelKey)
-    if (bucket == null) {
-      bucket = {
-        inputTokens: 0,
-        outputTokens: 0,
-        cacheCreation5mInputTokens: 0,
-        cacheCreation1hInputTokens: 0,
-        cacheReadInputTokens: 0,
-      }
-      perModelMap.set(modelKey, bucket)
-    }
-    bucket.inputTokens += entry.usage.inputTokens
-    bucket.outputTokens += entry.usage.outputTokens
-    bucket.cacheCreation5mInputTokens += entry.usage.cacheCreation5mInputTokens
-    bucket.cacheCreation1hInputTokens += entry.usage.cacheCreation1hInputTokens
-    bucket.cacheReadInputTokens += entry.usage.cacheReadInputTokens
   }
-
-  const perModel: PerModelTotals[] = []
-  let totalCost: number | null = 0
-  for (const [model, bucket] of perModelMap) {
-    const usage = {
-      inputTokens: bucket.inputTokens,
-      outputTokens: bucket.outputTokens,
-      cacheCreation5mInputTokens: bucket.cacheCreation5mInputTokens,
-      cacheCreation1hInputTokens: bucket.cacheCreation1hInputTokens,
-      cacheReadInputTokens: bucket.cacheReadInputTokens,
-    }
-    const weighted = calculateWeightedTokens(usage, model)
-    const cost = model === UNKNOWN_MODEL ? null : calculateCost(usage, model)
-    if (cost == null) {
-      totalCost = null
-    } else if (totalCost != null) {
-      totalCost += cost
-    }
-    perModel.push({ model, ...bucket, weightedTokens: weighted, cost })
-  }
-
+  const perModel = stats.perModel.map(perModelTokensToTotals)
   return {
-    messageCount,
-    userCount,
-    assistantCount,
+    agentSession,
+    stats,
+    statsErrored: agentSession.statsErrored,
+    durationMs: stats.activeDurationMs,
+    messageCount: stats.userCount + stats.assistantCount,
+    userCount: stats.userCount,
+    assistantCount: stats.assistantCount,
     perModel,
-    totalCost,
-    toolUseCount,
-    toolUseByName,
-    bySkill,
+    totalCost: sumPerModelCost(perModel),
+    toolUseCount: stats.toolUseCount,
+    toolUseByName: stats.toolUseByName,
+    bySkill: stats.bySkill,
   }
+}
+
+function perModelTokensToTotals(p: PerModelTokens): PerModelTotals {
+  const usage = p.usage
+  const weightedTokens = calculateWeightedTokens(usage, p.model)
+  const cost = p.model === UNKNOWN_MODEL ? null : calculateCost(usage, p.model)
+  return {
+    model: p.model,
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    cacheCreation5mInputTokens: usage.cacheCreation5mInputTokens,
+    cacheCreation1hInputTokens: usage.cacheCreation1hInputTokens,
+    cacheReadInputTokens: usage.cacheReadInputTokens,
+    weightedTokens,
+    cost,
+  }
+}
+
+function sumPerModelCost(perModel: PerModelTotals[]): number | null {
+  if (perModel.length === 0) {
+    return 0
+  }
+  let total: number | null = 0
+  for (const m of perModel) {
+    if (m.cost == null) {
+      return null
+    }
+    total += m.cost
+  }
+  return total
 }
