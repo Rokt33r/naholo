@@ -18,7 +18,9 @@ export class ClaudeCodeTranscriptParser {
 
     const lines = jsonl.split('\n')
     let index = 0
+    let lineNumber = 0
     for (const line of lines) {
+      lineNumber += 1
       if (line.length === 0) {
         continue
       }
@@ -32,8 +34,9 @@ export class ClaudeCodeTranscriptParser {
           errors.push(
             wrapAsError({
               kind: 'parse_failure',
-              message: `Invalid JSON on line ${index}: ${error.message}`,
+              message: `Invalid JSON on line ${lineNumber}: ${error.message}`,
               entryIndex: index,
+              lineNumber,
               path: null,
             }),
           )
@@ -50,6 +53,7 @@ export class ClaudeCodeTranscriptParser {
             kind: 'parse_failure',
             message: 'Entry is not an object',
             entryIndex: index,
+            lineNumber,
             path: null,
           }),
         )
@@ -65,6 +69,7 @@ export class ClaudeCodeTranscriptParser {
             kind: 'validation_failed',
             message: 'Missing record.type',
             entryIndex: index,
+            lineNumber,
             path: 'type',
           }),
         )
@@ -80,6 +85,7 @@ export class ClaudeCodeTranscriptParser {
             kind: 'unknown_entry_type',
             message: `Unknown entry type: ${typeValue}`,
             entryIndex: index,
+            lineNumber,
             path: typeValue,
           }),
         )
@@ -92,13 +98,20 @@ export class ClaudeCodeTranscriptParser {
         entries.push(entry)
       } catch (thrown) {
         entries.push(null)
-        errors.push(wrapAsError(thrown))
+        errors.push(wrapAsError(stampLineNumber(thrown, lineNumber)))
       }
       index += 1
     }
 
     return { entries, errors }
   }
+}
+
+function stampLineNumber(thrown: unknown, lineNumber: number): unknown {
+  if (thrown != null && typeof thrown === 'object' && 'kind' in thrown) {
+    ;(thrown as AgentSessionStatsError).lineNumber = lineNumber
+  }
+  return thrown
 }
 
 function wrapAsError(thrown: unknown): Error {

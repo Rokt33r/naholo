@@ -10,6 +10,7 @@ export function mapValidationError(
     kind: 'validation_failed',
     message: issue.message,
     entryIndex: index,
+    lineNumber: null,
     path: issue.path.map(String).join('.') || null,
   }
 }

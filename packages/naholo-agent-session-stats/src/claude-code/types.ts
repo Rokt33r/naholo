@@ -9,6 +9,7 @@ export type AgentSessionStatsError = {
   kind: AgentSessionStatsErrorKind
   message: string
   entryIndex: number | null
+  lineNumber: number | null
   path: string | null
 }
 

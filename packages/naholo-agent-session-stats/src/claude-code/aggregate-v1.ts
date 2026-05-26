@@ -105,6 +105,7 @@ function envelopeFromError(error: Error): AgentSessionStatsError {
     kind: 'parse_failure',
     message: error.message,
     entryIndex: null,
+    lineNumber: null,
     path: null,
   }
 }

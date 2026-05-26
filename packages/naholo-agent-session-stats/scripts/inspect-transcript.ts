@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { ClaudeCodeTranscriptParser } from '../src/claude-code/index.js'
 import { mapUserEntry } from '../src/claude-code/user-entry.js'
 import { mapAssistantEntry } from '../src/claude-code/assistant-entry.js'
@@ -6,14 +7,16 @@ import { mapSummaryEntry } from '../src/claude-code/summary-entry.js'
 import type { AgentSessionStatsError } from '../src/claude-code/types.js'
 
 function main(): void {
-  const path = process.argv[2]
-  if (path == null || path.length === 0) {
+  const arg = process.argv[2]
+  if (arg == null || arg.length === 0) {
     console.error(
       'Usage: pnpm --filter naholo-agent-session-stats inspect-transcript <path-to-transcript.jsonl>',
     )
     process.exit(2)
   }
 
+  const baseDir = process.env.INIT_CWD ?? process.cwd()
+  const path = resolve(baseDir, arg)
   const text = readFileSync(path, 'utf8')
   const rowsTotal = countNonEmptyLines(text)
 
@@ -33,15 +36,17 @@ function main(): void {
     }
   }
 
+  const envelopes: AgentSessionStatsError[] = []
+  const unknownEntryTypes = new Set<string>()
   let jsonErrors = 0
   let validationFailures = 0
-  const unknownEntryTypes = new Set<string>()
   for (const error of result.errors) {
     const envelope = readEnvelope(error)
     if (envelope == null) {
       jsonErrors += 1
       continue
     }
+    envelopes.push(envelope)
     switch (envelope.kind) {
       case 'parse_failure':
         jsonErrors += 1
@@ -64,6 +69,7 @@ function main(): void {
   console.log('')
   printSection('Entry types', observedEntryTypes, unknownEntryTypes)
   console.log('')
+  printErrorDetails(envelopes)
   if (
     unknownEntryTypes.size === 0 &&
     jsonErrors === 0 &&
@@ -78,6 +84,8 @@ function main(): void {
   )
   process.exit(1)
 }
+
+main()
 
 function readEnvelope(error: Error): AgentSessionStatsError | null {
   const cause = error.cause
@@ -117,4 +125,66 @@ function formatList(values: ReadonlySet<string>): string {
   return [...values].sort().join(', ')
 }
 
-main()
+function printErrorDetails(envelopes: readonly AgentSessionStatsError[]): void {
+  if (envelopes.length === 0) {
+    return
+  }
+  const buckets: Record<
+    AgentSessionStatsError['kind'],
+    AgentSessionStatsError[]
+  > = {
+    parse_failure: [],
+    unknown_entry_type: [],
+    validation_failed: [],
+  }
+  for (const env of envelopes) {
+    buckets[env.kind].push(env)
+  }
+
+  const lineWidth = computeLineColumnWidth(envelopes)
+  const kindWidth = 'unknown_entry_type'.length
+
+  for (const kind of [
+    'parse_failure',
+    'unknown_entry_type',
+    'validation_failed',
+  ] as const) {
+    const bucket = buckets[kind]
+    if (bucket.length === 0) {
+      continue
+    }
+    console.log(`  ${labelForKind(kind)} (${bucket.length}):`)
+    for (const env of bucket) {
+      const linePart = `line ${env.lineNumber ?? '?'}`.padEnd(lineWidth, ' ')
+      const kindPart = env.kind.padEnd(kindWidth, ' ')
+      const pathPart = env.path ?? '—'
+      console.log(`    ${linePart}   ${kindPart}   ${pathPart}`)
+      console.log(`      ${env.message}`)
+    }
+    console.log('')
+  }
+}
+
+function computeLineColumnWidth(
+  envelopes: readonly AgentSessionStatsError[],
+): number {
+  let max = 'line ?'.length
+  for (const env of envelopes) {
+    const w = `line ${env.lineNumber ?? '?'}`.length
+    if (w > max) {
+      max = w
+    }
+  }
+  return max
+}
+
+function labelForKind(kind: AgentSessionStatsError['kind']): string {
+  switch (kind) {
+    case 'parse_failure':
+      return 'JSON parse failures'
+    case 'unknown_entry_type':
+      return 'Unknown entry types'
+    case 'validation_failed':
+      return 'Validation failures'
+  }
+}
