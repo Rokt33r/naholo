@@ -15,7 +15,7 @@ export const UNKNOWN_MODEL = 'unknown'
 
 // ---- v1 stats shape ----
 //
-// Both `perModel` and `bySkill` store raw token buckets. Weighting is render-time.
+// Both `modelUsages` and `skillModelUsagesMap` store raw token buckets. Weighting is render-time.
 
 export type PerModelTokens = {
   model: string
@@ -28,8 +28,8 @@ export type AgentSessionStatsV1 = {
   summaryCount: number
   toolUseCount: number
   toolUseByName: Record<string, number>
-  bySkill: Record<string, PerModelTokens[]>
-  perModel: PerModelTokens[]
+  skillModelUsagesMap: Record<string, PerModelTokens[]>
+  modelUsages: PerModelTokens[]
   activeDurationMs: number
 }
 
@@ -172,17 +172,17 @@ function newEmptyMutableStatsV1(): MutableAgentSessionStatsV1 {
 }
 
 function finalizeV1(stats: MutableAgentSessionStatsV1): AgentSessionStatsV1 {
-  const perModel: PerModelTokens[] = []
+  const modelUsages: PerModelTokens[] = []
   for (const [model, usage] of stats.perModelMap) {
-    perModel.push({ model, usage })
+    modelUsages.push({ model, usage })
   }
-  const bySkill: Record<string, PerModelTokens[]> = {}
+  const skillModelUsagesMap: Record<string, PerModelTokens[]> = {}
   for (const [skill, modelMap] of stats.bySkillModelMap) {
     const rows: PerModelTokens[] = []
     for (const [model, usage] of modelMap) {
       rows.push({ model, usage })
     }
-    bySkill[skill] = rows
+    skillModelUsagesMap[skill] = rows
   }
   return {
     userCount: stats.userCount,
@@ -190,8 +190,8 @@ function finalizeV1(stats: MutableAgentSessionStatsV1): AgentSessionStatsV1 {
     summaryCount: stats.summaryCount,
     toolUseCount: stats.toolUseCount,
     toolUseByName: stats.toolUseByName,
-    bySkill,
-    perModel,
+    skillModelUsagesMap,
+    modelUsages,
     activeDurationMs: stats.activeDurationMs,
   }
 }

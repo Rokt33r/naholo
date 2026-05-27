@@ -40,11 +40,11 @@ export type SessionRowStats = {
   messageCount: number
   userCount: number
   assistantCount: number
-  perModel: PerModelTotals[]
+  modelUsages: PerModelTotals[]
   totalCost: number | null
   toolUseCount: number
   toolUseByName: Record<string, number>
-  bySkill: Record<string, PerModelTokens[]>
+  skillModelUsagesMap: Record<string, PerModelTokens[]>
 }
 
 type StatsViewProps = {
@@ -118,14 +118,14 @@ function buildSessionRow(agentSession: AgentSessionSummary): SessionRowStats {
       messageCount: 0,
       userCount: 0,
       assistantCount: 0,
-      perModel: [],
+      modelUsages: [],
       totalCost: null,
       toolUseCount: 0,
       toolUseByName: {},
-      bySkill: {},
+      skillModelUsagesMap: {},
     }
   }
-  const perModel = stats.perModel.map(perModelTokensToTotals)
+  const modelUsages = stats.modelUsages.map(perModelTokensToTotals)
   return {
     agentSession,
     stats,
@@ -134,11 +134,11 @@ function buildSessionRow(agentSession: AgentSessionSummary): SessionRowStats {
     messageCount: stats.userCount + stats.assistantCount,
     userCount: stats.userCount,
     assistantCount: stats.assistantCount,
-    perModel,
-    totalCost: sumPerModelCost(perModel),
+    modelUsages,
+    totalCost: sumModelUsagesCost(modelUsages),
     toolUseCount: stats.toolUseCount,
     toolUseByName: stats.toolUseByName,
-    bySkill: stats.bySkill,
+    skillModelUsagesMap: stats.skillModelUsagesMap,
   }
 }
 
@@ -158,16 +158,16 @@ function perModelTokensToTotals(p: PerModelTokens): PerModelTotals {
   }
 }
 
-function sumPerModelCost(perModel: PerModelTotals[]): number | null {
-  if (perModel.length === 0) {
+function sumModelUsagesCost(modelUsages: PerModelTotals[]): number | null {
+  if (modelUsages.length === 0) {
     return 0
   }
   let total: number | null = 0
-  for (const m of perModel) {
-    if (m.cost == null) {
+  for (const modelUsage of modelUsages) {
+    if (modelUsage.cost == null) {
       return null
     }
-    total += m.cost
+    total += modelUsage.cost
   }
   return total
 }

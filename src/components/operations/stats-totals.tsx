@@ -35,7 +35,7 @@ type PerSkillModelRow = {
 
 type SkillRow = {
   skill: string
-  perModel: PerSkillModelRow[]
+  modelUsages: PerSkillModelRow[]
   totalWeightedTokens: number
 }
 
@@ -48,9 +48,9 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
   let durationMs = 0
   let toolUseCount = 0
   const toolUseByName: Record<string, number> = {}
-  const bySkillModelUsage = new Map<string, Map<string, Usage>>()
+  const skillModelUsagesMap = new Map<string, Map<string, Usage>>()
 
-  const perModelMap = new Map<string, PerModelTotals>()
+  const modelUsageMap = new Map<string, Usage>()
 
   for (const row of rows) {
     if (row.stats == null) {
@@ -64,27 +64,20 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
     for (const [name, count] of Object.entries(row.toolUseByName)) {
       toolUseByName[name] = (toolUseByName[name] ?? 0) + count
     }
-    for (const [skill, perModelList] of Object.entries(row.bySkill)) {
-      let modelMap = bySkillModelUsage.get(skill)
+    for (const [skill, modelUsages] of Object.entries(
+      row.skillModelUsagesMap,
+    )) {
+      let modelMap = skillModelUsagesMap.get(skill)
       if (modelMap == null) {
         modelMap = new Map<string, Usage>()
-        bySkillModelUsage.set(skill, modelMap)
+        skillModelUsagesMap.set(skill, modelMap)
       }
-      for (const pm of perModelList) {
-        addUsageInto(modelMap, pm.model, pm.usage)
+      for (const modelUsage of modelUsages) {
+        addModelUsageInto(modelMap, modelUsage.model, modelUsage.usage)
       }
     }
-    for (const m of row.perModel) {
-      const existing = perModelMap.get(m.model)
-      if (existing == null) {
-        perModelMap.set(m.model, { ...m })
-      } else {
-        existing.inputTokens += m.inputTokens
-        existing.outputTokens += m.outputTokens
-        existing.cacheCreation5mInputTokens += m.cacheCreation5mInputTokens
-        existing.cacheCreation1hInputTokens += m.cacheCreation1hInputTokens
-        existing.cacheReadInputTokens += m.cacheReadInputTokens
-      }
+    for (const modelUsage of row.modelUsages) {
+      addModelUsageInto(modelUsageMap, modelUsage.model, modelUsage)
     }
   }
 
@@ -93,18 +86,18 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
   )
 
   const skillsSorted: SkillRow[] = []
-  for (const [skill, modelMap] of bySkillModelUsage) {
-    const perModel: PerSkillModelRow[] = []
+  for (const [skill, modelMap] of skillModelUsagesMap) {
+    const modelUsages: PerSkillModelRow[] = []
     let totalWeighted = 0
     for (const [model, usage] of modelMap) {
       const weighted = calculateWeightedTokens(usage, model)
-      perModel.push({ model, weightedTokens: weighted })
+      modelUsages.push({ model, weightedTokens: weighted })
       totalWeighted += weighted
     }
-    perModel.sort((a, b) => b.weightedTokens - a.weightedTokens)
+    modelUsages.sort((a, b) => b.weightedTokens - a.weightedTokens)
     skillsSorted.push({
       skill,
-      perModel,
+      modelUsages,
       totalWeightedTokens: totalWeighted,
     })
   }
@@ -118,23 +111,13 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
     return b.totalWeightedTokens - a.totalWeightedTokens
   })
 
-  const perModelRows = Array.from(perModelMap.values()).map((m) => ({
-    ...m,
-    cost:
-      m.model === UNKNOWN_MODEL
-        ? null
-        : calculateCost(
-            {
-              inputTokens: m.inputTokens,
-              outputTokens: m.outputTokens,
-              cacheCreation5mInputTokens: m.cacheCreation5mInputTokens,
-              cacheCreation1hInputTokens: m.cacheCreation1hInputTokens,
-              cacheReadInputTokens: m.cacheReadInputTokens,
-            },
-            m.model,
-          ),
+  const modelRows = Array.from(modelUsageMap, ([model, usage]) => ({
+    model,
+    ...usage,
+    weightedTokens: calculateWeightedTokens(usage, model),
+    cost: model === UNKNOWN_MODEL ? null : calculateCost(usage, model),
   }))
-  perModelRows.sort((a, b) => {
+  modelRows.sort((a, b) => {
     if (a.model === UNKNOWN_MODEL) {
       return 1
     }
@@ -145,11 +128,11 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
   })
 
   let totalCost: number | null = null
-  for (const m of perModelRows) {
-    if (m.cost == null) {
+  for (const modelRow of modelRows) {
+    if (modelRow.cost == null) {
       continue
     }
-    totalCost = (totalCost ?? 0) + m.cost
+    totalCost = (totalCost ?? 0) + modelRow.cost
   }
 
   return (
@@ -165,14 +148,14 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
       </div>
 
       <div className='flex flex-col gap-2 border-t pt-3'>
-        {perModelRows.length === 0 ? (
+        {modelRows.length === 0 ? (
           <div className='text-xs text-muted-foreground'>
             No usage recorded.
           </div>
         ) : (
           <div className='flex flex-col gap-1'>
-            {perModelRows.map((m) => (
-              <PerModelRow key={m.model} row={m} />
+            {modelRows.map((modelRow) => (
+              <PerModelRow key={modelRow.model} row={modelRow} />
             ))}
           </div>
         )}
@@ -193,10 +176,10 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
                   >
                     <span className='font-medium'>{skillRow.skill}</span>
                     <span className='text-muted-foreground'>
-                      {skillRow.perModel
+                      {skillRow.modelUsages
                         .map(
-                          (pm) =>
-                            `${pm.model} ${formatCompact(pm.weightedTokens)}`,
+                          (modelUsage) =>
+                            `${modelUsage.model} ${formatCompact(modelUsage.weightedTokens)}`,
                         )
                         .join(' · ')}
                     </span>
@@ -302,7 +285,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function addUsageInto(
+function addModelUsageInto(
   modelMap: Map<string, Usage>,
   model: string,
   usage: PerModelTokens['usage'],
