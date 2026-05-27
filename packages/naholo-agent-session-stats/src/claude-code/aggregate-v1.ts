@@ -1,11 +1,6 @@
 import type { AgentSessionStatsError, ClaudeCodeTokenUsage } from './types'
-import { ClaudeCodeTranscriptParser } from './parser'
-import {
-  type ClaudeCodeAssistantEntry,
-  mapAssistantEntry,
-} from './assistant-entry'
-import { mapUserEntry } from './user-entry'
-import { mapSummaryEntry } from './summary-entry'
+import type { ClaudeCodeAssistantEntry } from './assistant-entry'
+import { getDefaultParser } from './default-parser'
 
 // ---- Format identifier ----
 
@@ -48,13 +43,7 @@ export type AggregateClaudeCodeV1Result = {
 export function aggregateClaudeCodeV1(
   jsonl: string,
 ): AggregateClaudeCodeV1Result {
-  const parser = new ClaudeCodeTranscriptParser({
-    mappers: {
-      user: mapUserEntry,
-      assistant: mapAssistantEntry,
-      summary: mapSummaryEntry,
-    },
-  })
+  const parser = getDefaultParser()
   const result = parser.process(jsonl)
 
   const stats = newEmptyMutableStatsV1()

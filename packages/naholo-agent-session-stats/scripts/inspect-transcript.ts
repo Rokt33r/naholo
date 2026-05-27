@@ -1,15 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { ClaudeCodeTranscriptParser } from '../src/claude-code/index.js'
-import { mapUserEntry } from '../src/claude-code/user-entry.js'
-import { mapAssistantEntry } from '../src/claude-code/assistant-entry.js'
-import { mapSummaryEntry } from '../src/claude-code/summary-entry.js'
-import { mapAiTitleEntry } from '../src/claude-code/ai-title-entry.js'
-import { mapAttachmentEntry } from '../src/claude-code/attachment-entry.js'
-import { mapFileHistorySnapshotEntry } from '../src/claude-code/file-history-snapshot-entry.js'
-import { mapLastPromptEntry } from '../src/claude-code/last-prompt-entry.js'
-import { mapQueueOperationEntry } from '../src/claude-code/queue-operation-entry.js'
-import { mapSystemEntry } from '../src/claude-code/system-entry.js'
+import { getDefaultParser } from '../src/claude-code/default-parser.js'
 import type { AgentSessionStatsError } from '../src/claude-code/types.js'
 
 function main(): void {
@@ -26,19 +17,7 @@ function main(): void {
   const text = readFileSync(path, 'utf8')
   const rowsTotal = countNonEmptyLines(text)
 
-  const parser = new ClaudeCodeTranscriptParser({
-    mappers: {
-      user: mapUserEntry,
-      assistant: mapAssistantEntry,
-      summary: mapSummaryEntry,
-      'ai-title': mapAiTitleEntry,
-      attachment: mapAttachmentEntry,
-      'file-history-snapshot': mapFileHistorySnapshotEntry,
-      'last-prompt': mapLastPromptEntry,
-      'queue-operation': mapQueueOperationEntry,
-      system: mapSystemEntry,
-    },
-  })
+  const parser = getDefaultParser()
   const result = parser.process(text)
 
   const observedEntryTypes = new Set<string>()
