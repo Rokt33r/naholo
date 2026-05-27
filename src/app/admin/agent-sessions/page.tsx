@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { z } from 'zod'
 import { listAgentSessionsForAdmin } from '@/server/admin/agent-session-stats'
+import { BulkProcessDialog } from './_components/bulk-process-dialog'
 import { ReprocessRowButton } from './_components/reprocess-row-button'
 
 const searchParamsSchema = z.object({
@@ -25,6 +26,7 @@ export default async function AgentSessionsAdminPage({
         <h1 className='text-xl font-semibold text-zinc-900 dark:text-zinc-50'>
           Agent Sessions
         </h1>
+        <BulkProcessDialog />
       </div>
 
       <div className='mt-4 flex items-center gap-2 text-sm'>
