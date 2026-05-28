@@ -2,12 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { getPolarWebhookEvent } from '@/server/admin/polar-webhook-event'
+import { requireAppAdmin } from '@/server/auth/permissions'
 
 export default async function PolarWebhookEventDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAppAdmin()
   const { id } = await params
   const event = await getPolarWebhookEvent(id)
   if (event == null) {

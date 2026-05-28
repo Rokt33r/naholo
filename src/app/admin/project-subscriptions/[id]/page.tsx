@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { getProjectSubscription } from '@/server/admin/project-subscription'
+import { requireAppAdmin } from '@/server/auth/permissions'
 import { PolarSubscriptionStatusBadge } from '../../_components/polar-subscription-status-badge'
 
 export default async function ProjectSubscriptionDetailPage({
@@ -9,6 +10,7 @@ export default async function ProjectSubscriptionDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAppAdmin()
   const { id } = await params
   const sub = await getProjectSubscription(id)
   if (sub == null) {

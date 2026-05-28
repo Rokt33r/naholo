@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { z } from 'zod'
 import { listAgentSessionsForAdmin } from '@/server/admin/agent-session-stats'
+import { requireAppAdmin } from '@/server/auth/permissions'
 import { BulkProcessDialog } from './_components/bulk-process-dialog'
 import { ReprocessRowButton } from './_components/reprocess-row-button'
 
@@ -13,6 +14,7 @@ export default async function AgentSessionsAdminPage({
 }: {
   searchParams: Promise<{ filter?: string }>
 }) {
+  await requireAppAdmin()
   const raw = await searchParams
   const { filter } = searchParamsSchema.parse({
     filter: raw.filter ?? 'unprocessed',

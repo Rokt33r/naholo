@@ -5,6 +5,7 @@ import {
   POLAR_SUBSCRIPTION_PAGE_SIZE,
   listPolarSubscriptions,
 } from '@/server/admin/polar-subscription'
+import { requireAppAdmin } from '@/server/auth/permissions'
 import { PolarSubscriptionStatusBadge } from '../_components/polar-subscription-status-badge'
 
 const STATUSES = [
@@ -26,6 +27,7 @@ export default async function PolarSubscriptionsPage({
 }: {
   searchParams: Promise<{ page?: string; status?: string }>
 }) {
+  await requireAppAdmin()
   const raw = await searchParams
   const parsed = searchParamsSchema.safeParse({
     page: raw.page,

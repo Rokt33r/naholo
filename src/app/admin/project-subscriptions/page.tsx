@@ -5,6 +5,7 @@ import {
   PROJECT_SUBSCRIPTION_PAGE_SIZE,
   listProjectSubscriptions,
 } from '@/server/admin/project-subscription'
+import { requireAppAdmin } from '@/server/auth/permissions'
 import { PolarSubscriptionStatusBadge } from '../_components/polar-subscription-status-badge'
 
 const searchParamsSchema = z.object({
@@ -16,6 +17,7 @@ export default async function ProjectSubscriptionsPage({
 }: {
   searchParams: Promise<{ page?: string }>
 }) {
+  await requireAppAdmin()
   const raw = await searchParams
   const parsed = searchParamsSchema.safeParse({ page: raw.page })
   const { page } = parsed.success ? parsed.data : { page: 1 }

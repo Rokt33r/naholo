@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { getPolarSubscription } from '@/server/admin/polar-subscription'
+import { requireAppAdmin } from '@/server/auth/permissions'
 import { PolarSubscriptionStatusBadge } from '../../_components/polar-subscription-status-badge'
 import { RefetchButton } from './refetch-button'
 
@@ -14,6 +15,7 @@ export default async function PolarSubscriptionDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireAppAdmin()
   const { id } = await params
   const sub = await getPolarSubscription(id)
   if (sub == null) {

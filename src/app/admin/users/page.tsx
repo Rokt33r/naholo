@@ -1,7 +1,9 @@
 import { listAllUsers } from '@/server/admin/user'
+import { requireAppAdmin } from '@/server/auth/permissions'
 import { format } from 'date-fns'
 
 export default async function AdminUsersPage() {
+  await requireAppAdmin()
   const users = await listAllUsers()
 
   return (

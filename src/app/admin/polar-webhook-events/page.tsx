@@ -5,6 +5,7 @@ import {
   POLAR_WEBHOOK_EVENT_PAGE_SIZE,
   listPolarWebhookEvents,
 } from '@/server/admin/polar-webhook-event'
+import { requireAppAdmin } from '@/server/auth/permissions'
 
 const searchParamsSchema = z.object({
   page: z.coerce.number().int().min(1).catch(1),
@@ -21,6 +22,7 @@ export default async function PolarWebhookEventsPage({
 }: {
   searchParams: Promise<{ page?: string; eventType?: string }>
 }) {
+  await requireAppAdmin()
   const raw = await searchParams
   const parsed = searchParamsSchema.safeParse({
     page: raw.page,
