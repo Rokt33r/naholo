@@ -26,7 +26,7 @@ Operational vocabulary used by the skills (written in full in docs; may be abbre
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
-1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)**: takes an operation number from the server. Runs `naholo agent infil {n}`, which creates the infiled directory at `.naholo/local/infiled/`, writes `op.yml` (`{ number, title }`), pulls `TASKS.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. Errors with "Already infiled. Run \"naholo agent exfil\" first." when an op is already infiled — only one op can be infiled at a time. **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merges tasks + notes against the latest server state). Either way, the agent then generates the workflow notes if missing: `notes/OPERATION.md` (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills) and `notes/TIMELINE.md` (one bullet per existing log entry). `TASKS.md` stays as pulled (empty list, ready for `/warno`). Never pushes.
+1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)**: takes an operation number from the server. Runs `naholo agent infil {n}`, which creates the infiled directory at `.naholo/local/infiled/`, writes `op.yml` (`{ number, title }`), pulls `TASKS.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. Errors with "Already infiled. Run \"naholo agent exfil\" first." when an op is already infiled — only one op can be infiled at a time. **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merges tasks + notes against the latest server state). Either way, the agent then generates `notes/OPERATION.md` if missing (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills). `TASKS.md` stays as pulled (empty list, ready for `/warno`); `notes/TIMELINE.md` is written by `naholo agent add-timeline` on first call. Never pushes.
 2. **`/warno ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Warning Orders / Target Reference Points) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `TASKS.md` — those are `/opord`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, refresh Target Reference Points); EXECUTION-shaped instructions belong to `/opord`. Stops with a "next: `/opord`" pointer.
 3. **`/opord ["freeform"]`** — Input: warno-completed operation (MISSION populated). OPORD-style detail-cutter and plan revisor. Resolves any unanswered Warning Order alternatives, cuts MISSION into ORP-sized tasks, **appends `## EXECUTION`** (one `### TASK N — Title` per task with `#### Intent` + `#### Scheme of Maneuver` when applicable + `#### Course of Action`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the task), and mirrors the task list into `TASKS.md` as a flat checkbox list. With `## EXECUTION` already present, freeform args drive plan revisions — insert, drop, split, merge, retitle, rewrite — applied only to unfinished tasks. Completed tasks (those with a populated AAR) are immutable. New tasks append at the next free integer; never letter-suffix, never re-slot existing tasks.
 4. **`/splash [N] ["freeform"]`** — Input: opord-completed operation with at least one unchecked task. With `N`, ships TASK N. Without `N`, picks the next unchecked task from `TASKS.md`. Reads the task's Intent + Course of Action from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target task section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in TASKS.md, appends a TIMELINE.md bullet. Stops after one task.
@@ -35,13 +35,25 @@ The agent-facing lifecycle for an operation is a one-way pipeline from server to
 
 The canonical happy-path cycle: `/infil → /warno → /opord → /splash → (user reviews AAR) → /splash → … → /exfil`. Mid-cycle revisions: `/opord "freeform"` between splashes adjusts the unfinished plan (insert, drop, split, rewrite); re-run `/warno` for direction (MISSION) changes.
 
-## Notes
+## Infiled files
 
-Three workflow notes have a fixed contract. All other notes are free-form.
+The infiled directory (`.naholo/local/infiled/`) is the agent's full working set for the active op. It holds CLI state, the checklist, the live OP document, the skill-event log, free-form notes, a server-log snapshot, and the 3-way-merge baseline. Files marked _fixed contract_ have a layout the skills depend on; everything else is either free-form or CLI-owned.
 
-### OPERATION.md
+### `op.yml`
 
-The single live document per OP. `/infil` writes SITUATION, `/warno` appends MISSION, `/opord` appends EXECUTION, `/splash` adds each task's AAR when it ships. Layout:
+CLI state at the infiled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent pull`. Agents do not edit it directly; `naholo agent op` / `op-path` read it.
+
+### `TASKS.md`
+
+The canonical checklist. The only file with checkboxes. Flat — no sub-tasks. _Fixed contract._
+
+- **Heading**: `# TASKS — OP #{n}`
+- Every task is `- [ ] {n}. {short title}` (e.g., `- [ ] 1. Add man command`). No indentation, no sub-bullets.
+- `[ref](naholo://tasks/{id})` links point at the server-side task record; `naholo agent push` appends them for newly created tasks.
+
+### `notes/OPERATION.md`
+
+The single live document per OP. `/infil` writes SITUATION, `/warno` appends MISSION, `/opord` appends EXECUTION, `/splash` adds each task's AAR when it ships. _Fixed contract._ Layout:
 
 - **Heading**: `# OP #{n}: {title}`
 - **Sections (in fixed order when present; only `## SITUATION` is mandatory)**: top-level sections appear only when their owning skill has written them. After `/infil` only `## SITUATION` exists; `## MISSION` is appended by `/warno`; `## EXECUTION` is appended by `/opord`. No empty section headers, no placeholder bodies — if a section is absent, the skill that owns it hasn't run yet.
@@ -62,21 +74,25 @@ The single live document per OP. `/infil` writes SITUATION, `/warno` appends MIS
 - **No other top-level sections**: only the three above are allowed — do not invent new `##` headings. Timeline lives in TIMELINE.md. Per-task progress lives in EXECUTION's AARs.
 - **Shipped signal**: the presence of `#### After-Action Report` under a task section means that task has shipped. Absence means it is still open.
 
-### TASKS.md
+### `notes/TIMELINE.md`
 
-The canonical checklist. The only file with checkboxes. Flat — no sub-tasks.
-
-- **Heading**: `# TASKS — OP #{n}`
-- Every task is `- [ ] {n}. {short title}` (e.g., `- [ ] 1. Add man command`). No indentation, no sub-bullets.
-- `[ref](naholo://tasks/{id})` links point at the server-side task record; `naholo agent push` appends them for newly created tasks.
-
-### TIMELINE.md
-
-The chronological event log. Separate note (was previously `## Timeline` inside OPERATION.md).
+The chronological phase log. Each bullet records something that happened during the current phase — running a skill is one event, but follow-up edits made while still in that phase are also events (e.g. a MISSION tweak after `/warno` is still `warno`, a plan adjustment after `/opord` is still `opord`, a deviation noticed after `/splash` is still `splash`). Written exclusively by `naholo agent add-timeline`, which auto-seeds the heading on first write when the file is absent. _Fixed contract._
 
 - **Heading**: `# TIMELINE — OP #{n}`
-- Body is a single chronological bullet list. Format: `- **{YYYY-MM-DD HH:MM} — {stage-or-author}**: {summary}`.
-- Stage labels used by skills: `warno`, `opord`, `splash`, `sitrep`, `exfil`. Other authors (server log entries seeded at infil) appear by name.
+- Body is a single chronological bullet list. Format: `- {YYYY-MM-DD HH:MM} — {stage}: {summary}` (no bold markers).
+- Stage labels: `warno`, `opord`, `splash`, `sitrep`, `exfil` — bare label, no parenthetical variants. The label names the phase the event belongs to, not the trigger.
+
+### `notes/*.md` — other notes
+
+Free-form supporting docs (research, API design, decision logs, etc.). No fixed layout. `/warno` may write them while shaping MISSION; `/sitrep` and `/exfil` push them to the server alongside the workflow notes.
+
+### `LOGS.yml`
+
+Snapshot of the server-side log feed. Overwritten on every `naholo agent infil` / `pull` — never merged, never edited locally. Agents read it directly when they need server-log context.
+
+### `.base/`
+
+3-way-merge baseline owned by `naholo agent pull` / `push`. Mirrors the last-synced state of `TASKS.md` and `notes/*.md`. Agents do not edit it.
 
 ### Listing order
 
