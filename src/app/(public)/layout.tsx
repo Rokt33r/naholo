@@ -2,16 +2,20 @@ import { Github } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import icon from '@/app/icon.png'
+import { getAuthUser } from '@/server/auth/permissions'
 
 // Placeholder — owner will replace with the actual public repo URL once the
 // project is open-sourced.
 const GITHUB_URL = 'https://github.com/'
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const user = await getAuthUser({ allowedAuthMethods: ['session'] })
+  const isAuthed = user != null
+
   return (
     <div className='flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950'>
       <header className='border-b border-zinc-200 dark:border-zinc-800'>
@@ -27,24 +31,44 @@ export default function PublicLayout({
             </span>
           </Link>
           <div className='flex items-center gap-6'>
+            <a
+              href={GITHUB_URL}
+              aria-label='Source repo'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+            >
+              <Github className='size-4' />
+            </a>
             <Link
               href='/pricing'
               className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
             >
               Pricing
             </Link>
-            <Link
-              href='/sign-in'
-              className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-            >
-              Sign In
-            </Link>
-            <Link
-              href='/sign-up'
-              className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-            >
-              Sign Up
-            </Link>
+            {isAuthed ? (
+              <Link
+                href='/app'
+                className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+              >
+                Enter ops room
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href='/sign-in'
+                  className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href='/sign-up'
+                  className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>
@@ -78,15 +102,6 @@ export default function PublicLayout({
               &copy; {new Date().getFullYear()} Junyoung Choi. All rights
               reserved.
             </p>
-            <a
-              href={GITHUB_URL}
-              aria-label='Source repo'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
-            >
-              <Github className='h-4 w-4' />
-            </a>
           </div>
         </div>
       </footer>

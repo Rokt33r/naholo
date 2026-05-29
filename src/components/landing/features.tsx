@@ -1,4 +1,4 @@
-import { SatelliteDish, Terminal } from 'lucide-react'
+import { Gauge, LandPlot, RefreshCw, ScrollText, Workflow } from 'lucide-react'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
 
@@ -10,39 +10,46 @@ type Feature = {
 
 const FEATURES: Feature[] = [
   {
-    title: 'Mission HQ (Web app)',
+    title: 'OP flow cycle',
     bullets: [
-      'Logs — intel collection and activity record per operation',
-      'Notes — tabbed documentation per operation',
-      'Tasks — hierarchical task tracking',
-      'Loadouts — customize a set of skills for your AI agent',
+      'Military-style OP cycle — skills + CLI for AI agents, not vibe coding',
+      'Plans and changes scoped for fast review',
+      'Durable workflow — survives mid-session plan and implementation pivots',
     ],
-    Icon: SatelliteDish,
+    Icon: LandPlot,
   },
   {
-    title: 'Field kit (CLI)',
+    title: 'Stateless context',
     bullets: [
-      'Infil — load intel (logs, notes, tasks) from HQ and set up operation',
-      'Loadouts — inject skills into agent session, default loadout provided',
-      'Sitrep / Exfil — report to server via agent, no manual sync needed',
+      'TIMELINE is auto-written as the OP proceeds, so every session opens with a compact recap',
+      'No compact needed — start a fresh session anytime',
     ],
-    Icon: Terminal,
+    Icon: ScrollText,
+  },
+  {
+    title: 'Per-OP token usage',
+    bullets: [
+      'Automatic agent session tracking per OP',
+      'Token spend tracked per OP — see where the budget goes',
+      'Works across worktrees — concurrent sessions register to the right OP',
+    ],
+    Icon: Gauge,
   },
 ]
 
 export function Features() {
   return (
     <Section>
-      <BriefingLabel>{'// 02 · Arsenal'}</BriefingLabel>
+      <BriefingLabel>{'// 02 · Features'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
-        Your kit, field-ready.
+        Built for developers, not vibe coders.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-        Everything you need to run ops — from mission planning to boots on the
-        ground.
+        A disciplined loop, a context that refuses to bloat, and a token bill
+        you can actually read.
       </p>
 
-      <div className='mt-12 grid grid-cols-1 gap-6 md:grid-cols-2'>
+      <div className='mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
         {FEATURES.map((f) => (
           <article
             key={f.title}

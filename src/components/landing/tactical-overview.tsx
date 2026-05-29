@@ -1,9 +1,10 @@
 import {
   ArrowDownFromLine,
-  Blocks,
-  FileText,
+  Crosshair,
+  ListChecks,
   PlaneTakeoff,
   Radio,
+  Siren,
 } from 'lucide-react'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
@@ -22,28 +23,36 @@ const COMMANDS: Command[] = [
     index: '01',
     code: '/infil',
     name: 'Infil',
-    body: 'Pull notes, tasks, and logs from the server into a local codebase. Now you have the intel — and a clean baseline for later diffs.',
-    artefacts: ['OPERATION.md'],
+    body: 'Pull notes, tasks, and logs from the server into a local working dir.',
+    artefacts: ['OPERATION', 'TASKS'],
     Icon: ArrowDownFromLine,
   },
   {
     index: '02',
-    code: '/spec',
-    name: 'Spec',
-    body: 'Turn the brief into an executable plan. Scout the codebase, lock down architecture, write the task list.',
-    artefacts: ['SPEC.md', 'TASKS.md'],
-    Icon: FileText,
+    code: '/warno',
+    name: 'Warno',
+    body: 'Research the codebase and lock in the architecture decisions before any tasks are cut.',
+    artefacts: ['OPERATION.MISSION'],
+    Icon: Siren,
   },
   {
     index: '03',
-    code: '/ship',
-    name: 'Ship',
-    body: 'Execute the spec top to bottom. Each task gets checked as its code lands. No improvising outside the plan.',
-    artefacts: ['Code changes', 'TASKS.md'],
-    Icon: Blocks,
+    code: '/opord',
+    name: 'Opord',
+    body: 'Cut the mission into single-commit-sized tasks. Each task ships in one splash.',
+    artefacts: ['OPERATION.EXECUTION', 'TASKS'],
+    Icon: ListChecks,
   },
   {
     index: '04',
+    code: '/splash',
+    name: 'Splash',
+    body: 'Ship one task. Implement, verify, write the After-Action Report highlighting deviations during implementation.',
+    artefacts: ['Code changes', 'After-Action Report'],
+    Icon: Crosshair,
+  },
+  {
+    index: '05',
     code: '/sitrep',
     name: 'Sitrep',
     body: 'Push a mid-mission checkpoint. Server-side tasks, notes, and a summary log sync — no extract yet.',
@@ -51,7 +60,7 @@ const COMMANDS: Command[] = [
     Icon: Radio,
   },
   {
-    index: '05',
+    index: '06',
     code: '/exfil',
     name: 'Exfil',
     body: 'Close out the operation. Final sync, debrief log, and an optional close on the issue. Extract.',
@@ -60,20 +69,29 @@ const COMMANDS: Command[] = [
   },
 ]
 
-const TACTIC_DIAGRAM = `┌─────────────────────────────────────────────────────────────────┐
-│  Mission HQ: Naholo web app                                     │
-│                                                                 │
-│  [Ideation: Drop intel as logs or notes]                        │
-└─────────────────────────────────────────────────────────────────┘
-       │                        ^                         ^
-       │ /infil                 │ /sitrep                 │ /exfil
-       v                        │ (run anytime)           │
-┌─────────────────────────────────────────────────────────────────┐
-│  Battlefield: Your codebase                                     │
-│                                                                 │
-│  [Review summary] ──/spec──▸ [Review spec] ──/ship──▸ [Review]  │
-│       PLAN.md                  SPEC.md                  diff    │
-└─────────────────────────────────────────────────────────────────┘`
+const TACTIC_DIAGRAM = `┌────────────────────────────────────────────────────────┐
+│  Mission HQ: Naholo web app                            │
+│                                                        │
+│  [Ideation: Drop intel as logs or notes]               │
+└────────────────────────────────────────────────────────┘
+  │ /infil           ^ /sitrep          ^ /exfil
+  v (pull OP data)   │ (push OP data)   │ (push + close)
+┌────────────────────────────────────────────────────────┐
+│ Battlefield: Your codebase                             │
+│                                                        │
+│ /warno (write architecture decisions)                  │
+│          ↓                                             │
+│   [Review architecture decisions]                      │
+│          ↓                                             │
+│ /opord (cut into single-commit tasks)                  │
+│          ↓                                             │
+│   [Review specs]                                       │
+│          ↓                                             │
+│ /splash (ship one task)  ◂┐                            │
+│          ↓                │ [Repeat]                   │
+│   [Review diff]           │ (/opord if revising tasks) │
+│          └────────────────┘                            │
+└────────────────────────────────────────────────────────┘`
 
 export function TacticalOverview() {
   return (
@@ -88,7 +106,7 @@ export function TacticalOverview() {
       </p>
 
       <div className='mt-12 flex justify-center'>
-        <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-4 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm'>
+        <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-3 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm'>
           {TACTIC_DIAGRAM}
         </pre>
       </div>

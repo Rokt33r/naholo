@@ -60,7 +60,7 @@ export function Requirements() {
             <div className='flex items-center gap-2'>
               <BrandIcon slug='nodedotjs' alt='Node.js' />
               <span className='text-lg font-semibold text-zinc-900 dark:text-zinc-50'>
-                Node.js v20+
+                Node.js v22+
               </span>
             </div>
           </div>
