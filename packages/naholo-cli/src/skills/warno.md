@@ -46,7 +46,6 @@ Read if you haven't read:
 
 - `{operationDir}/TASKS.md`
 - `{operationDir}/notes/OPERATION.md`
-- `{operationDir}/notes/TIMELINE.md`
 
 ### 6. Research the codebase
 
@@ -72,11 +71,11 @@ Otherwise do **not** ask. No alts for naming, paths, style, or anything you're a
 
 Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
 
-- **MISSION absent (no `## MISSION` heading at all), no args** → fresh write. Append `## MISSION` itself plus all three subsections (Concept of Operations, Warning Orders, Target Reference Points) after the last `## SITUATION` content. Append `- **{YYYY-MM-DD HH:MM} — warno**: Drafted MISSION.` to TIMELINE.md.
-- **MISSION present but partially populated, no args** → resume in place. Add missing subsections (including TRP if absent), complete partial ones. Append `- **{YYYY-MM-DD HH:MM} — warno (resumed)**: …` to TIMELINE.md.
+- **MISSION absent (no `## MISSION` heading at all), no args** → fresh write. Append `## MISSION` itself plus all three subsections (Concept of Operations, Warning Orders, Target Reference Points) after the last `## SITUATION` content. Run `naholo agent add-timeline -T warno 'Drafted MISSION.'`.
+- **MISSION present, no args** → stop. The skill cannot tell whether a present MISSION is finished or still in progress, and silently editing it risks clobbering committed direction. Tell the user to either re-run with freeform args describing the change (`/warno "…"`) or delete the `## MISSION` section from `OPERATION.md` and re-run `/warno` for a fresh write. Do not modify MISSION, do not append a TIMELINE bullet.
 - **Args provided, classify intent**:
-  - **Targeted edit** — args describe partial changes to MISSION (Concept of Operations, Warning Orders, Target Reference Points). Apply the described edits in place; refresh TRP if the edit changes which paths are relevant. Append `- **{YYYY-MM-DD HH:MM} — warno (revised)**: {summary}` to TIMELINE.md.
-  - **Full restart** — args explicitly say start over (e.g., "rewrite the mission from scratch"). Replace MISSION wholesale (including TRP). If `## EXECUTION` already has content, use `AskUserQuestion` to ask whether to **keep EXECUTION** (let `/opord` reconcile it against the new MISSION later) or **flush EXECUTION** (delete every task section — including shipped ones — and leave EXECUTION empty for `/opord` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Append `- **{YYYY-MM-DD HH:MM} — warno (restart)**: {summary, including kept/flushed EXECUTION}` to TIMELINE.md.
+  - **Targeted edit** — args describe partial changes to MISSION (Concept of Operations, Warning Orders, Target Reference Points). Apply the described edits in place; refresh TRP if the edit changes which paths are relevant. Run `naholo agent add-timeline -T warno '{summary}'`.
+  - **Full restart** — args explicitly say start over (e.g., "rewrite the mission from scratch"). Replace MISSION wholesale (including TRP). If `## EXECUTION` already has content, use `AskUserQuestion` to ask whether to **keep EXECUTION** (let `/opord` reconcile it against the new MISSION later) or **flush EXECUTION** (delete every task section — including shipped ones — and leave EXECUTION empty for `/opord` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Run `naholo agent add-timeline -T warno '{summary, including kept/flushed EXECUTION}'`.
 
 ### 8. Write OPERATION.md MISSION
 
@@ -148,6 +147,6 @@ Next:
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **TRP is a curated map, not a research log**: noun-only tags, no verbs/clauses/relative pronouns; backtick-wrapped paths; folders end with `/`; prefer a folder or glob over enumerating siblings.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
-- **Do NOT implement any code** — only edit `OPERATION.md` and `TIMELINE.md`.
+- **Do NOT implement any code** — only edit `OPERATION.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.

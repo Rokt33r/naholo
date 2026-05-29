@@ -28,7 +28,6 @@ Anything in quotes is optional freeform context that informs the summary log (e.
 5. **Read local state** (for context when generating the summary log):
    - `{operationDir}/TASKS.md`
    - `{operationDir}/notes/OPERATION.md`
-   - `{operationDir}/notes/TIMELINE.md`
 
 6. **Push via CLI**: Run `naholo agent push` using the Bash tool. The push includes `TIMELINE.md` as just-another-note. Read the CLI output to know what was synced.
 
@@ -45,7 +44,7 @@ Anything in quotes is optional freeform context that informs the summary log (e.
    - {any freeform context the user provided}
    ```
 
-8. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — sitrep**: Synced {N} tasks, {N} notes. {brief summary}`. Do NOT append to OPERATION.md — TIMELINE.md is the only file that gets chronological bullets.
+8. **Append TIMELINE bullet**: Run `naholo agent add-timeline -T sitrep 'Synced {N} tasks, {N} notes. {brief summary}'`. Do NOT append to OPERATION.md — TIMELINE.md is the only file that gets chronological bullets.
 
 9. **Print summary**: Output what was synced to chat. Use markdown link syntax with the absolute paths so the user can click to open them. When listing notes, use the fixed order: OPERATION → TASKS → TIMELINE first, then other notes alphabetically. Print as raw markdown — no surrounding fence.
 

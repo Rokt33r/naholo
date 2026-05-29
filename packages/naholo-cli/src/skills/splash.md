@@ -47,7 +47,6 @@ Read if you haven't read:
 
 - `{operationDir}/TASKS.md`
 - `{operationDir}/notes/OPERATION.md`
-- `{operationDir}/notes/TIMELINE.md`
 
 Validate: `## EXECUTION` must exist and contain at least one `### TASK N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### TASK N` sections under it, tell the user to run `/opord` first (and `/warno` first if `## MISSION` is also absent) and stop.
 
@@ -117,12 +116,10 @@ In `TASKS.md`, flip `- [ ] N. Title` → `- [x] N. Title` for the task that just
 
 ### 11. Append a TIMELINE bullet
 
-Append one bullet to `{operationDir}/notes/TIMELINE.md`:
+Run `naholo agent add-timeline` with the bare `splash` stage label:
 
-- Fresh splash: `- **{YYYY-MM-DD HH:MM} — splash**: task {N} shipped — {one-line summary}.`
-- Revision splash: `- **{YYYY-MM-DD HH:MM} — splash (revised)**: task {N} AAR updated — {one-line summary of the change}.`
-
-Use local time in `YYYY-MM-DD HH:MM` format (matches the format `/infil` seeded TIMELINE.md with).
+- Fresh splash: `naholo agent add-timeline -T splash 'task {N} shipped — {one-line summary}.'`
+- Revision splash: `naholo agent add-timeline -T splash 'task {N} AAR updated — {one-line summary of the change}.'`
 
 ### 12. Print summary
 
@@ -177,7 +174,7 @@ If the user should review before the next splash, mention it. If all tasks are n
 - **Stay in scope**: the task intent is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
 - **Don't touch other tasks**: do not edit other tasks' Course of Action, AARs, or Goals. If the work reveals that another task needs revision, surface it — don't silently rewrite.
 - **TASKS.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next task.
-- **TIMELINE.md gets exactly one bullet per splash invocation**.
+- **One TIMELINE bullet per splash invocation** — `naholo agent add-timeline` guarantees the format.
 - **OPERATION.md sections stay at SITUATION / MISSION / EXECUTION**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Don't re-elaborate the task**: if the Goal or Course of Action are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the task Goal — that's `/opord`'s job (or `/warno`, if MISSION itself needs to change).
 - **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
