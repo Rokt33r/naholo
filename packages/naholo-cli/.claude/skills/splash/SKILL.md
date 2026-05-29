@@ -169,7 +169,7 @@ If the user should review before the next splash, mention it. If all tasks are n
 
 ## Post-splash phase
 
-Once this skill returns, the session is in the **splash** phase — anchored to the task that was just shipped (or revised). The phase persists until a different skill runs or the session ends.
+Once this skill returns, the session is in the **splash** phase — anchored to the task that was just shipped (or revised). The phase persists until a different phase-changing skill runs (`/infil`, `/warno`, `/opord`), `/exfil` cleans up the workflow, or the session ends. Re-running `/splash` stays in the splash phase but re-anchors it to the just-shipped task. `/sitrep` is a sync-only operation and does **not** end the phase.
 
 While in the splash phase:
 

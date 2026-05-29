@@ -142,7 +142,7 @@ Next:
 
 ## Post-warno phase
 
-Once this skill returns, the session is in the **warno** phase. The phase persists until a different skill runs or the session ends.
+Once this skill returns, the session is in the **warno** phase. The phase persists until a different phase-changing skill runs (`/infil`, `/opord`, `/splash`), `/exfil` cleans up the workflow, or the session ends. `/sitrep` is a sync-only operation and does **not** end the phase.
 
 While in the warno phase:
 
