@@ -76,11 +76,11 @@ The single live document per OP. `/infil` writes SITUATION, `/warno` appends MIS
 
 ### `notes/TIMELINE.md`
 
-The chronological phase log. Each bullet records something that happened during the current phase — running a skill is one event, but follow-up edits made while still in that phase are also events (e.g. a MISSION tweak after `/warno` is still `warno`, a plan adjustment after `/opord` is still `opord`, a deviation noticed after `/splash` is still `splash`). Written exclusively by `naholo agent add-timeline`, which auto-seeds the heading on first write when the file is absent. _Fixed contract._
+The chronological catch-up log. Its only purpose is to let a fresh agent session — one without in-context history of the OP — quickly understand what's already happened. Written exclusively by `naholo agent add-timeline`, which auto-seeds the heading on first write when the file is absent. _Fixed contract._ Each skill defines its own rules for when to call `add-timeline`; agents read this section once per session and don't need to re-read it during the session (everything new is already in context).
 
 - **Heading**: `# TIMELINE — OP #{n}`
 - Body is a single chronological bullet list. Format: `- {YYYY-MM-DD HH:MM} — {stage}: {summary}` (no bold markers).
-- Stage labels: `warno`, `opord`, `splash`, `sitrep`, `exfil` — bare label, no parenthetical variants. The label names the phase the event belongs to, not the trigger.
+- Stage labels: `infil`, `warno`, `opord`, `splash`, `sitrep`, `exfil` — bare label, no parenthetical variants.
 
 ### `notes/*.md` — other notes
 
