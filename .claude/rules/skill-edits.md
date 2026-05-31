@@ -11,3 +11,15 @@ When the user asks to edit a core skill:
 2. Print ``Run `naholo install-skills` to apply the changes.`` in chat — and stop. The user runs it themselves to mirror into `.claude/skills/{name}/SKILL.md`; do not run it yourself.
 
 Edits to `.claude/skills/{name}/SKILL.md` are lost the next time someone runs `naholo install-skills`, so they don't survive.
+
+## Writing skill prose
+
+Skill bodies and the agent manual (`packages/naholo-cli/src/commands/agent/manual.md`) are read cold by every new session. Describe current behavior only.
+
+Anti-patterns — avoid phrasings that assume the reader knows prior state:
+
+- "no longer X", "is no longer …", "X is gone now", "was previously Y"
+- "do not call X / Y / Z" enumerated against removed commands or MCP tools
+- "drops the X call", "stops doing Y" when describing the skill's own behavior
+
+State what the skill **does**, the commands it **does call**, and the contracts it **does honor**. Migration context (what changed, why) belongs in `TIMELINE.md` and commit messages, not in skill prose.
