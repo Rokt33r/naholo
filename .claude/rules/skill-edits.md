@@ -8,6 +8,6 @@ The six core skills (`/infil`, `/warno`, `/opord`, `/splash`, `/sitrep`, `/exfil
 When the user asks to edit a core skill:
 
 1. Edit `packages/naholo-cli/src/skills/{name}.md`.
-2. Run `naholo install-skills` to mirror the change into `.claude/skills/{name}/SKILL.md`.
+2. Print ``Run `naholo install-skills` to apply the changes.`` in chat — and stop. The user runs it themselves to mirror into `.claude/skills/{name}/SKILL.md`; do not run it yourself.
 
 Edits to `.claude/skills/{name}/SKILL.md` are lost the next time someone runs `naholo install-skills`, so they don't survive.
