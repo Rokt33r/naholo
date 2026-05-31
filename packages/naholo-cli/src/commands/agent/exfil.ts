@@ -22,7 +22,9 @@ export const exfilCommand = new Command('exfil')
       const opNum = opYml.number
       const close = options.close === true
       const localDir = getLocalOperationDir()
-      const { client, projectSlug } = getCliContext()
+      const { client, projectSlug, currentProfile } = getCliContext()
+      const baseUrl = currentProfile.profile.baseUrl.replace(/\/$/, '')
+      const opUrl = `${baseUrl}/app/projects/${projectSlug}/operations/${opNum}`
 
       await runPush()
 
@@ -52,6 +54,6 @@ export const exfilCommand = new Command('exfil')
 
       fs.rmSync(localDir, { recursive: true, force: true })
 
-      console.log(`Exfiled operation #${opNum}`)
+      console.log(opUrl)
     }),
   )
