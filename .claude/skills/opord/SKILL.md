@@ -215,6 +215,7 @@ ORP sizing rules:
 
 - Each task should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
 - **Intent is the approach summary only.** Concrete shapes live in SOM, concrete steps live in COA — Intent must stay a single skim-readable headline.
+- **Compound titles are a split tell.** If a task title needs a comma, "and", or "+" to describe it ("Slim X, relocate Y, strip Z"), each clause is a split candidate. Split until every title is a single verb + object.
 - No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (Course of Action sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
 - An intent that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/warno` to add the decision if it's missing).
