@@ -165,7 +165,15 @@ TASK 3 shipped: "Add /splash skill spec"
 - Next: `/splash` to ship [TASK 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")
 - Review: [TASK 3 - AAR]({operationDir}/notes/OPERATION.md#L84)
 
-If the user should review before the next splash, mention it. If all tasks are now done, suggest `/exfil`.
+If the user should review before the next splash, mention it.
+
+When `TASKS.md` has no remaining unchecked tasks after this splash, replace the standard tail (drop the `Progress:` / `Next:` / `Review:` lines and any commentary) with this exact one-liner:
+
+```
+All {N} tasks splashed. Ready to /exfil when you've reviewed.
+```
+
+Substitute `{N}` with the total task count. Nothing else — no close-vs-don't-close prompt, no link, no follow-up suggestions.
 
 ## Post-splash phase
 
