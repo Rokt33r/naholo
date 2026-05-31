@@ -4,7 +4,7 @@ import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
 import { readSessions } from '../../lib/agent-sessions.js'
 import { getLocalOperationDir, readOpYml } from '../../lib/local-operations.js'
-import { runPush } from './push.js'
+import { pushOp } from '../../lib/push-op.js'
 
 export const exfilCommand = new Command('exfil')
   .description(
@@ -26,7 +26,7 @@ export const exfilCommand = new Command('exfil')
       const baseUrl = currentProfile.profile.baseUrl.replace(/\/$/, '')
       const opUrl = `${baseUrl}/app/projects/${projectSlug}/operations/${opNum}`
 
-      await runPush()
+      await pushOp()
 
       const sessions = readSessions()
       for (const entry of sessions) {
