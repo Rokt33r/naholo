@@ -1,60 +1,49 @@
 ---
 name: sitrep
-description: Sync local progress to Naholo — push tasks and notes (including TIMELINE.md), post summary log. Does not close.
+description: Sync local progress to Naholo and post a one-sentence status log; does not close or clean up.
 argument-hint: '["freeform"]'
 model: sonnet
 ---
 
 # Sitrep — Sync Progress
 
-Sync local changes back to Naholo and post a summary log, without closing the operation or cleaning up the local directory. Use this for mid-session checkpoints.
+Thin wrapper around `naholo agent sitrep`. The CLI command owns the push (tasks + notes including TIMELINE.md) and the operation-log post — this skill composes the one-sentence status line and delegates.
 
 ## Arguments
 
 No operation number — the skill resolves the active operation via `naholo agent op`.
 
-Anything in quotes is optional freeform context that informs the summary log (e.g., `"checkpoint before refactor"` or `"resuming tomorrow"`). Most invocations have no args.
+Anything in quotes is optional freeform context. When given, it replaces the `next:` clause of the log verbatim. Most invocations have no args.
 
 ## What to do
 
 1. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
 
-2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules. Otherwise skip.
 
 3. **Find infiled operation**: Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and stop. Otherwise capture the printed `#{operationNumber} {title}` for context.
 
-4. **Resolve operation directory**: Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`.
-
-5. **Read local state** (for context when generating the summary log):
-   - `{operationDir}/TASKS.md`
-   - `{operationDir}/notes/OPERATION.md`
-
-6. **Push via CLI**: Run `naholo agent push` using the Bash tool. The push includes `TIMELINE.md` as just-another-note. Read the CLI output to know what was synced.
-
-7. **Post summary log**: Generate a diff summary and post via `create_operation_log` MCP tool.
-
-   **The first line MUST start with the literal sync signal `**sitrep** — ` (bold word, em-dash, single space).** `/infil` keys off this prefix to detect and skip sync echoes on re-infil — without it, the next infil will re-mirror this log as a new TIMELINE bullet (duplicate info).
-
-   Format:
+4. **Compose the log content** — a single line in this exact shape:
 
    ```
-   **sitrep** — {one-sentence headline: synced {N} tasks, {N} notes; what's the state}
-
-   - {optional bullets: tasks completed, tasks added/revised, notes touched, code-change summary from `git diff --stat` or OPERATION.md AARs}
-   - {any freeform context the user provided}
+   **sitrep** — phase: {warno|opord|splash}, next: {short imperative — e.g. "/splash to ship TASK 3", "/opord to revise TASK 4", "review AAR"}.
    ```
 
-8. **Append TIMELINE bullet**: Run `naholo agent add-timeline -T sitrep 'Synced {N} tasks, {N} notes. {brief summary}'`. Do NOT append to OPERATION.md — TIMELINE.md is the only file that gets chronological bullets.
+   - `phase` is the most recent phase-changing skill that ran in this session (`/warno`, `/opord`, or `/splash`).
+   - `next` is the obvious next step from `TASKS.md` + `OPERATION.md` state. If freeform args were passed, use them verbatim as the `next:` clause.
+   - The `**sitrep** — ` prefix is mandatory — `/infil` keys off it to skip sync echoes when re-infiling.
 
-9. **Print summary**: Output what was synced to chat. Use markdown link syntax with the absolute paths so the user can click to open them. When listing notes, use the fixed order: OPERATION → TASKS → TIMELINE first, then other notes alphabetically. Print as raw markdown — no surrounding fence.
+5. **Run `naholo agent sitrep --log "<content>"`** with the composed line. On non-zero exit, surface the CLI's error and stop — the local dir is preserved.
+
+6. **Print the confirmation** as raw markdown (no surrounding fence):
+
+   ```
+   Sitrep synced for OP #{operationNumber}.
+   ```
 
 ## Rules
 
-- **Do NOT close the operation** — sitrep is a checkpoint, not a finish line.
-- **Do NOT clean up the local directory** — leave `{operationDir}` intact for continued work.
-- **Do NOT modify source files** — sitrep is a sync operation only.
-- **Use `naholo agent push` for all syncing** — do not manually call MCP tools for syncing tasks or notes, or manage `.base/` files. The CLI handles all of this.
-- **TIMELINE.md is the only file that gets the new bullet** — OPERATION.md keeps SITUATION / MISSION / EXECUTION only.
-- **Always post the summary log** — the log is the checkpoint record.
-- Print the summary as raw markdown — no surrounding fence.
-- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- **Sitrep is sync-only** — no source-file edits, no close, no local-dir cleanup.
+- **`naholo agent sitrep` owns the push and the log post** — the skill's only CLI calls are `naholo agent op` and `naholo agent sitrep --log`.
+- **The `**sitrep** — ` prefix on the log content is mandatory** — `/infil` uses it to detect and skip sync echoes.
+- Print the confirmation as raw markdown — no surrounding fence.
