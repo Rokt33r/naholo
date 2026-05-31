@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const STOP_HOOK_COMMAND = 'naholo agent claude-code-stop'
-const SESSION_END_HOOK_COMMAND = 'naholo agent claude-code-session-end'
 
 interface CommandHook {
   type: 'command'
@@ -91,10 +90,7 @@ function addCommandHook(
 
 export function hasNaholoHooks(settingsPath: string): boolean {
   const settings = readSettings(settingsPath)
-  return (
-    hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND) &&
-    hasCommandHook(settings, 'SessionEnd', SESSION_END_HOOK_COMMAND)
-  )
+  return hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
 }
 
 export function installNaholoHooks(
@@ -102,12 +98,7 @@ export function installNaholoHooks(
 ): 'added' | 'already-present' {
   const settings = readSettings(settingsPath)
   const addedStop = addCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
-  const addedSessionEnd = addCommandHook(
-    settings,
-    'SessionEnd',
-    SESSION_END_HOOK_COMMAND,
-  )
-  if (!addedStop && !addedSessionEnd) {
+  if (!addedStop) {
     return 'already-present'
   }
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true })

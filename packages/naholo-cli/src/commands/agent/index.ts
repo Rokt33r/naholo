@@ -7,7 +7,6 @@ import { opPathCommand } from './op-path.js'
 import { opUrlCommand } from './op-url.js'
 import { pullCommand } from './pull.js'
 import { pushCommand } from './push.js'
-import { claudeCodeSessionEndCommand } from './claude-code-session-end.js'
 import { claudeCodeStopCommand } from './claude-code-stop.js'
 
 export const agentCommand = new Command('agent').description(
@@ -23,4 +22,3 @@ agentCommand.addCommand(opCommand)
 agentCommand.addCommand(opPathCommand)
 agentCommand.addCommand(opUrlCommand)
 agentCommand.addCommand(claudeCodeStopCommand)
-agentCommand.addCommand(claudeCodeSessionEndCommand)

@@ -1,31 +1,17 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import readline from 'node:readline'
-import type { NaholoClient } from 'naholo-api/client'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 import { z } from 'zod'
-import { getNaholoLocalDir } from './local-operations.js'
-
-export const STALE_SESSION_MS = 60 * 60 * 1000
+import { getLocalOperationDir } from './local-operations.js'
 
 export type LocalAgentSessionEntry = z.infer<
   typeof localAgentSessionEntrySchema
 >
 
 export function getSessionsYmlPath(): string {
-  return path.join(getNaholoLocalDir(), 'agent-sessions.yml')
+  return path.join(getLocalOperationDir(), 'agent-sessions.yml')
 }
-
-const localAgentSessionEntrySchema = z.object({
-  session_id: z.string(),
-  transcript_path: z.string(),
-  title: z.string().nullable(),
-  projectSlug: z.string(),
-  op: z.number(),
-  started_at: z.string(),
-  last_message_at: z.string(),
-  ended: z.boolean(),
-})
 
 export function readSessions(): LocalAgentSessionEntry[] {
   const ymlPath = getSessionsYmlPath()
@@ -47,12 +33,6 @@ export function readSessions(): LocalAgentSessionEntry[] {
   return result
 }
 
-function writeSessions(entries: LocalAgentSessionEntry[]): void {
-  const ymlPath = getSessionsYmlPath()
-  fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
-  fs.writeFileSync(ymlPath, yamlStringify(entries))
-}
-
 export function upsertLocalAgentSessionEntry(
   entry: LocalAgentSessionEntry,
 ): void {
@@ -62,28 +42,13 @@ export function upsertLocalAgentSessionEntry(
   writeSessions(next)
 }
 
-export function removeSessions(sessionIds: string[]): void {
-  if (sessionIds.length === 0) {
-    return
-  }
-  const drop = new Set(sessionIds)
-  const existing = readSessions()
-  const next = existing.filter((e) => !drop.has(e.session_id))
-  if (next.length === existing.length) {
-    return
-  }
-  writeSessions(next)
-}
-
 // Streams a Claude Code JSONL transcript for metadata only (timestamps, title)
-// and returns a full local-agent-session entry tagged with the supplied op context.
+// and returns a session entry. Op binding is implicit via the infiled-dir location.
 export async function resolveLocalAgentSessionEntry(input: {
   session_id: string
   transcript_path: string
-  projectSlug: string
-  op: number
 }): Promise<LocalAgentSessionEntry> {
-  const { session_id, transcript_path, projectSlug, op } = input
+  const { session_id, transcript_path } = input
 
   let firstTimestamp: string | null = null
   let lastTimestamp: string | null = null
@@ -130,77 +95,21 @@ export async function resolveLocalAgentSessionEntry(input: {
     session_id,
     transcript_path,
     title,
-    projectSlug,
-    op,
     started_at: firstTimestamp,
     last_message_at: lastTimestamp,
-    ended: false,
   }
 }
 
-export function markSessionEnded(session_id: string): void {
-  const existing = readSessions()
-  const target = existing.find((e) => e.session_id === session_id)
-  if (target == null) {
-    return
-  }
-  if (target.ended) {
-    return
-  }
-  target.ended = true
-  upsertLocalAgentSessionEntry(target)
-}
+const localAgentSessionEntrySchema = z.object({
+  session_id: z.string(),
+  transcript_path: z.string(),
+  title: z.string().nullable(),
+  started_at: z.string(),
+  last_message_at: z.string(),
+})
 
-function isDrainable(entry: LocalAgentSessionEntry, now: Date): boolean {
-  if (entry.ended) {
-    return true
-  }
-  const lastMs = Date.parse(entry.last_message_at)
-  if (Number.isNaN(lastMs)) {
-    return false
-  }
-  return now.getTime() - lastMs > STALE_SESSION_MS
-}
-
-export async function drainSessions(
-  client: NaholoClient,
-  now: Date,
-): Promise<{
-  uploaded: string[]
-  failed: Array<{ session_id: string; error: Error }>
-}> {
-  const entries = readSessions()
-  const uploaded: string[] = []
-  const failed: Array<{ session_id: string; error: Error }> = []
-
-  for (const entry of entries) {
-    if (!isDrainable(entry, now)) {
-      continue
-    }
-    try {
-      const buffer = fs.readFileSync(entry.transcript_path)
-      const transcript = buffer.toString('utf-8')
-      await client.recordAgentSession(
-        entry.projectSlug,
-        entry.op,
-        entry.session_id,
-        {
-          title: entry.title,
-          startedAt: entry.started_at,
-          endedAt: entry.last_message_at,
-          transcript,
-          transcriptSizeBytes: buffer.byteLength,
-        },
-      )
-      uploaded.push(entry.session_id)
-    } catch (error) {
-      failed.push({
-        session_id: entry.session_id,
-        error: error instanceof Error ? error : new Error(String(error)),
-      })
-    }
-  }
-
-  removeSessions(uploaded)
-  return { uploaded, failed }
+function writeSessions(entries: LocalAgentSessionEntry[]): void {
+  const ymlPath = getSessionsYmlPath()
+  fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
+  fs.writeFileSync(ymlPath, yamlStringify(entries))
 }

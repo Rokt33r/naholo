@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { getNaholoLocalDir } from './local-operations.js'
 
-export type HookSource = 'claude-code-stop' | 'claude-code-session-end'
+export type HookSource = 'claude-code-stop'
 
 export function getHookErrorsLogPath(): string {
   return path.join(getNaholoLocalDir(), 'hook-errors.log')
