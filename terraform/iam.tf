@@ -130,6 +130,13 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
           "s3:DeleteObject"
         ]
         Resource = "${aws_s3_bucket.file_storage.arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.file_storage.arn
       }
     ]
   })
