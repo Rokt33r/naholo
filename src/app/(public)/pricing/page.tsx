@@ -12,7 +12,7 @@ export default function PricingPage() {
           Pricing
         </h1>
         <p className='mt-4 text-lg text-zinc-600 dark:text-zinc-400'>
-          심플한 요금제. 숨겨진 비용 없음.
+          Simple pricing. No hidden fees.
         </p>
       </div>
 
@@ -22,7 +22,7 @@ export default function PricingPage() {
             Basic
           </h2>
           <p className='mt-2 text-sm text-zinc-500 dark:text-zinc-400'>
-            개인 혹은 작은 팀 협업을 위한 플랜
+            For individuals and small teams.
           </p>
 
           <div className='mt-6'>
@@ -38,19 +38,19 @@ export default function PricingPage() {
           <ul className='mt-8 space-y-3 text-sm text-zinc-600 dark:text-zinc-400'>
             <li className='flex items-start gap-2'>
               <span className='mt-0.5 text-emerald-500'>&#10003;</span>
-              무제한 이슈 및 태스크
+              Unlimited issues & tasks
             </li>
             <li className='flex items-start gap-2'>
               <span className='mt-0.5 text-emerald-500'>&#10003;</span>
-              무제한 노트 및 로그
-            </li>
-            <li className='flex items-start gap-2'>
-              <span className='mt-0.5 text-emerald-500'>&#10003;</span>팀 협업
-              기능
+              Unlimited notes & logs
             </li>
             <li className='flex items-start gap-2'>
               <span className='mt-0.5 text-emerald-500'>&#10003;</span>
-              1개월 무료 체험
+              Team collaboration
+            </li>
+            <li className='flex items-start gap-2'>
+              <span className='mt-0.5 text-emerald-500'>&#10003;</span>
+              1-month free trial (one per user)
             </li>
           </ul>
 
@@ -58,10 +58,10 @@ export default function PricingPage() {
             type='button'
             className='mt-8 w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200'
           >
-            무료 체험 시작하기
+            Start free trial
           </button>
           <p className='mt-3 text-center text-xs text-zinc-400 dark:text-zinc-500'>
-            신용카드 불필요 &middot; 1개월 무료 체험
+            No credit card &middot; 1-month free trial, available once per user
           </p>
         </div>
       </div>

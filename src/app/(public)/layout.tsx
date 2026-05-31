@@ -82,19 +82,19 @@ export default async function PublicLayout({
               href='/terms'
               className='text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'
             >
-              이용약관
+              Terms
             </Link>
             <Link
               href='/privacy'
               className='text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'
             >
-              개인정보처리방침
+              Privacy
             </Link>
             <Link
               href='/refund'
               className='text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'
             >
-              환불 정책
+              Refund Policy
             </Link>
           </div>
           <div className='flex items-center gap-4'>
