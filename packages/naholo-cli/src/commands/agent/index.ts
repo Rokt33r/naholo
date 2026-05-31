@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { addTimelineCommand } from './add-timeline.js'
+import { exfilCommand } from './exfil.js'
 import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
 import { opCommand } from './op.js'
@@ -16,6 +17,7 @@ export const agentCommand = new Command('agent').description(
 agentCommand.addCommand(infilCommand)
 agentCommand.addCommand(pullCommand)
 agentCommand.addCommand(pushCommand)
+agentCommand.addCommand(exfilCommand)
 agentCommand.addCommand(addTimelineCommand)
 agentCommand.addCommand(manCommand)
 agentCommand.addCommand(opCommand)
