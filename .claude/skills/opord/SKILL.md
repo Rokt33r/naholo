@@ -50,7 +50,6 @@ Read if you haven't read:
 
 - `{operationDir}/TASKS.md`
 - `{operationDir}/notes/OPERATION.md`
-- `{operationDir}/notes/TIMELINE.md`
 
 If MISSION includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/warno` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/opord` doesn't redo the discovery work.
 
@@ -74,13 +73,13 @@ No reasons on rejected items unless the user wrote them in. When in doubt, treat
 
 Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
-- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 10). Append `- **{YYYY-MM-DD HH:MM} — opord**: Drafted N tasks.` to TIMELINE.md.
-- **EXECUTION present but partially populated, no args** → resume in place. Continue from where the previous run left off — finish partial tasks, fill missing subsections. Append `- **{YYYY-MM-DD HH:MM} — opord (resumed)**: …` to TIMELINE.md.
+- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 10). Run `naholo agent add-timeline -T opord 'Drafted N tasks.'`.
+- **EXECUTION present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## EXECUTION` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify EXECUTION, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided, classify intent**:
-  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place. Append `- **{YYYY-MM-DD HH:MM} — opord (revised)**: {summary}` to TIMELINE.md.
-  - **Insertion** — args describe adding one or more new tasks. Append the new `### TASK N — Title` sections at the next free integer after the last existing task (do **not** renumber or re-slot existing tasks, finished or unfinished). If the user names a position ("after TASK 3"), still write the section at the end of EXECUTION and trust `/splash` order to be driven by the integer order in `TASKS.md` — keep numbering monotonic. Append `- **{YYYY-MM-DD HH:MM} — opord (revised)**: {summary}` to TIMELINE.md.
-  - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present. Append `- **{YYYY-MM-DD HH:MM} — opord (revised)**: {summary}` to TIMELINE.md.
-  - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite EXECUTION and renew all tasks even finished. Append `- **{YYYY-MM-DD HH:MM} — opord (restart)**: {summary}` to TIMELINE.md.
+  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place. Run `naholo agent add-timeline -T opord '{summary}'`.
+  - **Insertion** — args describe adding one or more new tasks. Append the new `### TASK N — Title` sections at the next free integer after the last existing task (do **not** renumber or re-slot existing tasks, finished or unfinished). If the user names a position ("after TASK 3"), still write the section at the end of EXECUTION and trust `/splash` order to be driven by the integer order in `TASKS.md` — keep numbering monotonic. Run `naholo agent add-timeline -T opord '{summary}'`.
+  - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present. Run `naholo agent add-timeline -T opord '{summary}'`.
+  - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite EXECUTION and renew all tasks even finished. Run `naholo agent add-timeline -T opord '{summary}'`.
 
 ### 9. Write OPERATION.md EXECUTION
 
@@ -251,6 +250,18 @@ Next:
 - Direction change → re-run `/warno "freeform instructions"` to revise MISSION
 - Optionally → `/sitrep` to push current plan to the server
 
+## Post-opord phase
+
+Once this skill returns, the session is in the **opord** phase. The phase persists until a different phase-changing skill runs (`/infil`, `/warno`, `/splash`), `/exfil` cleans up the workflow, or the session ends. `/sitrep` is a sync-only operation and does **not** end the phase.
+
+While in the opord phase:
+
+- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite Course of Action steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
+- **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
+  - MISSION rewrite (Concept of Operations / Warning Orders / Target Reference Points) → `/warno`
+  - Implementing a task → `/splash`
+  - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
+
 ## Rules
 
 - **EXECUTION-only**: `/opord` writes (or revises) `## EXECUTION` and mirrors to `TASKS.md`. It does NOT touch `## MISSION` — direction changes belong to `/warno`.
@@ -263,6 +274,6 @@ Next:
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **New tasks append at the next free integer**: never letter-suffix, never re-slot existing tasks. The numbering is plain `TASK 1`, `TASK 2`, …. (Historical letter-suffix tasks from before this doctrine — e.g. `TASK 3a` — stay as-is; they're immutable AAR records.)
-- **Do NOT implement any code** — only edit `OPERATION.md`, `TASKS.md`, and `TIMELINE.md`.
+- **Do NOT implement any code** — only edit `OPERATION.md` and `TASKS.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.

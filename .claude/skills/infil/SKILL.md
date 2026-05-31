@@ -9,7 +9,7 @@ model: sonnet
 
 Fetch an operation's full context from Naholo and set up a local working directory for the `/warno` → `/splash` → `/sitrep` (mid-session) → `/exfil` (done) workflow.
 
-Infil is a one-way bring-down from server to local. It never pushes. If `OPERATION.md` or `TIMELINE.md` need to be created, they are written locally only — the user runs `/sitrep` or `/exfil` later to sync upstream.
+Infil is a one-way bring-down from server to local. It never pushes. If `OPERATION.md` needs to be created, it is written locally only — the user runs `/sitrep` or `/exfil` later to sync upstream.
 
 ## Arguments
 
@@ -73,33 +73,11 @@ Optional operation number (e.g., `42`).
    - Do NOT write `## MISSION` or `## EXECUTION` headings — `/warno` and `/opord` append those when they run.
 
    **If OPERATION.md already exists** (common case: a prior `/sitrep` or `/exfil` already pushed it, and this is a fresh infil after a mid-cycle exfil — e.g., the OP was paused waiting on a prerequisite OP):
-   - Diff server state against local notes:
-     - **New logs**: LOGS.yml entries with `createdAt` later than the last TIMELINE bullet.
-     - **Note changes**: created/updated, from infil's CLI report.
-   - **Skip sync-summary logs** (strict signal — do not pattern-guess): any LOGS.yml entry whose `content` first line begins with `**sitrep** —` or `**exfil** —` is a sync recap emitted by those skills. Its information is already encoded in the TIMELINE bullets that were just pulled — re-mirroring it would duplicate. Ignore these entries entirely when computing "what's new."
-   - **What counts as significant**: genuine new human comms (user notes, teammate questions, decision flips), substantive note edits a teammate made server-side, or new tasks — NOT sitrep/exfil echoes.
-   - If nothing significant → note "OPERATION.md is up to date" in the summary; do not touch TIMELINE or SITUATION.
-   - If something significant → summarize it (e.g., "2 new user notes, `research.md` updated server-side"), then:
-     - Append one TIMELINE bullet per significant event (no user confirmation needed for routine new logs; ask only if a SITUATION rewrite is on the table).
-     - If the new info materially changes `### Pain`, `### Suggested solution`, or `### Notes` under SITUATION (e.g., user pivoted the problem, added a hard constraint), patch SITUATION in place. Leave MISSION and EXECUTION alone — those are owned by `/warno` and `/opord`.
+   - Read the CLI's notes/tasks merge report (created / updated / merged / conflict counts) and summarize it.
+   - If the merge surfaces a substantive note edit a teammate made server-side that materially changes `### Pain`, `### Suggested solution`, or `### Notes` under SITUATION (e.g., user pivoted the problem, added a hard constraint), patch SITUATION in place. Leave MISSION and EXECUTION alone — those are owned by `/warno` and `/opord`.
+   - If the agent needs server-side log context, it reads `{operationDir}/LOGS.yml` directly — TIMELINE is skill-event-only.
 
-6. **Handle TIMELINE.md** (sibling of OPERATION.md):
-
-   **If `{operationDir}/notes/TIMELINE.md` does not exist**:
-   - Write it locally via `Write`. Template:
-
-     ```markdown
-     # TIMELINE — OP #{operationNumber}
-
-     - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
-     - **{YYYY-MM-DD HH:MM} — {author}**: {summary of log entry}
-     ```
-
-   - One bullet per LOGS.yml entry, using each entry's `createdAt` and `author`. Summarize content in one line.
-
-   **If TIMELINE.md already exists**: leave it alone (re-runs of infil are handled via the OPERATION.md "what changed" branch above).
-
-7. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
+6. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
 
    If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
@@ -107,18 +85,30 @@ Optional operation number (e.g., `42`).
 
    Infiled operation #42: "Implement user auth"
    - Tasks: 0 (none yet — to be defined in `/warno`)
-   - Notes: OPERATION [created], TIMELINE [created], api-design, research
+   - Notes: OPERATION [created], api-design, research
    - Logs: 8 entries
    - Local: [{operationDir}/]({operationDir}/)
    - Operation: [OPERATION.md]({operationDir}/notes/OPERATION.md)
-   - Timeline: [TIMELINE.md]({operationDir}/notes/TIMELINE.md)
 
    Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line. Include the CLI output details (tasks updated/inserted, notes merged) in the summary.
+
+## Post-infil phase
+
+Once this skill returns, the session is in the **infil** phase. The phase persists until a different phase-changing skill runs (`/warno`, `/opord`, `/splash`), `/exfil` cleans up the workflow, or the session ends. `/sitrep` is a sync-only operation and does **not** end the phase.
+
+While in the infil phase:
+
+- **In-phase follow-up edits** — any further infil-driven edit the user asks for (refining `## SITUATION`, fixing a typo in the seeded OPERATION.md, adding a SITUATION.Notes bullet pointing at a fresh `LOGS.yml` entry) is part of this phase. Fire a single `naholo agent add-timeline -T infil '<summary>'` per discrete event so a future fresh session sees what changed.
+- **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
+  - Drafting / revising `## MISSION` → `/warno`
+  - Cutting tasks / editing `## EXECUTION` or `TASKS.md` → `/opord`
+  - Implementing a task → `/splash`
+  - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
 
 ## Rules
 
 - **Use `naholo agent infil` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync tasks/notes. The CLI handles all of that.
-- **Infil never pushes**. If OPERATION.md or TIMELINE.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
+- **Infil never pushes**. If OPERATION.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.
 - Do NOT write `## MISSION` or `## EXECUTION` headings — `/warno` appends MISSION, `/opord` appends EXECUTION.

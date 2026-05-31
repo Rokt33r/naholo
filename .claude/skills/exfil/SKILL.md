@@ -34,7 +34,6 @@ If no instructions given, ask the user whether to close.
 5. **Read local state** (for context when generating the summary log):
    - `{operationDir}/TASKS.md`
    - `{operationDir}/notes/OPERATION.md`
-   - `{operationDir}/notes/TIMELINE.md`
 
 6. **Check for remaining tasks**: Check `TASKS.md` for any unchecked (`- [ ]`) tasks.
    - If there are incomplete tasks → use `AskUserQuestion` to warn: "Heads up — {count} tasks still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
@@ -71,7 +70,7 @@ If no instructions given, ask the user whether to close.
 
    **If `create_operation_log` fails → STOP. Do NOT proceed to step 9.** Report the error and preserve local data (see step 11 failure path).
 
-9. **Append TIMELINE bullet**: Append a single bullet to `{operationDir}/notes/TIMELINE.md`: `- **{YYYY-MM-DD HH:MM} — exfil**: Final sync — {brief summary}.` Do NOT append to OPERATION.md.
+9. **Append TIMELINE bullet**: Run `naholo agent add-timeline -T exfil 'Final sync — {brief summary}.'`. Do NOT append to OPERATION.md.
 
 10. **Close or ask about closing**:
     - If extra instructions already specify → follow them.
