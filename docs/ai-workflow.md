@@ -71,7 +71,7 @@ Two skills for different stages:
 
 **`/sitrep ["freeform"]`** — mid-session checkpoint:
 
-- Syncs tasks and all notes (including `TIMELINE.md`) to server via `naholo agent push`
+- Syncs tasks and all notes (including `TIMELINE.md`) to server via `naholo agent sitrep --log <content>`
 - Posts a summary log entry via `create_operation_log`
 - Runs `naholo agent add-timeline -T sitrep '<summary>'`
 - Leaves local directory intact for continued work
@@ -121,4 +121,4 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 | `create_operation_log` | `/sitrep`, `/exfil` | Post summary log entries    |
 | `close_operation`      | `/exfil`            | Close a completed operation |
 
-Task and note syncing flows through the `naholo agent infil` / `naholo agent pull` / `naholo agent push` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.
+Task and note syncing flows through the `naholo agent infil` / `naholo agent pull` / `naholo agent sitrep` / `naholo agent exfil` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.

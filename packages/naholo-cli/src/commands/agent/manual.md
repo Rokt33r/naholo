@@ -49,7 +49,7 @@ The canonical checklist. The only file with checkboxes. Flat — no sub-tasks. _
 
 - **Heading**: `# TASKS — OP #{n}`
 - Every task is `- [ ] {n}. {short title}` (e.g., `- [ ] 1. Add man command`). No indentation, no sub-bullets.
-- `[ref](naholo://tasks/{id})` links point at the server-side task record; `naholo agent push` appends them for newly created tasks.
+- `[ref](naholo://tasks/{id})` links point at the server-side task record; sync commands append them inline when a new task lands on the server.
 
 ### `notes/OPERATION.md`
 
@@ -118,17 +118,6 @@ Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge
 - 3-way merges notes line-by-line (via diff3) and structurally merges tasks by ID. Reports `updated`/`kept-local`/`merged`/`conflict`/`created`/`unchanged` per file.
 - Refreshes `op.yml.title` from the server.
 - Errors with `No infiled operation` when nothing is infiled. Switching ops requires `exfil` then `infil`. Never runs pushes.
-
-### `naholo agent push`
-
-Argless. Pushes local changes to the server.
-
-- Reads the op number from `op.yml`.
-- Reads `TASKS.md` and syncs the task tree (creates new tasks, updates existing by `[ref]` id).
-- Patches newly created tasks with `[ref](naholo://tasks/{id})` links in the local file.
-- Reads every `notes/*.md` (including `TIMELINE.md`) and creates or updates the corresponding server note.
-- Updates `.base/` with the just-pushed state as the new baseline for future 3-way merges.
-- Outputs sync counts. Agents use this during `/sitrep` and `/exfil`.
 
 ### `naholo agent op-path`
 

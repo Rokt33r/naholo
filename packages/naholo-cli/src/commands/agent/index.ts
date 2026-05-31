@@ -7,7 +7,6 @@ import { opCommand } from './op.js'
 import { opPathCommand } from './op-path.js'
 import { opUrlCommand } from './op-url.js'
 import { pullCommand } from './pull.js'
-import { pushCommand } from './push.js'
 import { sitrepCommand } from './sitrep.js'
 import { claudeCodeStopCommand } from './claude-code-stop.js'
 
@@ -17,7 +16,6 @@ export const agentCommand = new Command('agent').description(
 
 agentCommand.addCommand(infilCommand)
 agentCommand.addCommand(pullCommand)
-agentCommand.addCommand(pushCommand)
 agentCommand.addCommand(exfilCommand)
 agentCommand.addCommand(sitrepCommand)
 agentCommand.addCommand(addTimelineCommand)
