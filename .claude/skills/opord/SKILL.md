@@ -233,7 +233,16 @@ Sync `TASKS.md` to match the EXECUTION task list:
 
 Show the plan state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
 
-Example (printed directly, not fenced):
+The summary's primary link points at the **most-affected scope** of this run, so the user can jump straight to what changed:
+
+- **Fresh write / full restart** → link to `## EXECUTION` (the whole section is new). Label: `EXECUTION`.
+- **Targeted edit on a single task** → link to that task's `### TASK N — Title` heading. Label: `TASK N`.
+- **Insertion of one new task** → link to the inserted task's heading. Label: `TASK N`.
+- **Multi-task revision / multiple insertions** → list one link per affected task on its own bullet. Labels: `TASK N`.
+
+Resolve `<line>` by reading back `OPERATION.md` after writing EXECUTION and locating the matching heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
+
+Example (fresh write, printed directly, not fenced):
 
 Plan complete for OP #42: "Implement user auth"
 
@@ -241,7 +250,13 @@ Plan complete for OP #42: "Implement user auth"
 - Execution: [EXECUTION]({operationDir}/notes/OPERATION.md#L<line>)
 - Tasks: [TASKS.md]({operationDir}/TASKS.md)
 
-Resolve `<line>` by reading back `OPERATION.md` after writing EXECUTION and locating the `## EXECUTION` heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
+Example (targeted edit on TASK 4):
+
+Plan adjusted for OP #42: "Implement user auth"
+
+- Tasks: 6 total (3 done, 3 remaining)
+- Edited: [TASK 4]({operationDir}/notes/OPERATION.md#L<line>)
+- Tasks: [TASKS.md]({operationDir}/TASKS.md)
 
 Next:
 

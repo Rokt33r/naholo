@@ -80,7 +80,7 @@ If no instructions given, ask the user whether to close.
       - If no → leave open
 
 11. **Clean up or abort**:
-    - **If push, summary log, and close all completed successfully**: Delete the `{operationDir}` directory.
+    - **If push, summary log, and close all completed successfully**: Delete the `{operationDir}` directory with `rm -rf {operationDir}` via Bash.
     - **If any step failed**: Do NOT delete. Instead:
       - Print which step failed and what the error was
       - Confirm that local data at `{operationDir}` is preserved
