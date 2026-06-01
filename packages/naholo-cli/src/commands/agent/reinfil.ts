@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
+import type { OperationLog } from 'naholo-api/types'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
@@ -17,14 +18,7 @@ import {
   writeOpYml,
 } from '../../lib/local-operations.js'
 
-type ServerLog = {
-  id: string
-  content: string
-  createdAt: string
-  projectOperator: { id: string; name: string; type: string } | null
-}
-
-function writeLogsYaml(serverLogs: ServerLog[]): void {
+function writeLogsYaml(serverLogs: OperationLog[]): void {
   // Server is source of truth — overwrite local LOGS.yml on every pull.
   const entries = serverLogs.map((log) => ({
     id: log.id,
