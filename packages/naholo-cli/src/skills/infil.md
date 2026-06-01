@@ -16,7 +16,7 @@ Infil is a one-way bring-down from server to local. It never pushes. If `OPERATI
 Optional operation number (e.g., `42`).
 
 - **Provided** → fresh infil. Runs `naholo agent infil <n>` to fetch the op from the server and create the infiled directory. Errors if an op is already infiled.
-- **Omitted** → re-infil (refresh). Runs `naholo agent pull` against the currently infiled op. Errors if nothing is infiled.
+- **Omitted** → re-infil (refresh). Runs `naholo agent reinfil` against the currently infiled op. Errors if nothing is infiled.
 
 ## What to do
 
@@ -26,7 +26,7 @@ Optional operation number (e.g., `42`).
 
 3. **Fetch via CLI**: Branch on whether `{operationNumber}` was provided.
    - **Fresh infil ({operationNumber} provided)**: Run `naholo agent infil {operationNumber}`. If the CLI errors with "Already infiled. Run \"naholo agent exfil\" first.", tell the user that an op is already infiled — they can `/infil` (no args) to refresh it, or `/exfil` first to switch ops. Then stop.
-   - **Re-infil ({operationNumber} omitted)**: Run `naholo agent pull`. If the CLI errors with "No infiled operation", tell the user to pass an operation number (`/infil <n>`) for a fresh infil and stop.
+   - **Re-infil ({operationNumber} omitted)**: Run `naholo agent reinfil`. If the CLI errors with "No infiled operation", tell the user to pass an operation number (`/infil <n>`) for a fresh infil and stop.
 
    Either way, capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
 

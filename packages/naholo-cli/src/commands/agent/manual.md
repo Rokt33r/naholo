@@ -26,7 +26,7 @@ Operational vocabulary used by the skills (written in full in docs; may be abbre
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
-1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)**: takes an operation number from the server. Runs `naholo agent infil {n}`, which creates the infiled directory at `.naholo/local/infiled/`, writes `op.yml` (`{ number, title }`), pulls `TASKS.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. Errors with "Already infiled. Run \"naholo agent exfil\" first." when an op is already infiled — only one op can be infiled at a time. **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merges tasks + notes against the latest server state). Either way, the agent then generates `notes/OPERATION.md` if missing (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills). `TASKS.md` stays as pulled (empty list, ready for `/warno`); `notes/TIMELINE.md` is written by `naholo agent add-timeline` on first call. Never pushes.
+1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)**: takes an operation number from the server. Runs `naholo agent infil {n}`, which creates the infiled directory at `.naholo/local/infiled/`, writes `op.yml` (`{ number, title }`), pulls `TASKS.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. Errors with "Already infiled. Run \"naholo agent exfil\" first." when an op is already infiled — only one op can be infiled at a time. **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent reinfil` (3-way merges tasks + notes against the latest server state). Either way, the agent then generates `notes/OPERATION.md` if missing (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills). `TASKS.md` stays as pulled (empty list, ready for `/warno`); `notes/TIMELINE.md` is written by `naholo agent add-timeline` on first call. Never pushes.
 2. **`/warno ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Warning Orders / Target Reference Points) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `TASKS.md` — those are `/opord`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, refresh Target Reference Points); EXECUTION-shaped instructions belong to `/opord`. Stops with a "next: `/opord`" pointer.
 3. **`/opord ["freeform"]`** — Input: warno-completed operation (MISSION populated). OPORD-style detail-cutter and plan revisor. Resolves any unanswered Warning Order alternatives, cuts MISSION into ORP-sized tasks, **appends `## EXECUTION`** (one `### TASK N — Title` per task with `#### Intent` + `#### Scheme of Maneuver` when applicable + `#### Course of Action`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the task), and mirrors the task list into `TASKS.md` as a flat checkbox list. With `## EXECUTION` already present, freeform args drive plan revisions — insert, drop, split, merge, retitle, rewrite — applied only to unfinished tasks. Completed tasks (those with a populated AAR) are immutable. New tasks append at the next free integer; never letter-suffix, never re-slot existing tasks.
 4. **`/splash [N] ["freeform"]`** — Input: opord-completed operation with at least one unchecked task. With `N`, ships TASK N. Without `N`, picks the next unchecked task from `TASKS.md`. Reads the task's Intent + Course of Action from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target task section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in TASKS.md, appends a TIMELINE.md bullet. Stops after one task.
@@ -41,7 +41,7 @@ The infiled directory (`.naholo/local/infiled/`) is the agent's full working set
 
 ### `op.yml`
 
-CLI state at the infiled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent pull`. Agents do not edit it directly; `naholo agent op` / `op-path` read it.
+CLI state at the infiled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent reinfil`. Agents do not edit it directly; `naholo agent op` / `op-path` read it.
 
 ### `TASKS.md`
 
@@ -92,7 +92,7 @@ Snapshot of the server-side log feed. Overwritten on every `naholo agent infil` 
 
 ### `.base/`
 
-3-way-merge baseline owned by `naholo agent pull` / `push`. Mirrors the last-synced state of `TASKS.md` and `notes/*.md`. Agents do not edit it.
+3-way-merge baseline owned by the sync commands (`naholo agent reinfil`, `naholo agent sitrep`, `naholo agent exfil`). Mirrors the last-synced state of `TASKS.md` and `notes/*.md`. Agents do not edit it.
 
 ### Listing order
 
@@ -111,7 +111,7 @@ Only one op can be infiled at a time. The agent CLI is a small state machine: `i
 
 Initial fetch. Takes the server op number, creates `.naholo/local/infiled/`, writes `op.yml`, and pulls tasks/notes/.base/LOGS.yml. Errors with `Already infiled. Run "naholo agent exfil" first.` when an op is already infiled. Agents use this during `/infil`.
 
-### `naholo agent pull`
+### `naholo agent reinfil`
 
 Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge against the server.
 

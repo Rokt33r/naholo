@@ -36,7 +36,7 @@ function writeLogsYaml(serverLogs: ServerLog[]): void {
   fs.writeFileSync(logsPath, yamlStringify(entries))
 }
 
-export const pullCommand = new Command('pull')
+export const reinfilCommand = new Command('reinfil')
   .description('Refresh the currently infiled operation from the server')
   .action(
     withErrorHandling(async () => {

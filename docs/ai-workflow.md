@@ -18,13 +18,13 @@ This is the brainstorming phase. The operation accumulates everything needed to 
 Fetch the operation locally for offline-first work. Only one op can be infiled at a time; the local data lives at a fixed `.naholo/local/infiled/` path with op identity stored in `op.yml`.
 
 - **Fresh infil (`/infil {N}`)**: `naholo agent infil {N}` creates the infiled directory, writes `op.yml` (`{ number, title }`), and pulls `TASKS.md` plus all existing `notes/*.md` from the server, then prints the absolute directory path on stdout — the `/infil` agent reads that line and does not need a separate `op-path` call. Errors with "Already infiled" if an op is already infiled
-- **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent pull` (3-way merge against the server) — no need to exfil first to pick up new server-side changes
+- **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent reinfil` (3-way merge against the server) — no need to exfil first to pick up new server-side changes
 - The agent then generates `notes/OPERATION.md` if missing (server-authored copies are preserved on re-runs) — the single live document for the OP, with three top-level sections written incrementally by their owning skills:
   - `## SITUATION` — `### Pain`, `### Suggested solution` (filled by infil from logs/notes), plus optional `### Notes`
   - `## MISSION` — `### Concept of Operations`, `### Warning Orders`, `### Target Reference Points` (absent after infil; appended by `/warno`). Warning Order bullets may carry an optional `- ? <prompt> (a / b) >` sub-bullet (transient open alt) and/or a `- Rejected: a, b` sub-bullet. TRP is a flat bullet list of files / folders / glob patterns (each `` `path` — tag ``) — a curated map a fresh `/opord` session uses to skip re-walking the codebase
   - `## EXECUTION` — one `### TASK N — Title` section per task with `#### Intent`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and a `#### After-Action Report` added by `/splash` when the task ships (absent after infil; appended by `/opord`)
 - `TASKS.md` stays as pulled (empty list until `/opord` populates it); `notes/TIMELINE.md` is written by `naholo agent add-timeline` on first call (not seeded at infil); other `notes/*.md` are whatever the operation already had
-- On re-infil, `naholo agent pull` performs a 3-way merge (local vs server vs baseline) — never silently overwrites local changes
+- On re-infil, `naholo agent reinfil` performs a 3-way merge (local vs server vs baseline) — never silently overwrites local changes
 
 ### Phase 3: Warno (`/warno ["freeform"]`)
 
@@ -121,4 +121,4 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 | `create_operation_log` | `/sitrep`, `/exfil` | Post summary log entries    |
 | `close_operation`      | `/exfil`            | Close a completed operation |
 
-Task and note syncing flows through the `naholo agent infil` / `naholo agent pull` / `naholo agent sitrep` / `naholo agent exfil` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.
+Task and note syncing flows through the `naholo agent infil` / `naholo agent reinfil` / `naholo agent sitrep` / `naholo agent exfil` CLI rather than direct MCP calls, so skills don't manage `.base/` baselines or per-entity MCP tools by hand. The CLI treats `notes/*.md` as opaque markdown — `OPERATION.md`, `TIMELINE.md`, and any free-form notes all sync the same way.
