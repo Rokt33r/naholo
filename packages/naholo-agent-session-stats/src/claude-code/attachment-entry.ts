@@ -17,6 +17,7 @@ const attachmentRowSchema = z
     cwd: z.unknown().optional(),
     entrypoint: z.unknown().optional(),
     gitBranch: z.unknown().optional(),
+    slug: z.string().optional(),
     sessionId: z.unknown().optional(),
     userType: z.unknown().optional(),
     uuid: z.unknown().optional(),
