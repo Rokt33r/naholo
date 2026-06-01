@@ -78,7 +78,7 @@ export const dumpOpCommand = new Command('dump-op')
         const text = await client.getAgentSessionTranscript(
           projectSlug,
           operationNumber,
-          session.id,
+          session.sessionId,
         )
         fs.writeFileSync(
           path.join(transcriptsDir, `${session.sessionId}.jsonl`),
