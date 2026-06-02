@@ -15,8 +15,14 @@ export function registerTools(
     },
     async ({ title }) => {
       const operation = await client.createOperation(projectSlug, { title })
+      const url = `${client.baseUrl}/app/projects/${projectSlug}/operations/${operation.number}`
       return {
-        content: [{ type: 'text', text: JSON.stringify(operation, null, 2) }],
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ ...operation, url }, null, 2),
+          },
+        ],
       }
     },
   )

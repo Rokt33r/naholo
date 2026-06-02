@@ -19,7 +19,7 @@ import type {
 } from './types.js'
 
 export class NaholoClient {
-  private baseUrl: string
+  public baseUrl: string
   private token: string
 
   constructor(options: { baseUrl: string; token: string }) {
