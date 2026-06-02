@@ -30,10 +30,15 @@ The agent-facing lifecycle for an operation is a one-way pipeline from server to
 2. **`/warno ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Warning Orders / Target Reference Points) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `TASKS.md` — those are `/opord`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, refresh Target Reference Points); EXECUTION-shaped instructions belong to `/opord`. Stops with a "next: `/opord`" pointer.
 3. **`/opord ["freeform"]`** — Input: warno-completed operation (MISSION populated). OPORD-style detail-cutter and plan revisor. Resolves any unanswered Warning Order alternatives, cuts MISSION into ORP-sized tasks, **appends `## EXECUTION`** (one `### TASK N — Title` per task with `#### Intent` + `#### Scheme of Maneuver` when applicable + `#### Course of Action`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the task), and mirrors the task list into `TASKS.md` as a flat checkbox list. With `## EXECUTION` already present, freeform args drive plan revisions — insert, drop, split, merge, retitle, rewrite — applied only to unfinished tasks. Completed tasks (those with a populated AAR) are immutable. New tasks append at the next free integer; never letter-suffix, never re-slot existing tasks.
 4. **`/splash [N] ["freeform"]`** — Input: opord-completed operation with at least one unchecked task. With `N`, ships TASK N. Without `N`, picks the next unchecked task from `TASKS.md`. Reads the task's Intent + Course of Action from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target task section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in TASKS.md, appends a TIMELINE.md bullet. Stops after one task.
-5. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (tasks + all notes including TIMELINE.md), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
-6. **`/exfil ["close"|"don't close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
+5. **`/chop "freeform"`** — Input: infiled operation in warno or opord phase. Drafts a CHOP proposal at `notes/CHOP.md` showing how the parent OP's Warning Orders and EXECUTION tasks would split between the current OP and a new OP. **Does not touch the server, does not touch `OPERATION.md`**. Re-runnable: with `CHOP.md` already present, freeform args revise the existing proposal in place. Args are mandatory in both fresh and revision modes. Enters the **chop** phase; `/warno`, `/opord`, `/splash` may still run but each surfaces a "CHOP pending" `AskUserQuestion` gate first since they will desync the proposal.
+6. **`/chopchop`** — Input: infiled operation with `notes/CHOP.md` present. Applies the proposal: spawns a new OP server-side seeded with the carved SITUATION + MISSION + EXECUTION (Course of Action and AAR carry over verbatim when present), prunes the same scope from the parent's local `OPERATION.md` + `TASKS.md`, and deletes `CHOP.md` both locally and server-side. Ends the chop phase. No args.
+7. **`/nochop`** — Input: infiled operation with `notes/CHOP.md` present. Discards the proposal by deleting `CHOP.md` both locally and server-side. Parent OP is not modified. Ends the chop phase. No args.
+8. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (tasks + all notes including `TIMELINE.md` and any in-flight `CHOP.md`), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
+9. **`/exfil ["close"|"don't close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
 
 The canonical happy-path cycle: `/infil → /warno → /opord → /splash → (user reviews AAR) → /splash → … → /exfil`. Mid-cycle revisions: `/opord "freeform"` between splashes adjusts the unfinished plan (insert, drop, split, rewrite); re-run `/warno` for direction (MISSION) changes.
+
+**OP-splitting side branch**: when the scope inside one OP grows large enough that two OPs would be cleaner, run `/chop "freeform"` to draft the split into `notes/CHOP.md`, review (or hand-edit) the doc, then `/chopchop` to apply or `/nochop` to discard. Plugs in between any two cycle steps in the warno or opord phase.
 
 ## Infiled files
 
@@ -80,7 +85,7 @@ The chronological catch-up log. Its only purpose is to let a fresh agent session
 
 - **Heading**: `# TIMELINE — OP #{n}`
 - Body is a single chronological bullet list. Format: `- {YYYY-MM-DD HH:MM} — {stage}: {summary}` (no bold markers).
-- Stage labels: `infil`, `warno`, `opord`, `splash`, `sitrep`, `exfil` — bare label, no parenthetical variants.
+- Stage labels: `infil`, `warno`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop` — bare label, no parenthetical variants.
 
 ### `notes/*.md` — other notes
 

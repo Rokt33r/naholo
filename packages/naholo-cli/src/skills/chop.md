@@ -1,0 +1,202 @@
+---
+name: chop
+description: Draft a CHOP proposal for splitting the currently infiled Naholo operation. Writes `notes/CHOP.md` showing how MISSION.Warning Orders and EXECUTION tasks split between the current OP and a proposed new OP, for user review. No server calls, no pruning — `/chopchop` applies the proposal once the user is satisfied.
+argument-hint: '"freeform — what to carve off"'
+---
+
+# Chop — Draft the CHOP proposal
+
+The first half of the OP-splitting workflow. `/chop` reads the parent's current MISSION + EXECUTION, takes a freeform description of what to carve, and writes a `CHOP.md` proposal note showing **side-by-side** how Warning Orders and tasks split between the current OP and a proposed new OP. The user reviews (and optionally edits) `CHOP.md`, then runs `/chopchop` to apply it.
+
+CHOP — short for **Change of Operational Control** — is the military verb for transferring a unit from one commander to another. Here the "unit" is a slice of MISSION + EXECUTION: a set of Warning Orders and the unfinished tasks that depend on them. `/chop` is the planning brief; `/chopchop` is the actual transfer.
+
+The parent OP's `OPERATION.md` is **not touched** by this skill. Nothing goes to the server. The only side effect is creating `CHOP.md` in the parent's notes directory.
+
+## Arguments
+
+Required freeform args describing what to carve. There is no `/chop` without args — the skill needs a direction to cut along.
+
+Common patterns:
+
+- `/chop "subagent transcript ingest WOs"` — carve by topic; the model picks the matching WOs.
+- `/chop "WOs 3, 4, 5 and the unfinished tasks that depend on them"` — carve by explicit reference.
+- `/chop "everything related to the CLI upload path; new OP titled 'Subagent transcript ingest'"` — caller pre-suggests the new OP title.
+
+Args that would put a **shipped task** (one with a populated `#### After-Action Report` in parent EXECUTION) onto the new OP are unusual but allowed — the skill confirms intent via `AskUserQuestion` before drafting the proposal. If the user confirms, the shipped task transfers with its AAR intact when `/chopchop` runs.
+
+## What to do
+
+### 0. Require freeform args
+
+If the user invoked `/chop` with no args, abort immediately. Do not load personality, do not load the manual, do not run `naholo agent op`, do not read any files, do not call `add-timeline`. Print the message below as raw markdown (no surrounding fence) and stop:
+
+> `/chop` requires a prompt describing what to carve. Re-run as `/chop "what to carve"` — e.g. `/chop "subagent transcript ingest WOs"`.
+
+Args are mandatory whether or not `CHOP.md` already exists — both fresh draft and revision modes need instructions.
+
+### 1. Load personality
+
+If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+
+### 2. Load manual
+
+If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+
+### 3. Find infiled operation
+
+Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and abort. Otherwise capture `#{parentNumber} {parentTitle}`.
+
+### 4. Resolve operation directory
+
+Run `naholo agent op-path` to get the absolute parent operation directory; call this `{operationDir}`.
+
+### 5. Read local state
+
+Read:
+
+- `{operationDir}/notes/OPERATION.md` — needed in full to identify carveable WOs and tasks, and to know each task's shipped/unshipped state.
+- `{operationDir}/TASKS.md` — needed to enumerate task numbers + titles.
+
+If `## MISSION` is absent in `OPERATION.md`, stop and tell the user there's nothing to chop yet — run `/warno` first.
+
+If `notes/CHOP.md` already exists, also read it — this is a **revision** run. The args describe how to tweak the existing proposal (move a WO between sides, retitle the new OP, etc.), not a fresh draft. Common reason: the user is refining the proposal across sessions.
+
+### 6. Plan the split
+
+Branch on whether `CHOP.md` already existed in step 5:
+
+- **Fresh draft (no prior `CHOP.md`)** — derive the full split from the args + the parent's current `OPERATION.md`. Decide every field below from scratch.
+- **Revision (`CHOP.md` already existed)** — start from the existing proposal and apply only the changes the args describe (move WO X to the other side, retitle the new OP, rewrite a Concept of Operations, swap two tasks). Leave everything the args don't touch alone. Re-validate against the parent's current `OPERATION.md` since it may have changed between sessions — if a WO or task referenced in the old `CHOP.md` no longer exists on the parent (a `/warno` or `/opord` ran between chops), drop the stale reference and call it out in the summary.
+
+In either mode, decide:
+
+- **Carved Warning Orders** — the exact WO bullets (by bold label) that match the args. If args are ambiguous, pick the smallest literal-reading set and surface the ambiguity in `## Intent`.
+- **Surviving Warning Orders** — every WO that's not carved.
+- **Carved tasks** — every `### TASK N — Title` whose Intent / Course of Action only makes sense under the carved WOs. If any candidate carved task is **shipped** (its parent section has `#### After-Action Report`), pause and ask the user via `AskUserQuestion` whether it's intentional to move shipped work to the new OP. Show the task number + title + a one-line AAR summary so they can decide per task. Default option: keep shipped tasks on the parent. Only include a shipped task under `# NEW OP` if the user explicitly confirms.
+- **Surviving tasks** — every other `### TASK N`, including all shipped ones.
+- **Proposed new-OP title** — short noun phrase, follows the parent's title conventions. Use the user's suggestion if their args included one; otherwise propose one based on the carved WOs.
+- **Post-split Concept of Operations for the parent** — if the parent's existing CoO would read wrong after the carve (e.g. mentions the carved approach), draft a narrower version: **two or three sentences max**, concept-level only, no file lists / edit steps / build commands. If the existing CoO still reads true post-carve, reuse it verbatim.
+- **Concept of Operations for the new OP** — **two or three sentences max**, scoped to the carved approach. Concept-level only: name the chosen path and connect it back to the carved Pain. Do **not** enumerate files, edit steps, or build commands here — those belong in Warning Orders or land later in EXECUTION on the new OP. May be a verbatim slice of the parent's CoO if it already reads narrowly.
+
+**Do not** allocate Target Reference Points in `CHOP.md`. TRP allocation is `/chopchop`'s job — agents at apply time decide which TRP entries support only carved WOs (move), only surviving WOs (keep), or both (duplicate). The user is not expected to review TRP at proposal time.
+
+### 7. Write `CHOP.md`
+
+Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it overwrites the existing file on revision runs):
+
+```markdown
+# CHOP
+
+## Intent
+
+{One to three sentences at most. Concept-level only — names the cleave line and why. No file lists, no edit steps, no TRP, no enumerated WO references. Surface any ambiguity from step 6 here in plain language.}
+
+---
+
+# CURRENT OP #{parentNumber}: {parentTitle}
+
+## MISSION
+
+### Concept of Operations
+
+{Post-split CoO for the parent — either the verbatim existing CoO or the narrowed draft from step 6.}
+
+### Warning Orders
+
+{The surviving WOs, verbatim — preserve bold labels and reasoning halves. **Drop** any `- ?` open-alt and `- Rejected:` sub-bullets; they don't belong in a CHOP planning brief.}
+
+## EXECUTION
+
+- [ ] TASK {n} — {title}
+- [x] TASK {n} — {title}
+- …
+
+---
+
+# NEW OP: {proposed title}
+
+## MISSION
+
+### Concept of Operations
+
+{New OP's CoO — two or three sentences scoped to the carved approach.}
+
+### Warning Orders
+
+{The carved WOs, verbatim — preserve bold labels and reasoning halves. **Drop** any `- ?` open-alt and `- Rejected:` sub-bullets; they don't belong in a CHOP planning brief.}
+
+## EXECUTION
+
+- [ ] TASK 1 — {title}
+- [ ] TASK 2 — {title}
+- …
+```
+
+Format rules to honor when writing the doc:
+
+- **No TRP** anywhere in `CHOP.md`. `/chopchop` allocates TRP at apply time.
+- **No `#### Intent`, no `#### Scheme of Maneuver`, no `#### Course of Action`, no `#### After-Action Report`** anywhere in `CHOP.md`. The EXECUTION blocks under each OP are **checkbox task items** (`- [ ] TASK n — title` or `- [x] TASK n — title`), not full task sections. Full per-task detail lives in `OPERATION.md`; `CHOP.md` is a planning brief.
+- **Checkbox carries shipped state.** `- [x]` ≡ shipped (parent task section has `#### After-Action Report`). `- [ ]` ≡ unshipped. No textual annotations, no traceback parentheticals — the title is the link back to the parent's task.
+- **Task lines mirror the parent's `### TASK` heading shape exactly** — same `TASK {n} — {title}` form (em-dash separator, single space on each side), title copied verbatim from the parent's `### TASK n — {title}` heading. Do not substitute a period for the em-dash, do not paraphrase the title, do not substitute Intent, do not summarize.
+- **Parent task numbers do not change.** Under `# CURRENT OP`, list surviving tasks with their original numbers (gaps from carved tasks are fine — matches `/opord`'s never-re-slot rule).
+- **New OP tasks renumber from 1.** Under `# NEW OP`, list carved tasks as `TASK 1`, `TASK 2`, … in the order they should appear on the new OP. The parent-task mapping is derived from title match at `/chopchop` time.
+- **Shipped tasks under `# NEW OP` use `- [x]`** — same checkbox semantics as `# CURRENT OP`. They only appear there if the user explicitly confirmed in step 6.
+- **WOs transfer verbatim except for `- ?` and `- Rejected:` sub-bullets, which are always dropped.** Bold labels and reasoning halves stay word-for-word; open alts and rejected-option lines do not appear in `CHOP.md`.
+- **Three `---` separators** divide the doc into four blocks (intent → current OP → new OP). No other top-level `#` headings.
+
+### 8. Stamp TIMELINE
+
+Run, picking the verb based on step 6's branch:
+
+```
+naholo agent add-timeline -T chop 'Drafted CHOP.md: carved {N} WO(s), {M} task(s); proposed new OP "{proposed title}".'
+```
+
+or, on a revision run:
+
+```
+naholo agent add-timeline -T chop 'Revised CHOP.md: {one-sentence summary of what changed — e.g. "moved WO X to the new OP", "retitled new OP", "rewrote new OP CoO"}.'
+```
+
+### 9. Print summary
+
+Show the chop draft state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
+
+Example (printed directly, not fenced):
+
+CHOP proposal drafted on OP #{parentNumber}: "{parentTitle}"
+
+- Carved: {N} WO(s), {M} unshipped task(s)
+- Surviving: {N} WO(s), {M} task(s) ({S} shipped, immutable)
+- Proposed new OP: "{proposed title}"
+- Review: [CHOP.md]({operationDir}/notes/CHOP.md)
+
+Next:
+
+- Looks good → `/chopchop` to apply (spawns the new OP server-side and prunes the parent).
+- Want to tweak the split → edit `CHOP.md` directly (move bullets between the CURRENT and NEW OP sections, rename the new OP, rewrite either Concept of Operations), then `/chopchop`.
+- Abandon the proposal → delete `CHOP.md` and the chop never happened.
+
+## Post-chop phase
+
+Running `/chop` enters the **chop** phase. The phase persists until `/chopchop` consumes `CHOP.md`, the user deletes `CHOP.md`, `/exfil` cleans up the workflow, or the session ends. `/sitrep` is sync-only and does not end the phase.
+
+While in the chop phase (i.e. `CHOP.md` exists):
+
+- **In-phase follow-up edits** — two equally valid channels for revising the proposal: hand-edit `CHOP.md` directly, or re-run `/chop "freeform"` to apply a revision through the skill. Re-runs round-trip across sessions.
+- **Other skills are not blocked** — `/warno`, `/opord`, and `/splash` may still run while `CHOP.md` exists. They each surface their own "CHOP pending" `AskUserQuestion` gate so the user can either cancel out and revise CHOP first, or proceed knowing the proposal will desync. If the user proceeds, they own re-running `/chop "freeform"` afterward to bring `CHOP.md` back into sync with the parent's updated MISSION / EXECUTION.
+- **Apply the proposal** → `/chopchop` (consumes `CHOP.md`, ends the chop phase).
+- **Discard the proposal** → `/nochop` (deletes `CHOP.md`, stamps TIMELINE, ends the chop phase, points at the next action).
+- **Push the parent's current state to the server without leaving** → `/sitrep` (does not end the phase). `CHOP.md` syncs along with the other notes, so a teammate or a future fresh session can `/infil` and resume the proposal.
+
+## Rules
+
+- **Args are mandatory** — `/chop` with no args is an error.
+- **Shipped tasks require explicit confirmation to carve** — if a candidate carved task is shipped, pause via `AskUserQuestion` per step 6. Default to keeping the shipped task on the parent unless the user confirms the move; the AAR transfers with the task when they do.
+- **No server calls** — `/chop` writes `CHOP.md` and a TIMELINE bullet. Nothing else. No `mcp__naholo__create_operation`, no `create_note`, no parent `OPERATION.md` edits.
+- **No TRP in `CHOP.md`** — TRP allocation is `/chopchop`'s job.
+- **No per-task detail in `CHOP.md`** — EXECUTION blocks are one-line task summaries only. No Intent, Scheme of Maneuver, Course of Action, or AAR.
+- **One proposal at a time** — only one `CHOP.md` exists at any moment. Re-running `/chop` while `CHOP.md` is present revises the existing proposal in place; it does not stack a second one.
+- **Verbatim WO transfer in the draft** — carved and surviving WOs both appear word-for-word from the parent's `OPERATION.md`.
+- **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- Print the summary as raw markdown — no surrounding fence.

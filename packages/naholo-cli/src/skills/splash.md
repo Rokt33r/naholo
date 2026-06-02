@@ -41,7 +41,33 @@ Run `naholo agent op`. If it errors with "No infiled operation", tell the user t
 
 Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`.
 
-### 5. Read state
+### 5. Pending CHOP gate
+
+If `{operationDir}/notes/CHOP.md` exists, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
+
+Call `AskUserQuestion` with:
+
+- **question**: `"A CHOP proposal is pending at notes/CHOP.md — running /splash now will desync it from the parent OP. How do you want to proceed?"`
+- **header**: `"CHOP pending"`
+- **options** (labels only, no descriptions):
+  1. `"Resolve CHOP first (Recommended)"`
+  2. `"Proceed anyway"`
+
+Branch on the answer:
+
+- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print as raw markdown (no surrounding fence) and stop:
+
+  > `/splash` cancelled. Pick one:
+  >
+  > - `/chop "freeform"` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  > - `/chopchop` — apply CHOP
+  > - `/nochop` — abort and abandon CHOP
+
+- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 13), append this line as the final line:
+
+  > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+
+### 6. Read state
 
 Read if you haven't read:
 
@@ -50,21 +76,21 @@ Read if you haven't read:
 
 Validate: `## EXECUTION` must exist and contain at least one `### TASK N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### TASK N` sections under it, tell the user to run `/opord` first (and `/warno` first if `## MISSION` is also absent) and stop.
 
-### 6. Pick the target task
+### 7. Pick the target task
 
 - If `N` was provided → target TASK N. If no matching `### TASK N` section exists, stop and tell the user.
 - Otherwise → target the **first** unchecked task in TASKS.md, top to bottom. Task numbers are the order. Do **not** infer a different target from session context (e.g. a task the user just inserted via `/opord`) — without an explicit `N`, first-unchecked wins. If all are `[x]`, tell the user there's nothing left and suggest `/exfil`.
 
-If the targeted task already has a `#### After-Action Report` heading with a non-empty body, this is a **revision splash** — see step 9 (AAR update path). If the task has no `#### After-Action Report` heading at all, this is a **fresh splash** — `/splash` adds the heading itself when shipping.
+If the targeted task already has a `#### After-Action Report` heading with a non-empty body, this is a **revision splash** — see step 10 (AAR update path). If the task has no `#### After-Action Report` heading at all, this is a **fresh splash** — `/splash` adds the heading itself when shipping.
 
-### 7. Read the task contract
+### 8. Read the task contract
 
 From OPERATION.md `### TASK N — Title`:
 
 - `#### Intent` — the success criterion.
 - `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI / signature changes; treat as authoritative shape for the splash.
 - `#### Course of Action` — the planned action list (Add / Edit / Move / Delete / Run / Manual).
-- Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 9.
+- Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 10.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the task intent specifies — if they ask for more than, or different from, what the task intent covers, **stop before implementing** and surface two options to the user:
 
@@ -73,7 +99,7 @@ If freeform args are provided, treat them as additional context to weigh during 
 
 Wait for the user to choose before continuing.
 
-### 8. Implement (fresh splash path)
+### 9. Implement (fresh splash path)
 
 Implement the code changes that satisfy the task intent:
 
@@ -90,7 +116,7 @@ Implement the code changes that satisfy the task intent:
 
 After the COA finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you actually changed (e.g. a formatter on any tracked-file change, a type checker on any TS-source change). These are not listed on the COA — `/opord` deliberately omits them. If a verification fails, attempt to fix the failure as long as the fix stays within the task's scope; record the fix as a deviation in the AAR. If the fix would expand scope (touches files unrelated to the task, requires schema or contract changes, etc.), stop and surface the failure to the user rather than improvising.
 
-### 9. Write the AAR (or update it for revision splashes)
+### 10. Write the AAR (or update it for revision splashes)
 
 Two paths:
 
@@ -110,18 +136,18 @@ In both paths the body has two labels in fixed order:
 
 The AAR is the canonical record of what's currently true on disk for that task; revision history lives in TIMELINE.md.
 
-### 10. Flip the checkbox
+### 11. Flip the checkbox
 
 In `TASKS.md`, flip `- [ ] N. Title` → `- [x] N. Title` for the task that just shipped. For revision splashes, the box is already `[x]` — leave it.
 
-### 11. Append a TIMELINE bullet
+### 12. Append a TIMELINE bullet
 
 Run `naholo agent add-timeline` with the bare `splash` stage label:
 
 - Fresh splash: `naholo agent add-timeline -T splash 'task {N} shipped — {one-line summary}.'`
 - Revision splash: `naholo agent add-timeline -T splash 'task {N} AAR updated — {one-line summary of the change}.'`
 
-### 12. Print summary
+### 13. Print summary
 
 Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
 

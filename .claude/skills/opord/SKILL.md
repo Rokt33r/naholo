@@ -16,7 +16,7 @@ Each task is sized for one reviewable `/splash`; sub-tasks are deliberately not 
 
 No operation number — the skill resolves the active operation via `naholo agent op`.
 
-Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 8 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 9 (re-run dispatch). Common patterns:
 
 - `/opord` (no args) — first run after `/warno`, or resume a partial EXECUTION draft.
 - `/opord "split TASK 3 into two — one for the schema, one for the migration"` — targeted edit.
@@ -44,7 +44,33 @@ Run `naholo agent op`. If it errors with "No infiled operation", tell the user t
 
 Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
 
-### 5. Read local state
+### 5. Pending CHOP gate
+
+If `{operationDir}/notes/CHOP.md` exists, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
+
+Call `AskUserQuestion` with:
+
+- **question**: `"A CHOP proposal is pending at notes/CHOP.md — running /opord now will desync it from the parent OP. How do you want to proceed?"`
+- **header**: `"CHOP pending"`
+- **options** (labels only, no descriptions):
+  1. `"Resolve CHOP first (Recommended)"`
+  2. `"Proceed anyway"`
+
+Branch on the answer:
+
+- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print as raw markdown (no surrounding fence) and stop:
+
+  > `/opord` cancelled. Pick one:
+  >
+  > - `/chop "freeform"` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  > - `/chopchop` — apply CHOP
+  > - `/nochop` — abort and abandon CHOP
+
+- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 12), append this line as the final line:
+
+  > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+
+### 6. Read local state
 
 Read if you haven't read:
 
@@ -53,13 +79,13 @@ Read if you haven't read:
 
 If MISSION includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/warno` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/opord` doesn't redo the discovery work.
 
-### 6. Validate MISSION
+### 7. Validate MISSION
 
 `## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the two required subsections (`### Concept of Operations`, `### Warning Orders`), stop and tell the user to run `/warno` first. `/opord` is the OPORD pass — without a populated MISSION it has nothing to cut.
 
 `### Target Reference Points` is optional — its absence is not a validation failure. If it's missing, `/opord` proceeds normally (and may have to research the codebase itself).
 
-### 7. Resolve Warning Order alternatives
+### 8. Resolve Warning Order alternatives
 
 For each `### Warning Orders` bullet that has a `- ? <prompt> (opt-a / opt-b) >` sub-bullet, resolve it in place:
 
@@ -69,11 +95,11 @@ For each `### Warning Orders` bullet that has a `- ? <prompt> (opt-a / opt-b) >`
 
 No reasons on rejected items unless the user wrote them in. When in doubt, treat the answer as empty and collapse to Rejected.
 
-### 8. Re-run dispatch + write EXECUTION
+### 9. Re-run dispatch + write EXECUTION
 
 Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
-- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 10). Run `naholo agent add-timeline -T opord 'Drafted N tasks.'`.
+- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 11). Run `naholo agent add-timeline -T opord 'Drafted N tasks.'`.
 - **EXECUTION present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## EXECUTION` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify EXECUTION, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided, classify intent**:
   - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place. Run `naholo agent add-timeline -T opord '{summary}'`.
@@ -81,7 +107,7 @@ Inspect the current state of `## EXECUTION` and any freeform args. Branch:
   - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present. Run `naholo agent add-timeline -T opord '{summary}'`.
   - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite EXECUTION and renew all tasks even finished. Run `naholo agent add-timeline -T opord '{summary}'`.
 
-### 9. Write OPERATION.md EXECUTION
+### 10. Write OPERATION.md EXECUTION
 
 One `### TASK N — Title` subsection per task, in order. Each task section has three subsections — **`#### Intent`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
 
@@ -220,7 +246,7 @@ ORP sizing rules:
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
 - An intent that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/warno` to add the decision if it's missing).
 
-### 10. Mirror to TASKS.md
+### 11. Mirror to TASKS.md
 
 Sync `TASKS.md` to match the EXECUTION task list:
 
@@ -230,7 +256,7 @@ Sync `TASKS.md` to match the EXECUTION task list:
 - Add new tasks as `- [ ]`. Remove deleted tasks (only if they have no `#### After-Action Report` heading — never remove a shipped task).
 - Renumber as needed; keep titles synced with the task headings.
 
-### 11. Print summary
+### 12. Print summary
 
 Show the plan state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
 
