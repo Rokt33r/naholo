@@ -6,6 +6,24 @@ import type {
 } from './types'
 import { mapValidationError } from './utils'
 
+const usageBlockSchema = z
+  .object({
+    input_tokens: z.number().int().nonnegative(),
+    output_tokens: z.number().int().nonnegative(),
+    cache_creation: z.object({
+      ephemeral_5m_input_tokens: z.number().int().nonnegative(),
+      ephemeral_1h_input_tokens: z.number().int().nonnegative(),
+    }),
+    cache_read_input_tokens: z.number().int().nonnegative(),
+    cache_creation_input_tokens: z.unknown().optional(),
+    service_tier: z.unknown().optional(),
+    server_tool_use: z.unknown().optional(),
+    inference_geo: z.unknown().optional(),
+    iterations: z.unknown().optional(),
+    speed: z.unknown().optional(),
+  })
+  .strict()
+
 const assistantRowSchema = z
   .object({
     type: z.literal('assistant'),
@@ -59,59 +77,79 @@ const assistantRowSchema = z
             ),
           ])
           .optional(),
-        usage: z
-          .object({
-            input_tokens: z.number().int().nonnegative(),
-            output_tokens: z.number().int().nonnegative(),
-            cache_creation: z.object({
-              ephemeral_5m_input_tokens: z.number().int().nonnegative(),
-              ephemeral_1h_input_tokens: z.number().int().nonnegative(),
-            }),
-            cache_read_input_tokens: z.number().int().nonnegative(),
-            cache_creation_input_tokens: z.unknown().optional(),
-            service_tier: z.unknown().optional(),
-            server_tool_use: z.unknown().optional(),
-            inference_geo: z.unknown().optional(),
-            iterations: z.unknown().optional(),
-            speed: z.unknown().optional(),
-          })
-          .strict(),
+        usage: usageBlockSchema,
       })
       .strict(),
   })
   .strict()
 
-export type ClaudeCodeAssistantData = z.infer<typeof assistantRowSchema>
+const usageOnlyAssistantSchema = z.object({
+  timestamp: z.string().optional(),
+  attributionSkill: z.string().optional(),
+  message: z.object({
+    id: z.string().optional(),
+    model: z.string(),
+    usage: usageBlockSchema,
+  }),
+})
+
+export type StrictAssistantRow = z.infer<typeof assistantRowSchema>
+
+export type UsageOnlyAssistantRow = z.infer<typeof usageOnlyAssistantSchema>
+
+export type AssistantData =
+  | { kind: 'strict'; value: StrictAssistantRow }
+  | { kind: 'usage-only'; value: UsageOnlyAssistantRow }
+
+export type ClaudeCodeAssistantData = AssistantData
 
 export type ClaudeCodeAssistantEntry = ClaudeCodeTranscriptEntry<
   'assistant',
-  ClaudeCodeAssistantData
+  AssistantData
 >
 
 export const mapAssistantEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
-  const parsed = assistantRowSchema.safeParse(rawJson)
-  if (!parsed.success) {
+  const strict = assistantRowSchema.safeParse(rawJson)
+  if (strict.success) {
     const entry: ClaudeCodeAssistantEntry = {
       type: 'assistant',
-      data: null,
+      data: { kind: 'strict', value: strict.data },
       raw: rawLine,
-      errors: [mapValidationError(parsed.error, ctx.index)],
-      modelUsages: [],
+      errors: [],
+      modelUsages: [
+        usageRow(strict.data.message.model, strict.data.message.usage),
+      ],
     }
     return entry
   }
+
+  const errors = [mapValidationError(strict.error, ctx.index)]
+  const fallback = usageOnlyAssistantSchema.safeParse(rawJson)
+  if (fallback.success) {
+    const entry: ClaudeCodeAssistantEntry = {
+      type: 'assistant',
+      data: { kind: 'usage-only', value: fallback.data },
+      raw: rawLine,
+      errors,
+      modelUsages: [
+        usageRow(fallback.data.message.model, fallback.data.message.usage),
+      ],
+    }
+    return entry
+  }
+  errors.push(mapValidationError(fallback.error, ctx.index))
   const entry: ClaudeCodeAssistantEntry = {
     type: 'assistant',
-    data: parsed.data,
+    data: null,
     raw: rawLine,
-    errors: [],
-    modelUsages: [usageFromAssistantData(parsed.data)],
+    errors,
+    modelUsages: [],
   }
   return entry
 }
 
 export function extractToolUses(
-  content: ClaudeCodeAssistantData['message']['content'],
+  content: StrictAssistantRow['message']['content'],
 ): string[] {
   if (content == null || typeof content === 'string') {
     return []
@@ -125,18 +163,20 @@ export function extractToolUses(
   return toolUses
 }
 
-function usageFromAssistantData(
-  data: ClaudeCodeAssistantData,
+function usageRow(
+  model: string,
+  usage: z.infer<typeof usageBlockSchema>,
 ): ModelTokenUsage {
-  const u = data.message.usage
   return {
-    model: data.message.model,
+    model,
     usage: {
-      inputTokens: u.input_tokens,
-      outputTokens: u.output_tokens,
-      cacheCreation5mInputTokens: u.cache_creation.ephemeral_5m_input_tokens,
-      cacheCreation1hInputTokens: u.cache_creation.ephemeral_1h_input_tokens,
-      cacheReadInputTokens: u.cache_read_input_tokens,
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+      cacheCreation5mInputTokens:
+        usage.cache_creation.ephemeral_5m_input_tokens,
+      cacheCreation1hInputTokens:
+        usage.cache_creation.ephemeral_1h_input_tokens,
+      cacheReadInputTokens: usage.cache_read_input_tokens,
     },
   }
 }

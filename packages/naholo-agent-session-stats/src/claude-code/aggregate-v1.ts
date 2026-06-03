@@ -4,7 +4,7 @@ import type {
   ClaudeCodeTranscriptEntry,
   ModelTokenUsage,
 } from './types'
-import type { ClaudeCodeAssistantData } from './assistant-entry'
+import type { AssistantData } from './assistant-entry'
 import { extractToolUses } from './assistant-entry'
 import { getDefaultParser } from './default-parser'
 
@@ -64,7 +64,7 @@ export function aggregateClaudeCodeV1(
       case 'assistant':
         accumulateAssistant(
           stats,
-          entry.data as ClaudeCodeAssistantData,
+          entry.data as AssistantData,
           entry.modelUsages,
         )
         break
@@ -96,26 +96,37 @@ type MutableAgentSessionStatsV1 = {
 
 function accumulateAssistant(
   stats: MutableAgentSessionStatsV1,
-  data: ClaudeCodeAssistantData,
+  data: AssistantData,
   modelUsages: ModelTokenUsage[],
 ): void {
   stats.assistantCount += 1
-  const toolUses = extractToolUses(data.message.content)
-  for (const name of toolUses) {
-    stats.toolUseCount += 1
-    stats.toolUseByName[name] = (stats.toolUseByName[name] ?? 0) + 1
-  }
-  const messageId = data.message.id
-  if (stats.seenMessageIds.has(messageId)) {
-    return
-  }
-  stats.seenMessageIds.add(messageId)
 
-  const attributionSkill =
-    data.attributionSkill != null && data.attributionSkill.length > 0
-      ? data.attributionSkill
-      : null
-  const skillKey = attributionSkill ?? NO_SKILL
+  let messageId: string | undefined
+  let attributionSkill: string | undefined
+  if (data.kind === 'strict') {
+    const toolUses = extractToolUses(data.value.message.content)
+    for (const name of toolUses) {
+      stats.toolUseCount += 1
+      stats.toolUseByName[name] = (stats.toolUseByName[name] ?? 0) + 1
+    }
+    messageId = data.value.message.id
+    attributionSkill = data.value.attributionSkill
+  } else {
+    messageId = data.value.message.id
+    attributionSkill = data.value.attributionSkill
+  }
+
+  if (messageId != null) {
+    if (stats.seenMessageIds.has(messageId)) {
+      return
+    }
+    stats.seenMessageIds.add(messageId)
+  }
+
+  const skillKey =
+    attributionSkill != null && attributionSkill.length > 0
+      ? attributionSkill
+      : NO_SKILL
 
   for (const { model, usage } of modelUsages) {
     const modelKey = model.length > 0 ? model : UNKNOWN_MODEL
@@ -164,6 +175,11 @@ function feedDuration(
 function getEntryTimestamp(entry: ClaudeCodeTranscriptEntry): string | null {
   if (entry.data == null) {
     return null
+  }
+  if (entry.type === 'assistant') {
+    const data = entry.data as AssistantData
+    const timestamp = data.value.timestamp
+    return typeof timestamp === 'string' ? timestamp : null
   }
   const data = entry.data as { timestamp?: unknown }
   return typeof data.timestamp === 'string' ? data.timestamp : null
