@@ -11,11 +11,11 @@ import {
   calculateWeightedTokens,
 } from '@/lib/agent-session-pricing'
 import {
-  useAgentSessions,
-  type AgentSessionSummary,
-} from '@/hooks/use-agent-sessions'
+  useAgentTranscripts,
+  type AgentTranscriptSummary,
+} from '@/hooks/use-agent-transcripts'
 import { StatsTotals } from './stats-totals'
-import { StatsSessionsTable } from './stats-sessions-table'
+import { StatsTranscriptsTable } from './stats-transcripts-table'
 import { TranscriptDialog } from './transcript-dialog'
 
 export const UNKNOWN_MODEL = 'unknown'
@@ -32,8 +32,8 @@ export type PerModelTotals = {
   cost: number | null
 }
 
-export type SessionRowStats = {
-  agentSession: AgentSessionSummary
+export type TranscriptRowStats = {
+  agentTranscript: AgentTranscriptSummary
   stats: AgentTranscriptStatsV1 | null
   statsErrored: boolean
   durationMs: number
@@ -53,15 +53,15 @@ type StatsViewProps = {
 }
 
 export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
-  const { data: agentSessions = [], isLoading } = useAgentSessions(
+  const { data: agentTranscripts = [], isLoading } = useAgentTranscripts(
     projectSlug,
     operationNumber,
   )
-  const [openAgentSessionSessionId, setOpenAgentSessionSessionId] = useState<
+  const [openAgentTranscriptId, setOpenAgentTranscriptId] = useState<
     string | null
   >(null)
 
-  const rows: SessionRowStats[] = agentSessions.map(buildSessionRow)
+  const rows: TranscriptRowStats[] = agentTranscripts.map(buildTranscriptRow)
 
   if (isLoading) {
     return (
@@ -71,34 +71,35 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
     )
   }
 
-  const openAgentSession =
-    openAgentSessionSessionId == null
+  const openAgentTranscript =
+    openAgentTranscriptId == null
       ? null
-      : (agentSessions.find((s) => s.sessionId === openAgentSessionSessionId) ??
-        null)
+      : (agentTranscripts.find(
+          (t) => t.transcriptId === openAgentTranscriptId,
+        ) ?? null)
   const openStats =
-    openAgentSessionSessionId == null
+    openAgentTranscriptId == null
       ? null
       : (rows.find(
-          (r) => r.agentSession.sessionId === openAgentSessionSessionId,
+          (r) => r.agentTranscript.transcriptId === openAgentTranscriptId,
         ) ?? null)
 
   return (
     <div className='flex h-full flex-col gap-4 overflow-auto p-4'>
       <StatsTotals rows={rows} />
-      <StatsSessionsTable
+      <StatsTranscriptsTable
         rows={rows}
-        onSelectAgentSession={setOpenAgentSessionSessionId}
+        onSelectAgentTranscript={setOpenAgentTranscriptId}
       />
       <TranscriptDialog
         projectSlug={projectSlug}
         operationNumber={operationNumber}
-        agentSession={openAgentSession}
+        agentTranscript={openAgentTranscript}
         stats={openStats}
-        open={openAgentSession != null}
+        open={openAgentTranscript != null}
         onOpenChange={(open) => {
           if (!open) {
-            setOpenAgentSessionSessionId(null)
+            setOpenAgentTranscriptId(null)
           }
         }}
       />
@@ -106,14 +107,18 @@ export function StatsView({ projectSlug, operationNumber }: StatsViewProps) {
   )
 }
 
-function buildSessionRow(agentSession: AgentSessionSummary): SessionRowStats {
+function buildTranscriptRow(
+  agentTranscript: AgentTranscriptSummary,
+): TranscriptRowStats {
   const stats =
-    agentSession.statsFormat === CLAUDE_CODE_V1 ? agentSession.stats : null
+    agentTranscript.statsFormat === CLAUDE_CODE_V1
+      ? agentTranscript.stats
+      : null
   if (stats == null) {
     return {
-      agentSession,
+      agentTranscript,
       stats: null,
-      statsErrored: agentSession.statsErrored,
+      statsErrored: agentTranscript.statsErrored,
       durationMs: 0,
       messageCount: 0,
       userCount: 0,
@@ -127,9 +132,9 @@ function buildSessionRow(agentSession: AgentSessionSummary): SessionRowStats {
   }
   const modelUsages = stats.modelUsages.map(perModelTokensToTotals)
   return {
-    agentSession,
+    agentTranscript,
     stats,
-    statsErrored: agentSession.statsErrored,
+    statsErrored: agentTranscript.statsErrored,
     durationMs: stats.activeDurationMs,
     messageCount: stats.userCount + stats.assistantCount,
     userCount: stats.userCount,

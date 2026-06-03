@@ -12,16 +12,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { createResponseError } from '@/lib/fetcher'
-import type { AgentSessionSummary } from '@/hooks/use-agent-sessions'
+import type { AgentTranscriptSummary } from '@/hooks/use-agent-transcripts'
 import { StatsTotals } from './stats-totals'
-import type { SessionRowStats } from './stats-view'
+import type { TranscriptRowStats } from './stats-view'
 import { TranscriptViewer } from './transcript-viewer'
 
 type TranscriptDialogProps = {
   projectSlug: string
   operationNumber: number
-  agentSession: AgentSessionSummary | null
-  stats: SessionRowStats | null
+  agentTranscript: AgentTranscriptSummary | null
+  stats: TranscriptRowStats | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -29,7 +29,7 @@ type TranscriptDialogProps = {
 export function TranscriptDialog({
   projectSlug,
   operationNumber,
-  agentSession,
+  agentTranscript,
   stats,
   open,
   onOpenChange,
@@ -37,16 +37,16 @@ export function TranscriptDialog({
   const queryClient = useQueryClient()
   const [isDownloading, setIsDownloading] = useState(false)
 
-  if (agentSession == null) {
+  if (agentTranscript == null) {
     return null
   }
 
-  const transcriptUrl = `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSession.sessionId}/transcript`
+  const transcriptUrl = `/api/projects/${projectSlug}/operations/${operationNumber}/agent-transcripts/${agentTranscript.transcriptId}/transcript`
   const queryKey = [
-    'agent-session-transcript',
+    'agent-transcript-body',
     projectSlug,
     operationNumber,
-    agentSession.sessionId,
+    agentTranscript.transcriptId,
   ]
 
   const handleDownload = async () => {
@@ -61,7 +61,7 @@ export function TranscriptDialog({
         jsonl = await response.text()
         queryClient.setQueryData(queryKey, jsonl)
       }
-      triggerJsonlDownload(jsonl, buildDownloadFilename(agentSession))
+      triggerJsonlDownload(jsonl, buildDownloadFilename(agentTranscript))
     } catch (error) {
       console.error('Failed to download transcript:', error)
     } finally {
@@ -74,7 +74,7 @@ export function TranscriptDialog({
       <DialogContent className='flex h-[80vh] max-w-3xl flex-col gap-0 p-0 sm:max-w-3xl'>
         <DialogHeader className='border-b px-4 py-3'>
           <DialogTitle className='truncate pr-8'>
-            {agentSession.title ?? (
+            {agentTranscript.title ?? (
               <span className='text-muted-foreground'>(untitled)</span>
             )}
           </DialogTitle>
@@ -88,14 +88,14 @@ export function TranscriptDialog({
           <TranscriptViewer
             projectSlug={projectSlug}
             operationNumber={operationNumber}
-            agentSessionSessionId={agentSession.sessionId}
+            transcriptId={agentTranscript.transcriptId}
           />
         </div>
         <DialogFooter className='border-t px-4 py-3'>
           <Button
             variant='outline'
             onClick={handleDownload}
-            disabled={isDownloading || !agentSession.hasTranscript}
+            disabled={isDownloading || !agentTranscript.hasTranscript}
           >
             {isDownloading ? (
               <Loader2 className='mr-1 size-5 animate-spin' />
@@ -110,9 +110,11 @@ export function TranscriptDialog({
   )
 }
 
-function buildDownloadFilename(agentSession: AgentSessionSummary): string {
-  const slug = slugifyTitle(agentSession.title) || 'untitled'
-  return `${slug}-${agentSession.sessionId}.jsonl`
+function buildDownloadFilename(
+  agentTranscript: AgentTranscriptSummary,
+): string {
+  const slug = slugifyTitle(agentTranscript.title) || 'untitled'
+  return `${slug}-${agentTranscript.transcriptId}.jsonl`
 }
 
 function slugifyTitle(title: string | null): string {

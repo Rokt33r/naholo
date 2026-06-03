@@ -13,24 +13,24 @@ async function fetchTranscriptText(url: string): Promise<string> {
   return await response.text()
 }
 
-export function useAgentSessionTranscript(
+export function useAgentTranscriptBody(
   projectSlug: string,
   operationNumber: number,
-  agentSessionSessionId: string | null,
+  transcriptId: string | null,
 ) {
   return useQuery({
     queryKey: [
-      'agent-session-transcript',
+      'agent-transcript-body',
       projectSlug,
       operationNumber,
-      agentSessionSessionId,
+      transcriptId,
     ],
     queryFn: () =>
       fetchTranscriptText(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions/${agentSessionSessionId}/transcript`,
+        `/api/projects/${projectSlug}/operations/${operationNumber}/agent-transcripts/${transcriptId}/transcript`,
       ),
     select: (jsonl): TranscriptEntry[] => parseTranscript(jsonl),
-    enabled: agentSessionSessionId != null,
+    enabled: transcriptId != null,
     staleTime: 1000 * 60,
   })
 }

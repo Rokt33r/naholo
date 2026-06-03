@@ -13,11 +13,11 @@ import {
   NO_SKILL,
   UNKNOWN_MODEL,
   type PerModelTotals,
-  type SessionRowStats,
+  type TranscriptRowStats,
 } from './stats-view'
 
 type StatsTotalsProps = {
-  rows: SessionRowStats[]
+  rows: TranscriptRowStats[]
 }
 
 type Usage = {
@@ -40,7 +40,7 @@ type SkillRow = {
 }
 
 export function StatsTotals({ rows }: StatsTotalsProps) {
-  const sessionCount = rows.length
+  const transcriptCount = rows.length
 
   let messageCount = 0
   let userCount = 0
@@ -139,12 +139,12 @@ export function StatsTotals({ rows }: StatsTotalsProps) {
     <div className='flex flex-col gap-4 rounded-md border p-4 text-sm'>
       <div className='grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-4'>
         <Stat label='Approx. cost' value={formatUSD(totalCost)} />
-        <Stat label='Sessions' value={formatInt(sessionCount)} />
+        <Stat label='Transcripts' value={formatInt(transcriptCount)} />
         <Stat
           label='Messages'
           value={`${formatInt(messageCount)} (${formatInt(userCount)} user / ${formatInt(assistantCount)} asst)`}
         />
-        <Stat label='Session time' value={formatDurationLong(durationMs)} />
+        <Stat label='Transcript time' value={formatDurationLong(durationMs)} />
       </div>
 
       <div className='flex flex-col gap-2 border-t pt-3'>

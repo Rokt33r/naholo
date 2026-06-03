@@ -23,7 +23,7 @@ type OperationTabsProps = {
   notesSaveState?: Record<string, DebouncedSaveState>
   isWideScreen: boolean
   logsCount: number
-  hasAgentSessions: boolean
+  hasAgentTranscripts: boolean
 }
 
 function generateUniqueName(notes: Note[], base: string): string {
@@ -47,7 +47,7 @@ export function OperationTabs({
   notesSaveState,
   isWideScreen,
   logsCount,
-  hasAgentSessions,
+  hasAgentTranscripts,
 }: OperationTabsProps) {
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const { mutateAsync: createNote, isPending: isCreating } = useCreateNote(
@@ -101,7 +101,7 @@ export function OperationTabs({
         <SatelliteDish className='mr-1 size-5' />
         {!isWideScreen ? `Comms (${logsCount})` : 'Comms'}
       </Button>
-      {hasAgentSessions && (
+      {hasAgentTranscripts && (
         <Button
           variant={isStatsActive ? 'secondary' : 'ghost'}
           size='sm'

@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import type { AgentTranscriptStatsV1 } from 'naholo-agent-transcript-stats/claude-code'
 import { fetcher } from '@/lib/fetcher'
 
-export type AgentSessionSummary = {
+export type AgentTranscriptSummary = {
   id: string
-  sessionId: string
+  transcriptId: string
   title: string | null
   startedAt: string
   endedAt: string
@@ -15,12 +15,15 @@ export type AgentSessionSummary = {
   statsErrored: boolean
 }
 
-export function useAgentSessions(projectSlug: string, operationNumber: number) {
+export function useAgentTranscripts(
+  projectSlug: string,
+  operationNumber: number,
+) {
   return useQuery({
-    queryKey: ['agent-sessions', projectSlug, operationNumber],
+    queryKey: ['agent-transcripts', projectSlug, operationNumber],
     queryFn: () =>
-      fetcher<AgentSessionSummary[]>(
-        `/api/projects/${projectSlug}/operations/${operationNumber}/agent-sessions`,
+      fetcher<AgentTranscriptSummary[]>(
+        `/api/projects/${projectSlug}/operations/${operationNumber}/agent-transcripts`,
       ),
     staleTime: 1000 * 60,
   })

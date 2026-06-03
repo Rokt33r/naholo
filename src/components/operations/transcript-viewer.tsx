@@ -1,29 +1,25 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
-import { useAgentSessionTranscript } from '@/hooks/use-agent-session-transcript'
+import { useAgentTranscriptBody } from '@/hooks/use-agent-transcript-body'
 import { TranscriptEntryRow } from './transcript-entry-row'
 
 type TranscriptViewerProps = {
   projectSlug: string
   operationNumber: number
-  agentSessionSessionId: string
+  transcriptId: string
 }
 
 export function TranscriptViewer({
   projectSlug,
   operationNumber,
-  agentSessionSessionId,
+  transcriptId,
 }: TranscriptViewerProps) {
   const {
     data: entries,
     isLoading,
     error,
-  } = useAgentSessionTranscript(
-    projectSlug,
-    operationNumber,
-    agentSessionSessionId,
-  )
+  } = useAgentTranscriptBody(projectSlug, operationNumber, transcriptId)
 
   if (isLoading) {
     return (

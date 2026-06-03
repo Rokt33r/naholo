@@ -38,7 +38,7 @@ import {
 } from '@/hooks/use-operations'
 import { useUpdateNote } from '@/hooks/use-notes'
 import { useOperationNoteStore } from '@/hooks/use-operation-note-store'
-import { useAgentSessions } from '@/hooks/use-agent-sessions'
+import { useAgentTranscripts } from '@/hooks/use-agent-transcripts'
 import type { Note } from 'naholo-api/types'
 
 type ActiveTab =
@@ -85,8 +85,11 @@ export function OperationDetail({
   const [isDeleting, setIsDeleting] = useState(false)
   const [showTasksDialog, setShowTasksDialog] = useState(false)
 
-  const { data: agentSessions } = useAgentSessions(projectSlug, operationNumber)
-  const hasAgentSessions = (agentSessions?.length ?? 0) > 0
+  const { data: agentTranscripts } = useAgentTranscripts(
+    projectSlug,
+    operationNumber,
+  )
+  const hasAgentTranscripts = (agentTranscripts?.length ?? 0) > 0
 
   const { operation, isLoading } = useOperation(projectSlug, operationNumber)
   const { mutateAsync: updateTitle } = useUpdateOperationTitle(
@@ -286,13 +289,13 @@ export function OperationDetail({
         notesSaveState={store.saveStates}
         isWideScreen={isWideScreen}
         logsCount={operationLogs.length}
-        hasAgentSessions={hasAgentSessions}
+        hasAgentTranscripts={hasAgentTranscripts}
       />
 
       {/* Content */}
       <div className='flex-1 overflow-hidden'>
         {(activeTab.type === 'comms' ||
-          (activeTab.type === 'stats' && !hasAgentSessions)) && (
+          (activeTab.type === 'stats' && !hasAgentTranscripts)) && (
           <OperationLogsList
             projectSlug={projectSlug}
             operationNumber={operation.number}
@@ -300,7 +303,7 @@ export function OperationDetail({
             isClosed={operation.closed}
           />
         )}
-        {activeTab.type === 'stats' && hasAgentSessions && (
+        {activeTab.type === 'stats' && hasAgentTranscripts && (
           <StatsView
             projectSlug={projectSlug}
             operationNumber={operation.number}

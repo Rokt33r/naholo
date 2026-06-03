@@ -1,19 +1,19 @@
 import { cn } from '@/lib/utils'
-import type { SessionRowStats } from './stats-view'
+import type { TranscriptRowStats } from './stats-view'
 
-type StatsSessionsTableProps = {
-  rows: SessionRowStats[]
-  onSelectAgentSession: (agentSessionSessionId: string) => void
+type StatsTranscriptsTableProps = {
+  rows: TranscriptRowStats[]
+  onSelectAgentTranscript: (transcriptId: string) => void
 }
 
-export function StatsSessionsTable({
+export function StatsTranscriptsTable({
   rows,
-  onSelectAgentSession,
-}: StatsSessionsTableProps) {
+  onSelectAgentTranscript,
+}: StatsTranscriptsTableProps) {
   if (rows.length === 0) {
     return (
       <div className='rounded-md border p-6 text-center text-sm text-muted-foreground'>
-        No agent sessions yet.
+        No agent transcripts yet.
       </div>
     )
   }
@@ -33,13 +33,13 @@ export function StatsSessionsTable({
           {rows.map((row) => {
             const hasStats = row.stats != null
             const fullFailure = !hasStats && row.statsErrored
-            const canOpen = hasStats && row.agentSession.hasTranscript
+            const canOpen = hasStats && row.agentTranscript.hasTranscript
             return (
               <tr
-                key={row.agentSession.sessionId}
+                key={row.agentTranscript.transcriptId}
                 onClick={() => {
                   if (canOpen) {
-                    onSelectAgentSession(row.agentSession.sessionId)
+                    onSelectAgentTranscript(row.agentTranscript.transcriptId)
                   }
                 }}
                 className={cn(
@@ -50,7 +50,7 @@ export function StatsSessionsTable({
                 )}
               >
                 <Td className='max-w-[280px] truncate'>
-                  {row.agentSession.title ?? (
+                  {row.agentTranscript.title ?? (
                     <span className='text-muted-foreground'>(untitled)</span>
                   )}
                 </Td>
