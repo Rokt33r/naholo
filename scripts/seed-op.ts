@@ -6,16 +6,16 @@ import { eq } from 'drizzle-orm'
 import { db } from '../src/server/db'
 import { projects, projectOperators } from '../src/server/db/schema'
 import { createOperation } from '../src/server/services/operation'
-import { upsertAgentSession } from '../src/server/services/agent-session'
+import { upsertAgentTranscript } from '../src/server/services/agent-transcript'
 import { createTask } from '../src/server/services/task'
 import { setTaskDone } from '../src/server/services/task'
 import { createNote } from '../src/server/services/note'
 import { createOperationLog } from '../src/server/services/operation-log'
 import { getFileStorageAdapter } from '../src/server/file-storage'
 
-type SourceAgentSession = {
+type SourceAgentTranscript = {
   id: string
-  sessionId: string
+  transcriptId: string
   title: string | null
   startedAt: string
   endedAt: string
@@ -87,9 +87,9 @@ async function main() {
     const logs = JSON.parse(
       fs.readFileSync(path.join(tmpDir, 'logs.json'), 'utf-8'),
     ) as SourceOperationLog[]
-    const sessions = JSON.parse(
+    const transcripts = JSON.parse(
       fs.readFileSync(path.join(tmpDir, 'sessions.json'), 'utf-8'),
-    ) as SourceAgentSession[]
+    ) as SourceAgentTranscript[]
 
     const destProject = await db.query.projects.findFirst({
       where: eq(projects.slug, destProjSlug),
@@ -215,56 +215,56 @@ async function main() {
     }
 
     const fileStorage = getFileStorageAdapter()
-    let sessionsCreated = 0
+    let transcriptsCreated = 0
     let transcriptsCopied = 0
 
-    for (const session of sessions) {
-      let transcript: string | null = null
-      if (session.hasTranscript) {
+    for (const transcript of transcripts) {
+      let transcriptText: string | null = null
+      if (transcript.hasTranscript) {
         const transcriptPath = path.join(
           tmpDir,
           'transcripts',
-          `${session.sessionId}.jsonl`,
+          `${transcript.transcriptId}.jsonl`,
         )
         if (!fs.existsSync(transcriptPath)) {
           console.warn(
-            `  ! transcript file missing for ${session.sessionId} — skipping`,
+            `  ! transcript file missing for ${transcript.transcriptId} — skipping`,
           )
           continue
         }
-        transcript = fs.readFileSync(transcriptPath, 'utf-8')
+        transcriptText = fs.readFileSync(transcriptPath, 'utf-8')
         await fileStorage.putObject(
-          `agent-session-transcripts/${destProject.id}/${destOperationId}/${session.sessionId}`,
-          transcript,
+          `agent-transcripts/${destProject.id}/${destOperationId}/${transcript.transcriptId}`,
+          transcriptText,
         )
         transcriptsCopied += 1
       }
 
-      const upserted = await upsertAgentSession({
+      const upserted = await upsertAgentTranscript({
         projectId: destProject.id,
         operationId: destOperationId,
         projectOperatorId: destOperator.id,
-        sessionId: session.sessionId,
-        title: session.title,
-        startedAt: new Date(session.startedAt),
-        endedAt: new Date(session.endedAt),
-        transcriptSizeBytes: session.transcriptSizeBytes,
-        transcriptText: transcript,
+        transcriptId: transcript.transcriptId,
+        title: transcript.title,
+        startedAt: new Date(transcript.startedAt),
+        endedAt: new Date(transcript.endedAt),
+        transcriptSizeBytes: transcript.transcriptSizeBytes,
+        transcriptText,
       })
       if (!upserted.success) {
         console.error(
-          `Failed to upsert session ${session.sessionId}: ${upserted.error.message}`,
+          `Failed to upsert transcript ${transcript.transcriptId}: ${upserted.error.message}`,
         )
         continue
       }
-      sessionsCreated += 1
+      transcriptsCreated += 1
     }
 
     console.log(
       `Seeded ${operation.projectSlug}#${operation.number} → ${destProjSlug}#${destOperationNumber}`,
     )
     console.log(
-      `  ${tasksCreated}/${tasks.length} task(s), ${notesCreated}/${notes.length} note(s), ${logsCreated}/${logs.length} log(s), ${sessionsCreated}/${sessions.length} session(s), ${transcriptsCopied} transcript(s)`,
+      `  ${tasksCreated}/${tasks.length} task(s), ${notesCreated}/${notes.length} note(s), ${logsCreated}/${logs.length} log(s), ${transcriptsCreated}/${transcripts.length} transcript(s), ${transcriptsCopied} body(ies)`,
     )
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true })
