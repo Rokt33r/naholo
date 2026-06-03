@@ -9,9 +9,9 @@ import {
   unique,
 } from 'drizzle-orm/pg-core'
 import type {
-  AgentSessionStatsV1,
-  AgentSessionStatsError,
-} from 'naholo-agent-session-stats/claude-code'
+  AgentTranscriptStatsV1,
+  AgentTranscriptStatsError,
+} from 'naholo-agent-transcript-stats/claude-code'
 import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { operations } from './operations'
@@ -38,9 +38,9 @@ export const operationAgentTranscripts = pgTable(
     endedAt: timestamp('ended_at').notNull(),
     hasTranscript: boolean('has_transcript').notNull().default(false),
     transcriptSizeBytes: integer('transcript_size_bytes').notNull(),
-    stats: jsonb('stats').$type<AgentSessionStatsV1>(),
+    stats: jsonb('stats').$type<AgentTranscriptStatsV1>(),
     statsFormat: text('stats_format').$type<'claude-code-v1'>(),
-    statsError: jsonb('stats_error').$type<AgentSessionStatsError[]>(),
+    statsError: jsonb('stats_error').$type<AgentTranscriptStatsError[]>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

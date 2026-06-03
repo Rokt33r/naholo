@@ -1,9 +1,9 @@
 import type { z } from 'zod'
-import type { AgentSessionStatsError } from './types'
+import type { AgentTranscriptStatsError } from './types'
 
 export function mapValidationError(
   zodError: z.ZodError,
-): AgentSessionStatsError {
+): AgentTranscriptStatsError {
   const issue = zodError.issues[0]
   return {
     kind: 'validation_failed',

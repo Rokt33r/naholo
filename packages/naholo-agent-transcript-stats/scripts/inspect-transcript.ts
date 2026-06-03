@@ -1,18 +1,18 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { getDefaultParser } from '../src/claude-code/default-parser.js'
-import type { AgentSessionStatsError } from '../src/claude-code/types.js'
+import type { AgentTranscriptStatsError } from '../src/claude-code/types.js'
 
 type EntryErrorRow = {
   lineNumber: number
-  error: AgentSessionStatsError
+  error: AgentTranscriptStatsError
 }
 
 function main(): void {
   const arg = process.argv[2]
   if (arg == null || arg.length === 0) {
     console.error(
-      'Usage: pnpm --filter naholo-agent-session-stats inspect-transcript <path-to-transcript.jsonl>',
+      'Usage: pnpm --filter naholo-agent-transcript-stats inspect-transcript <path-to-transcript.jsonl>',
     )
     process.exit(2)
   }
@@ -111,7 +111,7 @@ function printErrorDetails(rows: readonly EntryErrorRow[]): void {
   if (rows.length === 0) {
     return
   }
-  const buckets: Record<AgentSessionStatsError['kind'], EntryErrorRow[]> = {
+  const buckets: Record<AgentTranscriptStatsError['kind'], EntryErrorRow[]> = {
     parse_failure: [],
     unknown_entry_type: [],
     validation_failed: [],
@@ -155,7 +155,7 @@ function computeLineColumnWidth(rows: readonly EntryErrorRow[]): number {
   return max
 }
 
-function labelForKind(kind: AgentSessionStatsError['kind']): string {
+function labelForKind(kind: AgentTranscriptStatsError['kind']): string {
   switch (kind) {
     case 'parse_failure':
       return 'JSON parse failures'

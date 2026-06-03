@@ -1,13 +1,13 @@
 import 'server-only'
 import { and, asc, eq } from 'drizzle-orm'
 import type {
-  AgentSessionStatsError,
-  AgentSessionStatsV1,
-} from 'naholo-agent-session-stats/claude-code'
+  AgentTranscriptStatsError,
+  AgentTranscriptStatsV1,
+} from 'naholo-agent-transcript-stats/claude-code'
 import {
   CLAUDE_CODE_V1,
   aggregateClaudeCodeV1,
-} from 'naholo-agent-session-stats/claude-code'
+} from 'naholo-agent-transcript-stats/claude-code'
 import { db } from '../db'
 import { operationAgentTranscripts } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
@@ -23,7 +23,7 @@ export type AgentTranscriptSummary = {
   endedAt: string
   hasTranscript: boolean
   transcriptSizeBytes: number
-  stats: AgentSessionStatsV1 | null
+  stats: AgentTranscriptStatsV1 | null
   statsFormat: 'claude-code-v1' | null
   statsErrored: boolean
 }
@@ -137,9 +137,9 @@ function toSummary(row: {
   endedAt: Date
   hasTranscript: boolean
   transcriptSizeBytes: number
-  stats: AgentSessionStatsV1 | null
+  stats: AgentTranscriptStatsV1 | null
   statsFormat: 'claude-code-v1' | null
-  statsError: AgentSessionStatsError[] | null
+  statsError: AgentTranscriptStatsError[] | null
 }): AgentTranscriptSummary {
   return {
     id: row.id,
@@ -157,9 +157,9 @@ function toSummary(row: {
 
 function computeTranscriptColumns(transcriptText: string | null): {
   hasTranscript: boolean
-  stats: AgentSessionStatsV1 | null
+  stats: AgentTranscriptStatsV1 | null
   statsFormat: 'claude-code-v1' | null
-  statsError: AgentSessionStatsError[] | null
+  statsError: AgentTranscriptStatsError[] | null
 } {
   if (transcriptText == null) {
     return {

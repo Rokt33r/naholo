@@ -1,5 +1,5 @@
 import type {
-  AgentSessionStatsError,
+  AgentTranscriptStatsError,
   ClaudeCodeTokenUsage,
   ClaudeCodeTranscriptEntry,
   ModelTokenUsage,
@@ -23,7 +23,7 @@ export const UNKNOWN_MODEL = 'unknown'
 //
 // Both `modelUsages` and `skillModelUsagesMap` store raw token buckets. Weighting is render-time.
 
-export type AgentSessionStatsV1 = {
+export type AgentTranscriptStatsV1 = {
   userCount: number
   assistantCount: number
   summaryCount: number
@@ -37,8 +37,8 @@ export type AgentSessionStatsV1 = {
 // ---- Aggregator ----
 
 export type AggregateClaudeCodeV1Result = {
-  stats: AgentSessionStatsV1
-  errors: AgentSessionStatsError[]
+  stats: AgentTranscriptStatsV1
+  errors: AgentTranscriptStatsError[]
 }
 
 export function aggregateClaudeCodeV1(
@@ -48,7 +48,7 @@ export function aggregateClaudeCodeV1(
   const result = parser.process(jsonl)
 
   const stats = newEmptyMutableStatsV1()
-  const errors: AgentSessionStatsError[] = []
+  const errors: AgentTranscriptStatsError[] = []
   for (const entry of result.entries) {
     for (const envelope of entry.errors) {
       errors.push(envelope)
@@ -81,7 +81,7 @@ export function aggregateClaudeCodeV1(
 
 // ---- Mutable accumulator ----
 
-type MutableAgentSessionStatsV1 = {
+type MutableAgentTranscriptStatsV1 = {
   userCount: number
   assistantCount: number
   summaryCount: number
@@ -95,7 +95,7 @@ type MutableAgentSessionStatsV1 = {
 }
 
 function accumulateAssistant(
-  stats: MutableAgentSessionStatsV1,
+  stats: MutableAgentTranscriptStatsV1,
   data: AssistantData,
   modelUsages: ModelTokenUsage[],
 ): void {
@@ -153,7 +153,7 @@ function accumulateAssistant(
 }
 
 function feedDuration(
-  stats: MutableAgentSessionStatsV1,
+  stats: MutableAgentTranscriptStatsV1,
   timestamp: string | null,
 ): void {
   if (timestamp == null) {
@@ -185,7 +185,7 @@ function getEntryTimestamp(entry: ClaudeCodeTranscriptEntry): string | null {
   return typeof data.timestamp === 'string' ? data.timestamp : null
 }
 
-function newEmptyMutableStatsV1(): MutableAgentSessionStatsV1 {
+function newEmptyMutableStatsV1(): MutableAgentTranscriptStatsV1 {
   return {
     userCount: 0,
     assistantCount: 0,
@@ -200,7 +200,9 @@ function newEmptyMutableStatsV1(): MutableAgentSessionStatsV1 {
   }
 }
 
-function finalizeV1(stats: MutableAgentSessionStatsV1): AgentSessionStatsV1 {
+function finalizeV1(
+  stats: MutableAgentTranscriptStatsV1,
+): AgentTranscriptStatsV1 {
   const modelUsages: ModelTokenUsage[] = []
   for (const [model, usage] of stats.perModelMap) {
     modelUsages.push({ model, usage })

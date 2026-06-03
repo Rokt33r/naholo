@@ -1,11 +1,11 @@
 import 'server-only'
 import { and, asc, eq, isNotNull, isNull, or } from 'drizzle-orm'
 import {
-  type AgentSessionStatsError,
-  type AgentSessionStatsV1,
+  type AgentTranscriptStatsError,
+  type AgentTranscriptStatsV1,
   CLAUDE_CODE_V1,
   aggregateClaudeCodeV1,
-} from 'naholo-agent-session-stats/claude-code'
+} from 'naholo-agent-transcript-stats/claude-code'
 import { db } from '../db'
 import { operationAgentTranscripts, operations, projects } from '../db/schema'
 import { getFileStorageAdapter } from '../file-storage'
@@ -64,9 +64,9 @@ export async function listAgentTranscriptsForAdmin(
 export async function setAgentTranscriptStats(params: {
   operationId: string
   transcriptId: string
-  stats: AgentSessionStatsV1 | null
+  stats: AgentTranscriptStatsV1 | null
   statsFormat: 'claude-code-v1' | null
-  statsError: AgentSessionStatsError[] | null
+  statsError: AgentTranscriptStatsError[] | null
 }): Promise<void> {
   await db
     .update(operationAgentTranscripts)

@@ -1,12 +1,12 @@
 // ---- Error envelope ----
 
-export type AgentSessionStatsErrorKind =
+export type AgentTranscriptStatsErrorKind =
   | 'parse_failure'
   | 'unknown_entry_type'
   | 'validation_failed'
 
-export type AgentSessionStatsError = {
-  kind: AgentSessionStatsErrorKind
+export type AgentTranscriptStatsError = {
+  kind: AgentTranscriptStatsErrorKind
   message: string
   path: string | null
 }
@@ -44,7 +44,7 @@ export type ClaudeCodeTranscriptEntry<
   lineNumber: number
   data: D | null
   raw: string
-  errors: AgentSessionStatsError[]
+  errors: AgentTranscriptStatsError[]
   modelUsages: ModelTokenUsage[]
 }
 

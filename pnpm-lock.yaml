@@ -116,9 +116,9 @@ importers:
       lucide-react:
         specifier: ^0.553.0
         version: 0.553.0(react@19.2.0)
-      naholo-agent-session-stats:
+      naholo-agent-transcript-stats:
         specifier: workspace:*
-        version: link:packages/naholo-agent-session-stats
+        version: link:packages/naholo-agent-transcript-stats
       naholo-api:
         specifier: workspace:*
         version: link:packages/naholo-api
@@ -217,7 +217,7 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4(@opentelemetry/api@1.9.1)(@types/node@22.19.18)(vite@8.0.8(@types/node@22.19.18)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.3))
 
-  packages/naholo-agent-session-stats:
+  packages/naholo-agent-transcript-stats:
     dependencies:
       zod:
         specifier: ^4.1.12

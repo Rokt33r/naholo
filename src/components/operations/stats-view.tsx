@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import {
   CLAUDE_CODE_V1,
-  type AgentSessionStatsV1,
+  type AgentTranscriptStatsV1,
   type ModelTokenUsage,
-} from 'naholo-agent-session-stats/claude-code'
+} from 'naholo-agent-transcript-stats/claude-code'
 import {
   calculateCost,
   calculateWeightedTokens,
@@ -34,7 +34,7 @@ export type PerModelTotals = {
 
 export type SessionRowStats = {
   agentSession: AgentSessionSummary
-  stats: AgentSessionStatsV1 | null
+  stats: AgentTranscriptStatsV1 | null
   statsErrored: boolean
   durationMs: number
   messageCount: number

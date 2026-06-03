@@ -1,5 +1,5 @@
 import type {
-  AgentSessionStatsError,
+  AgentTranscriptStatsError,
   ClaudeCodeTranscriptEntry,
   ClaudeCodeTranscriptParserMappers,
   ClaudeCodeTranscriptParserOptions,
@@ -112,4 +112,4 @@ export class ClaudeCodeTranscriptParser {
 }
 
 // Re-exported so consumers can type-narrow without reaching into types.ts.
-export type { AgentSessionStatsError }
+export type { AgentTranscriptStatsError }
