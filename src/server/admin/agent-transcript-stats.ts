@@ -7,12 +7,12 @@ import {
   aggregateClaudeCodeV1,
 } from 'naholo-agent-session-stats/claude-code'
 import { db } from '../db'
-import { operationAgentSessions, operations, projects } from '../db/schema'
+import { operationAgentTranscripts, operations, projects } from '../db/schema'
 import { getFileStorageAdapter } from '../file-storage'
 
-export type AgentSessionAdminListItem = {
+export type AgentTranscriptAdminListItem = {
   id: string
-  sessionId: string
+  transcriptId: string
   projectSlug: string
   operationNumber: number
   statsFormat: 'claude-code-v1' | null
@@ -20,39 +20,39 @@ export type AgentSessionAdminListItem = {
   errorCount: number
 }
 
-export async function listAgentSessionsForAdmin(
+export async function listAgentTranscriptsForAdmin(
   filter: 'unprocessed' | 'processed',
-): Promise<AgentSessionAdminListItem[]> {
+): Promise<AgentTranscriptAdminListItem[]> {
   const whereProcessed = and(
-    isNotNull(operationAgentSessions.stats),
-    isNull(operationAgentSessions.statsError),
+    isNotNull(operationAgentTranscripts.stats),
+    isNull(operationAgentTranscripts.statsError),
   )
   const whereUnprocessed = or(
-    isNull(operationAgentSessions.stats),
-    isNotNull(operationAgentSessions.statsError),
+    isNull(operationAgentTranscripts.stats),
+    isNotNull(operationAgentTranscripts.statsError),
   )
   const rows = await db
     .select({
-      id: operationAgentSessions.id,
-      sessionId: operationAgentSessions.sessionId,
+      id: operationAgentTranscripts.id,
+      transcriptId: operationAgentTranscripts.transcriptId,
       projectSlug: projects.slug,
       operationNumber: operations.number,
-      stats: operationAgentSessions.stats,
-      statsFormat: operationAgentSessions.statsFormat,
-      statsError: operationAgentSessions.statsError,
+      stats: operationAgentTranscripts.stats,
+      statsFormat: operationAgentTranscripts.statsFormat,
+      statsError: operationAgentTranscripts.statsError,
     })
-    .from(operationAgentSessions)
+    .from(operationAgentTranscripts)
     .innerJoin(
       operations,
-      eq(operations.id, operationAgentSessions.operationId),
+      eq(operations.id, operationAgentTranscripts.operationId),
     )
-    .innerJoin(projects, eq(projects.id, operationAgentSessions.projectId))
+    .innerJoin(projects, eq(projects.id, operationAgentTranscripts.projectId))
     .where(filter === 'processed' ? whereProcessed : whereUnprocessed)
-    .orderBy(asc(operationAgentSessions.createdAt))
+    .orderBy(asc(operationAgentTranscripts.createdAt))
 
   return rows.map((row) => ({
     id: row.id,
-    sessionId: row.sessionId,
+    transcriptId: row.transcriptId,
     projectSlug: row.projectSlug,
     operationNumber: row.operationNumber,
     statsFormat: row.statsFormat,
@@ -61,15 +61,15 @@ export async function listAgentSessionsForAdmin(
   }))
 }
 
-export async function setAgentSessionStats(params: {
+export async function setAgentTranscriptStats(params: {
   operationId: string
-  agentSessionSessionId: string
+  transcriptId: string
   stats: AgentSessionStatsV1 | null
   statsFormat: 'claude-code-v1' | null
   statsError: AgentSessionStatsError[] | null
 }): Promise<void> {
   await db
-    .update(operationAgentSessions)
+    .update(operationAgentTranscripts)
     .set({
       stats: params.stats,
       statsFormat: params.statsFormat,
@@ -78,21 +78,21 @@ export async function setAgentSessionStats(params: {
     })
     .where(
       and(
-        eq(operationAgentSessions.operationId, params.operationId),
-        eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
+        eq(operationAgentTranscripts.operationId, params.operationId),
+        eq(operationAgentTranscripts.transcriptId, params.transcriptId),
       ),
     )
 }
 
-export type ReprocessAgentSessionResult =
+export type ReprocessAgentTranscriptResult =
   | { ok: true; hasStats: boolean; errorCount: number }
   | { ok: false; reason: 'not_found' | 'no_transcript' }
 
-export async function reprocessAgentSession(
-  agentSessionSessionId: string,
-): Promise<ReprocessAgentSessionResult> {
-  const row = await db.query.operationAgentSessions.findFirst({
-    where: eq(operationAgentSessions.sessionId, agentSessionSessionId),
+export async function reprocessAgentTranscript(
+  transcriptId: string,
+): Promise<ReprocessAgentTranscriptResult> {
+  const row = await db.query.operationAgentTranscripts.findFirst({
+    where: eq(operationAgentTranscripts.transcriptId, transcriptId),
   })
   if (row == null) {
     return { ok: false, reason: 'not_found' }
@@ -101,12 +101,12 @@ export async function reprocessAgentSession(
     return { ok: false, reason: 'no_transcript' }
   }
 
-  const key = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.sessionId}`
+  const key = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.transcriptId}`
   const transcript = await getFileStorageAdapter().getObject(key)
   const { stats, errors } = aggregateClaudeCodeV1(transcript)
-  await setAgentSessionStats({
+  await setAgentTranscriptStats({
     operationId: row.operationId,
-    agentSessionSessionId: row.sessionId,
+    transcriptId: row.transcriptId,
     stats,
     statsFormat: CLAUDE_CODE_V1,
     statsError: errors.length > 0 ? errors : null,
