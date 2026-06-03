@@ -29,15 +29,17 @@ export const mapFileHistorySnapshotEntry: TranscriptMapper = (
   if (!parsed.success) {
     const entry: ClaudeCodeFileHistorySnapshotEntry = {
       type: 'file-history-snapshot',
+      lineNumber: ctx.lineNumber,
       data: null,
       raw: rawLine,
-      errors: [mapValidationError(parsed.error, ctx.index)],
+      errors: [mapValidationError(parsed.error)],
       modelUsages: [],
     }
     return entry
   }
   const entry: ClaudeCodeFileHistorySnapshotEntry = {
     type: 'file-history-snapshot',
+    lineNumber: ctx.lineNumber,
     data: parsed.data,
     raw: rawLine,
     errors: [],

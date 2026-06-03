@@ -23,15 +23,17 @@ export const mapLastPromptEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
   if (!parsed.success) {
     const entry: ClaudeCodeLastPromptEntry = {
       type: 'last-prompt',
+      lineNumber: ctx.lineNumber,
       data: null,
       raw: rawLine,
-      errors: [mapValidationError(parsed.error, ctx.index)],
+      errors: [mapValidationError(parsed.error)],
       modelUsages: [],
     }
     return entry
   }
   const entry: ClaudeCodeLastPromptEntry = {
     type: 'last-prompt',
+    lineNumber: ctx.lineNumber,
     data: parsed.data,
     raw: rawLine,
     errors: [],

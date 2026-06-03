@@ -113,6 +113,7 @@ export const mapAssistantEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
   if (strict.success) {
     const entry: ClaudeCodeAssistantEntry = {
       type: 'assistant',
+      lineNumber: ctx.lineNumber,
       data: { kind: 'strict', value: strict.data },
       raw: rawLine,
       errors: [],
@@ -123,11 +124,12 @@ export const mapAssistantEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
     return entry
   }
 
-  const errors = [mapValidationError(strict.error, ctx.index)]
+  const errors = [mapValidationError(strict.error)]
   const fallback = usageOnlyAssistantSchema.safeParse(rawJson)
   if (fallback.success) {
     const entry: ClaudeCodeAssistantEntry = {
       type: 'assistant',
+      lineNumber: ctx.lineNumber,
       data: { kind: 'usage-only', value: fallback.data },
       raw: rawLine,
       errors,
@@ -137,9 +139,10 @@ export const mapAssistantEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
     }
     return entry
   }
-  errors.push(mapValidationError(fallback.error, ctx.index))
+  errors.push(mapValidationError(fallback.error))
   const entry: ClaudeCodeAssistantEntry = {
     type: 'assistant',
+    lineNumber: ctx.lineNumber,
     data: null,
     raw: rawLine,
     errors,

@@ -29,15 +29,17 @@ export const mapQueueOperationEntry: TranscriptMapper = (
   if (!parsed.success) {
     const entry: ClaudeCodeQueueOperationEntry = {
       type: 'queue-operation',
+      lineNumber: ctx.lineNumber,
       data: null,
       raw: rawLine,
-      errors: [mapValidationError(parsed.error, ctx.index)],
+      errors: [mapValidationError(parsed.error)],
       modelUsages: [],
     }
     return entry
   }
   const entry: ClaudeCodeQueueOperationEntry = {
     type: 'queue-operation',
+    lineNumber: ctx.lineNumber,
     data: parsed.data,
     raw: rawLine,
     errors: [],

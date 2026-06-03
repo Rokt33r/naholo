@@ -17,7 +17,6 @@ export class ClaudeCodeTranscriptParser {
     const entries: ClaudeCodeTranscriptEntry[] = []
 
     const lines = jsonl.split('\n')
-    let index = 0
     let lineNumber = 0
     for (const line of lines) {
       lineNumber += 1
@@ -30,90 +29,85 @@ export class ClaudeCodeTranscriptParser {
         rawJson = JSON.parse(line)
       } catch (error) {
         if (error instanceof SyntaxError) {
-          entries.push(
-            createClaudeCodeTranscriptEntry('unknown', line, {
-              kind: 'parse_failure',
-              message: `Invalid JSON on line ${lineNumber}: ${error.message}`,
-              entryIndex: index,
-              lineNumber,
-              path: null,
-            }),
-          )
-          index += 1
+          entries.push({
+            type: 'unknown',
+            lineNumber,
+            data: null,
+            raw: line,
+            errors: [
+              {
+                kind: 'parse_failure',
+                message: `Invalid JSON on line ${lineNumber}: ${error.message}`,
+                path: null,
+              },
+            ],
+            modelUsages: [],
+          })
           continue
         }
         throw error
       }
 
       if (rawJson == null || typeof rawJson !== 'object') {
-        entries.push(
-          createClaudeCodeTranscriptEntry('unknown', line, {
-            kind: 'parse_failure',
-            message: 'Entry is not an object',
-            entryIndex: index,
-            lineNumber,
-            path: null,
-          }),
-        )
-        index += 1
+        entries.push({
+          type: 'unknown',
+          lineNumber,
+          data: null,
+          raw: line,
+          errors: [
+            {
+              kind: 'parse_failure',
+              message: 'Entry is not an object',
+              path: null,
+            },
+          ],
+          modelUsages: [],
+        })
         continue
       }
 
       const typeValue = (rawJson as Record<string, unknown>).type
       if (typeof typeValue !== 'string') {
-        entries.push(
-          createClaudeCodeTranscriptEntry('unknown', line, {
-            kind: 'validation_failed',
-            message: 'Missing record.type',
-            entryIndex: index,
-            lineNumber,
-            path: 'type',
-          }),
-        )
-        index += 1
+        entries.push({
+          type: 'unknown',
+          lineNumber,
+          data: null,
+          raw: line,
+          errors: [
+            {
+              kind: 'validation_failed',
+              message: 'Missing record.type',
+              path: 'type',
+            },
+          ],
+          modelUsages: [],
+        })
         continue
       }
 
       const mapper = this.mappers[typeValue]
       if (mapper == null) {
-        entries.push(
-          createClaudeCodeTranscriptEntry(typeValue, line, {
-            kind: 'unknown_entry_type',
-            message: `Unknown entry type: ${typeValue}`,
-            entryIndex: index,
-            lineNumber,
-            path: typeValue,
-          }),
-        )
-        index += 1
+        entries.push({
+          type: typeValue,
+          lineNumber,
+          data: null,
+          raw: line,
+          errors: [
+            {
+              kind: 'unknown_entry_type',
+              message: `Unknown entry type: ${typeValue}`,
+              path: typeValue,
+            },
+          ],
+          modelUsages: [],
+        })
         continue
       }
 
-      const entry = mapper(rawJson, line, { index, type: typeValue })
-      for (const envelope of entry.errors) {
-        if (envelope.lineNumber == null) {
-          envelope.lineNumber = lineNumber
-        }
-      }
-      entries.push(entry)
-      index += 1
+      entries.push(mapper(rawJson, line, { type: typeValue, lineNumber }))
     }
 
     return { entries }
-  }
-}
-
-function createClaudeCodeTranscriptEntry(
-  type: string,
-  rawLine: string,
-  envelope: AgentSessionStatsError,
-): ClaudeCodeTranscriptEntry {
-  return {
-    type,
-    data: null,
-    raw: rawLine,
-    errors: [envelope],
-    modelUsages: [],
   }
 }
 

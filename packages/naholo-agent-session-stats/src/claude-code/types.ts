@@ -8,8 +8,6 @@ export type AgentSessionStatsErrorKind =
 export type AgentSessionStatsError = {
   kind: AgentSessionStatsErrorKind
   message: string
-  entryIndex: number | null
-  lineNumber: number | null
   path: string | null
 }
 
@@ -43,6 +41,7 @@ export type ClaudeCodeTranscriptEntry<
   D = unknown,
 > = {
   type: K
+  lineNumber: number
   data: D | null
   raw: string
   errors: AgentSessionStatsError[]
@@ -52,8 +51,8 @@ export type ClaudeCodeTranscriptEntry<
 // ---- Mapper types ----
 
 export type TranscriptMapperContext = {
-  index: number
   type: string
+  lineNumber: number
 }
 
 export type TranscriptMapper = (
