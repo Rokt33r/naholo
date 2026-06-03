@@ -3,9 +3,9 @@ import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import {
-  getAgentSessionBySessionId,
-  upsertAgentSession,
-} from '@/server/services/agent-session'
+  getAgentTranscriptByTranscriptId,
+  upsertAgentTranscript,
+} from '@/server/services/agent-transcript'
 import { getFileStorageAdapter } from '@/server/file-storage'
 
 type RouteContext = {
@@ -24,17 +24,21 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       projectSlug,
       operationNumber,
     )
-    const agentSession = await getAgentSessionBySessionId({
+    const transcript = await getAgentTranscriptByTranscriptId({
       operationId: operation.id,
-      agentSessionSessionId: agentSessionSessionId,
+      transcriptId: agentSessionSessionId,
     })
-    if (agentSession == null) {
+    if (transcript == null) {
       return NextResponse.json(
         { error: 'not_found', resource: 'agent_session' },
         { status: 404 },
       )
     }
-    return NextResponse.json(agentSession, { status: 200 })
+    const { transcriptId, ...rest } = transcript
+    return NextResponse.json(
+      { sessionId: transcriptId, ...rest },
+      { status: 200 },
+    )
   } catch (error) {
     return mapApiError(error)
   }
@@ -80,11 +84,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const upserted = await upsertAgentSession({
+    const upserted = await upsertAgentTranscript({
       projectId: project.id,
       operationId: operation.id,
       projectOperatorId: projectOperator.id,
-      sessionId: agentSessionSessionId,
+      transcriptId: agentSessionSessionId,
       title: validation.data.title,
       startedAt: new Date(validation.data.startedAt),
       endedAt: new Date(validation.data.endedAt),

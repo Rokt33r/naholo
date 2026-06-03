@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
-import { getAgentSessionTranscriptText } from '@/server/services/agent-session'
+import { getAgentTranscriptText } from '@/server/services/agent-transcript'
 
 type RouteContext = {
   params: Promise<{
@@ -19,10 +19,10 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       projectSlug,
       operationNumber,
     )
-    const transcript = await getAgentSessionTranscriptText({
+    const transcript = await getAgentTranscriptText({
       projectId: project.id,
       operationId: operation.id,
-      agentSessionSessionId: agentSessionSessionId,
+      transcriptId: agentSessionSessionId,
     })
     return new NextResponse(transcript, {
       status: 200,
