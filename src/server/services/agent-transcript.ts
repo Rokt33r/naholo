@@ -9,15 +9,15 @@ import {
   aggregateClaudeCodeV1,
 } from 'naholo-agent-session-stats/claude-code'
 import { db } from '../db'
-import { operationAgentSessions } from '../db/schema'
+import { operationAgentTranscripts } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok } from '@/lib/return-result'
 import { ConflictError, NotFoundError } from '../errors'
 import { getFileStorageAdapter } from '../file-storage'
 
-export type AgentSessionSummary = {
+export type AgentTranscriptSummary = {
   id: string
-  sessionId: string
+  transcriptId: string
   title: string | null
   startedAt: string
   endedAt: string
@@ -28,37 +28,11 @@ export type AgentSessionSummary = {
   statsErrored: boolean
 }
 
-function toSummary(row: {
-  id: string
-  sessionId: string
-  title: string | null
-  startedAt: Date
-  endedAt: Date
-  hasTranscript: boolean
-  transcriptSizeBytes: number
-  stats: AgentSessionStatsV1 | null
-  statsFormat: 'claude-code-v1' | null
-  statsError: AgentSessionStatsError[] | null
-}): AgentSessionSummary {
-  return {
-    id: row.id,
-    sessionId: row.sessionId,
-    title: row.title,
-    startedAt: row.startedAt.toISOString(),
-    endedAt: row.endedAt.toISOString(),
-    hasTranscript: row.hasTranscript,
-    transcriptSizeBytes: row.transcriptSizeBytes,
-    stats: row.stats,
-    statsFormat: row.statsFormat,
-    statsErrored: row.statsError != null && row.statsError.length > 0,
-  }
-}
-
-export async function upsertAgentSession(data: {
+export async function upsertAgentTranscript(data: {
   projectId: string
   operationId: string
   projectOperatorId: string | null
-  sessionId: string
+  transcriptId: string
   title: string | null
   startedAt: Date
   endedAt: Date
@@ -68,12 +42,12 @@ export async function upsertAgentSession(data: {
   const transcriptColumns = computeTranscriptColumns(data.transcriptText)
 
   const [row] = await db
-    .insert(operationAgentSessions)
+    .insert(operationAgentTranscripts)
     .values({
       projectId: data.projectId,
       operationId: data.operationId,
       projectOperatorId: data.projectOperatorId,
-      sessionId: data.sessionId,
+      transcriptId: data.transcriptId,
       title: data.title,
       startedAt: data.startedAt,
       endedAt: data.endedAt,
@@ -85,8 +59,8 @@ export async function upsertAgentSession(data: {
     })
     .onConflictDoUpdate({
       target: [
-        operationAgentSessions.operationId,
-        operationAgentSessions.sessionId,
+        operationAgentTranscripts.operationId,
+        operationAgentTranscripts.transcriptId,
       ],
       set: {
         projectId: data.projectId,
@@ -102,57 +76,83 @@ export async function upsertAgentSession(data: {
         updatedAt: new Date(),
       },
     })
-    .returning({ id: operationAgentSessions.id })
+    .returning({ id: operationAgentTranscripts.id })
 
   return ok({ id: row.id })
 }
 
-export async function listAgentSessionsByOperation(
+export async function listAgentTranscriptsByOperation(
   operationId: string,
-): Promise<AgentSessionSummary[]> {
-  const rows = await db.query.operationAgentSessions.findMany({
-    where: eq(operationAgentSessions.operationId, operationId),
-    orderBy: asc(operationAgentSessions.startedAt),
+): Promise<AgentTranscriptSummary[]> {
+  const rows = await db.query.operationAgentTranscripts.findMany({
+    where: eq(operationAgentTranscripts.operationId, operationId),
+    orderBy: asc(operationAgentTranscripts.startedAt),
   })
   return rows.map(toSummary)
 }
 
-export async function getAgentSessionBySessionId(params: {
+export async function getAgentTranscriptByTranscriptId(params: {
   operationId: string
-  agentSessionSessionId: string
-}): Promise<AgentSessionSummary | null> {
-  const row = await db.query.operationAgentSessions.findFirst({
+  transcriptId: string
+}): Promise<AgentTranscriptSummary | null> {
+  const row = await db.query.operationAgentTranscripts.findFirst({
     where: and(
-      eq(operationAgentSessions.operationId, params.operationId),
-      eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
+      eq(operationAgentTranscripts.operationId, params.operationId),
+      eq(operationAgentTranscripts.transcriptId, params.transcriptId),
     ),
   })
   return row == null ? null : toSummary(row)
 }
 
-export async function getAgentSessionTranscriptText(params: {
+export async function getAgentTranscriptText(params: {
   projectId: string
   operationId: string
-  agentSessionSessionId: string
+  transcriptId: string
 }): Promise<string> {
-  const row = await db.query.operationAgentSessions.findFirst({
+  const row = await db.query.operationAgentTranscripts.findFirst({
     where: and(
-      eq(operationAgentSessions.operationId, params.operationId),
-      eq(operationAgentSessions.sessionId, params.agentSessionSessionId),
+      eq(operationAgentTranscripts.operationId, params.operationId),
+      eq(operationAgentTranscripts.transcriptId, params.transcriptId),
     ),
   })
   if (row == null) {
-    throw new NotFoundError('agent_session')
+    throw new NotFoundError('agent_transcript')
   }
   if (!row.hasTranscript) {
     throw new ConflictError({
-      code: 'agent_session_no_transcript',
-      message: 'Agent session has no transcript',
+      code: 'agent_transcript_no_transcript',
+      message: 'Agent transcript has no transcript body',
     })
   }
 
-  const key = `agent-session-transcripts/${params.projectId}/${params.operationId}/${row.sessionId}`
+  const key = `agent-session-transcripts/${params.projectId}/${params.operationId}/${row.transcriptId}`
   return await getFileStorageAdapter().getObject(key)
+}
+
+function toSummary(row: {
+  id: string
+  transcriptId: string
+  title: string | null
+  startedAt: Date
+  endedAt: Date
+  hasTranscript: boolean
+  transcriptSizeBytes: number
+  stats: AgentSessionStatsV1 | null
+  statsFormat: 'claude-code-v1' | null
+  statsError: AgentSessionStatsError[] | null
+}): AgentTranscriptSummary {
+  return {
+    id: row.id,
+    transcriptId: row.transcriptId,
+    title: row.title,
+    startedAt: row.startedAt.toISOString(),
+    endedAt: row.endedAt.toISOString(),
+    hasTranscript: row.hasTranscript,
+    transcriptSizeBytes: row.transcriptSizeBytes,
+    stats: row.stats,
+    statsFormat: row.statsFormat,
+    statsErrored: row.statsError != null && row.statsError.length > 0,
+  }
 }
 
 function computeTranscriptColumns(transcriptText: string | null): {
