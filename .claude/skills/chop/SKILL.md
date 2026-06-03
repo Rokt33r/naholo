@@ -54,7 +54,7 @@ Run `naholo agent op-path` to get the absolute parent operation directory; call 
 
 Read:
 
-- `{operationDir}/notes/OPERATION.md` — needed in full to identify carveable WOs and tasks, and to know each task's shipped/unshipped state.
+- `{operationDir}/notes/OPERATION.md` — needed in full. The parent's `## SITUATION` (Pain + Notes) is the source material for the two proposed SITUATIONs drafted in step 6; the rest is needed to identify carveable WOs and tasks, and to know each task's shipped/unshipped state.
 - `{operationDir}/TASKS.md` — needed to enumerate task numbers + titles.
 
 If `## MISSION` is absent in `OPERATION.md`, stop and tell the user there's nothing to chop yet — run `/warno` first.
@@ -65,18 +65,22 @@ If `notes/CHOP.md` already exists, also read it — this is a **revision** run. 
 
 Branch on whether `CHOP.md` already existed in step 5:
 
-- **Fresh draft (no prior `CHOP.md`)** — derive the full split from the args + the parent's current `OPERATION.md`. Decide every field below from scratch.
-- **Revision (`CHOP.md` already existed)** — start from the existing proposal and apply only the changes the args describe (move WO X to the other side, retitle the new OP, rewrite a Concept of Operations, swap two tasks). Leave everything the args don't touch alone. Re-validate against the parent's current `OPERATION.md` since it may have changed between sessions — if a WO or task referenced in the old `CHOP.md` no longer exists on the parent (a `/warno` or `/opord` ran between chops), drop the stale reference and call it out in the summary.
-
-In either mode, decide:
+**Fresh draft (no prior `CHOP.md`)** — derive the full split from the args + the parent's current `OPERATION.md`. Decide every field below from scratch:
 
 - **Carved Warning Orders** — the exact WO bullets (by bold label) that match the args. If args are ambiguous, pick the smallest literal-reading set and surface the ambiguity in `## Intent`.
 - **Surviving Warning Orders** — every WO that's not carved.
 - **Carved tasks** — every `### TASK N — Title` whose Intent / Course of Action only makes sense under the carved WOs. If any candidate carved task is **shipped** (its parent section has `#### After-Action Report`), pause and ask the user via `AskUserQuestion` whether it's intentional to move shipped work to the new OP. Show the task number + title + a one-line AAR summary so they can decide per task. Default option: keep shipped tasks on the parent. Only include a shipped task under `# NEW OP` if the user explicitly confirms.
 - **Surviving tasks** — every other `### TASK N`, including all shipped ones.
+- **Proposed parent title** — reuse the parent's existing title verbatim unless the carve invalidates it (e.g. the title names a scope that's entirely moving to the new OP). When it does, draft a narrower title in the same shape as the original. The user retitles by editing the `# CURRENT OP #{n}: {title}` header directly on review.
 - **Proposed new-OP title** — short noun phrase, follows the parent's title conventions. Use the user's suggestion if their args included one; otherwise propose one based on the carved WOs.
+- **Parent SITUATION (post-split)** — narrow the parent's existing `### Pain` body to the surviving scope, in the parent's own words where they still read true. Drop `### Notes` bullets that only applied to carved WOs; keep ones that still apply. Omit the `### Notes` heading entirely when nothing survives (same convention as `OPERATION.md`).
+- **New OP SITUATION** — derive `### Pain` from the carved scope, in the parent's own words where they read true at the narrower scope. `### Notes` is optional — populate it only when there's a concrete pointer worth surfacing (one-line bullet, omit the heading entirely otherwise).
 - **Post-split Concept of Operations for the parent** — if the parent's existing CoO would read wrong after the carve (e.g. mentions the carved approach), draft a narrower version: **two or three sentences max**, concept-level only, no file lists / edit steps / build commands. If the existing CoO still reads true post-carve, reuse it verbatim.
 - **Concept of Operations for the new OP** — **two or three sentences max**, scoped to the carved approach. Concept-level only: name the chosen path and connect it back to the carved Pain. Do **not** enumerate files, edit steps, or build commands here — those belong in Warning Orders or land later in EXECUTION on the new OP. May be a verbatim slice of the parent's CoO if it already reads narrowly.
+
+**Revision (`CHOP.md` already existed)** — start from the existing proposal and edit only the fields the args explicitly target. Do **not** re-derive every field from the parent — that would clobber the user's review pass. The default for every field is "leave it alone." Apply the args as targeted edits — move a WO between sides, retitle the new OP, rewrite a Concept of Operations, swap two tasks, edit a SITUATION body — using the fresh-draft field definitions above as the spec for what each field means.
+
+Then run a single re-validation pass against the parent's current `OPERATION.md` (which may have changed between sessions): if a WO bold label or task title referenced in the old `CHOP.md` no longer exists on the parent (a `/warno` or `/opord` ran between chops), drop the stale reference and call it out in the summary. Re-validation is the only thing that touches fields the args didn't name.
 
 **Do not** allocate Target Reference Points in `CHOP.md`. TRP allocation is `/chopchop`'s job — agents at apply time decide which TRP entries support only carved WOs (move), only surviving WOs (keep), or both (duplicate). The user is not expected to review TRP at proposal time.
 
@@ -93,7 +97,17 @@ Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it o
 
 ---
 
-# CURRENT OP #{parentNumber}: {parentTitle}
+# CURRENT OP #{parentNumber}: {proposed parent title}
+
+## SITUATION
+
+### Pain
+
+{Parent's post-split Pain body — narrowed from the parent's existing `### Pain`, parent's words where they still read true.}
+
+### Notes
+
+- {Surviving notes that still apply post-split. Omit the `### Notes` heading entirely when nothing survives.}
 
 ## MISSION
 
@@ -115,6 +129,16 @@ Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it o
 
 # NEW OP: {proposed title}
 
+## SITUATION
+
+### Pain
+
+{Carved Pain — narrowed to the carved scope, parent's words where they read true at the narrower scope.}
+
+### Notes
+
+- {Optional. Omit the `### Notes` heading entirely when empty.}
+
 ## MISSION
 
 ### Concept of Operations
@@ -135,6 +159,8 @@ Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it o
 Format rules to honor when writing the doc:
 
 - **No TRP** anywhere in `CHOP.md`. `/chopchop` allocates TRP at apply time.
+- **Both sides carry `## SITUATION`.** `### Pain` is mandatory on both sides; `### Notes` is optional and follows the `OPERATION.md` omit-when-empty convention — omit the `### Notes` heading entirely when the side has nothing to flag, do not write a placeholder body.
+- **The `# CURRENT OP #{n}: {title}` header carries the parent's proposed post-split title.** The user retitles the parent by editing this header. `# NEW OP: {title}` carries the new OP's proposed title the same way.
 - **No `#### Intent`, no `#### Scheme of Maneuver`, no `#### Course of Action`, no `#### After-Action Report`** anywhere in `CHOP.md`. The EXECUTION blocks under each OP are **checkbox task items** (`- [ ] TASK n — title` or `- [x] TASK n — title`), not full task sections. Full per-task detail lives in `OPERATION.md`; `CHOP.md` is a planning brief.
 - **Checkbox carries shipped state.** `- [x]` ≡ shipped (parent task section has `#### After-Action Report`). `- [ ]` ≡ unshipped. No textual annotations, no traceback parentheticals — the title is the link back to the parent's task.
 - **Task lines mirror the parent's `### TASK` heading shape exactly** — same `TASK {n} — {title}` form (em-dash separator, single space on each side), title copied verbatim from the parent's `### TASK n — {title}` heading. Do not substitute a period for the em-dash, do not paraphrase the title, do not substitute Intent, do not summarize.
@@ -196,6 +222,7 @@ While in the chop phase (i.e. `CHOP.md` exists):
 - **No server calls** — `/chop` writes `CHOP.md` and a TIMELINE bullet. Nothing else. No `mcp__naholo__create_operation`, no `create_note`, no parent `OPERATION.md` edits.
 - **No TRP in `CHOP.md`** — TRP allocation is `/chopchop`'s job.
 - **No per-task detail in `CHOP.md`** — EXECUTION blocks are one-line task summaries only. No Intent, Scheme of Maneuver, Course of Action, or AAR.
+- **SITUATION bodies and the CURRENT OP header title are user-editable surfaces** — `/chop` drafts them on a fresh run, but revision runs preserve hand-edits unless the args explicitly target them. The user reviews the proposed Pain / Notes / parent title in `CHOP.md` before `/chopchop` applies the split.
 - **One proposal at a time** — only one `CHOP.md` exists at any moment. Re-running `/chop` while `CHOP.md` is present revises the existing proposal in place; it does not stack a second one.
 - **Verbatim WO transfer in the draft** — carved and surviving WOs both appear word-for-word from the parent's `OPERATION.md`.
 - **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.

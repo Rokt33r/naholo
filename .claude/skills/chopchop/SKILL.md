@@ -109,7 +109,7 @@ This is a judgment call per entry; the user does not review it. Lean toward dupl
 
 ### 8. Create the new OP server-side
 
-Call `mcp__naholo__create_operation` with `title: {newTitle}` from `CHOP.md`. Capture the returned operation number — call this `{newNumber}`.
+Call `mcp__naholo__create_operation` with `title: {newTitle}` from `CHOP.md`. Capture the returned operation `number` — call this `{newNumber}` — and the returned `url` — call this `{newUrl}`.
 
 ### 9. Compose and push the new OP's `OPERATION.md`
 
@@ -224,7 +224,7 @@ Print the summary as raw markdown — no surrounding fence. Use markdown link sy
 
 > CHOP applied on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATION.md)
 >
-> - Spawned: OP #{newNumber} {newTitle} — [open on Naholo]({baseUrl}/app/projects/{projectSlug}/operations/{newNumber})
+> - Spawned: OP #{newNumber} {newTitle} — [open on Naholo]({newUrl})
 > - Moved to new OP: {N} Warning Orders, {M} task(s), {T_moved} TRP entries
 
 **Then append the next-actions block** that matches the mode you just determined.
@@ -259,7 +259,7 @@ Line-anchor resolution (per the manual's `### Link format`):
 - `<execution-line>` — locate the `## EXECUTION` heading.
 - `<task-line>` (only needed for `execution-ready`) — pick the first `- [ ] {N}. {title}` row from `TASKS.md` in source order. Substitute `{N}` and `{title}` in the `/splash` bullet from that row, then locate `### TASK {N} — {title}` in `OPERATION.md` and use that heading's line. By construction, `execution-ready` guarantees at least one unchecked row exists.
 
-The new-OP URL composes from `${baseUrl}/app/projects/${projectSlug}/operations/${newNumber}` using the same pattern as `/exfil`'s summary.
+The new-OP URL comes directly from `mcp__naholo__create_operation`'s response — read `url` off the returned JSON; no need to compose from `baseUrl`/`projectSlug`.
 
 ## Post-chopchop phase
 
