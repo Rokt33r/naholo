@@ -23,7 +23,7 @@ type RowStatus =
   | { kind: 'error'; reason: 'not_found' | 'no_transcript' | 'http' }
 
 type Row = {
-  sessionId: string
+  transcriptId: string
   projectSlug: string
   operationNumber: number
   selected: boolean
@@ -32,7 +32,7 @@ type Row = {
 
 type ListItem = {
   id: string
-  sessionId: string
+  transcriptId: string
   projectSlug: string
   operationNumber: number
 }
@@ -108,10 +108,10 @@ export function BulkProcessDialog() {
     setPhase('loading')
     try {
       const response = await fetch(
-        '/api/admin/agent-sessions?filter=unprocessed',
+        '/api/admin/agent-transcripts?filter=unprocessed',
       )
       if (!response.ok) {
-        toast.error(`Failed to load sessions (${response.status})`)
+        toast.error(`Failed to load transcripts (${response.status})`)
         setPhase('idle')
         setOpen(false)
         return
@@ -119,7 +119,7 @@ export function BulkProcessDialog() {
       const data = (await response.json()) as { rows: ListItem[] }
       setRows(
         data.rows.map((item) => ({
-          sessionId: item.sessionId,
+          transcriptId: item.transcriptId,
           projectSlug: item.projectSlug,
           operationNumber: item.operationNumber,
           selected: true,
@@ -129,17 +129,19 @@ export function BulkProcessDialog() {
       setPhase('ready')
     } catch (error) {
       toast.error(
-        `Failed to load sessions: ${error instanceof Error ? error.message : 'unknown'}`,
+        `Failed to load transcripts: ${error instanceof Error ? error.message : 'unknown'}`,
       )
       setPhase('idle')
       setOpen(false)
     }
   }
 
-  function toggleRow(sessionId: string) {
+  function toggleRow(transcriptId: string) {
     setRows((prev) =>
       prev.map((row) =>
-        row.sessionId === sessionId ? { ...row, selected: !row.selected } : row,
+        row.transcriptId === transcriptId
+          ? { ...row, selected: !row.selected }
+          : row,
       ),
     )
   }
@@ -171,14 +173,16 @@ export function BulkProcessDialog() {
       }
       setRows((prev) =>
         prev.map((r) =>
-          r.sessionId === row.sessionId
+          r.transcriptId === row.transcriptId
             ? { ...r, status: { kind: 'processing' } }
             : r,
         ),
       )
-      const status = await reprocessOne(row.sessionId)
+      const status = await reprocessOne(row.transcriptId)
       setRows((prev) =>
-        prev.map((r) => (r.sessionId === row.sessionId ? { ...r, status } : r)),
+        prev.map((r) =>
+          r.transcriptId === row.transcriptId ? { ...r, status } : r,
+        ),
       )
     }
     setPhase('done')
@@ -197,9 +201,9 @@ export function BulkProcessDialog() {
       </DialogTrigger>
       <DialogContent className='sm:max-w-3xl'>
         <DialogHeader>
-          <DialogTitle>Process unprocessed sessions</DialogTitle>
+          <DialogTitle>Process unprocessed transcripts</DialogTitle>
           <DialogDescription>
-            Reprocess sessions one by one. Selection is locked while running.
+            Reprocess transcripts one by one. Selection is locked while running.
           </DialogDescription>
         </DialogHeader>
 
@@ -262,7 +266,7 @@ export function BulkProcessDialog() {
                     aria-label='Toggle all'
                   />
                 </th>
-                <th className='px-3 py-2 font-medium'>Session</th>
+                <th className='px-3 py-2 font-medium'>Transcript</th>
                 <th className='px-3 py-2 font-medium'>Project / Op</th>
                 <th className='px-3 py-2 font-medium'>Status</th>
               </tr>
@@ -283,25 +287,25 @@ export function BulkProcessDialog() {
                     colSpan={4}
                     className='px-3 py-4 text-center text-zinc-500'
                   >
-                    No unprocessed sessions.
+                    No unprocessed transcripts.
                   </td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr
-                    key={row.sessionId}
+                    key={row.transcriptId}
                     className='border-b border-zinc-100 dark:border-zinc-800/50'
                   >
                     <td className='px-3 py-2'>
                       <Checkbox
                         checked={row.selected}
-                        onCheckedChange={() => toggleRow(row.sessionId)}
+                        onCheckedChange={() => toggleRow(row.transcriptId)}
                         disabled={phase === 'running'}
-                        aria-label={`Select ${row.sessionId}`}
+                        aria-label={`Select ${row.transcriptId}`}
                       />
                     </td>
                     <td className='px-3 py-2 font-mono text-xs text-zinc-900 dark:text-zinc-100'>
-                      {row.sessionId}
+                      {row.transcriptId}
                     </td>
                     <td className='px-3 py-2 text-zinc-600 dark:text-zinc-400'>
                       {row.projectSlug} #{row.operationNumber}
@@ -372,10 +376,10 @@ function reasonLabel(reason: 'not_found' | 'no_transcript' | 'http'): string {
   return 'request failed'
 }
 
-async function reprocessOne(sessionId: string): Promise<RowStatus> {
+async function reprocessOne(transcriptId: string): Promise<RowStatus> {
   try {
     const response = await fetch(
-      `/api/admin/agent-sessions/${sessionId}/reprocess`,
+      `/api/admin/agent-transcripts/${transcriptId}/reprocess`,
       { method: 'POST' },
     )
     if (!response.ok && response.status !== 404) {

@@ -7,11 +7,7 @@ type ReprocessResult =
   | { ok: true; hasStats: boolean; errorCount: number }
   | { ok: false; reason: 'not_found' | 'no_transcript' }
 
-export function ReprocessRowButton({
-  agentSessionSessionId,
-}: {
-  agentSessionSessionId: string
-}) {
+export function ReprocessRowButton({ transcriptId }: { transcriptId: string }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
@@ -20,7 +16,7 @@ export function ReprocessRowButton({
     setMessage(null)
     startTransition(async () => {
       const response = await fetch(
-        `/api/admin/agent-sessions/${agentSessionSessionId}/reprocess`,
+        `/api/admin/agent-transcripts/${transcriptId}/reprocess`,
         { method: 'POST' },
       )
       if (!response.ok && response.status !== 404) {

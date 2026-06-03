@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { z } from 'zod'
-import { listAgentSessionsForAdmin } from '@/server/admin/agent-session-stats'
+import { listAgentTranscriptsForAdmin } from '@/server/admin/agent-transcript-stats'
 import { requireAppAdmin } from '@/server/auth/permissions'
 import { BulkProcessDialog } from './_components/bulk-process-dialog'
 import { ReprocessRowButton } from './_components/reprocess-row-button'
@@ -9,7 +9,7 @@ const searchParamsSchema = z.object({
   filter: z.enum(['unprocessed', 'processed']).catch('unprocessed'),
 })
 
-export default async function AgentSessionsAdminPage({
+export default async function AgentTranscriptsAdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ filter?: string }>
@@ -20,13 +20,13 @@ export default async function AgentSessionsAdminPage({
     filter: raw.filter ?? 'unprocessed',
   })
 
-  const rows = await listAgentSessionsForAdmin(filter)
+  const rows = await listAgentTranscriptsForAdmin(filter)
 
   return (
     <div className='p-6'>
       <div className='flex items-center justify-between'>
         <h1 className='text-xl font-semibold text-zinc-900 dark:text-zinc-50'>
-          Agent Sessions
+          Agent Transcripts
         </h1>
         <BulkProcessDialog />
       </div>
@@ -41,7 +41,7 @@ export default async function AgentSessionsAdminPage({
         <table className='w-full text-sm'>
           <thead>
             <tr className='border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400'>
-              <th className='pb-2 pr-4 font-medium'>Session ID</th>
+              <th className='pb-2 pr-4 font-medium'>Transcript ID</th>
               <th className='pb-2 pr-4 font-medium'>Project / Op</th>
               <th className='pb-2 pr-4 font-medium'>Format</th>
               <th className='pb-2 pr-4 font-medium'>Stats</th>
@@ -66,7 +66,7 @@ export default async function AgentSessionsAdminPage({
                   className='border-b border-zinc-100 dark:border-zinc-800/50'
                 >
                   <td className='py-2 pr-4 font-mono text-xs text-zinc-900 dark:text-zinc-100'>
-                    {row.sessionId}
+                    {row.transcriptId}
                   </td>
                   <td className='py-2 pr-4 text-zinc-600 dark:text-zinc-400'>
                     {row.projectSlug} #{row.operationNumber}
@@ -83,14 +83,12 @@ export default async function AgentSessionsAdminPage({
                   <td className='py-2'>
                     <div className='flex items-center gap-3'>
                       <Link
-                        href={`/api/admin/agent-sessions/${row.sessionId}/pruned-transcript`}
+                        href={`/api/admin/agent-transcripts/${row.transcriptId}/pruned-transcript`}
                         className='text-zinc-600 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100'
                       >
                         Download pruned
                       </Link>
-                      <ReprocessRowButton
-                        agentSessionSessionId={row.sessionId}
-                      />
+                      <ReprocessRowButton transcriptId={row.transcriptId} />
                     </div>
                   </td>
                 </tr>
@@ -115,7 +113,7 @@ function FilterLink({
   const isActive = current === value
   return (
     <Link
-      href={`/admin/agent-sessions?filter=${value}`}
+      href={`/admin/agent-transcripts?filter=${value}`}
       className={
         isActive
           ? 'rounded bg-zinc-200 px-2 py-1 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-50'

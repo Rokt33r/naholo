@@ -18,8 +18,8 @@ import { publicConfig } from '@/lib/publicConfig'
 const items = [
   { href: '/admin/users', label: 'Users', billingOnly: false },
   {
-    href: '/admin/agent-sessions',
-    label: 'Agent Sessions',
+    href: '/admin/agent-transcripts',
+    label: 'Agent Transcripts',
     billingOnly: false,
   },
   {
