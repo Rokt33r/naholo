@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
-import { readSessions } from '../../lib/agent-sessions.js'
+import { readTranscripts } from '../../lib/agent-transcripts.js'
 import { getLocalOperationDir, readOpYml } from '../../lib/local-operations.js'
 import { pushOp } from '../../lib/push-op.js'
 
@@ -28,17 +28,22 @@ export const exfilCommand = new Command('exfil')
 
       await pushOp()
 
-      const sessions = readSessions()
-      for (const entry of sessions) {
+      const transcripts = readTranscripts()
+      for (const entry of transcripts) {
         const buffer = fs.readFileSync(entry.transcript_path)
         const transcript = buffer.toString('utf-8')
-        await client.recordAgentSession(projectSlug, opNum, entry.session_id, {
-          title: entry.title,
-          startedAt: entry.started_at,
-          endedAt: entry.last_message_at,
-          transcript,
-          transcriptSizeBytes: buffer.byteLength,
-        })
+        await client.recordAgentTranscript(
+          projectSlug,
+          opNum,
+          entry.transcript_id,
+          {
+            title: entry.title,
+            startedAt: entry.started_at,
+            endedAt: entry.last_message_at,
+            transcript,
+            transcriptSizeBytes: buffer.byteLength,
+          },
+        )
       }
 
       const logContent = close

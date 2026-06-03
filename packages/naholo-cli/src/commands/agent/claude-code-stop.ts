@@ -1,9 +1,9 @@
 import { Command } from 'commander'
 import { withErrorHandling } from '../../errors.js'
 import {
-  resolveLocalAgentSessionEntry,
-  upsertLocalAgentSessionEntry,
-} from '../../lib/agent-sessions.js'
+  resolveLocalAgentTranscriptEntry,
+  upsertLocalAgentTranscriptEntry,
+} from '../../lib/agent-transcripts.js'
 import { readOpYml } from '../../lib/local-operations.js'
 
 interface HookPayload {
@@ -42,11 +42,11 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
         return
       }
 
-      const entry = await resolveLocalAgentSessionEntry({
-        session_id: hook.session_id,
+      const entry = await resolveLocalAgentTranscriptEntry({
+        transcript_id: hook.session_id,
         transcript_path: hook.transcript_path,
       })
 
-      upsertLocalAgentSessionEntry(entry)
+      upsertLocalAgentTranscriptEntry(entry)
     }),
   )

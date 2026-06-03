@@ -5,16 +5,16 @@ import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 import { z } from 'zod'
 import { getLocalOperationDir } from './local-operations.js'
 
-export type LocalAgentSessionEntry = z.infer<
-  typeof localAgentSessionEntrySchema
+export type LocalAgentTranscriptEntry = z.infer<
+  typeof localAgentTranscriptEntrySchema
 >
 
-export function getSessionsYmlPath(): string {
-  return path.join(getLocalOperationDir(), 'agent-sessions.yml')
+export function getTranscriptsYmlPath(): string {
+  return path.join(getLocalOperationDir(), 'agent-transcripts.yml')
 }
 
-export function readSessions(): LocalAgentSessionEntry[] {
-  const ymlPath = getSessionsYmlPath()
+export function readTranscripts(): LocalAgentTranscriptEntry[] {
+  const ymlPath = getTranscriptsYmlPath()
   if (!fs.existsSync(ymlPath)) {
     return []
   }
@@ -23,9 +23,9 @@ export function readSessions(): LocalAgentSessionEntry[] {
   if (!Array.isArray(parsed)) {
     return []
   }
-  const result: LocalAgentSessionEntry[] = []
+  const result: LocalAgentTranscriptEntry[] = []
   for (const entry of parsed) {
-    const validated = localAgentSessionEntrySchema.safeParse(entry)
+    const validated = localAgentTranscriptEntrySchema.safeParse(entry)
     if (validated.success) {
       result.push(validated.data)
     }
@@ -33,22 +33,22 @@ export function readSessions(): LocalAgentSessionEntry[] {
   return result
 }
 
-export function upsertLocalAgentSessionEntry(
-  entry: LocalAgentSessionEntry,
+export function upsertLocalAgentTranscriptEntry(
+  entry: LocalAgentTranscriptEntry,
 ): void {
-  const existing = readSessions()
-  const next = existing.filter((e) => e.session_id !== entry.session_id)
+  const existing = readTranscripts()
+  const next = existing.filter((e) => e.transcript_id !== entry.transcript_id)
   next.push(entry)
-  writeSessions(next)
+  writeTranscripts(next)
 }
 
 // Streams a Claude Code JSONL transcript for metadata only (timestamps, title)
-// and returns a session entry. Op binding is implicit via the infiled-dir location.
-export async function resolveLocalAgentSessionEntry(input: {
-  session_id: string
+// and returns a transcript entry. Op binding is implicit via the infiled-dir location.
+export async function resolveLocalAgentTranscriptEntry(input: {
+  transcript_id: string
   transcript_path: string
-}): Promise<LocalAgentSessionEntry> {
-  const { session_id, transcript_path } = input
+}): Promise<LocalAgentTranscriptEntry> {
+  const { transcript_id, transcript_path } = input
 
   let firstTimestamp: string | null = null
   let lastTimestamp: string | null = null
@@ -92,7 +92,7 @@ export async function resolveLocalAgentSessionEntry(input: {
   }
 
   return {
-    session_id,
+    transcript_id,
     transcript_path,
     title,
     started_at: firstTimestamp,
@@ -100,16 +100,16 @@ export async function resolveLocalAgentSessionEntry(input: {
   }
 }
 
-const localAgentSessionEntrySchema = z.object({
-  session_id: z.string(),
+const localAgentTranscriptEntrySchema = z.object({
+  transcript_id: z.string(),
   transcript_path: z.string(),
   title: z.string().nullable(),
   started_at: z.string(),
   last_message_at: z.string(),
 })
 
-function writeSessions(entries: LocalAgentSessionEntry[]): void {
-  const ymlPath = getSessionsYmlPath()
+function writeTranscripts(entries: LocalAgentTranscriptEntry[]): void {
+  const ymlPath = getTranscriptsYmlPath()
   fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
   fs.writeFileSync(ymlPath, yamlStringify(entries))
 }
