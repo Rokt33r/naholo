@@ -21,35 +21,29 @@ function main(): void {
   const result = parser.process(text)
 
   const observedEntryTypes = new Set<string>()
-  for (const entry of result.entries) {
-    if (entry != null) {
-      observedEntryTypes.add(entry.type)
-    }
-  }
-
   const envelopes: AgentSessionStatsError[] = []
   const unknownEntryTypes = new Set<string>()
   let jsonErrors = 0
   let validationFailures = 0
-  for (const error of result.errors) {
-    const envelope = readEnvelope(error)
-    if (envelope == null) {
-      jsonErrors += 1
-      continue
+  for (const entry of result.entries) {
+    if (entry.data != null) {
+      observedEntryTypes.add(entry.type)
     }
-    envelopes.push(envelope)
-    switch (envelope.kind) {
-      case 'parse_failure':
-        jsonErrors += 1
-        break
-      case 'unknown_entry_type':
-        if (envelope.path != null) {
-          unknownEntryTypes.add(envelope.path)
-        }
-        break
-      case 'validation_failed':
-        validationFailures += 1
-        break
+    for (const envelope of entry.errors) {
+      envelopes.push(envelope)
+      switch (envelope.kind) {
+        case 'parse_failure':
+          jsonErrors += 1
+          break
+        case 'unknown_entry_type':
+          if (envelope.path != null) {
+            unknownEntryTypes.add(envelope.path)
+          }
+          break
+        case 'validation_failed':
+          validationFailures += 1
+          break
+      }
     }
   }
 
@@ -77,14 +71,6 @@ function main(): void {
 }
 
 main()
-
-function readEnvelope(error: Error): AgentSessionStatsError | null {
-  const cause = error.cause
-  if (cause != null && typeof cause === 'object' && 'kind' in cause) {
-    return cause as AgentSessionStatsError
-  }
-  return null
-}
 
 function countNonEmptyLines(text: string): number {
   let count = 0

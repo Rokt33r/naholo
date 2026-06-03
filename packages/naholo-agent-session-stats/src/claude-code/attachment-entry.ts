@@ -1,11 +1,6 @@
 import { z } from 'zod'
-import type { ClaudeCodeTranscriptEntryBase, TranscriptMapper } from './types'
+import type { ClaudeCodeTranscriptEntry, TranscriptMapper } from './types'
 import { mapValidationError } from './utils'
-
-export interface ClaudeCodeAttachmentEntry
-  extends ClaudeCodeTranscriptEntryBase {
-  type: 'attachment'
-}
 
 const attachmentRowSchema = z
   .object({
@@ -25,16 +20,31 @@ const attachmentRowSchema = z
   })
   .strict()
 
-export const mapAttachmentEntry: TranscriptMapper = (raw, ctx) => {
-  const parsed = attachmentRowSchema.safeParse(raw)
+export type ClaudeCodeAttachmentData = z.infer<typeof attachmentRowSchema>
+
+export type ClaudeCodeAttachmentEntry = ClaudeCodeTranscriptEntry<
+  'attachment',
+  ClaudeCodeAttachmentData
+>
+
+export const mapAttachmentEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
+  const parsed = attachmentRowSchema.safeParse(rawJson)
   if (!parsed.success) {
-    throw mapValidationError(parsed.error, ctx.index)
+    const entry: ClaudeCodeAttachmentEntry = {
+      type: 'attachment',
+      data: null,
+      raw: rawLine,
+      errors: [mapValidationError(parsed.error, ctx.index)],
+      modelUsages: [],
+    }
+    return entry
   }
   const entry: ClaudeCodeAttachmentEntry = {
-    index: ctx.index,
     type: 'attachment',
-    timestamp: parsed.data.timestamp,
-    raw,
+    data: parsed.data,
+    raw: rawLine,
+    errors: [],
+    modelUsages: [],
   }
   return entry
 }

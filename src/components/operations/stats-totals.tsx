@@ -1,4 +1,4 @@
-import type { PerModelTokens } from 'naholo-agent-session-stats/claude-code'
+import type { ModelTokenUsage } from 'naholo-agent-session-stats/claude-code'
 import {
   calculateCost,
   calculateWeightedTokens,
@@ -288,7 +288,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function addModelUsageInto(
   modelMap: Map<string, Usage>,
   model: string,
-  usage: PerModelTokens['usage'],
+  usage: ModelTokenUsage['usage'],
 ): void {
   let bucket = modelMap.get(model)
   if (bucket == null) {

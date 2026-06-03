@@ -1,5 +1,11 @@
-import type { AgentSessionStatsError, ClaudeCodeTokenUsage } from './types'
-import type { ClaudeCodeAssistantEntry } from './assistant-entry'
+import type {
+  AgentSessionStatsError,
+  ClaudeCodeTokenUsage,
+  ClaudeCodeTranscriptEntry,
+  ModelTokenUsage,
+} from './types'
+import type { ClaudeCodeAssistantData } from './assistant-entry'
+import { extractToolUses } from './assistant-entry'
 import { getDefaultParser } from './default-parser'
 
 // ---- Format identifier ----
@@ -17,19 +23,14 @@ export const UNKNOWN_MODEL = 'unknown'
 //
 // Both `modelUsages` and `skillModelUsagesMap` store raw token buckets. Weighting is render-time.
 
-export type PerModelTokens = {
-  model: string
-  usage: ClaudeCodeTokenUsage
-}
-
 export type AgentSessionStatsV1 = {
   userCount: number
   assistantCount: number
   summaryCount: number
   toolUseCount: number
   toolUseByName: Record<string, number>
-  skillModelUsagesMap: Record<string, PerModelTokens[]>
-  modelUsages: PerModelTokens[]
+  skillModelUsagesMap: Record<string, ModelTokenUsage[]>
+  modelUsages: ModelTokenUsage[]
   activeDurationMs: number
 }
 
@@ -47,17 +48,25 @@ export function aggregateClaudeCodeV1(
   const result = parser.process(jsonl)
 
   const stats = newEmptyMutableStatsV1()
+  const errors: AgentSessionStatsError[] = []
   for (const entry of result.entries) {
-    if (entry == null) {
+    for (const envelope of entry.errors) {
+      errors.push(envelope)
+    }
+    feedDuration(stats, getEntryTimestamp(entry))
+    if (entry.data == null) {
       continue
     }
-    feedDuration(stats, entry.timestamp)
     switch (entry.type) {
       case 'user':
         stats.userCount += 1
         break
       case 'assistant':
-        accumulateAssistant(stats, entry as ClaudeCodeAssistantEntry)
+        accumulateAssistant(
+          stats,
+          entry.data as ClaudeCodeAssistantData,
+          entry.modelUsages,
+        )
         break
       case 'summary':
         stats.summaryCount += 1
@@ -66,7 +75,7 @@ export function aggregateClaudeCodeV1(
   }
   return {
     stats: finalizeV1(stats),
-    errors: result.errors.map(envelopeFromError),
+    errors,
   }
 }
 
@@ -85,55 +94,51 @@ type MutableAgentSessionStatsV1 = {
   previousTimestampMs: number | null
 }
 
-function envelopeFromError(error: Error): AgentSessionStatsError {
-  const cause = error.cause
-  if (cause != null && typeof cause === 'object' && 'kind' in cause) {
-    return cause as AgentSessionStatsError
-  }
-  return {
-    kind: 'parse_failure',
-    message: error.message,
-    entryIndex: null,
-    lineNumber: null,
-    path: null,
-  }
-}
-
 function accumulateAssistant(
   stats: MutableAgentSessionStatsV1,
-  entry: ClaudeCodeAssistantEntry,
+  data: ClaudeCodeAssistantData,
+  modelUsages: ModelTokenUsage[],
 ): void {
   stats.assistantCount += 1
-  for (const name of entry.toolUses) {
+  const toolUses = extractToolUses(data.message.content)
+  for (const name of toolUses) {
     stats.toolUseCount += 1
     stats.toolUseByName[name] = (stats.toolUseByName[name] ?? 0) + 1
   }
-  if (stats.seenMessageIds.has(entry.messageId)) {
+  const messageId = data.message.id
+  if (stats.seenMessageIds.has(messageId)) {
     return
   }
-  stats.seenMessageIds.add(entry.messageId)
+  stats.seenMessageIds.add(messageId)
 
-  const skillKey = entry.attributionSkill ?? NO_SKILL
-  const modelKey = entry.model.length > 0 ? entry.model : UNKNOWN_MODEL
+  const attributionSkill =
+    data.attributionSkill != null && data.attributionSkill.length > 0
+      ? data.attributionSkill
+      : null
+  const skillKey = attributionSkill ?? NO_SKILL
 
-  let skillModelMap = stats.bySkillModelMap.get(skillKey)
-  if (skillModelMap == null) {
-    skillModelMap = new Map<string, ClaudeCodeTokenUsage>()
-    stats.bySkillModelMap.set(skillKey, skillModelMap)
-  }
-  let skillModelBucket = skillModelMap.get(modelKey)
-  if (skillModelBucket == null) {
-    skillModelBucket = emptyUsage()
-    skillModelMap.set(modelKey, skillModelBucket)
-  }
-  addUsage(skillModelBucket, entry.usage)
+  for (const { model, usage } of modelUsages) {
+    const modelKey = model.length > 0 ? model : UNKNOWN_MODEL
 
-  let modelBucket = stats.perModelMap.get(modelKey)
-  if (modelBucket == null) {
-    modelBucket = emptyUsage()
-    stats.perModelMap.set(modelKey, modelBucket)
+    let skillModelMap = stats.bySkillModelMap.get(skillKey)
+    if (skillModelMap == null) {
+      skillModelMap = new Map<string, ClaudeCodeTokenUsage>()
+      stats.bySkillModelMap.set(skillKey, skillModelMap)
+    }
+    let skillModelBucket = skillModelMap.get(modelKey)
+    if (skillModelBucket == null) {
+      skillModelBucket = emptyUsage()
+      skillModelMap.set(modelKey, skillModelBucket)
+    }
+    addUsage(skillModelBucket, usage)
+
+    let modelBucket = stats.perModelMap.get(modelKey)
+    if (modelBucket == null) {
+      modelBucket = emptyUsage()
+      stats.perModelMap.set(modelKey, modelBucket)
+    }
+    addUsage(modelBucket, usage)
   }
-  addUsage(modelBucket, entry.usage)
 }
 
 function feedDuration(
@@ -156,6 +161,14 @@ function feedDuration(
   stats.previousTimestampMs = tsMs
 }
 
+function getEntryTimestamp(entry: ClaudeCodeTranscriptEntry): string | null {
+  if (entry.data == null) {
+    return null
+  }
+  const data = entry.data as { timestamp?: unknown }
+  return typeof data.timestamp === 'string' ? data.timestamp : null
+}
+
 function newEmptyMutableStatsV1(): MutableAgentSessionStatsV1 {
   return {
     userCount: 0,
@@ -172,13 +185,13 @@ function newEmptyMutableStatsV1(): MutableAgentSessionStatsV1 {
 }
 
 function finalizeV1(stats: MutableAgentSessionStatsV1): AgentSessionStatsV1 {
-  const modelUsages: PerModelTokens[] = []
+  const modelUsages: ModelTokenUsage[] = []
   for (const [model, usage] of stats.perModelMap) {
     modelUsages.push({ model, usage })
   }
-  const skillModelUsagesMap: Record<string, PerModelTokens[]> = {}
+  const skillModelUsagesMap: Record<string, ModelTokenUsage[]> = {}
   for (const [skill, modelMap] of stats.bySkillModelMap) {
-    const rows: PerModelTokens[] = []
+    const rows: ModelTokenUsage[] = []
     for (const [model, usage] of modelMap) {
       rows.push({ model, usage })
     }

@@ -1,11 +1,6 @@
 import { z } from 'zod'
-import type { ClaudeCodeTranscriptEntryBase, TranscriptMapper } from './types'
+import type { ClaudeCodeTranscriptEntry, TranscriptMapper } from './types'
 import { mapValidationError } from './utils'
-
-export interface ClaudeCodeQueueOperationEntry
-  extends ClaudeCodeTranscriptEntryBase {
-  type: 'queue-operation'
-}
 
 const queueOperationRowSchema = z
   .object({
@@ -16,16 +11,37 @@ const queueOperationRowSchema = z
   })
   .strict()
 
-export const mapQueueOperationEntry: TranscriptMapper = (raw, ctx) => {
-  const parsed = queueOperationRowSchema.safeParse(raw)
+export type ClaudeCodeQueueOperationData = z.infer<
+  typeof queueOperationRowSchema
+>
+
+export type ClaudeCodeQueueOperationEntry = ClaudeCodeTranscriptEntry<
+  'queue-operation',
+  ClaudeCodeQueueOperationData
+>
+
+export const mapQueueOperationEntry: TranscriptMapper = (
+  rawJson,
+  rawLine,
+  ctx,
+) => {
+  const parsed = queueOperationRowSchema.safeParse(rawJson)
   if (!parsed.success) {
-    throw mapValidationError(parsed.error, ctx.index)
+    const entry: ClaudeCodeQueueOperationEntry = {
+      type: 'queue-operation',
+      data: null,
+      raw: rawLine,
+      errors: [mapValidationError(parsed.error, ctx.index)],
+      modelUsages: [],
+    }
+    return entry
   }
   const entry: ClaudeCodeQueueOperationEntry = {
-    index: ctx.index,
     type: 'queue-operation',
-    timestamp: parsed.data.timestamp,
-    raw,
+    data: parsed.data,
+    raw: rawLine,
+    errors: [],
+    modelUsages: [],
   }
   return entry
 }

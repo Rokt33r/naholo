@@ -23,24 +23,33 @@ export type ClaudeCodeTokenUsage = {
   cacheReadInputTokens: number
 }
 
-// ---- Shared base entry ----
-
-export interface ClaudeCodeTranscriptEntryBase {
-  index: number
-  timestamp: string | null
-  raw: unknown
-  type: string
+export type ModelTokenUsage = {
+  model: string
+  usage: ClaudeCodeTokenUsage
 }
 
-// Open union — concrete variants live in the per-entry-type modules and add
-// their own `type` literal + payload fields on top of the base.
-export type ClaudeCodeTranscriptEntry = ClaudeCodeTranscriptEntryBase
+// ---- Entry shape ----
+//
+// Every parsed transcript entry has the same flat shape. `data` carries the
+// strict schema's typed output when validation passes, and is `null` when the
+// JSON failed to parse or the schema rejected the row. `raw` is the original
+// JSONL line so renderers always have something to display. `errors` collects
+// any parse / validation envelopes attached to this line. `modelUsages`
+// carries token buckets extracted from this entry (assistant kind only;
+// always `[]` on other kinds).
+
+export type ClaudeCodeTranscriptEntry<
+  K extends string = string,
+  D = unknown,
+> = {
+  type: K
+  data: D | null
+  raw: string
+  errors: AgentSessionStatsError[]
+  modelUsages: ModelTokenUsage[]
+}
 
 // ---- Mapper types ----
-//
-// Mappers transform a raw JSON-parsed row into a typed entry. On invalid
-// input they `throw` an `AgentSessionStatsError`-shaped envelope; the parser
-// catches that and stores it on `Error.cause` when adding to `errors[]`.
 
 export type TranscriptMapperContext = {
   index: number
@@ -48,7 +57,8 @@ export type TranscriptMapperContext = {
 }
 
 export type TranscriptMapper = (
-  raw: unknown,
+  rawJson: unknown,
+  rawLine: string,
   ctx: TranscriptMapperContext,
 ) => ClaudeCodeTranscriptEntry
 
@@ -62,6 +72,5 @@ export type ClaudeCodeTranscriptParserOptions = {
 }
 
 export type ClaudeCodeTranscriptParserResult = {
-  entries: (ClaudeCodeTranscriptEntry | null)[]
-  errors: Error[]
+  entries: ClaudeCodeTranscriptEntry[]
 }

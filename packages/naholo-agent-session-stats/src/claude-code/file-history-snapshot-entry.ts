@@ -1,11 +1,6 @@
 import { z } from 'zod'
-import type { ClaudeCodeTranscriptEntryBase, TranscriptMapper } from './types'
+import type { ClaudeCodeTranscriptEntry, TranscriptMapper } from './types'
 import { mapValidationError } from './utils'
-
-export interface ClaudeCodeFileHistorySnapshotEntry
-  extends ClaudeCodeTranscriptEntryBase {
-  type: 'file-history-snapshot'
-}
 
 const fileHistorySnapshotRowSchema = z
   .object({
@@ -16,16 +11,37 @@ const fileHistorySnapshotRowSchema = z
   })
   .strict()
 
-export const mapFileHistorySnapshotEntry: TranscriptMapper = (raw, ctx) => {
-  const parsed = fileHistorySnapshotRowSchema.safeParse(raw)
+export type ClaudeCodeFileHistorySnapshotData = z.infer<
+  typeof fileHistorySnapshotRowSchema
+>
+
+export type ClaudeCodeFileHistorySnapshotEntry = ClaudeCodeTranscriptEntry<
+  'file-history-snapshot',
+  ClaudeCodeFileHistorySnapshotData
+>
+
+export const mapFileHistorySnapshotEntry: TranscriptMapper = (
+  rawJson,
+  rawLine,
+  ctx,
+) => {
+  const parsed = fileHistorySnapshotRowSchema.safeParse(rawJson)
   if (!parsed.success) {
-    throw mapValidationError(parsed.error, ctx.index)
+    const entry: ClaudeCodeFileHistorySnapshotEntry = {
+      type: 'file-history-snapshot',
+      data: null,
+      raw: rawLine,
+      errors: [mapValidationError(parsed.error, ctx.index)],
+      modelUsages: [],
+    }
+    return entry
   }
   const entry: ClaudeCodeFileHistorySnapshotEntry = {
-    index: ctx.index,
     type: 'file-history-snapshot',
-    timestamp: null,
-    raw,
+    data: parsed.data,
+    raw: rawLine,
+    errors: [],
+    modelUsages: [],
   }
   return entry
 }

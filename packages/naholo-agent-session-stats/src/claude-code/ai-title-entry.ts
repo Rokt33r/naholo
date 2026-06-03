@@ -1,10 +1,6 @@
 import { z } from 'zod'
-import type { ClaudeCodeTranscriptEntryBase, TranscriptMapper } from './types'
+import type { ClaudeCodeTranscriptEntry, TranscriptMapper } from './types'
 import { mapValidationError } from './utils'
-
-export interface ClaudeCodeAiTitleEntry extends ClaudeCodeTranscriptEntryBase {
-  type: 'ai-title'
-}
 
 const aiTitleRowSchema = z
   .object({
@@ -14,16 +10,31 @@ const aiTitleRowSchema = z
   })
   .strict()
 
-export const mapAiTitleEntry: TranscriptMapper = (raw, ctx) => {
-  const parsed = aiTitleRowSchema.safeParse(raw)
+export type ClaudeCodeAiTitleData = z.infer<typeof aiTitleRowSchema>
+
+export type ClaudeCodeAiTitleEntry = ClaudeCodeTranscriptEntry<
+  'ai-title',
+  ClaudeCodeAiTitleData
+>
+
+export const mapAiTitleEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
+  const parsed = aiTitleRowSchema.safeParse(rawJson)
   if (!parsed.success) {
-    throw mapValidationError(parsed.error, ctx.index)
+    const entry: ClaudeCodeAiTitleEntry = {
+      type: 'ai-title',
+      data: null,
+      raw: rawLine,
+      errors: [mapValidationError(parsed.error, ctx.index)],
+      modelUsages: [],
+    }
+    return entry
   }
   const entry: ClaudeCodeAiTitleEntry = {
-    index: ctx.index,
     type: 'ai-title',
-    timestamp: null,
-    raw,
+    data: parsed.data,
+    raw: rawLine,
+    errors: [],
+    modelUsages: [],
   }
   return entry
 }

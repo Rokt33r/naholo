@@ -4,7 +4,7 @@ import { useState } from 'react'
 import {
   CLAUDE_CODE_V1,
   type AgentSessionStatsV1,
-  type PerModelTokens,
+  type ModelTokenUsage,
 } from 'naholo-agent-session-stats/claude-code'
 import {
   calculateCost,
@@ -44,7 +44,7 @@ export type SessionRowStats = {
   totalCost: number | null
   toolUseCount: number
   toolUseByName: Record<string, number>
-  skillModelUsagesMap: Record<string, PerModelTokens[]>
+  skillModelUsagesMap: Record<string, ModelTokenUsage[]>
 }
 
 type StatsViewProps = {
@@ -142,7 +142,7 @@ function buildSessionRow(agentSession: AgentSessionSummary): SessionRowStats {
   }
 }
 
-function perModelTokensToTotals(p: PerModelTokens): PerModelTotals {
+function perModelTokensToTotals(p: ModelTokenUsage): PerModelTotals {
   const usage = p.usage
   const weightedTokens = calculateWeightedTokens(usage, p.model)
   const cost = p.model === UNKNOWN_MODEL ? null : calculateCost(usage, p.model)

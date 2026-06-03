@@ -1,11 +1,6 @@
 import { z } from 'zod'
-import type { ClaudeCodeTranscriptEntryBase, TranscriptMapper } from './types'
+import type { ClaudeCodeTranscriptEntry, TranscriptMapper } from './types'
 import { mapValidationError } from './utils'
-
-export interface ClaudeCodeLastPromptEntry
-  extends ClaudeCodeTranscriptEntryBase {
-  type: 'last-prompt'
-}
 
 const lastPromptRowSchema = z
   .object({
@@ -16,16 +11,31 @@ const lastPromptRowSchema = z
   })
   .strict()
 
-export const mapLastPromptEntry: TranscriptMapper = (raw, ctx) => {
-  const parsed = lastPromptRowSchema.safeParse(raw)
+export type ClaudeCodeLastPromptData = z.infer<typeof lastPromptRowSchema>
+
+export type ClaudeCodeLastPromptEntry = ClaudeCodeTranscriptEntry<
+  'last-prompt',
+  ClaudeCodeLastPromptData
+>
+
+export const mapLastPromptEntry: TranscriptMapper = (rawJson, rawLine, ctx) => {
+  const parsed = lastPromptRowSchema.safeParse(rawJson)
   if (!parsed.success) {
-    throw mapValidationError(parsed.error, ctx.index)
+    const entry: ClaudeCodeLastPromptEntry = {
+      type: 'last-prompt',
+      data: null,
+      raw: rawLine,
+      errors: [mapValidationError(parsed.error, ctx.index)],
+      modelUsages: [],
+    }
+    return entry
   }
   const entry: ClaudeCodeLastPromptEntry = {
-    index: ctx.index,
     type: 'last-prompt',
-    timestamp: null,
-    raw,
+    data: parsed.data,
+    raw: rawLine,
+    errors: [],
+    modelUsages: [],
   }
   return entry
 }
