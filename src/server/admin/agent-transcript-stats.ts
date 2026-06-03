@@ -101,7 +101,7 @@ export async function reprocessAgentTranscript(
     return { ok: false, reason: 'no_transcript' }
   }
 
-  const key = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.transcriptId}`
+  const key = `agent-transcripts/${row.projectId}/${row.operationId}/${row.transcriptId}`
   const transcript = await getFileStorageAdapter().getObject(key)
   const { stats, errors } = aggregateClaudeCodeV1(transcript)
   await setAgentTranscriptStats({

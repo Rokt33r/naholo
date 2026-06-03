@@ -29,7 +29,7 @@ export async function GET(
     )
   }
 
-  const key = `agent-session-transcripts/${row.projectId}/${row.operationId}/${row.transcriptId}`
+  const key = `agent-transcripts/${row.projectId}/${row.operationId}/${row.transcriptId}`
   const transcript = await getFileStorageAdapter().getObject(key)
   const pruned = pruneTranscriptForDownload(transcript)
 

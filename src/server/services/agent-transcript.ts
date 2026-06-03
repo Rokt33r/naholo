@@ -125,7 +125,7 @@ export async function getAgentTranscriptText(params: {
     })
   }
 
-  const key = `agent-session-transcripts/${params.projectId}/${params.operationId}/${row.transcriptId}`
+  const key = `agent-transcripts/${params.projectId}/${params.operationId}/${row.transcriptId}`
   return await getFileStorageAdapter().getObject(key)
 }
 
