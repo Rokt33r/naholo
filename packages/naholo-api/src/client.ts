@@ -1,6 +1,6 @@
 import type {
-  AgentSessionPayload,
-  AgentSessionSummary,
+  AgentTranscriptPayload,
+  AgentTranscriptSummary,
   AuthUser,
   CreateTaskInput,
   Operation,
@@ -339,44 +339,44 @@ export class NaholoClient {
     )
   }
 
-  // ---- Agent Sessions ----
+  // ---- Agent Transcripts ----
 
-  recordAgentSession(
+  recordAgentTranscript(
     projectSlug: string,
     operationNumber: number | string,
-    agentSessionSessionId: string,
-    payload: AgentSessionPayload,
+    transcriptId: string,
+    payload: AgentTranscriptPayload,
   ): Promise<{ id: string }> {
     return this.request(
       'PUT',
       this.operationPath(
         projectSlug,
         operationNumber,
-        `/agent-sessions/${agentSessionSessionId}`,
+        `/agent-transcripts/${transcriptId}`,
       ),
       payload,
     )
   }
 
-  listAgentSessions(
+  listAgentTranscripts(
     projectSlug: string,
     operationNumber: number | string,
-  ): Promise<AgentSessionSummary[]> {
+  ): Promise<AgentTranscriptSummary[]> {
     return this.request(
       'GET',
-      this.operationPath(projectSlug, operationNumber, '/agent-sessions'),
+      this.operationPath(projectSlug, operationNumber, '/agent-transcripts'),
     )
   }
 
-  async getAgentSessionTranscript(
+  async getAgentTranscriptBody(
     projectSlug: string,
     operationNumber: number | string,
-    agentSessionId: string,
+    transcriptId: string,
   ): Promise<string> {
     const path = this.operationPath(
       projectSlug,
       operationNumber,
-      `/agent-sessions/${agentSessionId}/transcript`,
+      `/agent-transcripts/${transcriptId}/transcript`,
     )
     const url = `${this.baseUrl}${path}`
     const res = await fetch(url, {

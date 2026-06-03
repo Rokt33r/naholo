@@ -151,13 +151,13 @@ export type UserApiToken = {
   createdAt: string
 }
 
-// ---- Agent sessions ----
+// ---- Agent transcripts ----
 
 import type { AgentTranscriptStatsV1 } from 'naholo-agent-transcript-stats/claude-code'
 
-export type AgentSessionSummary = {
+export type AgentTranscriptSummary = {
   id: string
-  sessionId: string
+  transcriptId: string
   title: string | null
   startedAt: string // ISO 8601
   endedAt: string // ISO 8601
@@ -168,11 +168,11 @@ export type AgentSessionSummary = {
   statsErrored: boolean
 }
 
-export type AgentSessionPayload = {
+export type AgentTranscriptPayload = {
   title: string | null
   startedAt: string // ISO 8601
   endedAt: string // ISO 8601
-  // null = caller is recording the session but opting out of transcript upload;
+  // null = caller is recording the transcript but opting out of body upload;
   // server leaves has_transcript=false and skips the storage write.
   transcript: string | null
   transcriptSizeBytes: number
