@@ -18,8 +18,8 @@ import { operations } from './operations'
 import { projects } from './projects'
 import { projectOperators } from './project-operators'
 
-export const operationAgentSessions = pgTable(
-  'operation_agent_sessions',
+export const operationAgentTranscripts = pgTable(
+  'operation_agent_transcripts',
   {
     id: uuidV7IdColumn(),
     projectId: uuid('project_id')
@@ -32,7 +32,7 @@ export const operationAgentSessions = pgTable(
       () => projectOperators.id,
       { onDelete: 'set null' },
     ),
-    sessionId: text('session_id').notNull(),
+    transcriptId: text('transcript_id').notNull(),
     title: text('title'),
     startedAt: timestamp('started_at').notNull(),
     endedAt: timestamp('ended_at').notNull(),
@@ -45,26 +45,26 @@ export const operationAgentSessions = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    unique('operation_agent_sessions_operation_id_session_id').on(
+    unique('operation_agent_transcripts_operation_id_transcript_id').on(
       table.operationId,
-      table.sessionId,
+      table.transcriptId,
     ),
   ],
 )
 
-export const operationAgentSessionsRelations = relations(
-  operationAgentSessions,
+export const operationAgentTranscriptsRelations = relations(
+  operationAgentTranscripts,
   ({ one }) => ({
     project: one(projects, {
-      fields: [operationAgentSessions.projectId],
+      fields: [operationAgentTranscripts.projectId],
       references: [projects.id],
     }),
     operation: one(operations, {
-      fields: [operationAgentSessions.operationId],
+      fields: [operationAgentTranscripts.operationId],
       references: [operations.id],
     }),
     projectOperator: one(projectOperators, {
-      fields: [operationAgentSessions.projectOperatorId],
+      fields: [operationAgentTranscripts.projectOperatorId],
       references: [projectOperators.id],
     }),
   }),
