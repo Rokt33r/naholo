@@ -136,6 +136,12 @@ Argless. Prints `#{number} {title}` for the infiled op. Errors with `No infiled 
 
 Prints this manual to stdout. No arguments, no I/O. Skills run it once per session (mirroring the `naholo://soul` pattern) and adopt the rules.
 
+### Troubleshooting: "No infiled operation" mid-session
+
+The infiled directory is resolved against the shell's working directory — the CLI walks `process.cwd()` looking for `.naholo/local/infiled/`. If any `naholo agent *` command returns `No infiled operation` after it was working earlier in the session, the shell's cwd has likely drifted out of the directory where the op was infiled. Do not assume the op was exfiled or the directory deleted.
+
+Recovery: run `pwd`, then `cd` back to the directory where the op was infiled (the one containing `.naholo/local/infiled/`), and re-run the command.
+
 ## Chat output
 
 When printing an end-of-skill summary to the user (infil recap, warno summary, splash AAR digest, sitrep/exfil report), output raw markdown lines directly — **never wrap the summary block in a codeblock fence**. Fenced summaries break `[text](path)` link rendering in the Naholo UI. Files written to disk can still contain fenced code examples; this rule applies only to chat output.
