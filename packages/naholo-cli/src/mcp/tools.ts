@@ -155,6 +155,25 @@ export function registerTools(
   )
 
   server.registerTool(
+    'delete_note',
+    {
+      description: 'Delete a note from an operation',
+      inputSchema: {
+        operationNumber: z
+          .number()
+          .int()
+          .positive()
+          .describe('Operation number (e.g. 3)'),
+        noteName: z.string().describe('Note name'),
+      },
+    },
+    async ({ operationNumber, noteName }) => {
+      await client.deleteNote(projectSlug, operationNumber, noteName)
+      return { content: [{ type: 'text', text: 'Note deleted.' }] }
+    },
+  )
+
+  server.registerTool(
     'create_operation_log',
     {
       description: 'Create a log entry for an operation',
