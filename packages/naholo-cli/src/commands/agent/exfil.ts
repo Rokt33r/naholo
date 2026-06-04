@@ -44,6 +44,19 @@ export const exfilCommand = new Command('exfil')
             transcriptSizeBytes: buffer.byteLength,
           },
         )
+
+        for (const subagent of entry.subagents) {
+          const subBuffer = fs.readFileSync(subagent.transcript_path)
+          const subTranscript = subBuffer.toString('utf-8')
+          const syntheticId = `${entry.transcript_id}-subagent-${subagent.agentId}`
+          await client.recordAgentTranscript(projectSlug, opNum, syntheticId, {
+            title: null,
+            startedAt: subagent.started_at,
+            endedAt: subagent.last_message_at,
+            transcript: subTranscript,
+            transcriptSizeBytes: subBuffer.byteLength,
+          })
+        }
       }
 
       const logContent = close
