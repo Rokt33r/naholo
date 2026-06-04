@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import { withErrorHandling } from '../../errors.js'
 import {
   resolveLocalAgentTranscriptEntry,
+  resolveLocalSubagentTranscriptEntries,
   upsertLocalAgentTranscriptEntry,
 } from '../../lib/agent-transcripts.js'
 import { readOpYml } from '../../lib/local-operations.js'
@@ -46,6 +47,9 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
         transcript_id: hook.session_id,
         transcript_path: hook.transcript_path,
       })
+      entry.subagents = await resolveLocalSubagentTranscriptEntries(
+        hook.transcript_path,
+      )
 
       upsertLocalAgentTranscriptEntry(entry)
     }),
