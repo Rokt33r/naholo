@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { addTimelineCommand } from './add-timeline.js'
+import { chopchopCommand } from './chopchop.js'
 import { exfilCommand } from './exfil.js'
 import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
@@ -24,3 +25,4 @@ agentCommand.addCommand(opCommand)
 agentCommand.addCommand(opPathCommand)
 agentCommand.addCommand(opUrlCommand)
 agentCommand.addCommand(claudeCodeStopCommand)
+agentCommand.addCommand(chopchopCommand)
