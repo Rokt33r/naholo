@@ -18,7 +18,7 @@ Operational vocabulary used by the skills (written in full in docs; may be abbre
 - **ORP** — Operation Rally Point. The unit of work for a single task: scoped, reviewable, ships in one `/splash`.
 - **AAR** — After-Action Report. The on-disk record of what actually happened during a `/splash`. Lives inside each task's section.
 - **CONOPS** — Concept of Operations. The two-or-three-sentence overview that opens MISSION: names the chosen approach and ties it back to `SITUATION.Pain`. Concept-level only — file lists and edit steps belong in Warning Orders, not here.
-- **WARNORD** — Warning Order. One bulleted decision inside MISSION's `### Warning Orders` subsection — one sentence per decision.
+- **WARNORD**, **WARNO** — Warning Order. One bulleted decision inside MISSION's `### Warning Orders` subsection — one sentence per decision.
 - **OPORD** — Operation Order. The detail-cutting brief: the MISSION broken into ordered, ship-sized tasks, each with a Course of Action. `/opord` writes the OPORD into `## EXECUTION` (one `### TASK N — Title` per ORP) and mirrors the task list to `TASKS.md`. Re-runs handle all plan revisions — insert, drop, split, merge, retitle, rewrite unfinished tasks — with new tasks appended at the next free integer.
 - **COA** — Course of Action. The per-task action list inside EXECUTION. Each item names an explicit step (Add / Edit / Move / Delete / Run / Manual) so non-file work (migrations, rebuilds) is first-class. `Manual:` items are user-owned — `/splash` pauses for the user instead of executing them. Sub-bullets list only top-level exported symbols.
 
