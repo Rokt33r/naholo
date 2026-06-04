@@ -1,3 +1,5 @@
+import { extractHeadingBody } from './markdown-utils.js'
+
 export type ChopOpSide = {
   title: string
   situation: string
@@ -24,7 +26,7 @@ export function parseChopMd(md: string): ParsedChopMd {
   }
   const [intentBlock, currentBlock, newBlock] = blocks
 
-  const intent = extractLevel2Body(intentBlock, 'Intent')
+  const intent = extractHeadingBody(intentBlock, '## Intent')
 
   const currentHeading = currentBlock.match(
     /^# CURRENT OP #(\d+):\s*(.+?)\s*$/m,
@@ -124,16 +126,16 @@ export function composeNewOpOperationMd(input: {
 }
 
 function parseOpSideBody(block: string): Omit<ChopOpSide, 'title'> {
-  const situation = extractLevel2Body(block, 'SITUATION')
-  const missionBody = extractLevel2Body(block, 'MISSION')
-  const executionBody = extractLevel2Body(block, 'EXECUTION')
+  const situation = extractHeadingBody(block, '## SITUATION')
+  const missionBody = extractHeadingBody(block, '## MISSION')
+  const executionBody = extractHeadingBody(block, '## EXECUTION')
 
   return {
     situation,
     mission: {
-      coo: extractLevel3Body(missionBody, 'Concept of Operations'),
-      woBlock: extractLevel3Body(missionBody, 'Warning Orders'),
-      trpBlock: extractLevel3Body(missionBody, 'Target Reference Points'),
+      coo: extractHeadingBody(missionBody, '### Concept of Operations'),
+      woBlock: extractHeadingBody(missionBody, '### Warning Orders'),
+      trpBlock: extractHeadingBody(missionBody, '### Target Reference Points'),
     },
     taskLines: parseTaskCheckboxes(executionBody),
   }
@@ -144,40 +146,6 @@ function splitByHorizontalRule(md: string): string[] {
     .split(/^---\s*$/m)
     .map((b) => b.trim())
     .filter((b) => b.length > 0)
-}
-
-function extractLevel2Body(source: string, heading: string): string {
-  return extractHeadingBody(source, '##', heading)
-}
-
-function extractLevel3Body(source: string, heading: string): string {
-  return extractHeadingBody(source, '###', heading)
-}
-
-function extractHeadingBody(
-  source: string,
-  prefix: '##' | '###',
-  heading: string,
-): string {
-  const lines = source.split('\n')
-  const target = `${prefix} ${heading}`
-  const startIndex = lines.findIndex((line) => line.trim() === target)
-  if (startIndex < 0) {
-    return ''
-  }
-  let endIndex = lines.length
-  const stopPrefix = prefix === '##' ? '## ' : '### '
-  for (let i = startIndex + 1; i < lines.length; i += 1) {
-    if (lines[i].startsWith(stopPrefix)) {
-      endIndex = i
-      break
-    }
-  }
-  return lines
-    .slice(startIndex + 1, endIndex)
-    .join('\n')
-    .replace(/^\n+/, '')
-    .replace(/\n+$/, '')
 }
 
 function parseTaskCheckboxes(

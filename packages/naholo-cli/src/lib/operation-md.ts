@@ -1,3 +1,5 @@
+import { extractHeadingBody } from './markdown-utils.js'
+
 export type ParsedOperationMd = {
   number: number
   title: string
@@ -18,13 +20,16 @@ export function parseOperationMd(md: string): ParsedOperationMd {
   const number = Number(headingMatch[1])
   const title = headingMatch[2]
 
-  const situation = extractLevel2Body(md, 'SITUATION')
-  const missionBody = extractLevel2Body(md, 'MISSION')
-  const executionBody = extractLevel2Body(md, 'EXECUTION')
+  const situation = extractHeadingBody(md, '## SITUATION')
+  const missionBody = extractHeadingBody(md, '## MISSION')
+  const executionBody = extractHeadingBody(md, '## EXECUTION')
 
-  const coo = extractLevel3Body(missionBody, 'Concept of Operations')
-  const woBlock = extractLevel3Body(missionBody, 'Warning Orders')
-  const trpBlock = extractLevel3Body(missionBody, 'Target Reference Points')
+  const coo = extractHeadingBody(missionBody, '### Concept of Operations')
+  const woBlock = extractHeadingBody(missionBody, '### Warning Orders')
+  const trpBlock = extractHeadingBody(
+    missionBody,
+    '### Target Reference Points',
+  )
 
   const executionByTitle = parseExecutionSections(executionBody)
 
@@ -128,40 +133,6 @@ function parseWoBullets(woBlock: string): WoBullet[] {
 
 function joinWoBullets(bullets: WoBullet[]): string {
   return bullets.map((b) => b.body.join('\n')).join('\n')
-}
-
-function extractLevel2Body(md: string, heading: string): string {
-  return extractHeadingBody(md, '##', heading)
-}
-
-function extractLevel3Body(parentBody: string, heading: string): string {
-  return extractHeadingBody(parentBody, '###', heading)
-}
-
-function extractHeadingBody(
-  source: string,
-  prefix: '##' | '###',
-  heading: string,
-): string {
-  const lines = source.split('\n')
-  const target = `${prefix} ${heading}`
-  const startIndex = lines.findIndex((line) => line.trim() === target)
-  if (startIndex < 0) {
-    return ''
-  }
-  let endIndex = lines.length
-  const stopPrefix = prefix === '##' ? '## ' : '### '
-  for (let i = startIndex + 1; i < lines.length; i += 1) {
-    if (lines[i].startsWith(stopPrefix)) {
-      endIndex = i
-      break
-    }
-  }
-  return lines
-    .slice(startIndex + 1, endIndex)
-    .join('\n')
-    .replace(/^\n+/, '')
-    .replace(/\n+$/, '')
 }
 
 function parseExecutionSections(executionBody: string): Map<string, string> {
