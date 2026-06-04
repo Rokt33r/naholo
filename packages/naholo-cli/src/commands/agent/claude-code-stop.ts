@@ -1,8 +1,11 @@
+import fs from 'node:fs'
 import { Command } from 'commander'
 import { withErrorHandling } from '../../errors.js'
 import {
-  resolveLocalAgentTranscriptEntry,
-  resolveLocalSubagentTranscriptEntries,
+  type LocalSubagentTranscriptEntry,
+  listSubagentTranscriptFiles,
+  readLocalAgentTranscriptsYml,
+  resolveTranscriptMeta,
   upsertLocalAgentTranscriptEntry,
 } from '../../lib/agent-transcripts.js'
 import { readOpYml } from '../../lib/local-operations.js'
@@ -43,14 +46,70 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
         return
       }
 
-      const entry = await resolveLocalAgentTranscriptEntry({
-        transcript_id: hook.session_id,
-        transcript_path: hook.transcript_path,
-      })
-      entry.subagents = await resolveLocalSubagentTranscriptEntries(
-        hook.transcript_path,
+      const transcriptId = hook.session_id
+      const transcriptPath = hook.transcript_path
+      const previous = readLocalAgentTranscriptsYml().find(
+        (e) => e.transcript_id === transcriptId,
       )
 
-      upsertLocalAgentTranscriptEntry(entry)
+      const { firstTimestamp, lastTimestamp, title } =
+        await resolveTranscriptMeta(transcriptPath, { aiTitle: true })
+      if (firstTimestamp == null || lastTimestamp == null) {
+        throw new Error(
+          `Transcript ${transcriptPath} has no timestamped JSONL entries`,
+        )
+      }
+
+      const agentIdPreviousSubagentTranscriptMap = new Map<
+        string,
+        LocalSubagentTranscriptEntry
+      >(
+        previous?.subagents.map((subagentTranscript) => [
+          subagentTranscript.agentId,
+          subagentTranscript,
+        ]) ?? [],
+      )
+      const subagents: LocalSubagentTranscriptEntry[] = []
+      for (const {
+        agentId,
+        transcript_path: subagentTranscriptPath,
+      } of listSubagentTranscriptFiles(transcriptPath)) {
+        const subagentTranscriptSize = fs.statSync(subagentTranscriptPath).size
+        const prevSubagentTranscriptMeta =
+          agentIdPreviousSubagentTranscriptMap.get(agentId)
+        if (
+          prevSubagentTranscriptMeta != null &&
+          prevSubagentTranscriptMeta.size_bytes === subagentTranscriptSize
+        ) {
+          subagents.push({
+            ...prevSubagentTranscriptMeta,
+            transcript_path: subagentTranscriptPath,
+            size_bytes: subagentTranscriptSize,
+          })
+          continue
+        }
+        const { firstTimestamp, lastTimestamp } = await resolveTranscriptMeta(
+          subagentTranscriptPath,
+        )
+        if (firstTimestamp == null || lastTimestamp == null) {
+          continue
+        }
+        subagents.push({
+          agentId,
+          transcript_path: subagentTranscriptPath,
+          started_at: firstTimestamp,
+          last_message_at: lastTimestamp,
+          size_bytes: subagentTranscriptSize,
+        })
+      }
+
+      upsertLocalAgentTranscriptEntry({
+        transcript_id: transcriptId,
+        transcript_path: transcriptPath,
+        title,
+        started_at: firstTimestamp,
+        last_message_at: lastTimestamp,
+        subagents,
+      })
     }),
   )

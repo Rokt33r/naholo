@@ -17,7 +17,7 @@ export function getTranscriptsYmlPath(): string {
   return path.join(getLocalOperationDir(), 'agent-transcripts.yml')
 }
 
-export function readTranscripts(): LocalAgentTranscriptEntry[] {
+export function readLocalAgentTranscriptsYml(): LocalAgentTranscriptEntry[] {
   const ymlPath = getTranscriptsYmlPath()
   if (!fs.existsSync(ymlPath)) {
     return []
@@ -40,46 +40,17 @@ export function readTranscripts(): LocalAgentTranscriptEntry[] {
 export function upsertLocalAgentTranscriptEntry(
   entry: LocalAgentTranscriptEntry,
 ): void {
-  const existing = readTranscripts()
+  const existing = readLocalAgentTranscriptsYml()
   const next = existing.filter((e) => e.transcript_id !== entry.transcript_id)
   next.push(entry)
-  writeTranscripts(next)
+  writeAgentTranscriptsYml(next)
 }
 
-// Streams a Claude Code JSONL transcript for metadata only (timestamps, title)
-// and returns a transcript entry. Op binding is implicit via the infiled-dir location.
-export async function resolveLocalAgentTranscriptEntry(input: {
-  transcript_id: string
-  transcript_path: string
-}): Promise<LocalAgentTranscriptEntry> {
-  const { transcript_id, transcript_path } = input
-
-  const { firstTimestamp, lastTimestamp, title } = await resolveTranscriptMeta(
-    transcript_path,
-    { aiTitle: true },
-  )
-
-  if (firstTimestamp == null || lastTimestamp == null) {
-    throw new Error(
-      `Transcript ${transcript_path} has no timestamped JSONL entries`,
-    )
-  }
-
-  return {
-    transcript_id,
-    transcript_path,
-    title,
-    started_at: firstTimestamp,
-    last_message_at: lastTimestamp,
-    subagents: [],
-  }
-}
-
-// Scans `{dirname(parentTranscriptPath)}/subagents/agent-*.jsonl` and returns one
-// entry per subagent transcript file. Returns [] when the subagents dir is absent.
-export async function resolveLocalSubagentTranscriptEntries(
+// Lists `{dirname(parentTranscriptPath)}/subagents/agent-*.jsonl`. Returns the
+// agentId + absolute path for each file; returns [] when the subagents dir is absent.
+export function listSubagentTranscriptFiles(
   parentTranscriptPath: string,
-): Promise<LocalSubagentTranscriptEntry[]> {
+): { agentId: string; transcript_path: string }[] {
   const subagentsDir = path.join(
     path.dirname(parentTranscriptPath),
     'subagents',
@@ -87,52 +58,23 @@ export async function resolveLocalSubagentTranscriptEntries(
   if (!fs.existsSync(subagentsDir)) {
     return []
   }
-  const entries: LocalSubagentTranscriptEntry[] = []
+  const files: { agentId: string; transcript_path: string }[] = []
   for (const filename of fs.readdirSync(subagentsDir)) {
     const match = filename.match(/^agent-(.+)\.jsonl$/)
     if (match == null) {
       continue
     }
-    const agentId = match[1]
-    const transcript_path = path.join(subagentsDir, filename)
-    const { firstTimestamp, lastTimestamp } =
-      await resolveTranscriptMeta(transcript_path)
-    if (firstTimestamp == null || lastTimestamp == null) {
-      continue
-    }
-    entries.push({
-      agentId,
-      transcript_path,
-      started_at: firstTimestamp,
-      last_message_at: lastTimestamp,
+    files.push({
+      agentId: match[1],
+      transcript_path: path.join(subagentsDir, filename),
     })
   }
-  return entries
+  return files
 }
 
-const localSubagentTranscriptEntrySchema = z.object({
-  agentId: z.string(),
-  transcript_path: z.string(),
-  started_at: z.string(),
-  last_message_at: z.string(),
-})
-
-const localAgentTranscriptEntrySchema = z.object({
-  transcript_id: z.string(),
-  transcript_path: z.string(),
-  title: z.string().nullable(),
-  started_at: z.string(),
-  last_message_at: z.string(),
-  subagents: z.array(localSubagentTranscriptEntrySchema).default([]),
-})
-
-function writeTranscripts(entries: LocalAgentTranscriptEntry[]): void {
-  const ymlPath = getTranscriptsYmlPath()
-  fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
-  fs.writeFileSync(ymlPath, yamlStringify(entries))
-}
-
-async function resolveTranscriptMeta(
+// Streams a Claude Code JSONL transcript and returns first/last timestamps. When
+// `opts.aiTitle` is true, also extracts the most recent `ai-title` entry's value.
+export async function resolveTranscriptMeta(
   transcriptPath: string,
   opts: { aiTitle?: boolean } = {},
 ): Promise<{
@@ -181,4 +123,27 @@ async function resolveTranscriptMeta(
   }
 
   return { firstTimestamp, lastTimestamp, title }
+}
+
+const localSubagentTranscriptEntrySchema = z.object({
+  agentId: z.string(),
+  transcript_path: z.string(),
+  started_at: z.string(),
+  last_message_at: z.string(),
+  size_bytes: z.number(),
+})
+
+const localAgentTranscriptEntrySchema = z.object({
+  transcript_id: z.string(),
+  transcript_path: z.string(),
+  title: z.string().nullable(),
+  started_at: z.string(),
+  last_message_at: z.string(),
+  subagents: z.array(localSubagentTranscriptEntrySchema).default([]),
+})
+
+function writeAgentTranscriptsYml(entries: LocalAgentTranscriptEntry[]): void {
+  const ymlPath = getTranscriptsYmlPath()
+  fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
+  fs.writeFileSync(ymlPath, yamlStringify(entries))
 }

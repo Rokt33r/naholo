@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
-import { readTranscripts } from '../../lib/agent-transcripts.js'
+import { readLocalAgentTranscriptsYml } from '../../lib/agent-transcripts.js'
 import { getLocalOperationDir, readOpYml } from '../../lib/local-operations.js'
 import { pushOp } from '../../lib/push-op.js'
 
@@ -28,7 +28,7 @@ export const exfilCommand = new Command('exfil')
 
       await pushOp()
 
-      const transcripts = readTranscripts()
+      const transcripts = readLocalAgentTranscriptsYml()
       for (const entry of transcripts) {
         const buffer = fs.readFileSync(entry.transcript_path)
         const transcript = buffer.toString('utf-8')
