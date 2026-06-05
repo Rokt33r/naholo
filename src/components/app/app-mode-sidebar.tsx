@@ -39,7 +39,7 @@ export function AppModeSidebar({
           router.push(`/app/projects/${currentProjectSlug}/operations`)
         }
       >
-        <LandPlot className='size-5' />
+        <LandPlot className='size-4' />
       </ToolSidebarButton>
       <ToolSidebarButton
         isActive={currentMode === 'operators'}
@@ -48,7 +48,7 @@ export function AppModeSidebar({
           router.push(`/app/projects/${currentProjectSlug}/operators`)
         }
       >
-        <Contact className='size-5' />
+        <Contact className='size-4' />
       </ToolSidebarButton>
       <ToolSidebarSpacing />
 
@@ -56,7 +56,7 @@ export function AppModeSidebar({
         tooltip='Settings'
         onClick={() => setSettingsOpen(true)}
       >
-        <Settings className='size-5' />
+        <Settings className='size-4' />
       </ToolSidebarButton>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

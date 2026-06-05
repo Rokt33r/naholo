@@ -19,7 +19,7 @@ export default function OperatorsIndexPage() {
       <div className='flex items-center gap-2 px-2 pt-2 h-10'>
         {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
         <h2 className='flex flex-1 items-center gap-2 px-2 font-semibold'>
-          <Contact className='size-5' />
+          <Contact className='size-4' />
           Operators
         </h2>
       </div>

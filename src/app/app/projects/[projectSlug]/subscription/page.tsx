@@ -21,7 +21,7 @@ export default function SubscriptionIndexPage() {
       <div className='flex items-center gap-2 px-2 pt-2 h-10'>
         {isMobile && <AppModeMenu currentProjectSlug={projectSlug} />}
         <h2 className='flex flex-1 items-center gap-2 px-2 font-semibold'>
-          <CreditCard className='size-5' />
+          <CreditCard className='size-4' />
           Subscription
         </h2>
       </div>

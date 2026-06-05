@@ -150,7 +150,7 @@ export function OperationLogsList({
                 disabled={isReopening}
                 title='Reopen operation'
               >
-                <CircleDot className='size-5 text-green-600' />
+                <CircleDot className='size-4 text-green-600' />
               </Button>
             ) : (
               <Button
@@ -158,7 +158,7 @@ export function OperationLogsList({
                 onClick={handleClose}
                 disabled={isClosing}
               >
-                <CircleCheck className='size-5 text-purple-600' />
+                <CircleCheck className='size-4 text-purple-600' />
                 {message.trim() ? 'Close with log' : 'Close'}
               </Button>
             )}
@@ -168,7 +168,7 @@ export function OperationLogsList({
               disabled={!message.trim() || createLoading}
               title='Send (Enter)'
             >
-              <CornerDownLeft className='size-5' />
+              <CornerDownLeft className='size-4' />
             </Button>
           </div>
         </div>

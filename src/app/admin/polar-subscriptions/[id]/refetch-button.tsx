@@ -48,7 +48,7 @@ export function RefetchButton({
       onClick={handleClick}
       disabled={isPending}
     >
-      <RefreshCw className={`size-5 ${isPending ? 'animate-spin' : ''}`} />
+      <RefreshCw className={`size-4 ${isPending ? 'animate-spin' : ''}`} />
       Refetch from Polar
     </Button>
   )

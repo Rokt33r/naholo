@@ -98,7 +98,7 @@ export function OperationTabs({
         size='sm'
         onClick={() => onTabChange({ type: 'comms' })}
       >
-        <SatelliteDish className='mr-1 size-5' />
+        <SatelliteDish className='mr-1 size-4' />
         {!isWideScreen ? `Comms (${logsCount})` : 'Comms'}
       </Button>
       {hasAgentTranscripts && (
@@ -107,7 +107,7 @@ export function OperationTabs({
           size='sm'
           onClick={() => onTabChange({ type: 'stats' })}
         >
-          <BarChart3 className='mr-1 size-5' />
+          <BarChart3 className='mr-1 size-4' />
           Stats
         </Button>
       )}
@@ -140,10 +140,10 @@ export function OperationTabs({
                   !isActive && hasUnsavedChanges ? 'ring-2 ring-blue-500' : ''
                 }`}
               >
-                <FileText className='mr-1 size-5 shrink-0' />
+                <FileText className='mr-1 size-4 shrink-0' />
                 <span className='truncate'>{note.name}</span>
                 {isActive && savingState === 'saving' && (
-                  <Loader2 className='ml-1 size-5 shrink-0 animate-spin text-blue-500' />
+                  <Loader2 className='ml-1 size-4 shrink-0 animate-spin text-blue-500' />
                 )}
               </Button>
             </ContextMenuTrigger>
@@ -156,7 +156,7 @@ export function OperationTabs({
         onClick={handleAddNote}
         disabled={isCreating}
       >
-        <Plus className='mr-1 size-5' />
+        <Plus className='mr-1 size-4' />
         {isCreating ? 'Adding...' : 'Add Note'}
       </Button>
 

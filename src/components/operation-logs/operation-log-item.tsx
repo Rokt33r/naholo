@@ -168,7 +168,7 @@ export function OperationLogItem({
               className='size-7 opacity-0 group-hover:opacity-100'
               disabled={isLoading}
             >
-              <MoreVertical className='size-5' />
+              <MoreVertical className='size-4' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>

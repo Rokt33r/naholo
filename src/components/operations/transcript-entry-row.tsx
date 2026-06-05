@@ -36,9 +36,9 @@ export function TranscriptEntryRow({ entry }: TranscriptEntryRowProps) {
         onClick={handleToggle}
       >
         {isExpanded ? (
-          <ChevronDown className='size-5 shrink-0 text-muted-foreground' />
+          <ChevronDown className='size-4 shrink-0 text-muted-foreground' />
         ) : (
-          <ChevronRight className='size-5 shrink-0 text-muted-foreground' />
+          <ChevronRight className='size-4 shrink-0 text-muted-foreground' />
         )}
         <span
           className={cn(
@@ -65,9 +65,9 @@ export function TranscriptEntryRow({ entry }: TranscriptEntryRowProps) {
             title='Copy raw JSON'
           >
             {copied ? (
-              <Check className='size-5' />
+              <Check className='size-4' />
             ) : (
-              <Copy className='size-5' />
+              <Copy className='size-4' />
             )}
           </Button>
           <pre className='max-h-[480px] overflow-auto whitespace-pre-wrap break-all pr-10 font-mono text-xs'>

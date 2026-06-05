@@ -40,7 +40,7 @@ export function TaskActions({
   return (
     <div className='absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1'>
       {isCreating || isLoading ? (
-        <Loader2 className='mx-1 size-5 animate-spin text-zinc-400' />
+        <Loader2 className='mx-1 size-4 animate-spin text-zinc-400' />
       ) : (
         <div className='flex items-center gap-1 pl-6 opacity-0 group-hover/item:opacity-100'>
           <Button
@@ -50,7 +50,7 @@ export function TaskActions({
             onClick={onAddSubtask}
             tabIndex={-1}
           >
-            <Plus className='size-5' />
+            <Plus className='size-4' />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -60,7 +60,7 @@ export function TaskActions({
                 className='size-7'
                 tabIndex={-1}
               >
-                <MoreVertical className='size-5' />
+                <MoreVertical className='size-4' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>

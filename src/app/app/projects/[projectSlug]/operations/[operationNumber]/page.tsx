@@ -126,7 +126,7 @@ export default function OperationPage() {
               <div className='flex h-full flex-col'>
                 <div className='flex items-center gap-2 px-3 pt-2'>
                   <h2 className='flex items-center gap-1.5 text-md font-medium h-9'>
-                    <ListTodo className='size-5' />
+                    <ListTodo className='size-4' />
                     Tasks ({tasksLabel})
                   </h2>
                 </div>

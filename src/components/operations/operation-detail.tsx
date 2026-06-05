@@ -202,12 +202,12 @@ export function OperationDetail({
               )
             }}
           >
-            <ArrowLeft className='size-5' />
+            <ArrowLeft className='size-4' />
           </Button>
         ) : (
           collapsed && (
             <Button size='icon' variant='ghost' onClick={toggleOperationsList}>
-              <PanelLeftOpen className='size-5' />
+              <PanelLeftOpen className='size-4' />
             </Button>
           )
         )}
@@ -232,9 +232,9 @@ export function OperationDetail({
           ) : (
             <div className='flex items-center gap-2'>
               {operation.closed ? (
-                <CircleCheck className='size-5 shrink-0 text-purple-600' />
+                <CircleCheck className='size-4 shrink-0 text-purple-600' />
               ) : (
-                <CircleDot className='size-5 shrink-0 text-green-600' />
+                <CircleDot className='size-4 shrink-0 text-green-600' />
               )}
               <h1
                 className='cursor-text text-xl font-semibold'
@@ -246,7 +246,7 @@ export function OperationDetail({
                 {operation.title}
               </h1>
               {isSaving && (
-                <Loader2 className='size-5 animate-spin text-muted-foreground' />
+                <Loader2 className='size-4 animate-spin text-muted-foreground' />
               )}
             </div>
           )}
@@ -257,14 +257,14 @@ export function OperationDetail({
               variant={showTasksDialog ? 'secondary' : 'ghost'}
               onClick={() => setShowTasksDialog(!showTasksDialog)}
             >
-              <ListTodo className='mr-1 size-5' />(
+              <ListTodo className='mr-1 size-4' />(
               {formatTasksCount(tasksDoneCount, tasksTotalCount)})
             </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size='icon' variant='ghost' disabled={isDeleting}>
-                <MoreVertical className='size-5' />
+                <MoreVertical className='size-4' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
@@ -341,7 +341,7 @@ export function OperationDetail({
           >
             <DialogHeader className='px-4 pt-4'>
               <DialogTitle className='flex items-center gap-1.5'>
-                <ListTodo className='size-5' />
+                <ListTodo className='size-4' />
                 Tasks ({formatTasksCount(tasksDoneCount, tasksTotalCount)})
               </DialogTitle>
             </DialogHeader>

@@ -98,9 +98,9 @@ export function TranscriptDialog({
             disabled={isDownloading || !agentTranscript.hasTranscript}
           >
             {isDownloading ? (
-              <Loader2 className='mr-1 size-5 animate-spin' />
+              <Loader2 className='mr-1 size-4 animate-spin' />
             ) : (
-              <Download className='mr-1 size-5' />
+              <Download className='mr-1 size-4' />
             )}
             Download .jsonl
           </Button>
