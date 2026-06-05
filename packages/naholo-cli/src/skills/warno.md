@@ -8,7 +8,7 @@ argument-hint: '["freeform MISSION instructions"]'
 
 The MISSION-writing skill. Researches the codebase and writes `## MISSION` (Concept of Operations / Warning Orders / Target Reference Points) into `OPERATION.md` — appending the section when absent, revising in place when it already exists. Stops there. `/warno` does **not** write `## EXECUTION` and does **not** mirror to `TASKS.md` — those are owned by `/opord`.
 
-The skill name is the unambiguous "where are we" signal: re-running `/warno` is for direction changes (Concept of Operations rewrite, Warning Order revision). Once MISSION is settled, the user runs `/opord` to cut it into ORP-sized tasks.
+The skill name is the unambiguous "where are we" signal: re-running `/warno` is for direction changes (Concept of Operations rewrite, Warning Order revision). Once MISSION is settled, the user runs `/opord` to cut it into single-commit-sized tasks.
 
 ## Arguments
 
