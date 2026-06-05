@@ -158,7 +158,7 @@ Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it o
 
 Format rules to honor when writing the doc:
 
-- **No TRP** anywhere in `CHOP.md`. `/chopchop` allocates TRP at apply time.
+- **`/chop` does not write TRP.** `### Target Reference Points` blocks under each side's `## MISSION` are populated by `/chopchop` as a pre-flight rewrite before the CLI runs — they may be absent on a fresh `/chop` draft and are always regenerated on `/chopchop`.
 - **Both sides carry `## SITUATION`.** `### Pain` is mandatory on both sides; `### Notes` is optional and follows the `OPERATION.md` omit-when-empty convention — omit the `### Notes` heading entirely when the side has nothing to flag, do not write a placeholder body.
 - **The `# CURRENT OP #{n}: {title}` header carries the parent's proposed post-split title.** The user retitles the parent by editing this header. `# NEW OP: {title}` carries the new OP's proposed title the same way.
 - **No `#### Intent`, no `#### Scheme of Maneuver`, no `#### Course of Action`, no `#### After-Action Report`** anywhere in `CHOP.md`. The EXECUTION blocks under each OP are **checkbox task items** (`- [ ] TASK n — title` or `- [x] TASK n — title`), not full task sections. Full per-task detail lives in `OPERATION.md`; `CHOP.md` is a planning brief.
@@ -220,7 +220,7 @@ While in the chop phase (i.e. `CHOP.md` exists):
 - **Args are mandatory** — `/chop` with no args is an error.
 - **Shipped tasks require explicit confirmation to carve** — if a candidate carved task is shipped, pause via `AskUserQuestion` per step 6. Default to keeping the shipped task on the parent unless the user confirms the move; the AAR transfers with the task when they do.
 - **No server calls** — `/chop` writes `CHOP.md` and a TIMELINE bullet. Nothing else. No `mcp__naholo__create_operation`, no `create_note`, no parent `OPERATION.md` edits.
-- **No TRP in `CHOP.md`** — TRP allocation is `/chopchop`'s job.
+- **`/chop` does not write TRP** — `/chopchop` populates the `### Target Reference Points` block under each side's `## MISSION` as a pre-flight rewrite before its CLI runs.
 - **No per-task detail in `CHOP.md`** — EXECUTION blocks are one-line task summaries only. No Intent, Scheme of Maneuver, Course of Action, or AAR.
 - **SITUATION bodies and the CURRENT OP header title are user-editable surfaces** — `/chop` drafts them on a fresh run, but revision runs preserve hand-edits unless the args explicitly target them. The user reviews the proposed Pain / Notes / parent title in `CHOP.md` before `/chopchop` applies the split.
 - **One proposal at a time** — only one `CHOP.md` exists at any moment. Re-running `/chop` while `CHOP.md` is present revises the existing proposal in place; it does not stack a second one.

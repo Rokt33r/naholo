@@ -1,12 +1,12 @@
 ---
 name: opord
-description: Cut a warno'd Naholo operation's MISSION into ORP-sized tasks — write EXECUTION in OPERATION.md, mirror to TASKS.md.
+description: Cut a warno'd Naholo operation's MISSION into single-commit-sized tasks — write EXECUTION in OPERATION.md, mirror to TASKS.md.
 argument-hint: '["freeform plan-revision instructions"]'
 ---
 
 # Opord — Cut the Mission into Tasks
 
-OPORD-style detail-cutter. Reads `## MISSION` (must already be populated by `/warno`), resolves any unanswered Warning Order alternatives, cuts the mission into ORP-sized tasks, **appends `## EXECUTION`** to `OPERATION.md` when absent (revises in place when present), and mirrors the task list into `TASKS.md` as a flat checkbox list.
+OPORD-style detail-cutter. Reads `## MISSION` (must already be populated by `/warno`), resolves any unanswered Warning Order alternatives, cuts the mission into single-commit-sized tasks, **appends `## EXECUTION`** to `OPERATION.md` when absent (revises in place when present), and mirrors the task list into `TASKS.md` as a flat checkbox list.
 
 The skill name is the unambiguous "where are we" signal: re-running `/opord` is for any plan adjustment — split / merge / retitle / insert / drop / rewrite unfinished tasks, all the way up to a full restart. Direction changes — Concept of Operations rewrites, Warning Order revisions — belong to `/warno`, not `/opord`.
 
@@ -99,7 +99,7 @@ No reasons on rejected items unless the user wrote them in. When in doubt, treat
 
 Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
-- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into ORP-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 11). Run `naholo agent add-timeline -T opord 'Drafted N tasks.'`.
+- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into single-commit-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 11). Run `naholo agent add-timeline -T opord 'Drafted N tasks.'`.
 - **EXECUTION present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## EXECUTION` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify EXECUTION, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided, classify intent**:
   - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place. Run `naholo agent add-timeline -T opord '{summary}'`.
@@ -237,7 +237,9 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
 
 `/opord`'s per-task template ends at `#### Course of Action`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the task.
 
-ORP sizing rules:
+Single-commit sizing rules:
+
+A single-commit-sized task is one cohesive change that a reviewer can read as a single diff — one motivation, one verb in the title, no unrelated edits riding along. If you'd struggle to write its commit message without an "and", split it.
 
 - Each task should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
 - **Intent is the approach summary only.** Concrete shapes live in SOM, concrete steps live in COA — Intent must stay a single skim-readable headline.
