@@ -109,7 +109,7 @@ export function NoteDialog({
                   setName(e.target.value)
                   setError(null)
                 }}
-                className='flex-1 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring'
+                className='flex-1 rounded-md border bg-transparent px-3 h-8 text-sm outline-none focus:ring-2 focus:ring-ring'
                 autoFocus
               />
               <Button
