@@ -1,6 +1,6 @@
 # Naholo — AI-Assisted Development Workflow
 
-Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via a core pipeline of skills — `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil` — plus an optional OP-splitting side branch (`/chop` → `/chopchop` or `/nochop`) usable from the warno or opord phase.
+Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via a core pipeline of skills — `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil` — plus a fresh-OP shortcut (`/raid`) that collapses `/warno` + `/opord` for small ops, and an optional OP-splitting side branch (`/chop` → `/chopchop` or `/nochop`) usable from the warno or opord phase.
 
 ## Workflow
 
@@ -38,6 +38,14 @@ Write or modify `## MISSION` to lock in the architectural decisions.
 A Warning Order may carry a sub-bullet of the form `- ? <prompt> (a / b) >` when `/warno` surfaces alternatives instead of committing. The user can resolve it by re-running `/warno "..."` with an answer, by hand-editing `OPERATION.md`, or by leaving it for `/opord` to collapse.
 
 `/warno` with no args writes a fresh MISSION when none exists. To revise an existing MISSION, pass freeform args describing the change.
+
+### Phase 3.5: Raid (`/raid ["freeform"]`) — fresh-OP shortcut
+
+For small OPs where architecture review is overkill, `/raid` collapses Phase 3 and Phase 4 into a single invocation: it writes `## MISSION` inline (real Concept of Operations, real Target Reference Points, `### Warning Orders` body marked `_N/A_`), then chains `/opord` via the `Skill` tool to cut tasks and mirror `TASKS.md`.
+
+`/raid` runs only on **fresh OPs** — `OPERATION.md` must have neither `## MISSION` nor `## EXECUTION` yet. Once any plan content exists, MISSION rewrites belong to `/warno` and plan revisions belong to `/opord`. Freeform args are forwarded verbatim to the chained `/opord` as task-cutting hints; like `/warno`, `/raid` falls back to the OP's title, `LOGS.yml`, and notes when invoked bare.
+
+The session lands in the post-opord phase (declared by the chained `/opord`). If the operator later decides the OP deserves a real Warning Order list, `/warno "..."` upgrades the `_N/A_` stub into a real MISSION; the `raid` TIMELINE bullet remains as the durable signal that the original plan came from a raid.
 
 ### Phase 4: Opord (`/opord ["freeform"]`)
 
@@ -98,6 +106,7 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 | ----------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `/infil`    | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)                                                                                  |
 | `/warno`    | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs                                                                                  |
+| `/raid`     | `"freeform"` (optional)        | Task-cutting hints forwarded to the chained `/opord` (fresh OPs only)                                                                     |
 | `/opord`    | `"freeform"` (optional)        | Plan-revision instructions for unfinished tasks (insert / split / retitle / drop)                                                         |
 | `/splash`   | `N` or `"freeform"` (optional) | Task number; or extra context for the next-unchecked task                                                                                 |
 | `/chop`     | `"freeform"` (**required**)    | What to carve off (topic, WO references, optional new-OP title). Required in both fresh and revision modes — `/chop` with no args errors. |
