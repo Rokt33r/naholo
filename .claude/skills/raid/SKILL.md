@@ -39,33 +39,7 @@ Run `naholo agent op`. If it errors with "No infiled operation", tell the user t
 
 Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
 
-### 5. Pending CHOP gate
-
-If `{operationDir}/notes/CHOP.md` exists, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
-
-Call `AskUserQuestion` with:
-
-- **question**: `"A CHOP proposal is pending at notes/CHOP.md — running /raid now will desync it from the parent OP. How do you want to proceed?"`
-- **header**: `"CHOP pending"`
-- **options** (labels only, no descriptions):
-  1. `"Resolve CHOP first (Recommended)"`
-  2. `"Proceed anyway"`
-
-Branch on the answer:
-
-- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print as raw markdown (no surrounding fence) and stop:
-
-  > `/raid` cancelled. Pick one:
-  >
-  > - `/chop "freeform"` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
-  > - `/chopchop` — apply CHOP
-  > - `/nochop` — abort and abandon CHOP
-
-- **Proceed anyway** → continue with the skill's normal flow. After the chained `/opord` returns, surface this reminder as a final chat line:
-
-  > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
-
-### 6. Read local state
+### 5. Read local state
 
 Read if you haven't read:
 
@@ -73,7 +47,7 @@ Read if you haven't read:
 - `{operationDir}/notes/OPERATION.md`
 - `{operationDir}/LOGS.yml` and any free-form `{operationDir}/notes/*.md` the OP carries — these are the input `/raid` cuts from when args are empty.
 
-### 7. Fresh-OP guard
+### 6. Fresh-OP guard
 
 `/raid` requires a clean plan canvas. If `OPERATION.md` already contains a `## MISSION` heading or a `## EXECUTION` heading, abort. Print as raw markdown (no surrounding fence) and stop:
 
@@ -81,13 +55,13 @@ Read if you haven't read:
 
 Also confirm input viability: if neither the OP title, `LOGS.yml`, free-form notes, nor the freeform args carry enough signal to cut tasks from, stop and ask the user for a freeform prompt rather than guess.
 
-### 8. Research the codebase
+### 7. Research the codebase
 
 Investigate enough of the codebase to write a real Concept of Operations and a real Target Reference Points map. `/raid` skips Warning Order derivation but the other two MISSION subsections still pay their normal cost — a stub CONOPS leaves the downstream `/splash` and any future `/warno` revisions flying blind.
 
 As you research, keep a curated shortlist of files, folders, and glob patterns a fresh downstream session would actually need. Filter aggressively: skip files opened only to disprove a hypothesis, skip siblings covered by a folder or glob, prefer a folder/glob over enumerating files. TRP is a scannable map, not a research log.
 
-### 9. Write `## MISSION` to `OPERATION.md`
+### 8. Write `## MISSION` to `OPERATION.md`
 
 Append `## MISSION` after the last `## SITUATION` content with all three subsections in fixed order:
 
@@ -95,11 +69,11 @@ Append `## MISSION` after the last `## SITUATION` content with all three subsect
 - `### Warning Orders` — body is exactly the single line `_N/A_` (no bullets, no decisions). The `_N/A_` marker is the recoverable signal that the operator chose to skip architecture review; `/warno` can upgrade the stub into a real Warning Order list later if the operator changes their mind.
 - `### Target Reference Points` — a curated flat bullet list of files / folders / glob patterns the chained `/opord` (and downstream `/splash` sessions) need. Each entry is `` `{path-or-glob}` — {tag} ``: backtick-wrapped path (folders end with `/`, globs use standard wildcards), then a noun-only tag of a few words (no verbs, no clauses). No sub-bullets.
 
-### 10. Add the TIMELINE bullet
+### 9. Add the TIMELINE bullet
 
 Run `naholo agent add-timeline -T raid 'Drafted stub MISSION.'`. The `raid` label is the durable signal for "MISSION's Warning Orders were skipped" — downstream sessions read it to know the plan came from a raid, not a full warno.
 
-### 11. Chain `/opord` via the `Skill` tool
+### 10. Chain `/opord` via the `Skill` tool
 
 Invoke the `opord` skill via the `Skill` tool. Forward any freeform args verbatim as `args`; pass an empty `args` string when `/raid` was invoked bare. `/opord` reads the just-written MISSION (CONOPS + TRP carry real content; the `_N/A_` Warning Orders body satisfies its "MISSION populated" check), cuts tasks, writes `## EXECUTION`, mirrors `TASKS.md`, and appends its own TIMELINE bullet.
 
@@ -116,9 +90,5 @@ There is no post-raid phase. The chained `/opord` declares the **opord** phase o
 - **Args forwarded to the chained `/opord`**: pass freeform args through verbatim; pass empty when invoked bare.
 - **No EXECUTION-writing code in `/raid`**: the chained `/opord` owns task cutting and `TASKS.md` mirroring. Never write `## EXECUTION` directly from `/raid`.
 - **No post-raid summary**: end with `/opord`'s summary. Two TIMELINE bullets (`raid` then `opord`) is the expected shape.
-- **Wrong-phase requests** route the same as `/opord`'s post-opord phase:
-  - MISSION rewrite (Concept of Operations / Warning Orders / Target Reference Points) → `/warno`
-  - Implementing a task → `/splash`
-  - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
 - **Do NOT implement any code** — only edit `OPERATION.md`; TIMELINE.md is updated via `naholo agent add-timeline`; EXECUTION + TASKS.md are owned by the chained `/opord`.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.

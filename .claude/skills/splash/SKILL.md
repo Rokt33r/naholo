@@ -121,7 +121,7 @@ After the COA finishes, run the post-edit verifications defined in `CLAUDE.md` a
 Two paths:
 
 - **Fresh splash** (no `#### After-Action Report` heading on the target task yet): append the `#### After-Action Report`.
-- **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading.
+- **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading. Do NOT edit `#### Intent`, `#### Scheme of Maneuver`, or `#### Course of Action` of the task — those are the planning record owned by `/opord`. Every late discovery on a revision splash lands in **Deviations**; if the plan itself needs to change shape, surface it and tell the user to run `/opord`.
 
 In both paths the body has two labels in fixed order:
 
@@ -218,6 +218,7 @@ While in the splash phase:
 
 - **One task per invocation**: ship exactly one, then stop. The user re-runs `/splash` for the next.
 - **AAR is overwritten in place on revision** — never add a second AAR section to an task.
+- **Revision splashes never touch Intent / SOM / COA** — those are `/opord`'s planning record. Late discoveries land in AAR Deviations; structural plan changes require `/opord`.
 - **Stay in scope**: the task intent is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
 - **Don't touch other tasks**: do not edit other tasks' Course of Action, AARs, or Goals. If the work reveals that another task needs revision, surface it — don't silently rewrite.
 - **TASKS.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next task.
