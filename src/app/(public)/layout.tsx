@@ -41,6 +41,12 @@ export default async function PublicLayout({
               <Github className='size-4' />
             </a>
             <Link
+              href='/field-manual'
+              className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+            >
+              Field Manual
+            </Link>
+            <Link
               href='/pricing'
               className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
             >
