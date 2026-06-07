@@ -20,22 +20,20 @@ Optional operation number (e.g., `42`).
 
 ## What to do
 
-1. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
-
-2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
-
-3. **Fetch via CLI**: Branch on whether `{operationNumber}` was provided.
+1. **Fetch via CLI**: Branch on whether `{operationNumber}` was provided.
    - **Fresh infil ({operationNumber} provided)**: Run `naholo agent infil {operationNumber}`. If the CLI errors with "Already infiled. Run \"naholo agent exfil\" first.", tell the user that an op is already infiled — they can `/infil` (no args) to refresh it, or `/exfil` first to switch ops. Then stop.
    - **Re-infil ({operationNumber} omitted)**: Run `naholo agent reinfil`. If the CLI errors with "No infiled operation", tell the user to pass an operation number (`/infil <n>`) for a fresh infil and stop.
 
    Either way, capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
 
-4. **Read context**:
-   - **Title**: from the `Title:` line of infil's stdout.
+2. **Boot once**: If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` — read `currentOp` / `opTitle` / `opNotes` inline if needed but do not store them (they drift later in this same skill once OPERATION.md / TIMELINE.md land). On a fresh infil this is the first session-boot; on a re-infil after a CHOP cycle it may also be the first boot of this session, so do not assume it's already loaded.
+
+3. **Read context**:
+   - **Title**: from `opTitle` in `<op_status>` (matches the `Title:` line of infil's stdout).
    - **Logs**: `{operationDir}/LOGS.yml` (YAML array of `{ id, createdAt, author, content }`).
    - **Notes**: every `*.md` file in `{operationDir}/notes/`.
 
-5. **Handle OPERATION.md** (using the context from step 4):
+4. **Handle OPERATION.md** (using the context from step 3):
 
    OPERATION.md is the single live document for the OP (see manual for the full schema). `/infil` only seeds `## SITUATION` when generating from scratch; `## MISSION` is appended later by `/warno`, `## EXECUTION` by `/opord`.
 
@@ -77,7 +75,7 @@ Optional operation number (e.g., `42`).
    - If the merge surfaces a substantive note edit a teammate made server-side that materially changes `### Pain`, `### Suggested solution`, or `### Notes` under SITUATION (e.g., user pivoted the problem, added a hard constraint), patch SITUATION in place. Leave MISSION and EXECUTION alone — those are owned by `/warno` and `/opord`.
    - If the agent needs server-side log context, it reads `{operationDir}/LOGS.yml` directly — TIMELINE is skill-event-only.
 
-6. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
+5. **Print summary**: Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
 
    If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
@@ -114,4 +112,4 @@ While in the infil phase:
 - Do NOT write `## MISSION` or `## EXECUTION` headings — `/warno` appends MISSION, `/opord` appends EXECUTION.
 - Task notes from the server should be folded into OPERATION.md SITUATION context, NOT written to TASKS.md (TASKS.md is a pure checklist, populated by `/warno`).
 - Print the summary as raw markdown — no surrounding fence.
-- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from infil's `Local:` line.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from the infil's `Local:` line (matches `opPath` from `boot`'s `<op_status>`).

@@ -14,9 +14,7 @@ Each task is sized for one reviewable `/splash`; sub-tasks are deliberately not 
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op`.
-
-Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 9 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 6 (re-run dispatch). Common patterns:
 
 - `/opord` (no args) — first run after `/warno`, or resume a partial EXECUTION draft.
 - `/opord "split TASK 3 into two — one for the schema, one for the migration"` — targeted edit.
@@ -28,23 +26,21 @@ With `## EXECUTION` already present, the default assumption is that the freeform
 
 ## What to do
 
-### 1. Load personality
+### 1. Boot
 
-If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration; do not store them. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
 
-### 2. Load manual
+### 2. Load context
 
-If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+If you haven't already read these this session, read them now:
 
-### 3. Find infiled operation
+- `{operationDir}/notes/OPERATION.md` — the live OP document
+- `{operationDir}/TASKS.md` — the checklist
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and abort. Otherwise capture the printed `#{operationNumber} {title}` for context.
+If MISSION includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/warno` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/opord` doesn't redo the discovery work.
 
-### 4. Resolve operation directory
-
-Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
-
-### 5. Pending CHOP gate
+### 3. Pending CHOP gate
 
 If `{operationDir}/notes/CHOP.md` exists, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
 
@@ -66,26 +62,17 @@ Branch on the answer:
   > - `/chopchop` — apply CHOP
   > - `/nochop` — abort and abandon CHOP
 
-- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 12), append this line as the final line:
+- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 10), append this line as the final line:
 
   > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
-### 6. Read local state
-
-Read if you haven't read:
-
-- `{operationDir}/TASKS.md`
-- `{operationDir}/notes/OPERATION.md`
-
-If MISSION includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/warno` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/opord` doesn't redo the discovery work.
-
-### 7. Validate MISSION
+### 4. Validate MISSION
 
 `## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the two required subsections (`### Concept of Operations`, `### Warning Orders`), stop and tell the user to run `/warno` first. `/opord` is the OPORD pass — without a populated MISSION it has nothing to cut.
 
 `### Target Reference Points` is optional — its absence is not a validation failure. If it's missing, `/opord` proceeds normally (and may have to research the codebase itself).
 
-### 8. Resolve Warning Order alternatives
+### 5. Resolve Warning Order alternatives
 
 For each `### Warning Orders` bullet that has a `- ? <prompt> (opt-a / opt-b) >` sub-bullet, resolve it in place:
 
@@ -95,19 +82,19 @@ For each `### Warning Orders` bullet that has a `- ? <prompt> (opt-a / opt-b) >`
 
 No reasons on rejected items unless the user wrote them in. When in doubt, treat the answer as empty and collapse to Rejected.
 
-### 9. Re-run dispatch + write EXECUTION
+### 6. Re-run dispatch + write EXECUTION
 
 Inspect the current state of `## EXECUTION` and any freeform args. Branch:
 
-- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into single-commit-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 11). Run `naholo agent add-timeline -T opord 'Drafted N tasks.'`.
+- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into single-commit-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 8).
 - **EXECUTION present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## EXECUTION` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify EXECUTION, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided, classify intent**:
-  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place. Run `naholo agent add-timeline -T opord '{summary}'`.
-  - **Insertion** — args describe adding one or more new tasks. Append the new `### TASK N — Title` sections at the next free integer after the last existing task (do **not** renumber or re-slot existing tasks, finished or unfinished). If the user names a position ("after TASK 3"), still write the section at the end of EXECUTION and trust `/splash` order to be driven by the integer order in `TASKS.md` — keep numbering monotonic. Run `naholo agent add-timeline -T opord '{summary}'`.
-  - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present. Run `naholo agent add-timeline -T opord '{summary}'`.
-  - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite EXECUTION and renew all tasks even finished. Run `naholo agent add-timeline -T opord '{summary}'`.
+  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place.
+  - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, append at the next free integer after the last existing task.
+  - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present.
+  - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite EXECUTION and renew all tasks even finished.
 
-### 10. Write OPERATION.md EXECUTION
+### 7. Write OPERATION.md EXECUTION
 
 One `### TASK N — Title` subsection per task, in order. Each task section has three subsections — **`#### Intent`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
 
@@ -248,7 +235,7 @@ A single-commit-sized task is one cohesive change that a reviewer can read as a 
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
 - An intent that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/warno` to add the decision if it's missing).
 
-### 11. Mirror to TASKS.md
+### 8. Mirror to TASKS.md
 
 Sync `TASKS.md` to match the EXECUTION task list:
 
@@ -258,7 +245,11 @@ Sync `TASKS.md` to match the EXECUTION task list:
 - Add new tasks as `- [ ]`. Remove deleted tasks (only if they have no `#### After-Action Report` heading — never remove a shipped task).
 - Renumber as needed; keep titles synced with the task headings.
 
-### 12. Print summary
+### 9. Append a TIMELINE bullet
+
+Summarize what step 6 changed in one line, then run `naholo agent add-timeline -T opord '{summary}'`.
+
+### 10. Print summary
 
 Show the plan state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
 
@@ -317,7 +308,7 @@ While in the opord phase:
 - **Respect existing done states**: don't uncheck `[x]` items in TASKS.md.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
-- **New tasks append at the next free integer**: never letter-suffix, never re-slot existing tasks. The numbering is plain `TASK 1`, `TASK 2`, …. (Historical letter-suffix tasks from before this doctrine — e.g. `TASK 3a` — stay as-is; they're immutable AAR records.)
+- **Shipped tasks are immutable integers**: a task with a `#### After-Action Report` heading keeps its integer forever — never renumber it, never re-slot it. Unshipped tasks may be re-slotted (e.g., inserting "before TASK 6" bumps later unshipped tasks by 1). Numbering is plain `TASK 1`, `TASK 2`, …; no letter-suffix. (Historical letter-suffix tasks — e.g. `TASK 3a` — stay as-is; they're immutable AAR records from before this doctrine.)
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TASKS.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
-- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.

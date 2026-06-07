@@ -26,7 +26,7 @@ Operational vocabulary used by the skills (written in full in docs; may be abbre
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
-1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)**: takes an operation number from the server. Runs `naholo agent infil {n}`, which creates the infiled directory at `.naholo/local/infiled/`, writes `op.yml` (`{ number, title }`), pulls `TASKS.md` and all existing `notes/*.md` (plus `.base/` copies), and prints the absolute directory path to stdout — read it from there; do not run `op-path` during `/infil`. Errors with "Already infiled. Run \"naholo agent exfil\" first." when an op is already infiled — only one op can be infiled at a time. **Re-infil (`/infil` no args)**: refreshes the currently infiled op via `naholo agent reinfil` (3-way merges tasks + notes against the latest server state). Either way, the agent then generates `notes/OPERATION.md` if missing (containing **only** `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are absent and will be appended by their owning skills). `TASKS.md` stays as pulled (empty list, ready for `/warno`); `notes/TIMELINE.md` is written by `naholo agent add-timeline` on first call. Never pushes.
+1. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)** pulls operation `{n}` from the server into the local infiled directory. **Re-infil (`/infil` no args)** refreshes the currently infiled op via 3-way merge. Either mode seeds `notes/OPERATION.md` if missing (only `## SITUATION`, filled from logs/notes — `## MISSION` and `## EXECUTION` are appended by their owning skills). Only one op can be infiled at a time; never pushes.
 2. **`/warno ["freeform"]`** — Input: infiled operation. The MISSION-writing skill. Researches the codebase and **appends `## MISSION`** (heading + Concept of Operations / Warning Orders / Target Reference Points) to `OPERATION.md` when MISSION is absent; revises in place when it already exists. Does NOT touch `## EXECUTION` or `TASKS.md` — those are `/opord`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are MISSION-scoped (revise Concept of Operations, swap Warning Orders, refresh Target Reference Points); EXECUTION-shaped instructions belong to `/opord`. Stops with a "next: `/opord`" pointer.
 3. **`/raid ["freeform"]`** — Input: fresh infiled operation (no `## MISSION` and no `## EXECUTION` yet). The `/warno` + `/opord` collapse for small ops where architecture review is overkill. Researches the codebase, appends `## MISSION` to `OPERATION.md` with a real Concept of Operations + real Target Reference Points but `### Warning Orders` body marked `_N/A_`, then chains `/opord` via the `Skill` tool to cut tasks and mirror `TASKS.md`. Forwards freeform args to the chained `/opord`. Aborts when MISSION or EXECUTION already exists — use `/warno` or `/opord` for revisions. Lands the session in the post-opord phase (the chained `/opord` declares it).
 4. **`/opord ["freeform"]`** — Input: warno-completed operation (MISSION populated). OPORD-style detail-cutter and plan revisor. Resolves any unanswered Warning Order alternatives, cuts MISSION into single-commit-sized tasks, **appends `## EXECUTION`** (one `### TASK N — Title` per task with `#### Intent` + `#### Scheme of Maneuver` when applicable + `#### Course of Action`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the task), and mirrors the task list into `TASKS.md` as a flat checkbox list. With `## EXECUTION` already present, freeform args drive plan revisions — insert, drop, split, merge, retitle, rewrite — applied only to unfinished tasks. Completed tasks (those with a populated AAR) are immutable. New tasks append at the next free integer; never letter-suffix, never re-slot existing tasks.
@@ -49,7 +49,7 @@ The infiled directory (`.naholo/local/infiled/`) is the agent's full working set
 
 ### `op.yml`
 
-CLI state at the infiled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent reinfil`. Agents do not edit it directly; `naholo agent op` / `op-path` read it.
+CLI state at the infiled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent reinfil`. Agents do not edit it directly.
 
 ### `TASKS.md`
 
@@ -113,8 +113,6 @@ When a skill prints a list of notes (infil summary, sitrep recap, etc.), the ord
 
 ## Commands
 
-Only one op can be infiled at a time. The agent CLI is a small state machine: `infil` enters the infiled state, `pull`/`push`/`op-path`/`op` operate on it, `exfil` exits. State is persisted as `op.yml` at the infiled root. Commands that need an infiled op error with `No infiled operation. Run "naholo agent infil <n>" first.` when none exists.
-
 ### `naholo agent infil <n>`
 
 Initial fetch. Takes the server op number, creates `.naholo/local/infiled/`, writes `op.yml`, and pulls tasks/notes/.base/LOGS.yml. Errors with `Already infiled. Run "naholo agent exfil" first.` when an op is already infiled. Agents use this during `/infil`.
@@ -127,23 +125,49 @@ Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge
 - Refreshes `op.yml.title` from the server.
 - Errors with `No infiled operation` when nothing is infiled. Switching ops requires `exfil` then `infil`. Never runs pushes.
 
-### `naholo agent op-path`
+### `naholo agent boot`
 
-Argless. Prints the absolute infiled directory (`.naholo/local/infiled/`). Skills resolve the operation directory through this command — never hardcode `.naholo/local/infiled/...` paths.
+Argless. The single boot call every skill runs once per session. Prints three XML-delimited blocks to stdout:
+
+- `<personality>…</personality>` — the active CLI profile's soul text (empty body when no soul is configured).
+- `<manual>…</manual>` — the full text of this manual.
+- `<op_status>…</op_status>` — YAML payload (`currentOp`, `opTitle`, `opPath`, `opNotes`) when an op is infiled, or the literal `No infiled operation.` body in the empty state.
+
+Skills cache **only `opPath`** from `<op_status>` after the first boot — every other file path in the session composes on top of it. `currentOp`, `opTitle`, and `opNotes` are read inline when the boot fires and not stored.
 
 ### `naholo agent op`
 
-Argless. Prints `#{number} {title}` for the infiled op. Errors with `No infiled operation` when nothing is infiled. Skills use this to discover the active op number/title.
+Argless. Prints the op status YAML — same shape as `boot`'s `<op_status>` block:
+
+```yaml
+currentOp: 181
+opTitle: compact skill booting
+opPath: /abs/path/to/.naholo/local/infiled/
+opNotes:
+  - OPERATION
+  - TIMELINE
+```
+
+Errors with bare `No infiled operation.` when `op.yml` is absent. Troubleshooting-only: an agent runs it when it has lost track of which op is infiled or wants to confirm op state without re-emitting the full `boot` payload. Skills don't call it in their normal flow.
 
 ### `naholo agent man`
 
-Prints this manual to stdout. No arguments, no I/O. Skills run it once per session (mirroring the `naholo://soul` pattern) and adopt the rules.
+Prints this manual to stdout. No arguments, no I/O.
 
 ### Troubleshooting: "No infiled operation" mid-session
 
 The infiled directory is resolved against the shell's working directory — the CLI walks `process.cwd()` looking for `.naholo/local/infiled/`. If any `naholo agent *` command returns `No infiled operation` after it was working earlier in the session, the shell's cwd has likely drifted out of the directory where the op was infiled. Do not assume the op was exfiled or the directory deleted.
 
 Recovery: run `pwd`, then `cd` back to the directory where the op was infiled (the one containing `.naholo/local/infiled/`), and re-run the command.
+
+## Session bootstrap
+
+Every skill (except `/infil`'s pre-CLI step) opens with two reads, each done once per session:
+
+1. **Boot once** — if you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>`. Read `currentOp` / `opTitle` inline for opening narration if needed; do not store them. If `<op_status>` carries `No infiled operation.`, abort the skill and tell the user to run `/infil <opNum>`. Otherwise skip the boot call on subsequent skill invocations — `opPath` is already cached.
+2. **Load context once** — if you haven't read `OPERATION.md` this session, read `{opPath}notes/OPERATION.md`. If this is the first boot in a fresh session, also read `{opPath}notes/TIMELINE.md` once for catch-up. Do not re-read TIMELINE.md after that — it is a fresh-session catch-up doc, not in-session state.
+
+Subsequent skill invocations in the same session reuse the cached `opPath` and the in-context OPERATION.md without re-running boot or re-reading the file. Skills that need a fresh `opNotes` / `opTitle` (e.g. after `/warno` retitles, after `/infil` lands `OPERATION` / `TIMELINE`) re-run `naholo agent op` on demand.
 
 ## Chat output
 

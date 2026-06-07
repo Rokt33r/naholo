@@ -82,7 +82,6 @@ Read-only context available to the agent:
 | `naholo://operations/{operationNumber}/tasks` | All tasks for an operation (markdown)                                             |
 | `naholo://operations/{operationNumber}/notes` | All notes for an operation (JSON)                                                 |
 | `naholo://local/infiled`                      | The currently infiled operation (JSON), or null                                   |
-| `naholo://soul`                               | Personality / soul text for the current bot operator (markdown)                   |
 
 ### Reading a resource in Claude Code
 

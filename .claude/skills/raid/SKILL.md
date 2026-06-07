@@ -12,8 +12,6 @@ The `/warno` + `/opord` collapse for small fresh OPs where architecture review w
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op`.
-
 Anything passed as an argument is treated as **freeform task-cutting hints**. Optional — like `/warno`, `/raid` reads the OP's title, `LOGS.yml`, and `notes/` for input and only pushes back when the OP has no meaningful prompt to follow. When args are present, `/raid` forwards them verbatim to the chained `/opord` invocation as freeform context.
 
 Common patterns:
@@ -23,31 +21,20 @@ Common patterns:
 
 ## What to do
 
-### 1. Load personality
+### 1. Boot
 
-If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration; do not store them. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
 
-### 2. Load manual
+### 2. Load context
 
-If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+If you haven't already read these this session, read them now:
 
-### 3. Find infiled operation
+- `{operationDir}/notes/OPERATION.md` — the live OP document
+- `{operationDir}/TASKS.md` — the checklist
+- `{operationDir}/LOGS.yml` and any free-form `{operationDir}/notes/*.md` the OP carries — the task-cutting input `/raid` reads when args are empty
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and abort. Otherwise capture the printed `#{operationNumber} {title}` for context.
-
-### 4. Resolve operation directory
-
-Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
-
-### 5. Read local state
-
-Read if you haven't read:
-
-- `{operationDir}/TASKS.md`
-- `{operationDir}/notes/OPERATION.md`
-- `{operationDir}/LOGS.yml` and any free-form `{operationDir}/notes/*.md` the OP carries — these are the input `/raid` cuts from when args are empty.
-
-### 6. Fresh-OP guard
+### 3. Fresh-OP guard
 
 `/raid` requires a clean plan canvas. If `OPERATION.md` already contains a `## MISSION` heading or a `## EXECUTION` heading, abort. Print as raw markdown (no surrounding fence) and stop:
 
@@ -55,13 +42,13 @@ Read if you haven't read:
 
 Also confirm input viability: if neither the OP title, `LOGS.yml`, free-form notes, nor the freeform args carry enough signal to cut tasks from, stop and ask the user for a freeform prompt rather than guess.
 
-### 7. Research the codebase
+### 4. Research the codebase
 
 Investigate enough of the codebase to write a real Concept of Operations and a real Target Reference Points map. `/raid` skips Warning Order derivation but the other two MISSION subsections still pay their normal cost — a stub CONOPS leaves the downstream `/splash` and any future `/warno` revisions flying blind.
 
 As you research, keep a curated shortlist of files, folders, and glob patterns a fresh downstream session would actually need. Filter aggressively: skip files opened only to disprove a hypothesis, skip siblings covered by a folder or glob, prefer a folder/glob over enumerating files. TRP is a scannable map, not a research log.
 
-### 8. Write `## MISSION` to `OPERATION.md`
+### 5. Write `## MISSION` to `OPERATION.md`
 
 Append `## MISSION` after the last `## SITUATION` content with all three subsections in fixed order:
 
@@ -69,11 +56,11 @@ Append `## MISSION` after the last `## SITUATION` content with all three subsect
 - `### Warning Orders` — body is exactly the single line `_N/A_` (no bullets, no decisions). The `_N/A_` marker is the recoverable signal that the operator chose to skip architecture review; `/warno` can upgrade the stub into a real Warning Order list later if the operator changes their mind.
 - `### Target Reference Points` — a curated flat bullet list of files / folders / glob patterns the chained `/opord` (and downstream `/splash` sessions) need. Each entry is `` `{path-or-glob}` — {tag} ``: backtick-wrapped path (folders end with `/`, globs use standard wildcards), then a noun-only tag of a few words (no verbs, no clauses). No sub-bullets.
 
-### 9. Add the TIMELINE bullet
+### 6. Add the TIMELINE bullet
 
 Run `naholo agent add-timeline -T raid 'Drafted stub MISSION.'`. The `raid` label is the durable signal for "MISSION's Warning Orders were skipped" — downstream sessions read it to know the plan came from a raid, not a full warno.
 
-### 10. Chain `/opord` via the `Skill` tool
+### 7. Chain `/opord` via the `Skill` tool
 
 Invoke the `opord` skill via the `Skill` tool. Forward any freeform args verbatim as `args`; pass an empty `args` string when `/raid` was invoked bare. `/opord` reads the just-written MISSION (CONOPS + TRP carry real content; the `_N/A_` Warning Orders body satisfies its "MISSION populated" check), cuts tasks, writes `## EXECUTION`, mirrors `TASKS.md`, and appends its own TIMELINE bullet.
 
@@ -91,4 +78,4 @@ There is no post-raid phase. The chained `/opord` declares the **opord** phase o
 - **No EXECUTION-writing code in `/raid`**: the chained `/opord` owns task cutting and `TASKS.md` mirroring. Never write `## EXECUTION` directly from `/raid`.
 - **No post-raid summary**: end with `/opord`'s summary. Two TIMELINE bullets (`raid` then `opord`) is the expected shape.
 - **Do NOT implement any code** — only edit `OPERATION.md`; TIMELINE.md is updated via `naholo agent add-timeline`; EXECUTION + TASKS.md are owned by the chained `/opord`.
-- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.

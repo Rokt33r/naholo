@@ -106,7 +106,7 @@ Once a phase-changing skill returns, the session stays in that skill's **phase**
 
 ## Argument conventions
 
-Only `/infil` takes the operation number, and only on a fresh infil. Every other skill resolves the active operation via `naholo agent op` (which reads `op.yml` and prints `#{N} {title}`).
+Only `/infil` takes the operation number, and only on a fresh infil. Every other skill resolves the active operation from `naholo agent boot`'s `<op_status>` block (which carries `currentOp`, `opTitle`, `opPath`, `opNotes` as YAML; `naholo agent op` re-emits the same payload on demand for mid-session re-checks).
 
 | Skill       | First arg shape                | Meaning                                                                                                                                   |
 | ----------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |

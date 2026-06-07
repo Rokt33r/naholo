@@ -10,8 +10,6 @@ Implement exactly one task from `OPERATION.md` `## EXECUTION`, write the After-A
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op`.
-
 First positional token (optional):
 
 - **Integer `N`** — ship TASK N specifically. Required to skip ahead past earlier unchecked tasks, or to re-run on an already-shipped task and revise its AAR. Even when the user just inserted a new task via `/opord`, the default is still first-unchecked — they must pass `N` to target it.
@@ -25,23 +23,21 @@ Anything in quotes after is freeform context for the splash. Common patterns:
 
 ## What to do
 
-### 1. Load personality
+### 1. Boot
 
-If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration; do not store them. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
 
-### 2. Load manual
+### 2. Load context
 
-If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+If you haven't already read these this session, read them now:
 
-### 3. Find infiled operation
+- `{operationDir}/notes/OPERATION.md` — the live OP document
+- `{operationDir}/TASKS.md` — the checklist
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and stop. Otherwise capture the printed `#{operationNumber} {title}` for context.
+Validate: `## EXECUTION` must exist in `OPERATION.md` and contain at least one `### TASK N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### TASK N` sections under it, tell the user to run `/opord` first (and `/warno` first if `## MISSION` is also absent) and stop.
 
-### 4. Resolve operation directory
-
-Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`.
-
-### 5. Pending CHOP gate
+### 3. Pending CHOP gate
 
 If `{operationDir}/notes/CHOP.md` exists, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
 
@@ -63,34 +59,25 @@ Branch on the answer:
   > - `/chopchop` — apply CHOP
   > - `/nochop` — abort and abandon CHOP
 
-- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 13), append this line as the final line:
+- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 10), append this line as the final line:
 
   > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
-### 6. Read state
-
-Read if you haven't read:
-
-- `{operationDir}/TASKS.md`
-- `{operationDir}/notes/OPERATION.md`
-
-Validate: `## EXECUTION` must exist and contain at least one `### TASK N — Title` section. If `## EXECUTION` is absent (no heading at all) or has no `### TASK N` sections under it, tell the user to run `/opord` first (and `/warno` first if `## MISSION` is also absent) and stop.
-
-### 7. Pick the target task
+### 4. Pick the target task
 
 - If `N` was provided → target TASK N. If no matching `### TASK N` section exists, stop and tell the user.
 - Otherwise → target the **first** unchecked task in TASKS.md, top to bottom. Task numbers are the order. Do **not** infer a different target from session context (e.g. a task the user just inserted via `/opord`) — without an explicit `N`, first-unchecked wins. If all are `[x]`, tell the user there's nothing left and suggest `/exfil`.
 
-If the targeted task already has a `#### After-Action Report` heading with a non-empty body, this is a **revision splash** — see step 10 (AAR update path). If the task has no `#### After-Action Report` heading at all, this is a **fresh splash** — `/splash` adds the heading itself when shipping.
+If the targeted task already has a `#### After-Action Report` heading with a non-empty body, this is a **revision splash** — see step 7 (AAR update path). If the task has no `#### After-Action Report` heading at all, this is a **fresh splash** — `/splash` adds the heading itself when shipping.
 
-### 8. Read the task contract
+### 5. Read the task contract
 
 From OPERATION.md `### TASK N — Title`:
 
 - `#### Intent` — the success criterion.
 - `#### Scheme of Maneuver` (when present) — ASCII diagram of the planned flow / UI / signature changes; treat as authoritative shape for the splash.
 - `#### Course of Action` — the planned action list (Add / Edit / Move / Delete / Run / Manual).
-- Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 10.
+- Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 7.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the task intent specifies — if they ask for more than, or different from, what the task intent covers, **stop before implementing** and surface two options to the user:
 
@@ -99,7 +86,7 @@ If freeform args are provided, treat them as additional context to weigh during 
 
 Wait for the user to choose before continuing.
 
-### 9. Implement (fresh splash path)
+### 6. Implement (fresh splash path)
 
 Implement the code changes that satisfy the task intent:
 
@@ -116,7 +103,7 @@ Implement the code changes that satisfy the task intent:
 
 After the COA finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you actually changed (e.g. a formatter on any tracked-file change, a type checker on any TS-source change). These are not listed on the COA — `/opord` deliberately omits them. If a verification fails, attempt to fix the failure as long as the fix stays within the task's scope; record the fix as a deviation in the AAR. If the fix would expand scope (touches files unrelated to the task, requires schema or contract changes, etc.), stop and surface the failure to the user rather than improvising.
 
-### 10. Write the AAR (or update it for revision splashes)
+### 7. Write the AAR (or update it for revision splashes)
 
 Two paths:
 
@@ -136,18 +123,18 @@ In both paths the body has two labels in fixed order:
 
 The AAR is the canonical record of what's currently true on disk for that task; revision history lives in TIMELINE.md.
 
-### 11. Flip the checkbox
+### 8. Flip the checkbox
 
 In `TASKS.md`, flip `- [ ] N. Title` → `- [x] N. Title` for the task that just shipped. For revision splashes, the box is already `[x]` — leave it.
 
-### 12. Append a TIMELINE bullet
+### 9. Append a TIMELINE bullet
 
 Run `naholo agent add-timeline` with the bare `splash` stage label:
 
 - Fresh splash: `naholo agent add-timeline -T splash 'task {N} shipped — {one-line summary}.'`
 - Revision splash: `naholo agent add-timeline -T splash 'task {N} AAR updated — {one-line summary of the change}.'`
 
-### 13. Print summary
+### 10. Print summary
 
 Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
 
@@ -228,4 +215,4 @@ While in the splash phase:
 - **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
 - **`Manual:` items are user-owned**: never attempt to execute them; pause and ask the user to confirm completion before moving on.
 - Print the summary as raw markdown — no surrounding fence.
-- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.

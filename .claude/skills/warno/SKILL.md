@@ -12,9 +12,7 @@ The skill name is the unambiguous "where are we" signal: re-running `/warno` is 
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op`.
-
-Anything passed as an argument is treated as **freeform instructions** describing how to revise MISSION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 8 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise MISSION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 5 (re-run dispatch). Common patterns:
 
 - `/warno` (no args) — first run, or resume a partial MISSION draft.
 - `/warno "rework architecture decisions about plan mode"` — targeted edit.
@@ -24,23 +22,19 @@ EXECUTION-shaped instructions (insert/remove/revise tasks) belong to `/opord`, n
 
 ## What to do
 
-### 1. Load personality
+### 1. Boot
 
-If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration; do not store them. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
 
-### 2. Load manual
+### 2. Load context
 
-If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules (terminology, note formats, chat-output rules). Otherwise skip.
+If you haven't already read these this session, read them now:
 
-### 3. Find infiled operation
+- `{operationDir}/notes/OPERATION.md` — the live OP document
+- `{operationDir}/TASKS.md` — the checklist
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and abort. Otherwise capture the printed `#{operationNumber} {title}` for context.
-
-### 4. Resolve operation directory
-
-Run `naholo agent op-path` to get the absolute operation directory; call this `{operationDir}`. All file paths in this skill compose on top of it.
-
-### 5. Pending CHOP gate
+### 3. Pending CHOP gate
 
 If `{operationDir}/notes/CHOP.md` exists, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
 
@@ -62,18 +56,11 @@ Branch on the answer:
   > - `/chopchop` — apply CHOP
   > - `/nochop` — abort and abandon CHOP
 
-- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 10), append this line as the final line:
+- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 7), append this line as the final line:
 
   > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
-### 6. Read local state
-
-Read if you haven't read:
-
-- `{operationDir}/TASKS.md`
-- `{operationDir}/notes/OPERATION.md`
-
-### 7. Research the codebase
+### 4. Research the codebase
 
 Investigate thoroughly to understand:
 
@@ -84,7 +71,7 @@ Investigate thoroughly to understand:
 
 The goal is enough context to write a Concept of Operations that names the chosen path and connects to SITUATION.Pain, and Warning Orders that name each decision. `/opord` will use the MISSION to cut EXECUTION later — warno's job is to make the planning brief crisp.
 
-As you research, keep a curated shortlist of the files, folders, and glob patterns a fresh `/opord` session would actually need to read to cut EXECUTION — these become `### Target Reference Points` (TRP) in step 9. Filter aggressively: skip files you only opened to disprove a hypothesis, files that are obvious from project conventions (e.g. `package.json`), and siblings already covered by a folder or glob entry. If a directory has more than a handful of relevant siblings, list the directory or a glob — never enumerate dozens of files. TRP is a scannable map, not a research log.
+As you research, keep a curated shortlist of the files, folders, and glob patterns a fresh `/opord` session would actually need to read to cut EXECUTION — these become `### Target Reference Points` (TRP) in step 6. Filter aggressively: skip files you only opened to disprove a hypothesis, files that are obvious from project conventions (e.g. `package.json`), and siblings already covered by a folder or glob entry. If a directory has more than a handful of relevant siblings, list the directory or a glob — never enumerate dozens of files. TRP is a scannable map, not a research log.
 
 Default: commit to the most viable option you find — put it in the WO bold label and let the user override on review. Append a `- ? <prompt> (opt-a / opt-b) >` sub-bullet under a Warning Order **only** in these two cases:
 
@@ -93,7 +80,7 @@ Default: commit to the most viable option you find — put it in the WO bold lab
 
 Otherwise do **not** ask. No alts for naming, paths, style, or anything you're already confident about. Most operations will have zero `- ?` sub-bullets. `/opord` later resolves any that remain.
 
-### 8. Re-run dispatch + write MISSION
+### 5. Re-run dispatch + write MISSION
 
 Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
 
@@ -103,13 +90,13 @@ Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
   - **Targeted edit** — args describe partial changes to MISSION (Concept of Operations, Warning Orders, Target Reference Points). Apply the described edits in place; refresh TRP if the edit changes which paths are relevant. Run `naholo agent add-timeline -T warno '{summary}'`.
   - **Full restart** — args explicitly say start over (e.g., "rewrite the mission from scratch"). Replace MISSION wholesale (including TRP). If `## EXECUTION` already has content, use `AskUserQuestion` to ask whether to **keep EXECUTION** (let `/opord` reconcile it against the new MISSION later) or **flush EXECUTION** (delete every task section — including shipped ones — and leave EXECUTION empty for `/opord` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Run `naholo agent add-timeline -T warno '{summary, including kept/flushed EXECUTION}'`.
 
-### 9. Write OPERATION.md MISSION
+### 6. Write OPERATION.md MISSION
 
 `## MISSION` has three subsections in fixed order (add any that are missing):
 
 - `### Concept of Operations` — **two or three sentences max**. Names the chosen approach and connects it to `SITUATION.Pain`. Concept-level only — do **not** enumerate files, edit steps, or build commands here; those belong in Warning Orders or are derived later in EXECUTION.
 - `### Warning Orders` — a flat bullet list of decisions. One bullet per decision. Each bullet starts with a **bold one-line label** stating the decision, then `: ` and a single sentence of reasoning. Keep the bold label short — avoid long code spans, file paths, or multi-clause titles inside the bold (put those in the reasoning half after the colon). No `####` headings, no prose paragraphs. Use a sub-bullet only when one sentence genuinely cannot carry the decision (e.g., the decision has two or three concrete items the reader needs to see); keep sub-bullets to one short clause each and avoid them whenever possible. Two optional sub-bullet forms:
-  - `- ? <prompt> (opt-a / opt-b) >` — a single open alt for the user to answer (or for `/opord` to resolve). Only when the high bar in step 7 is met.
+  - `- ? <prompt> (opt-a / opt-b) >` — a single open alt for the user to answer (or for `/opord` to resolve). Only when the high bar in step 4 is met.
   - `- Rejected: opt-a, opt-b` — alternatives the user dismissed or `/opord` collapsed. Comma-joined, no reasons unless the user added them.
 
   Decisions belong here, not inside individual tasks.
@@ -119,7 +106,7 @@ Inspect the current state of OPERATION.md MISSION and any freeform args. Branch:
   - The tag is a **noun-only label** — at most a few words naming the role. **No verbs, no clauses, no relative pronouns** (`that…`, `which…`, `containing…`). If you find yourself writing a clause, cut it down to the noun.
   - No trailing period. No backticks around the tag.
   - **No sub-bullets.** If a file matters in two ways, write two bullets or pick the dominant role.
-  - **Filter aggressively** (see step 7): list a folder or glob when several siblings are relevant; skip files obvious from project conventions; skip files only opened to disprove a hypothesis.
+  - **Filter aggressively** (see step 4): list a folder or glob when several siblings are relevant; skip files obvious from project conventions; skip files only opened to disprove a hypothesis.
   - This is a map for downstream skills, not a duplicate of EXECUTION's per-task Course of Action.
 
 Examples:
@@ -143,7 +130,7 @@ Examples:
 - `docs/ai-workflow.md` — workflow doc
 ```
 
-### 10. Print summary
+### 7. Print summary
 
 Show the warno state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
 
@@ -181,10 +168,10 @@ While in the warno phase:
 ## Rules
 
 - **MISSION-only**: `/warno` appends `## MISSION` (heading + subsections) when absent and revises it in place when present. It does NOT write `## EXECUTION` and does NOT mirror to `TASKS.md`. Those are `/opord`'s job.
-- **Decisions commit to one path**: every Warning Order and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft. The narrow exception is the `- ? ... >` sub-bullet, which is reserved for the two cases in step 7.
+- **Decisions commit to one path**: every Warning Order and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft. The narrow exception is the `- ? ... >` sub-bullet, which is reserved for the two cases in step 4.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **TRP is a curated map, not a research log**: noun-only tags, no verbs/clauses/relative pronouns; backtick-wrapped paths; folders end with `/`; prefer a folder or glob over enumerating siblings.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
 - **Do NOT implement any code** — only edit `OPERATION.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
-- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.

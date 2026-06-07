@@ -11,8 +11,6 @@ Thin wrapper around `naholo agent exfil`. The CLI command owns the push, transcr
 
 ## Arguments
 
-No operation number — the skill resolves the active operation via `naholo agent op`.
-
 Anything in quotes is optional context. Common patterns:
 
 - `"close"` — close the operation after syncing
@@ -23,34 +21,35 @@ If no instructions are given, ask the user whether to close.
 
 ## What to do
 
-1. **Load personality**: If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+1. **Boot once**: If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration. If `<op_status>` carries `No infiled operation.`, tell the user there's no infiled operation to exfil and stop. Otherwise skip the boot call — `opPath` is already cached.
 
-2. **Load manual**: If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules. Otherwise skip.
+2. **Load context once**: If you haven't already read these this session, read them now:
+   - `{operationDir}/notes/OPERATION.md` — the live OP document
+   - `{operationDir}/TASKS.md` — the checklist
+   - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-3. **Find infiled operation**: Run `naholo agent op`. If it errors with "No infiled operation", tell the user there's no infiled operation to exfil and stop. Otherwise capture the printed `#{operationNumber} {title}` for context.
-
-4. **Check for unchecked tasks**: Read `{operationDir}/TASKS.md` (resolve `{operationDir}` via `naholo agent op-path`) and count unchecked (`- [ ]`) tasks. If any exist, use `AskUserQuestion` to warn: "Heads up — {count} tasks still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
+3. **Check for unchecked tasks**: Count unchecked (`- [ ]`) tasks in `TASKS.md`. If any exist, use `AskUserQuestion` to warn: "Heads up — {count} tasks still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
    - If **no** → abort. Print that exfil was aborted and local data is preserved at `{operationDir}`.
    - If **yes** → continue.
 
-5. **Resolve close intent**:
+4. **Resolve close intent**:
    - Args contain `"close"` → close.
    - Args contain `"don't close"` → leave open.
    - All tasks in TASKS.md are done → close (no need to ask).
-   - Otherwise → use `AskUserQuestion`: "Close operation #{operationNumber}?" Do NOT proceed until they respond.
+   - Otherwise → use `AskUserQuestion`: "Close operation #{currentOp}?" Do NOT proceed until they respond.
 
-6. **Run `naholo agent exfil`**: Pass `--close` when closing, no flag when leaving open. On non-zero exit, surface the CLI's error and stop — the local dir is preserved by the CLI on every failure path. On success, capture the last line of stdout as `{url}`.
+5. **Run `naholo agent exfil`**: Pass `--close` when closing, no flag when leaving open. On non-zero exit, surface the CLI's error and stop — the local dir is preserved by the CLI on every failure path. On success, capture the last line of stdout as `{url}`.
 
-7. **Print the completion line** as raw markdown (no surrounding fence):
+6. **Print the completion line** as raw markdown (no surrounding fence):
 
    ```
-   Exfil complete — [OP #{operationNumber}: "{title}"]({url})
+   Exfil complete — [OP #{currentOp}: "{opTitle}"]({url})
    ```
 
 ## Rules
 
 - **Exfil is sync-only** — no source-file edits in this skill.
-- **`naholo agent exfil` owns push, transcript drain, log post, optional close, and local-dir removal** — the skill's only CLI calls are `naholo agent op`, `naholo agent op-path`, and `naholo agent exfil`.
+- **`naholo agent exfil` owns push, transcript drain, log post, optional close, and local-dir removal** — the skill's only CLI calls are `naholo agent boot` and `naholo agent exfil`.
 - **The op URL is the last stdout line of `naholo agent exfil`** — capture it from there for the completion line.
 - Print the completion line as raw markdown — no surrounding fence.
-- **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` with the absolute path from `naholo agent op-path`. The `{url}` in the completion line is a real `https://` URL and is exempt.
+- **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` with `opPath` from boot's `<op_status>`. The `{url}` in the completion line is a real `https://` URL and is exempt.

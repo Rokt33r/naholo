@@ -16,31 +16,20 @@ None. `/chopchop` always consumes `{operationDir}/notes/CHOP.md` as-is. If the u
 
 ## What to do
 
-### 1. Load personality
+### 1. Boot
 
-If you haven't already read `naholo://soul` in this session, read it now. If non-empty, adopt it as your personality and voice. If empty or already loaded, skip.
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — the parent operation directory. Read `currentOp` / `opTitle` inline from `<op_status>` for the parent OP's `{parentNumber}` / `{parentTitle}`. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
 
-### 2. Load manual
+### 2. Load context
 
-If you haven't already run `naholo agent man` in this session, run it now via the Bash tool and adopt the rules. Otherwise skip.
-
-### 3. Find infiled operation
-
-Run `naholo agent op`. If it errors with "No infiled operation", tell the user to run `/infil {operationNumber}` first and abort. Capture `#{parentNumber} {parentTitle}`.
-
-### 4. Resolve operation directory
-
-Run `naholo agent op-path`; call the result `{operationDir}`.
-
-### 5. Read local state
-
-Read:
+If you haven't already read these this session, read them now:
 
 - `{operationDir}/notes/CHOP.md` — required. If missing, stop and tell the user to run `/chop "freeform"` first.
-- `{operationDir}/notes/OPERATION.md` — needed for parity checks against the parent's MISSION/EXECUTION and for the TRP allocation in step 7.
-- `{operationDir}/TASKS.md` — needed for the shipped/unshipped state on parent tasks.
+- `{operationDir}/notes/OPERATION.md` — needed for parity checks against the parent's MISSION/EXECUTION and for the TRP allocation in step 4
+- `{operationDir}/TASKS.md` — needed for the shipped/unshipped state on parent tasks
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that
 
-### 6. Validate `CHOP.md` (abort-before-modify gate)
+### 3. Validate `CHOP.md` (abort-before-modify gate)
 
 Before allocating TRP, before shelling out to the CLI, before any side effect: confirm `CHOP.md` is structurally sound and refers to real, unambiguous symbols on the parent. The CLI assumes these guarantees; failure here aborts cleanly without touching the server.
 
@@ -104,7 +93,7 @@ Common causes: `/warno` ran between `/chop` and `/chopchop` and added or dropped
 
 When validation passes, the parent↔CHOP mapping is unambiguous: every CHOP task title resolves to exactly one `### TASK m — {title}` section on the parent (by literal title match), and every WO bold label resolves to exactly one parent WO bullet. The CLI relies on that guarantee.
 
-### 7. Allocate Target Reference Points into `CHOP.md`
+### 4. Allocate Target Reference Points into `CHOP.md`
 
 Read the parent's `### Target Reference Points`. For each TRP entry, decide based on the carved vs. surviving WOs:
 
@@ -118,7 +107,7 @@ Then **overwrite** the `### Target Reference Points` block under each side's `##
 
 Format per entry follows the manual's TRP rules: backtick-wrapped paths, folder paths end with `/`, noun-only tags, no sub-bullets. Omit the `### Target Reference Points` heading entirely on a side when the side has zero entries (mirrors the `OPERATION.md` omit-when-empty convention).
 
-### 8. Run `naholo agent chopchop`
+### 5. Run `naholo agent chopchop`
 
 Shell out via Bash:
 
@@ -150,7 +139,7 @@ nextTaskTitle: <string or n/a>
 
 The CLI computes the line anchors and the `parentOpState` itself — the skill does not re-read `OPERATION.md` / `TASKS.md` afterward.
 
-### 9. Print summary
+### 6. Print summary
 
 Print as raw markdown — no surrounding fence. Use markdown link syntax.
 
@@ -191,7 +180,7 @@ Substitute `{missionLine}`, `{executionLine}`, `{nextTaskLine}`, `{nextTaskNumbe
 
 `/chopchop` **ends the chop phase**. No new phase begins automatically — the next phase is the user's choice, picked by invoking the appropriate skill. Do not infer a phase from `OPERATION.md` state and act as if it had been entered.
 
-If the user asks for follow-up work on the parent without explicitly invoking a skill, **push back once**. Surface the skill that owns the work — picking the most plausible suggestion from the prompt, or from the `parentOpState` value the CLI returned in step 8 if the prompt is ambiguous — and wait for them to invoke it. Common mappings:
+If the user asks for follow-up work on the parent without explicitly invoking a skill, **push back once**. Surface the skill that owns the work — picking the most plausible suggestion from the prompt, or from the `parentOpState` value the CLI returned in step 5 if the prompt is ambiguous — and wait for them to invoke it. Common mappings:
 
 - Rewriting parent `## MISSION` → suggest `/warno "..."`
 - Cutting tasks / editing parent `## EXECUTION` or `TASKS.md` → suggest `/opord "..."`
@@ -209,5 +198,5 @@ If the user pushes back, rephrases the request, or otherwise signals they want t
 - **TRP allocation is regenerated on every `/chopchop` run** — user hand-edits to TRP blocks in `CHOP.md` are not preserved. The user's TRP review channel is editing the parent's MISSION TRP before `/chopchop`.
 - **Trust `CHOP.md` on shipped scope** — if it lists a shipped task under `# NEW OP`, the CLI carries the task with its AAR intact. The shipped-or-not decision is `/chop`'s gate, not `/chopchop`'s.
 - **CLI owns apply semantics** — verbatim WO / task-section transfer, no-renumbering on the parent, new-OP renumber-from-1, server-then-local CHOP delete, and the parent rename are all CLI responsibilities. The skill validates and shells out; it does not edit `OPERATION.md`, `TASKS.md`, or call MCP tools.
-- **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with the absolute path from `naholo agent op-path`.
+- **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
 - Print the summary as raw markdown — no surrounding fence.
