@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
+  ArrowDownFromLine,
   MoreVertical,
   Loader2,
   CircleDot,
@@ -11,7 +12,13 @@ import {
   PanelLeftOpen,
   ListTodo,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -261,6 +268,21 @@ export function OperationDetail({
               {formatTasksCount(tasksDoneCount, tasksTotalCount)})
             </Button>
           )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size='icon'
+                variant='ghost'
+                onClick={() => {
+                  navigator.clipboard.writeText(`/infil ${operation.number}`)
+                  toast.success(`Copied /infil ${operation.number}`)
+                }}
+              >
+                <ArrowDownFromLine className='size-4' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Copy /infil {operation.number}</TooltipContent>
+          </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size='icon' variant='ghost' disabled={isDeleting}>
