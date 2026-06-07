@@ -1,6 +1,6 @@
 # Naholo — AI-Assisted Development Workflow
 
-Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via a core pipeline of skills — `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil` — plus a fresh-OP shortcut (`/raid`) that collapses `/warno` + `/opord` for small ops, and an optional OP-splitting side branch (`/chop` → `/chopchop` or `/nochop`) usable from the warno or opord phase.
+Naholo connects idea capture (in the web app) to plan execution (in local repos with AI agents) via a core pipeline of skills — `/infil` → `/warno` → `/opord` → `/splash` → `/sitrep` → `/exfil` — plus a fresh-OP shortcut (`/raid`) that collapses `/warno` + `/opord` for small ops, an optional OP-splitting side branch (`/chop` → `/chopchop` or `/nochop`) usable from the warno or opord phase, and a read-only Q&A side branch (`/recon`) runnable from any post-infil state.
 
 ## Workflow
 
@@ -81,6 +81,12 @@ When one OP has grown to cover two distinct concerns, split it. CHOP — short f
 
 While `CHOP.md` exists, `/warno` / `/opord` / `/splash` remain runnable, but each warns the user that the change will desync the pending proposal so they can revise CHOP afterward (or cancel and resolve CHOP first).
 
+### Side branch: Recon (`/recon ["first question"]`)
+
+For thinking out loud or auditing prior decisions without committing to a phase-changing skill. `/recon` loads `OPERATION.md` + `TIMELINE.md` and drops the session into a passive Q&A phase — questions get answered, additional files (`LOGS.yml`, other notes, codebase) are pulled on demand. Writes nothing: no `OPERATION.md` edits, no `TASKS.md` edits, no `add-timeline` bullets, no server syncs.
+
+Runnable from any post-`/infil` state. The recon phase persists until a phase-changing skill (`/warno`, `/opord`, `/splash`, `/chop`, `/chopchop`, `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves the recon phase intact. If the user asks for work that belongs to another skill mid-recon, `/recon` routes them to the right skill instead of doing it silently.
+
 ### Phase 6: Sync & Close
 
 Two skills for different stages of the same operation.
@@ -114,6 +120,7 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 | `/nochop`   | none                           | Discards `notes/CHOP.md`. No customization.                                                                                               |
 | `/sitrep`   | `"freeform"` (optional)        | Extra context for the summary log                                                                                                         |
 | `/exfil`    | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                                                                                                 |
+| `/recon`    | `"freeform"` (optional)        | Optional first question; without it, `/recon` loads context and waits                                                                     |
 
 ## Key Files
 

@@ -8,6 +8,7 @@ import sitrepContent from './skills/sitrep.md'
 import chopContent from './skills/chop.md'
 import chopchopContent from './skills/chopchop.md'
 import nochopContent from './skills/nochop.md'
+import reconContent from './skills/recon.md'
 
 export const CORE_LOADOUT_NAME = 'core'
 
@@ -22,4 +23,5 @@ export const coreSkills: { name: string; content: string }[] = [
   { name: 'chop', content: chopContent },
   { name: 'chopchop', content: chopchopContent },
   { name: 'nochop', content: nochopContent },
+  { name: 'recon', content: reconContent },
 ]

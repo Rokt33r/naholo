@@ -1,6 +1,6 @@
 # Naholo Agent Manual
 
-This is the single source of truth for how AI agents work with Naholo operations. Skills (`/infil`, `/warno`, `/opord`, `/splash`, `/sitrep`, `/exfil`) reference this manual instead of re-explaining workflow and file formats.
+This is the single source of truth for how AI agents work with Naholo operations. Skills (`/infil`, `/warno`, `/opord`, `/splash`, `/sitrep`, `/exfil`, `/recon`) reference this manual instead of re-explaining workflow and file formats.
 
 ## Terminology
 
@@ -36,6 +36,8 @@ The agent-facing lifecycle for an operation is a one-way pipeline from server to
 8. **`/nochop`** — Input: infiled operation with `notes/CHOP.md` present. Discards the proposal by deleting `CHOP.md` both locally and server-side. Parent OP is not modified. Ends the chop phase. No args.
 9. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (tasks + all notes including `TIMELINE.md` and any in-flight `CHOP.md`), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
 10. **`/exfil ["close"|"don't close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
+
+**Read-only side branch — `/recon ["first question"]`**: Input: infiled operation. Loads `OPERATION.md` + `TIMELINE.md` and drops the session into a passive Q&A phase — answers questions about the OP and pulls extra files (`LOGS.yml`, other notes, codebase) on demand. Writes nothing — no `OPERATION.md` edits, no `TASKS.md` edits, no `add-timeline` bullets, no server syncs. Runnable from any post-`/infil` state without disturbing MISSION / EXECUTION / AAR content. Phase-changing skills (`/warno`, `/opord`, `/splash`, `/chop`, `/chopchop`, `/nochop`) and `/exfil` end the recon phase.
 
 The canonical happy-path cycle: `/infil → /warno → /opord → /splash → (user reviews AAR) → /splash → … → /exfil`. Small fresh OPs may collapse `/warno → /opord` into a single `/raid` invocation. Mid-cycle revisions: `/opord "freeform"` between splashes adjusts the unfinished plan (insert, drop, split, rewrite); re-run `/warno` for direction (MISSION) changes.
 
