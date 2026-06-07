@@ -32,9 +32,9 @@ If you haven't run `naholo agent boot` this session, run it now via the Bash too
 
 ### 2. Load context
 
-If you haven't already read these this session, read them now:
+Read these now:
 
-- `{operationDir}/notes/OPERATION.md` — the live OP document
+- `{operationDir}/notes/OPERATION.md` — the live OP document; re-read every invocation so manual mid-session edits land
 - `{operationDir}/TASKS.md` — the checklist
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 

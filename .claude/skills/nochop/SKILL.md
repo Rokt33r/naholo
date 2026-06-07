@@ -22,13 +22,13 @@ If you haven't run `naholo agent boot` this session, run it now via the Bash too
 
 ### 2. Load context
 
-If you haven't already read these this session, read them now:
+Read these now:
 
 - `{operationDir}/notes/CHOP.md` — **required**. If missing, abort. Print as raw markdown (no surrounding fence) and stop:
 
   > No CHOP proposal in flight. `/nochop` only applies when `notes/CHOP.md` exists.
 
-- `{operationDir}/notes/OPERATION.md` — needed for the next-action mode in step 5
+- `{operationDir}/notes/OPERATION.md` — re-read every invocation so manual mid-session edits land; needed for the next-action mode in step 5
 - `{operationDir}/TASKS.md` — same
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that
 

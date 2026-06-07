@@ -160,15 +160,6 @@ The infiled directory is resolved against the shell's working directory — the 
 
 Recovery: run `pwd`, then `cd` back to the directory where the op was infiled (the one containing `.naholo/local/infiled/`), and re-run the command.
 
-## Session bootstrap
-
-Every skill (except `/infil`'s pre-CLI step) opens with two reads, each done once per session:
-
-1. **Boot once** — if you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>`. Read `currentOp` / `opTitle` inline for opening narration if needed; do not store them. If `<op_status>` carries `No infiled operation.`, abort the skill and tell the user to run `/infil <opNum>`. Otherwise skip the boot call on subsequent skill invocations — `opPath` is already cached.
-2. **Load context once** — if you haven't read `OPERATION.md` this session, read `{opPath}notes/OPERATION.md`. If this is the first boot in a fresh session, also read `{opPath}notes/TIMELINE.md` once for catch-up. Do not re-read TIMELINE.md after that — it is a fresh-session catch-up doc, not in-session state.
-
-Subsequent skill invocations in the same session reuse the cached `opPath` and the in-context OPERATION.md without re-running boot or re-reading the file. Skills that need a fresh `opNotes` / `opTitle` (e.g. after `/warno` retitles, after `/infil` lands `OPERATION` / `TIMELINE`) re-run `naholo agent op` on demand.
-
 ## Chat output
 
 When printing an end-of-skill summary to the user (infil recap, warno summary, splash AAR digest, sitrep/exfil report), output raw markdown lines directly — **never wrap the summary block in a codeblock fence**. Fenced summaries break `[text](path)` link rendering in the Naholo UI. Files written to disk can still contain fenced code examples; this rule applies only to chat output.

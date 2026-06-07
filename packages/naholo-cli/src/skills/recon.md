@@ -22,7 +22,10 @@ If you haven't run `naholo agent boot` this session, run it now via the Bash too
 
 ### 2. Load context
 
-If you haven't already read `{operationDir}/notes/OPERATION.md` this session, read it now. If this is the first boot in a fresh session, also read `{operationDir}/notes/TIMELINE.md` once for catch-up — never re-read it after that.
+Read these now:
+
+- `{operationDir}/notes/OPERATION.md` — the live OP document; re-read every invocation so manual mid-session edits land
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
 ### 3. Acknowledge readiness and answer
 

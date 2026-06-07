@@ -40,9 +40,9 @@ If you haven't run `naholo agent boot` this session, run it now via the Bash too
 
 ### 2. Load context
 
-If you haven't already read these this session, read them now:
+Read these now:
 
-- `{operationDir}/notes/OPERATION.md` — the live OP document; the parent's `## SITUATION` is source material for the two proposed SITUATIONs drafted in step 3, and the rest is needed to identify carveable WOs / tasks and each task's shipped state
+- `{operationDir}/notes/OPERATION.md` — the live OP document; re-read every invocation so manual mid-session edits land; the parent's `## SITUATION` is source material for the two proposed SITUATIONs drafted in step 3, and the rest is needed to identify carveable WOs / tasks and each task's shipped state
 - `{operationDir}/TASKS.md` — task numbers + titles
 - `{operationDir}/notes/CHOP.md` — **only when present** (a revision run); the args describe how to tweak the existing proposal, not draft a fresh one
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that

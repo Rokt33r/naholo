@@ -15,30 +15,41 @@ Anything in quotes is optional freeform context. When given, it replaces the `ne
 
 ## What to do
 
-1. **Boot once**: If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and stop. Otherwise skip the boot call — `opPath` is already cached.
+### 1. Boot
 
-2. **Load context once**: If you haven't already read these this session, read them now:
-   - `{operationDir}/notes/OPERATION.md` — the live OP document
-   - `{operationDir}/TASKS.md` — the checklist
-   - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and stop. Otherwise skip the boot call — `opPath` is already cached.
 
-3. **Compose the log content** — a single line in this exact shape:
+### 2. Load context
 
-   ```
-   **sitrep** — phase: {warno|opord|splash}, next: {short imperative — e.g. "/splash to ship TASK 3", "/opord to revise TASK 4", "review AAR"}.
-   ```
+Read these now:
 
-   - `phase` is the most recent phase-changing skill that ran in this session (`/warno`, `/opord`, or `/splash`).
-   - `next` is the obvious next step from `TASKS.md` + `OPERATION.md` state. If freeform args were passed, use them verbatim as the `next:` clause.
-   - The `**sitrep** — ` prefix is mandatory — `/infil` keys off it to skip sync echoes when re-infiling.
+- `{operationDir}/notes/OPERATION.md` — the live OP document; re-read every invocation so manual mid-session edits land
+- `{operationDir}/TASKS.md` — the checklist
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-4. **Run `naholo agent sitrep --log "<content>"`** with the composed line. On non-zero exit, surface the CLI's error and stop — the local dir is preserved.
+### 3. Compose the log content
 
-5. **Print the confirmation** as raw markdown (no surrounding fence):
+A single line in this exact shape:
 
-   ```
-   Sitrep synced for OP #{currentOp}.
-   ```
+```
+**sitrep** — phase: {warno|opord|splash}, next: {short imperative — e.g. "/splash to ship TASK 3", "/opord to revise TASK 4", "review AAR"}.
+```
+
+- `phase` is the most recent phase-changing skill that ran in this session (`/warno`, `/opord`, or `/splash`).
+- `next` is the obvious next step from `TASKS.md` + `OPERATION.md` state. If freeform args were passed, use them verbatim as the `next:` clause.
+- The `**sitrep** — ` prefix is mandatory — `/infil` keys off it to skip sync echoes when re-infiling.
+
+### 4. Run `naholo agent sitrep --log "<content>"`
+
+Run with the composed line. On non-zero exit, surface the CLI's error and stop — the local dir is preserved.
+
+### 5. Print the confirmation
+
+Print as raw markdown (no surrounding fence):
+
+```
+Sitrep synced for OP #{currentOp}.
+```
 
 ## Rules
 

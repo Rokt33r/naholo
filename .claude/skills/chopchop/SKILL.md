@@ -22,10 +22,10 @@ If you haven't run `naholo agent boot` this session, run it now via the Bash too
 
 ### 2. Load context
 
-If you haven't already read these this session, read them now:
+Read these now:
 
 - `{operationDir}/notes/CHOP.md` — required. If missing, stop and tell the user to run `/chop "freeform"` first.
-- `{operationDir}/notes/OPERATION.md` — needed for parity checks against the parent's MISSION/EXECUTION and for the TRP allocation in step 4
+- `{operationDir}/notes/OPERATION.md` — re-read every invocation so manual mid-session edits land; needed for parity checks against the parent's MISSION/EXECUTION and for the TRP allocation in step 4
 - `{operationDir}/TASKS.md` — needed for the shipped/unshipped state on parent tasks
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that
 

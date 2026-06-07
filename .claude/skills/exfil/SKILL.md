@@ -21,30 +21,43 @@ If no instructions are given, ask the user whether to close.
 
 ## What to do
 
-1. **Boot once**: If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration. If `<op_status>` carries `No infiled operation.`, tell the user there's no infiled operation to exfil and stop. Otherwise skip the boot call — `opPath` is already cached.
+### 1. Boot
 
-2. **Load context once**: If you haven't already read these this session, read them now:
-   - `{operationDir}/notes/OPERATION.md` — the live OP document
-   - `{operationDir}/TASKS.md` — the checklist
-   - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
+If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration. If `<op_status>` carries `No infiled operation.`, tell the user there's no infiled operation to exfil and stop. Otherwise skip the boot call — `opPath` is already cached.
 
-3. **Check for unchecked tasks**: Count unchecked (`- [ ]`) tasks in `TASKS.md`. If any exist, use `AskUserQuestion` to warn: "Heads up — {count} tasks still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
-   - If **no** → abort. Print that exfil was aborted and local data is preserved at `{operationDir}`.
-   - If **yes** → continue.
+### 2. Load context
 
-4. **Resolve close intent**:
-   - Args contain `"close"` → close.
-   - Args contain `"don't close"` → leave open.
-   - All tasks in TASKS.md are done → close (no need to ask).
-   - Otherwise → use `AskUserQuestion`: "Close operation #{currentOp}?" Do NOT proceed until they respond.
+Read these now:
 
-5. **Run `naholo agent exfil`**: Pass `--close` when closing, no flag when leaving open. On non-zero exit, surface the CLI's error and stop — the local dir is preserved by the CLI on every failure path. On success, capture the last line of stdout as `{url}`.
+- `{operationDir}/notes/OPERATION.md` — the live OP document; re-read every invocation so manual mid-session edits land
+- `{operationDir}/TASKS.md` — the checklist
+- `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-6. **Print the completion line** as raw markdown (no surrounding fence):
+### 3. Check for unchecked tasks
 
-   ```
-   Exfil complete — [OP #{currentOp}: "{opTitle}"]({url})
-   ```
+Count unchecked (`- [ ]`) tasks in `TASKS.md`. If any exist, use `AskUserQuestion` to warn: "Heads up — {count} tasks still incomplete. Proceed with exfil anyway?" Do NOT proceed until they respond.
+
+- If **no** → abort. Print that exfil was aborted and local data is preserved at `{operationDir}`.
+- If **yes** → continue.
+
+### 4. Resolve close intent
+
+- Args contain `"close"` → close.
+- Args contain `"don't close"` → leave open.
+- All tasks in TASKS.md are done → close (no need to ask).
+- Otherwise → use `AskUserQuestion`: "Close operation #{currentOp}?" Do NOT proceed until they respond.
+
+### 5. Run `naholo agent exfil`
+
+Pass `--close` when closing, no flag when leaving open. On non-zero exit, surface the CLI's error and stop — the local dir is preserved by the CLI on every failure path. On success, capture the last line of stdout as `{url}`.
+
+### 6. Print the completion line
+
+Print as raw markdown (no surrounding fence):
+
+```
+Exfil complete — [OP #{currentOp}: "{opTitle}"]({url})
+```
 
 ## Rules
 
