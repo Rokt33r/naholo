@@ -5,7 +5,6 @@ import { exfilCommand } from './exfil.js'
 import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
 import { opCommand } from './op.js'
-import { opPathCommand } from './op-path.js'
 import { opUrlCommand } from './op-url.js'
 import { reinfilCommand } from './reinfil.js'
 import { sitrepCommand } from './sitrep.js'
@@ -22,7 +21,6 @@ agentCommand.addCommand(sitrepCommand)
 agentCommand.addCommand(addTimelineCommand)
 agentCommand.addCommand(manCommand)
 agentCommand.addCommand(opCommand)
-agentCommand.addCommand(opPathCommand)
 agentCommand.addCommand(opUrlCommand)
 agentCommand.addCommand(claudeCodeStopCommand)
 agentCommand.addCommand(chopchopCommand)

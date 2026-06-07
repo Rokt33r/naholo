@@ -68,3 +68,25 @@ export function writeOpYml(info: OpYml): void {
   fs.mkdirSync(getLocalOperationDir(), { recursive: true })
   fs.writeFileSync(getOpYmlPath(), yamlStringify(info))
 }
+
+export function renderOpStatusYaml(): string | null {
+  const opYml = readOpYml()
+  if (opYml == null) {
+    return null
+  }
+  const opPath = getLocalOperationDir()
+  const notesDir = getNotesDir()
+  const opNotes = fs.existsSync(notesDir)
+    ? fs
+        .readdirSync(notesDir)
+        .filter((entry) => entry.endsWith('.md'))
+        .map((entry) => entry.slice(0, -3))
+        .sort()
+    : []
+  return yamlStringify({
+    currentOp: opYml.number,
+    opTitle: opYml.title,
+    opPath: opPath.endsWith(path.sep) ? opPath : opPath + path.sep,
+    opNotes,
+  })
+}
