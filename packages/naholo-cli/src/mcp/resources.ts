@@ -5,7 +5,6 @@ import {
 import type { NaholoClient } from 'naholo-api/client'
 import { readOpYml } from '../lib/local-operations.js'
 import { formatTasksMarkdown } from '../lib/tasks-markdown.js'
-import { getActiveProfile } from '../profile.js'
 
 export function registerResources(
   server: McpServer,
@@ -126,25 +125,6 @@ export function registerResources(
             uri: uri.href,
             mimeType: 'application/json',
             text: JSON.stringify(notes, null, 2),
-          },
-        ],
-      }
-    },
-  )
-
-  server.registerResource(
-    'soul',
-    'naholo://soul',
-    { description: 'Personality / soul text for the active CLI profile' },
-    async (uri) => {
-      const active = getActiveProfile()
-      const soul = active?.profile.soul ?? ''
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: 'text/markdown',
-            text: soul,
           },
         ],
       }
