@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { addTimelineCommand } from './add-timeline.js'
+import { bootCommand } from './boot.js'
 import { chopchopCommand } from './chopchop.js'
 import { exfilCommand } from './exfil.js'
 import { infilCommand } from './infil.js'
@@ -19,6 +20,7 @@ agentCommand.addCommand(reinfilCommand)
 agentCommand.addCommand(exfilCommand)
 agentCommand.addCommand(sitrepCommand)
 agentCommand.addCommand(addTimelineCommand)
+agentCommand.addCommand(bootCommand)
 agentCommand.addCommand(manCommand)
 agentCommand.addCommand(opCommand)
 agentCommand.addCommand(opUrlCommand)
