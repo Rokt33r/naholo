@@ -1,0 +1,63 @@
+export const metadata = {
+  title: 'Primer — Field Manual — naholo',
+}
+
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+    // 02 · Primer
+  </p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
+    The default is broken.
+  </h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+    The agent ships the chores. You ship the judgment.
+  </p>
+</div>
+
+Working with a coding agent is a discipline, not a workflow. The agent is _always_ confident. This chapter is what to do about it.
+
+## The default is broken
+
+Run a coding agent the default way — vibe coding, token-maxing, ship-and-see — and three things go wrong at once.
+
+**The human breaks.** You end up in one of two corners. The optimist stops reading the output and trusts a confident voice until it bites — that is delusion. The conscientious one tries to keep up with every diff, every transcript, every tool call, and drowns — that is overload. Both are the same failure: no checkpoint small enough to actually digest.
+
+**The output breaks.** Unreviewable diffs. Regressions. Drift. Slop you can&rsquo;t trace back to a decision. The code looks plausible long enough to merge and starts hurting later.
+
+**The resource bill breaks.** Tokens nobody counted. Compute, electricity, water — the costs the &ldquo;more context, more retries&rdquo; reflex pours into the void. You can&rsquo;t track what the default mode hides.
+
+These are three symptoms of one mistake: treating _more_ as a substitute for _review_.
+
+## How you&rsquo;re supposed to use a coding agent
+
+The cure is the same shape for every tool — Naholo, anything else, your own scripts. Three reviews carry every change. Skip one and the others can&rsquo;t save you.
+
+- **Review the architecture decisions** — before any implementation is planned.
+- **Review the implementation plan** — before a single line of code is written.
+- **Review the changes** — before you trust them in front of anyone else.
+
+Reviews are heavy. **Architecture** — the whole problem, every tradeoff. **Implementation** — every file the plan touches, in what order. **Change** — every line you&rsquo;re about to merge. That is real cognitive load, and it does not get cheaper by skipping. It gets cheaper by making each review **small** and **cumulative** — small enough to hold in one sitting, and ordered so each one builds on the last. You ramp up with the operation instead of facing every checkpoint cold.
+
+That is the rule that bounds everything else. Working well with an agent is not about burning billions of tokens — it is about keeping the agent&rsquo;s _context_ tight. Every token the agent reads is one it needs. The output stays anchored to the task at hand. Less slop generated, and the slop that does surface has nowhere to hide.
+
+The agent&rsquo;s job is to absorb the chores — bookkeeping, file shuffling, scaffolding, per-task ceremony. Your job is to absorb the judgment — what to build, how to shape it, whether it actually works. Trade the wrong way and you&rsquo;ve automated the wrong half.
+
+## How Naholo helps
+
+Naholo holds the bound for you. An operation is pinned to the three reviews, one document per review:
+
+- **MISSION** captures the architecture decisions so you can review them.
+- **EXECUTION** captures the implementation plan so you can review it.
+- **The per-task After-Action Report** captures each change so you can review it in isolation.
+
+A fourth document, **SITUATION**, sits in front of the trio. It isn&rsquo;t a review checkpoint — it&rsquo;s the agent&rsquo;s structured summary of your raw intel, the prep work that lets the three reviews land sharply.
+
+Each review ends at a checkpoint. Each checkpoint is small enough that you don&rsquo;t drown in it, and structured enough that you can&rsquo;t skip it. That is the answer to the human cost — the load is chopped before it arrives at you.
+
+Every operation also gets a token receipt. The agent-stats panel on the web app surfaces token usage by skill, model, and session, so you can see what each operation actually cost. That is the answer to the resource cost — the default mode hides what you spend; Naholo shows it.
+
+The skills (`/infil`, `/warno`, `/opord`, `/splash`, `/exfil`) and the CLI underneath them are the mechanisms that hold the shape in place. [Customize](/field-manual/customize) explains how to bend them; this chapter is just the _why_.
+
+---
+
+Don&rsquo;t ship delusion. Ship real.
