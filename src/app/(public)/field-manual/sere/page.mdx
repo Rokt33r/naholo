@@ -4,7 +4,7 @@ export const metadata = {
 
 <div className='not-prose'>
   <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
-    // 05 · S.E.R.E.
+    // 06 · S.E.R.E.
   </p>
   <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
     Recover the cycle.
@@ -20,6 +20,7 @@ S.E.R.E. is the military acronym for **Survival, Evasion, Resistance, Escape** �
 
 - [Context poisoned](#context-poisoned)
 - [Change a just-shipped task](#change-a-just-shipped-task)
+- [Stuck on a call](#stuck-on-a-call)
 - [Task conflicts with Warning Orders](#task-conflicts-with-warning-orders)
 - [Scope ballooned](#scope-ballooned)
 - [Plan is unsalvageable](#plan-is-unsalvageable)
@@ -37,7 +38,13 @@ S.E.R.E. is the military acronym for **Survival, Evasion, Resistance, Escape** �
 **Move.** Branch on size.
 
 - **Minor.** You&rsquo;re still in the splash phase from that splash, so just chat the tweak — &ldquo;rename that helper&rdquo;, &ldquo;the AAR missed the migration step, add it&rdquo;. The agent will make the change and refresh the AAR to match.
-- **Major.** Invoke `/opord "freeform"` to insert a new TASK and ship the change as its own splash. Re-splashing the same task would mix two stories; a new TASK gives the change its own review window.
+- **Major.** Invoke `/opord ...` to insert a new TASK and ship the change as its own splash. Re-splashing the same task would mix two stories; a new TASK gives the change its own review window.
+
+## Stuck on a call
+
+**Situation.** A Warning Order, a TASK, or a pending change doesn&rsquo;t sit right. You feel the call is wrong but can&rsquo;t yet name the fix &mdash; or you can&rsquo;t tell what fix the agent would even agree with. Re-running `/warno` or `/opord` blind would just churn.
+
+**Move.** Drop into `/recon` for a read-only research-and-discussion phase. Pull the relevant files, talk through tradeoffs with the agent, share the pain you can&rsquo;t yet name. The agent suggests alternatives; you suggest your own. Nothing lands on disk yet. When you have a concrete prompt, tell the agent `/warno ...` (for direction changes), `/opord ...` (for task changes), or combine them &mdash; `run /warno and /opord to update related WOs and TASKs` &mdash; when the idea has solidified enough to touch both layers. The discussion hands off into the right phase skill.
 
 ## Task conflicts with Warning Orders
 
@@ -45,17 +52,17 @@ S.E.R.E. is the military acronym for **Survival, Evasion, Resistance, Escape** �
 
 **Move.** Review the pushback. The agent will print a drafted `/warno "..."` prompt as part of the response — the MISSION revision it thinks is needed. From there:
 
-- If the drafted prompt looks right, tell the agent to `run /warno and /opord for me` — it&rsquo;ll revise MISSION, then re-cut the affected tasks under the new Warning Orders.
+- If the drafted prompt looks right, tell the agent `run /warno and /opord for me` — it&rsquo;ll revise MISSION, then re-cut the affected tasks under the new Warning Orders.
 - If the draft needs tweaks, copy it, edit it, and submit it yourself. The agent runs against the prompt you actually wanted. `/opord` follows after MISSION has settled so EXECUTION re-aligns with the new direction.
 
 ## Scope ballooned
 
 **Situation.** The CONOPS is bloated, the Warning Orders have multiplied past the point you can hold them in your head, or the task list is doing the work of two operations. These are the concrete signs the op should split.
 
-**Move.** Run `/chop "freeform"` to draft a split proposal at `notes/CHOP.md`. Review the proposal (or hand-edit it), then either `/chopchop` to apply the split and spawn a new OP, or `/nochop` to discard it. One op, one cohesive ship — bigger isn&rsquo;t better.
+**Move.** Run `/chop ...` to draft a split proposal at `notes/CHOP.md`. Review the proposal (or hand-edit it), then either `/chopchop` to apply the split and spawn a new OP, or `/nochop` to discard it. One op, one cohesive ship — bigger isn&rsquo;t better.
 
 ## Plan is unsalvageable
 
 **Situation.** Every checkpoint surfaces more problems than the last. The cycle is digging in instead of moving. You can feel the sunk cost growing.
 
-**Move.** Run `/exfil` with a &ldquo;close and carve intel&rdquo; instruction. The plan dies; whatever intel was worth keeping gets logged on the next operation. Sunk cost is the worse cost. Restart cheap.
+**Move.** Drop into `/recon` and walk through what is worth keeping &mdash; research notes, design decisions, partially-shipped work that deserves a second life. Tell the agent to spin up a new OP and post the carved intel as logs on it (MCP tools handle the create + log calls). Then `/exfil` the dying OP. The plan dies; the lessons live on a fresh start. Sunk cost is the worse cost. Restart cheap.

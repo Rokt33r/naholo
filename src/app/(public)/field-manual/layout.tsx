@@ -4,8 +4,9 @@ const chapters = [
   { slug: '', label: 'Overview' },
   { slug: 'quick-start', label: 'Quick Start' },
   { slug: 'primer', label: 'Primer' },
-  { slug: 'logistics', label: 'Logistics' },
+  { slug: 'readiness', label: 'Readiness' },
   { slug: 'workflow', label: 'Workflow' },
+  { slug: 'logistics', label: 'Logistics' },
   { slug: 'sere', label: 'S.E.R.E.' },
   { slug: 'customize', label: 'Customize' },
 ]

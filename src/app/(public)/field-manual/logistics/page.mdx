@@ -4,86 +4,127 @@ export const metadata = {
 
 <div className='not-prose'>
   <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
-    // 03 · Logistics
+    // 05 · Logistics
   </p>
   <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
-    Lay the ground.
+    The contracts.
   </h1>
   <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
-    Set up the rig before the first /infil.
+    The precise contracts for every skill, file, and tool.
   </p>
 </div>
 
-[Quick Start](/field-manual/quick-start) walks the happy path end to end. This chapter is the deep dive on what comes before: what you need on hand, what to install, which init mode fits, and what kind of agent tool the chain actually runs in.
+[Workflow](/field-manual/workflow) walks the cycle and the phase model. This chapter is the reference desk &mdash; when you need to know exactly what a skill takes, what file it touches, or what tool the agent calls, look here.
 
-## Prerequisites
+## Argument conventions
 
-Before you run `/infil` on your first operation, have these in place:
+Only `/infil` takes the operation number, and only on a fresh infil. Every other skill resolves the active operation from `naholo agent boot`&rsquo;s `<op_status>` block (which carries `currentOp`, `opTitle`, `opPath`, `opNotes` as YAML.
 
-- **A naholo account and a project.** Sign up, create or join a project. Operations belong to projects.
-- **A repo and an operation.** The repo is where the agent ships code. The operation is the issue you&rsquo;re about to work on — create it in the web app and drop logs as ideas land.
-- **A coding agent.** [Claude Code](https://claude.com/claude-code) is the supported one today. Codex support is on the way.
-- **The naholo CLI.** Installed once per machine, used by the agent during the cycle. You set it up here; you almost never type into it directly afterwards.
+| Skill       | First arg shape                | Meaning                                                                                                                                         |
+| ----------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/infil`    | `{N}` or none                  | Op number for fresh infil; no args to re-infil (refresh)                                                                                        |
+| `/warno`    | `"freeform"` (optional)        | MISSION-scoped instructions to revise Concept / WARNORDs                                                                                        |
+| `/raid`     | `"freeform"` (optional)        | Task-cutting hints forwarded to the chained `/opord` (fresh OPs only)                                                                           |
+| `/opord`    | `"freeform"` (optional)        | Plan-revision instructions for unfinished tasks (insert / split / retitle / drop)                                                               |
+| `/splash`   | `N` or `"freeform"` (optional) | Task number; or extra context for the next-unchecked task                                                                                       |
+| `/chop`     | `"freeform"` (**required**)    | What to carve off (topic, WO references, optional new-OP title). Required in both fresh and revision modes &mdash; `/chop` with no args errors. |
+| `/chopchop` | none                           | Consumes `notes/CHOP.md`. The only customization channel is hand-editing `CHOP.md` (or re-running `/chop "freeform"`) before applying.          |
+| `/nochop`   | none                           | Discards `notes/CHOP.md`. No customization.                                                                                                     |
+| `/sitrep`   | `"freeform"` (optional)        | Extra context for the summary log                                                                                                               |
+| `/exfil`    | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                                                                                                       |
+| `/recon`    | `"freeform"` (optional)        | Optional first question; without it, `/recon` loads context and waits                                                                           |
 
-## Install the CLI
+## File layout per op
 
-Install `naholo` globally from npm.
+The infiled directory is `.naholo/local/infiled/` (team mode) or `~/.naholo/covert-ops/{codename}/infiled/` (covert mode). What lives inside:
 
-```bash
-# with npm
-npm install -g @naholo/cli
+| File           | Role                                                                                                                                                                                                                                                                                  | Owned by                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPERATION.md` | Single live document &mdash; SITUATION, MISSION, EXECUTION (with per-task Intent, Scheme of Maneuver, Course of Action, AAR)                                                                                                                                                          | `/infil` creates SITUATION, `/warno` adds MISSION, `/opord` adds EXECUTION, `/splash` adds AARs, `/chopchop` prunes the carved scope                                                                                 |
+| `TASKS.md`     | Flat checkbox list mirroring the EXECUTION TASK headings                                                                                                                                                                                                                              | `/opord` structures + inserts, `/splash` checks off, `/chopchop` deletes carved lines                                                                                                                                |
+| `TIMELINE.md`  | Chronological catch-up log for fresh sessions that lack in-context history; pushed as just-another-note                                                                                                                                                                               | `naholo agent add-timeline` (invoked by each skill, plus by post-skill in-phase edits)                                                                                                                               |
+| `CHOP.md`      | OP-splitting planning brief: `## Intent` + side-by-side `# CURRENT OP` / `# NEW OP` blocks (Concept of Operations, Warning Orders, EXECUTION checklist). Syncs to the parent OP as a regular note via `/sitrep` and `/exfil`, so a teammate or fresh session can resume the proposal. | `/chop` creates/revises, `/chopchop` consumes + deletes both local and server-side on apply, `/nochop` deletes both on discard. Hand-editing between `/chop` and `/chopchop` is the supported customization channel. |
+| `LOGS.yml`     | Snapshot of the server-side log feed at the last infil. Overwritten on every infil / reinfil; never merged.                                                                                                                                                                           | `naholo agent infil` / `reinfil`                                                                                                                                                                                     |
+| `.base/`       | 3-way-merge baseline mirroring the last-synced state of `TASKS.md` and `notes/*.md`.                                                                                                                                                                                                  | Sync commands only                                                                                                                                                                                                   |
 
-# or with pnpm
-pnpm add -g @naholo/cli
+## `OPERATION.md` sections
+
+Exactly three top-level sections, always in this order when present:
+
+| Section        | Owner skill | Subsections                                                                                                                                                                                         |
+| -------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `## SITUATION` | `/infil`    | `### Pain`, optional `### Suggested solution`, optional `### Notes`                                                                                                                                 |
+| `## MISSION`   | `/warno`    | `### Concept of Operations`, `### Warning Orders`, optional `### Target Reference Points`                                                                                                           |
+| `## EXECUTION` | `/opord`    | one `### TASK N — Title` per task; each carries `#### Intent`, optional `#### Scheme of Maneuver`, `#### Course of Action`, and `#### After-Action Report` (added by `/splash` when the task ships) |
+
+No other top-level sections. Per-task progress lives inside EXECUTION&rsquo;s AARs; chronological events live in `TIMELINE.md` (below).
+
+## `TASKS.md` contract
+
+Heading: `# TASKS — OP #{n}`. Body is a flat checkbox list, one line per task:
+
+```
+- [ ] N. Title           # unfinished
+- [x] N. Title           # shipped
 ```
 
-The binary registers as `naholo` on your `PATH`. Confirm with `naholo --version`.
+After a `/sitrep` or `/exfil` sync, each line may carry a trailing `[ref](naholo://tasks/{id})` link to the server-side task record. The checkbox state and the task number are the load-bearing parts; titles mirror the EXECUTION TASK headings.
 
-## Initialize
+## `TIMELINE.md` contract
 
-Logging in and wiring a repo are two steps.
+Chronological catch-up log. Written **exclusively** by `naholo agent add-timeline` &mdash; never by hand, never by another skill directly. Heading: `# TIMELINE — OP #{n}`. Each entry:
 
-### Log in
-
-```bash
-naholo login
+```
+- {YYYY-MM-DD HH:MM} — {stage}: {summary}
 ```
 
-Opens a browser for device-flow auth. Confirm the word pair shown in the CLI matches the one in the browser. On success, a user API token is saved to `~/.naholo/profiles/{name}.yml`. Run this once per machine.
+Stage labels: `infil`, `warno`, `raid`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop`.
 
-### Pick an init mode
+## `naholo agent` commands
 
-There are two ways to attach a repo to a project. Pick based on whether anyone else on the project will use naholo from this codebase.
+The agent shells out to these. The CLI owns timestamps, merge logic, and sync I/O &mdash; skills just call.
 
-**`naholo init` — team setup.**
+| Command                                            | Called by                                    | Purpose                                                                                 |
+| -------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `naholo agent boot`                                | Every skill (first invocation per session)   | Print personality + manual + `op_status`. The session&rsquo;s single context-load call. |
+| `naholo agent infil <n>`                           | `/infil` (with `N`)                          | Fresh fetch of operation `{n}` from the server.                                         |
+| `naholo agent reinfil`                             | `/infil` (no args)                           | Argless refresh-only. 3-way-merges server state into the local infiled copy.            |
+| `naholo agent op`                                  | Troubleshooting only                         | Re-emit the `op_status` YAML when the session has lost track of which OP is infiled.    |
+| `naholo agent man`                                 | Troubleshooting only                         | Print the full manual to stdout.                                                        |
+| `naholo agent add-timeline -T <stage> '<summary>'` | Every phase-changing skill + in-phase tweaks | Append a TIMELINE bullet with the right timestamp + stage label.                        |
+| `naholo agent sitrep`                              | `/sitrep`                                    | Push local tasks + notes to the server, post a summary log.                             |
+| `naholo agent exfil [--close]`                     | `/exfil`                                     | Same as sitrep + optional close + delete local infiled dir.                             |
 
-```bash
-# in the root of your repo
-naholo init
-```
+The only call required at the top of every session is `naholo agent boot`. Everything else fires when its owning skill does work.
 
-Writes `.naholo/config.yml` (project id, slug, default operator id — **commit this**) and `.mcp.json` (usually gitignored). Anyone else who clones the repo can run `naholo login` and inherit the project wiring from the committed config.
+## MCP server
 
-**`naholo covert init` — solo setup.**
+The naholo CLI exposes a Model Context Protocol server as a parallel agent-facing surface. Ask the agent to use these tools directly when you need an out-of-cycle action &mdash; &ldquo;post a log on this op,&rdquo; &ldquo;pull the task list from another OP without re-infiling,&rdquo; &ldquo;create a new operation right now.&rdquo; The bundled set will keep growing to cover every essential naholo server behavior.
 
-```bash
-naholo covert init
-```
+**Tools**
 
-Same effect as `naholo init` but the project wiring lives at `~/.naholo/covert-ops/` instead of in the repo. Nothing lands in the working tree, nothing gets committed. Pick this when you&rsquo;re the only person on the project who uses naholo and you don&rsquo;t want the config visible to teammates.
+| Tool                   | Purpose                                      |
+| ---------------------- | -------------------------------------------- |
+| `create_operation`     | Create a new operation                       |
+| `close_operation`      | Close an operation                           |
+| `create_task`          | Create a new task in an operation            |
+| `update_task`          | Update a task (name, note, or `done` status) |
+| `create_note`          | Create a note on an operation                |
+| `update_note`          | Update a note on an operation                |
+| `delete_note`          | Delete a note from an operation              |
+| `create_operation_log` | Create a log entry for an operation          |
 
-The caveat: covert config is per-working-directory. Each `git worktree` you create is a new working directory, so each worktree needs its own `naholo covert init`. Regular `naholo init` doesn&rsquo;t have this problem because the config is committed and travels with the worktree.
+**Resources**
 
-Either flow prompts to install the agent skills into `.claude/skills/` (default yes). If you decline now, run `naholo install-skills` later — same outcome.
+| URI                                           | Contents                                             |
+| --------------------------------------------- | ---------------------------------------------------- |
+| `naholo://project`                            | Current project details                              |
+| `naholo://operations`                         | Operation list for the project                       |
+| `naholo://operations/{operationNumber}`       | Full operation context (tasks + notes + recent logs) |
+| `naholo://operations/{operationNumber}/tasks` | All tasks for an operation                           |
+| `naholo://operations/{operationNumber}/notes` | All notes for an operation                           |
+| `naholo://local/infiled`                      | Currently infiled operation                          |
 
-## The agent tool
+## Where to look next
 
-The chain — `/infil` → `/warno` → `/opord` → `/splash` → `/exfil` — only works in a tool that can **persistently open and edit `OPERATION.md`**.
-
-Think of `OPERATION.md` as a cousin of the temporary plan documents agents already produce — &ldquo;plan mode&rdquo; output, inline planning blocks, scratchpads — but **durable**. It is a real file on disk that survives every checkpoint, `/clear`, and restart in between — until `/exfil` tears it down at the end of the cycle.
-
-**Works:** an IDE with an agent plugin. [Claude Code](https://claude.com/claude-code) inside VS Code is the canonical setup for now — your agent runs in chat, your editor is right next to it, and `OPERATION.md` opens like any other file. You can edit it by hand, the agent can edit it in chat, and both of you see the same document.
-
-**Doesn&rsquo;t work:** a pure chat interface (e.g. the standalone claude.ai desktop app). The agent there can produce planning text inside the chat, but that text is volatile — it scrolls away, it isn&rsquo;t a real file, and you can&rsquo;t hand-edit it. The cycle&rsquo;s phase reviews land on `OPERATION.md`, which has to be a durable artifact on disk. A chat-only surface can&rsquo;t hold one.
-
-If you&rsquo;re wondering _why_ durability and operator control of the document matter so much, the [Primer](/field-manual/primer) is the chapter for that.
+That is every shape this chapter holds. For how the skills drive the cycle, see [Workflow](/field-manual/workflow). To replace these interfaces with your own &mdash; your own skill prose, your own CLI, your own MCP tools &mdash; see [Customize](/field-manual/customize).

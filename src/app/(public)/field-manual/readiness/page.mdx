@@ -1,0 +1,89 @@
+export const metadata = {
+  title: 'Readiness — Field Manual — naholo',
+}
+
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+    // 03 · Readiness
+  </p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
+    Gear check.
+  </h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+    One-time setup before the first /infil.
+  </p>
+</div>
+
+Before you run the cycle, lay the gear. This chapter covers everything you install or sign in to **once per machine** &mdash; the accounts, the runtime, the editor, the CLI. Past this checklist, the next chapter ([Workflow](/field-manual/workflow)) is the deep dive on actually driving the cycle.
+
+## Prerequisites
+
+Have these in place before anything else:
+
+- **A naholo account and a project.** Sign up, create or join a project. Operations belong to projects.
+- **A local project directory.** A cloned repo, or any working folder you want the agent to ship code into.
+- **Node.js v22 or newer, plus npm or pnpm.** Needed to install and run the naholo CLI.
+- **A coding agent.** [Claude Code](https://claude.com/claude-code) is the supported one today. Codex support is on the way.
+
+## IDE plus a Claude Code extension
+
+The cycle &mdash; `/infil` &rarr; `/warno` &rarr; `/opord` &rarr; `/splash` &rarr; `/exfil` &mdash; only works in a tool that can **persistently open and edit `OPERATION.md`**.
+
+Think of `OPERATION.md` as a cousin of the temporary plan documents agents already produce &mdash; &ldquo;plan mode&rdquo; output, inline planning blocks, scratchpads &mdash; but **durable**. It is a real file on disk that survives every checkpoint, `/clear`, and restart in between, until `/exfil` tears it down at the end of the cycle.
+
+**Works.** An IDE with an agent plugin. [Claude Code](https://claude.com/claude-code) inside VS Code is the canonical setup &mdash; your agent runs in chat, your editor sits right next to it, and `OPERATION.md` opens like any other file. You can edit it by hand, the agent can edit it in chat, and both of you see the same document.
+
+**Does not work.** A pure chat interface (e.g. the standalone claude.ai desktop app). A chat-only app has no editor pane for **you** to open `OPERATION.md` in, hand-edit it, and watch the agent&rsquo;s edits land. The cycle&rsquo;s reviews happen against that file &mdash; without somewhere on your side to read and write it, the human half of the review can&rsquo;t happen.
+
+Install Claude Code from [claude.com/claude-code](https://claude.com/claude-code) and add its VS Code extension. If you want the underlying _why_ &mdash; durability, operator control of the document &mdash; that is the [Primer](/field-manual/primer).
+
+## Install the CLI
+
+Install `naholo` globally from npm.
+
+```bash
+# with npm
+npm install -g @naholo/cli
+
+# or with pnpm
+pnpm add -g @naholo/cli
+```
+
+The binary registers as `naholo` on your `PATH`. Confirm with `naholo --version`.
+
+## Log in
+
+```bash
+naholo login
+```
+
+Opens a browser for device-flow auth. Confirm the word pair shown in the CLI matches the one in the browser. On success, a user API token is saved to `~/.naholo/profiles/{name}.yml`. Run this once per machine.
+
+## Pick an init mode
+
+There are two ways to attach a repo to a project. Pick based on whether anyone else on the project will use naholo from this codebase.
+
+**`naholo init` &mdash; team setup.**
+
+```bash
+# in the root of your repo
+naholo init
+```
+
+Writes `.naholo/config.yml` (project id, slug, default operator id &mdash; **commit this**) and `.mcp.json` (usually gitignored). Anyone else who clones the repo can run `naholo login` and inherit the project wiring from the committed config.
+
+**`naholo covert init` &mdash; solo setup.**
+
+```bash
+naholo covert init
+```
+
+Same effect as `naholo init` but the project wiring lives at `~/.naholo/covert-ops/` instead of in the repo. Nothing lands in the working tree, nothing gets committed. Pick this when you&rsquo;re the only person on the project who uses naholo and you do not want the config visible to teammates.
+
+The caveat: covert config is per-working-directory. Each `git worktree` you create is a new working directory, so each worktree needs its own `naholo covert init`. Regular `naholo init` does not have this problem because the config is committed and travels with the worktree.
+
+Either flow prompts to install the agent skills into `.claude/skills/` (default yes). If you decline now, run `naholo install-skills` later &mdash; same outcome. Re-run `naholo install-skills` after every CLI upgrade too, so the bundled skills match the binary you just upgraded.
+
+## Ready to deploy
+
+That is the gear check. Next: [Workflow](/field-manual/workflow) takes you through the cycle itself; [Logistics](/field-manual/logistics) is the interface reference once you need precise contracts for skills and commands.
