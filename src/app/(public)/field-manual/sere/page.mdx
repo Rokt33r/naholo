@@ -1,0 +1,61 @@
+export const metadata = {
+  title: 'S.E.R.E. — Field Manual — naholo',
+}
+
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+    // 05 · S.E.R.E.
+  </p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
+    Recover the cycle.
+  </h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+    Most failures are routine. Catch them early and the recovery stays cheap.
+  </p>
+</div>
+
+S.E.R.E. is the military acronym for **Survival, Evasion, Resistance, Escape** — what soldiers train for when the plan stops working. The cycle stalls in known ways; each one has a known move. The discipline is naming the situation early enough that the recovery is cheap.
+
+**Scenarios.**
+
+- [Context poisoned](#context-poisoned)
+- [Change a just-shipped task](#change-a-just-shipped-task)
+- [Task conflicts with Warning Orders](#task-conflicts-with-warning-orders)
+- [Scope ballooned](#scope-ballooned)
+- [Plan is unsalvageable](#plan-is-unsalvageable)
+
+## Context poisoned
+
+**Situation.** The agent is confused, repeating itself, or drifting from the plan. Tool calls go in circles. Replies start ignoring `OPERATION.md` and inventing their own version of the op.
+
+**Move.** Run `/clear` to wipe the chat context, then re-invoke the phase skill you were in — `/warno`, `/opord`, `/splash`, `/chop`, or `/recon`. The skill re-reads `OPERATION.md` and re-establishes the phase officially; the agent picks up where the last checkpoint left it. Fixing a poisoned context inline almost always costs more than re-booting through a skill.
+
+## Change a just-shipped task
+
+**Situation.** The splash landed but you want to change something — a rename, a missing step, a wrong util, or a new direction entirely.
+
+**Move.** Branch on size.
+
+- **Minor.** You&rsquo;re still in the splash phase from that splash, so just chat the tweak — &ldquo;rename that helper&rdquo;, &ldquo;the AAR missed the migration step, add it&rdquo;. The agent will make the change and refresh the AAR to match.
+- **Major.** Invoke `/opord "freeform"` to insert a new TASK and ship the change as its own splash. Re-splashing the same task would mix two stories; a new TASK gives the change its own review window.
+
+## Task conflicts with Warning Orders
+
+**Situation.** You ask the agent to reshape a task — split it, merge two, rewrite the approach — and the agent pushes back: the change would contradict a current Warning Order. The task can&rsquo;t move without MISSION moving first.
+
+**Move.** Review the pushback. The agent will print a drafted `/warno "..."` prompt as part of the response — the MISSION revision it thinks is needed. From there:
+
+- If the drafted prompt looks right, tell the agent to `run /warno and /opord for me` — it&rsquo;ll revise MISSION, then re-cut the affected tasks under the new Warning Orders.
+- If the draft needs tweaks, copy it, edit it, and submit it yourself. The agent runs against the prompt you actually wanted. `/opord` follows after MISSION has settled so EXECUTION re-aligns with the new direction.
+
+## Scope ballooned
+
+**Situation.** The CONOPS is bloated, the Warning Orders have multiplied past the point you can hold them in your head, or the task list is doing the work of two operations. These are the concrete signs the op should split.
+
+**Move.** Run `/chop "freeform"` to draft a split proposal at `notes/CHOP.md`. Review the proposal (or hand-edit it), then either `/chopchop` to apply the split and spawn a new OP, or `/nochop` to discard it. One op, one cohesive ship — bigger isn&rsquo;t better.
+
+## Plan is unsalvageable
+
+**Situation.** Every checkpoint surfaces more problems than the last. The cycle is digging in instead of moving. You can feel the sunk cost growing.
+
+**Move.** Run `/exfil` with a &ldquo;close and carve intel&rdquo; instruction. The plan dies; whatever intel was worth keeping gets logged on the next operation. Sunk cost is the worse cost. Restart cheap.

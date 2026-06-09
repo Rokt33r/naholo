@@ -8,7 +8,7 @@ The eleven core skills (`/infil`, `/warno`, `/raid`, `/opord`, `/splash`, `/sitr
 When the user asks to edit a core skill:
 
 1. Edit `packages/naholo-cli/src/skills/{name}.md`.
-2. If the edit changes workflow-shaped behavior (skill order, phase transitions, lifecycle args, the canonical happy-path cycle, or anything a user-facing reader would see described in the workflow doc), also edit `docs/ai-workflow.md` to match. Skip when the edit is purely internal — wording tweaks, agent-only mechanics, file-format clarifications.
+2. If the edit changes workflow-shaped behavior (skill order, phase transitions, lifecycle args, the canonical happy-path cycle, or anything a user-facing reader would see described in the workflow doc), also edit `src/app/(public)/field-manual/workflow/page.mdx` to match. Skip when the edit is purely internal — wording tweaks, agent-only mechanics, file-format clarifications.
 3. Print ``Run `naholo install-skills` to apply the changes.`` in chat — and stop. The user runs it themselves to mirror into `.claude/skills/{name}/SKILL.md`; do not run it yourself.
 
 Edits to `.claude/skills/{name}/SKILL.md` are lost the next time someone runs `naholo install-skills`, so they don't survive.

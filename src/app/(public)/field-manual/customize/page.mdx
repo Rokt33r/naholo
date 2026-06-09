@@ -1,0 +1,72 @@
+export const metadata = {
+  title: 'Customize — Field Manual — naholo',
+}
+
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+    // 06 · Customize
+  </p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
+    Build your own CLI.
+  </h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+    From bundled cycle to a team-owned binary.
+  </p>
+</div>
+
+The bundled `naholo` CLI is one shape of the cycle. The discipline is yours. So is the cycle &mdash; extend it, narrow it, replace it. This chapter walks the journey from running `naholo` as-is to shipping your team&rsquo;s own binary.
+
+## Tune the installed skills first
+
+Before you stand up your own CLI, try editing the skills you already installed. Skill prose hot-reloads on the next invocation &mdash; no rebuild, no restart, no new session. That makes the bundled skills the cheapest lever you have for shaping the cycle.
+
+Round-trip the bundled cycle once for a baseline (see [Quick Start](/field-manual/quick-start)) so you have something to iterate against, then edit a skill whenever the agent drifts.
+
+- Did the agent nail something? Ask it to update the skill so the win is repeatable.
+- Did it fumble something? Ask it to update the skill so the trap is avoided.
+
+A skill can also reach for tools that already exist on your machine. Want `/exfil` to open a pull request at the end of an op? Edit the `/exfil` skill so the agent invokes the `gh` CLI or a GitHub MCP server when wrapping up. The skill change ships the feature; no binary required. Same shape for mirroring a GitHub issue into a naholo operation: teach `/infil` (or your own starter skill) to call `gh` instead.
+
+Stay in prose when the step is judgment-heavy: which file to touch, when to push back, how to phrase a review prompt. **Judgment belongs in words.** Code is for what is already decided.
+
+## Fork the repo, build your own CLI
+
+When the procedure is deterministic, repetitive, or token-heavy, skill prose is the wrong place for it. Promote it to code &mdash; your team&rsquo;s own CLI app, the binary your operators install instead of, or alongside, `naholo`.
+
+The recommended path: **fork [naholo](https://github.com/Rokt33r/naholo)** and extract from [`packages/naholo-cli`](https://github.com/Rokt33r/naholo/tree/main/packages/naholo-cli). Same shape, your project&rsquo;s procedures. Anything the agent can shell out to also works &mdash; a Node binary, a Python module, a shell script wired into your repo.
+
+Both skill prose and binaries can express procedure. The real question for every sub-step is whether it needs an LLM at all.
+
+- **Programmable sub-steps.** Deterministic logic. _If the file exists, append a line; otherwise create it from a template and append._ A few lines of code cover every case &mdash; cheap, fast, no agent in the loop.
+- **LLM-shaped sub-steps.** Reading prose, picking files based on intent, composing arguments from a user request. No code wins this; the agent does.
+
+The customization play: as you grow confident in a procedure, narrow what the agent has to emit itself. Lift the programmable sub-steps out of skill prose and into the binary; leave the LLM-shaped sub-steps in prose. Less agent emission means fewer tokens, faster ops, and less slop &mdash; same cycle, lighter load.
+
+Distribute the binary to your team via either path:
+
+- **Bundle in the repo.** Add a `package.json` bin or commit a script &mdash; the team picks it up by cloning.
+- **Publish to a registry.** npm, PyPI, a Homebrew tap &mdash; the team installs globally, same pattern as `naholo` CLI app.
+
+> A scaffolding tool for spinning up your own CLI is coming. Until then, fork is the path.
+
+## MCP interfaces vs command-line interfaces
+
+One CLI app, two ways the agent talks to it. Pick per tool, by stage and shape.
+
+**MCP interfaces.** Your CLI app boots an MCP server; the agent sees each tool as a typed function with argument hints and a return schema.
+
+- Pros: schema-tight inputs and outputs &mdash; your skill prose does not have to spell out the contract.
+- Cons: no hot reload. Changing an MCP server means restarting Claude Code, and that costs you the current session.
+- Use for: generic, schema-shaped operations &mdash; basic CRUD, append a log, update a note. Recommended for **early** customization while the contract is still settling.
+
+**Command-line interfaces.** Your CLI app exposes subcommands; the agent invokes them through a shell call.
+
+- Pros: flexible, hot-reloads mid-op, fewer tokens at the call site if the command is composed well.
+- Cons: higher dev cost. You carry the input/output contract yourself, and skill prose has to teach the agent how to drive it.
+- Use for: stable, verified workflows. Once a procedure has earned its keep, collapse the skill prose plus MCP chain into a single subcommand.
+
+**Rule of thumb.** Prototype the tool as an MCP interface with skill prose above it. Promote to a command-line interface once the shape stops changing.
+
+## Ship the rig
+
+You are the context controller &mdash; and the rig builder. The agent ships the chores; the skills and the CLI you grow ship the discipline. Naholo is the starter; your CLI is the rig. (Also why the cycle lives in an IDE with an agent, not a chat window &mdash; see [Logistics](/field-manual/logistics).)
