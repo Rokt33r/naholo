@@ -1,14 +1,20 @@
 ---
 name: recon
-description: Enter a read-only Q&A phase on the infiled OP — load OPERATION.md + TIMELINE.md, answer questions, no edits and no syncs.
+description: Talk-it-out side branch — read OPERATION.md + TIMELINE.md, answer questions, shape the freeform args for the next /warno / /opord / /splash. Writes nothing.
 argument-hint: '["first question"]'
 ---
 
-# Recon — Read-Only Q&A
+# Recon — Talk it out before you fire a prompt
 
-Drop into a passive Q&A phase on the active infiled OP. Loads `OPERATION.md` + `TIMELINE.md` as context, then answers questions about the OP. Writes nothing — no `OPERATION.md` edits, no `TASKS.md` edits, no codebase edits, no `add-timeline` bullets, no server syncs.
+Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch — the agent loads `OPERATION.md` + `TIMELINE.md` (and pulls extra files on demand), answers questions, and the conversation shapes the freeform args for the next phase-changing skill. The agent never touches disk during recon; work the prompt out here, then fire `/warno "..."` / `/opord "..."` / `/splash N "..."` once it's ready.
 
-Use when the user wants to think out loud, audit prior decisions, or get the lay of the land without committing to a phase-changing skill. Re-running `/recon` re-loads context but is otherwise idempotent.
+Reach for it when:
+
+- A Warning Order in MISSION sounds fishy or unsure after `/warno` — talk through the decision before keeping it, dropping it, or revising it.
+- You want to revise a TASK or a shipped change but the right prompt isn't obvious yet — work out what to ask before you ask.
+- Any other moment your intent is unclear and you want to think out loud against the loaded OP context.
+
+Re-running `/recon` re-loads context but is otherwise idempotent.
 
 ## Arguments
 
@@ -41,6 +47,8 @@ Then branch:
 - **No arg** → stop after the readiness line and wait for the user's next message.
 
 Subsequent user turns in the recon phase are questions to answer the same way — read on demand, answer, no writes.
+
+When the conversation lands the prompt for a phase-changing skill, invoke that skill with the freeform args you and the user worked out — `/warno "..."`, `/opord "..."`, `/splash N "..."`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
 
 ## Post-recon phase
 
