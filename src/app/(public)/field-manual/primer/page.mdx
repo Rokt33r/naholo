@@ -16,11 +16,7 @@ export const metadata = {
   </p>
 </div>
 
-Working with a coding agent is a discipline, not a workflow. The agent is _always_ confident. This chapter is what to do about it.
-
-## The default is broken
-
-Run a coding agent the default way — vibe coding, token-maxing, ship-and-see — and three things go wrong at once.
+The agent is _always_ confident — fluent, plausible, never visibly unsure. Run it the default way — vibe coding, token-maxing, ship-and-see — and that confidence is what makes each failure mode bite. Three things go wrong at once.
 
 **The human breaks.** You end up in one of two corners. The optimist stops reading the output and trusts a confident voice until it bites — that is delusion. The conscientious one tries to keep up with every diff, every transcript, every tool call, and drowns — that is overload. Both are the same failure: no checkpoint small enough to actually digest.
 
@@ -58,10 +54,6 @@ Each review ends at a checkpoint. Each checkpoint is small enough that you don&r
 
 Every operation also gets a token receipt. The agent-stats panel on the web app surfaces token usage by skill, model, and session, so you can see what each operation actually cost. That is the answer to the resource cost — the default mode hides what you spend; Naholo shows it.
 
-The skills (`/infil`, `/warno`, `/opord`, `/splash`, `/exfil`) and the CLI underneath them are the mechanisms that hold the shape in place. [Customize](/field-manual/customize) explains how to bend them; this chapter is just the _why_.
-
----
-
-Don&rsquo;t ship delusion. Ship real.
+The skills (`/infil`, `/warno`, `/opord`, `/splash`, `/exfil`) and the CLI underneath them are the mechanisms that hold the shape in place.
 
 <ChapterPager slug='primer' />
