@@ -27,17 +27,11 @@ Have these in place before anything else:
 - **Node.js v22 or newer, plus npm or pnpm.** Needed to install and run the naholo CLI.
 - **A coding agent.** [Claude Code](https://claude.com/claude-code) is the supported one today. Codex support is on the way.
 
-## IDE plus a Claude Code extension
+## Install VS Code + the Claude Code extension
 
-The cycle &mdash; `/infil` &rarr; `/warno` &rarr; `/opord` &rarr; `/splash` &rarr; `/exfil` &mdash; only works in a tool that can **persistently open and edit `OPERATION.md`**.
+Install [Claude Code](https://claude.com/claude-code), then [VS Code](https://code.visualstudio.com/), then add the Claude Code extension to VS Code from the marketplace. That pairing is the canonical setup.
 
-Think of `OPERATION.md` as a cousin of the temporary plan documents agents already produce &mdash; &ldquo;plan mode&rdquo; output, inline planning blocks, scratchpads &mdash; but **durable**. It is a real file on disk that survives every checkpoint, `/clear`, and restart in between, until `/exfil` tears it down at the end of the cycle.
-
-**Works.** An IDE with an agent plugin. [Claude Code](https://claude.com/claude-code) inside VS Code is the canonical setup &mdash; your agent runs in chat, your editor sits right next to it, and `OPERATION.md` opens like any other file. You can edit it by hand, the agent can edit it in chat, and both of you see the same document.
-
-**Does not work.** A pure chat interface (e.g. the standalone claude.ai desktop app). A chat-only app has no editor pane for **you** to open `OPERATION.md` in, hand-edit it, and watch the agent&rsquo;s edits land. The cycle&rsquo;s reviews happen against that file &mdash; without somewhere on your side to read and write it, the human half of the review can&rsquo;t happen.
-
-Install Claude Code from [claude.com/claude-code](https://claude.com/claude-code) and add its VS Code extension. If you want the underlying _why_ &mdash; durability, operator control of the document &mdash; that is the [Primer](/field-manual/primer).
+`OPERATION.md` is **durable** &mdash; a real file on disk that survives every checkpoint, `/clear`, and restart between `/infil` and `/exfil`. The cycle's reviews happen against that file, with you hand-editing MISSION and TASKS between the agent's passes. That wants a proper text editor sitting next to the agent. Most chat-app agent interfaces _can_ edit the file too, but the writing experience is usually rough enough that you'll want a separate editor anyway &mdash; VS Code + the extension just folds both windows into one.
 
 ## Install the CLI
 
@@ -85,9 +79,5 @@ Same effect as `naholo init` but the project wiring lives at `~/.naholo/covert-o
 The caveat: covert config is per-working-directory. Each `git worktree` you create is a new working directory, so each worktree needs its own `naholo covert init`. Regular `naholo init` does not have this problem because the config is committed and travels with the worktree.
 
 Either flow prompts to install the agent skills into `.claude/skills/` (default yes). If you decline now, run `naholo install-skills` later &mdash; same outcome. Re-run `naholo install-skills` after every CLI upgrade too, so the bundled skills match the binary you just upgraded.
-
-## Ready to deploy
-
-That is the gear check. Next: [Workflow](/field-manual/workflow) takes you through the cycle itself; [Logistics](/field-manual/logistics) is the interface reference once you need precise contracts for skills and commands.
 
 <ChapterPager slug='readiness' />
