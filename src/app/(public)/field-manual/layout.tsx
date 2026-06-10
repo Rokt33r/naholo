@@ -1,21 +1,15 @@
-import Link from 'next/link'
+'use client'
 
-const chapters = [
-  { slug: '', label: 'Overview' },
-  { slug: 'quick-start', label: 'Quick Start' },
-  { slug: 'primer', label: 'Primer' },
-  { slug: 'readiness', label: 'Readiness' },
-  { slug: 'workflow', label: 'Workflow' },
-  { slug: 'logistics', label: 'Logistics' },
-  { slug: 'sere', label: 'S.E.R.E.' },
-  { slug: 'customize', label: 'Customize' },
-]
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { chapterHref, chapters } from './chapters'
 
 export default function FieldManualLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
   return (
     <div className='mx-auto w-full max-w-6xl px-6 py-12'>
       <div className='flex flex-col gap-10 lg:flex-row lg:gap-12'>
@@ -25,16 +19,25 @@ export default function FieldManualLayout({
               // Chapters
             </p>
             <ul className='mt-4 space-y-2'>
-              {chapters.map((chapter) => (
-                <li key={chapter.slug}>
-                  <Link
-                    href={`/field-manual${chapter.slug ? `/${chapter.slug}` : ''}`}
-                    className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-                  >
-                    {chapter.label}
-                  </Link>
-                </li>
-              ))}
+              {chapters.map((chapter) => {
+                const href = chapterHref(chapter)
+                const isActive = pathname === href
+                return (
+                  <li key={chapter.slug}>
+                    <Link
+                      href={href}
+                      className={
+                        'font-mono text-[11px] uppercase tracking-[0.2em] ' +
+                        (isActive
+                          ? 'text-amber-600 dark:text-amber-500'
+                          : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50')
+                      }
+                    >
+                      {`${chapter.number} · ${chapter.label}`}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
         </aside>
