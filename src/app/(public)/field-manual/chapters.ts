@@ -54,6 +54,12 @@ export const chapters: Chapter[] = [
     label: 'Customize',
     body: 'Bend or extend the cycle with your own skills and rules.',
   },
+  {
+    slug: 'glossary',
+    number: '08',
+    label: 'Glossary',
+    body: 'Military terms naholo borrows, and what we mean by them.',
+  },
 ]
 
 export function chapterHref(chapter: Chapter): string {

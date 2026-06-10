@@ -1,0 +1,141 @@
+import { ChapterPager } from '../chapter-pager'
+
+export const metadata = {
+  title: 'Glossary — Field Manual — naholo',
+}
+
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+    // 08 · Glossary
+  </p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
+    Words we borrowed.
+  </h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+    Military terms, naholo usage.
+  </p>
+</div>
+
+Naholo's vocabulary is borrowed from OPORD (operations order) doctrine — the five-paragraph order the U.S. military uses to brief a mission. Each entry below names the military origin briefly, then how the concept maps into the naholo cycle.
+
+## Skills
+
+<h3 id='infil'>INFIL — Infiltration</h3>
+
+**Military.** A force moving covertly through hostile territory to reach its objective before action.
+
+**Naholo.** `/infil <n>` pulls operation `n` from the server into your local working directory so the agent can act on it without round-tripping to the web app.
+
+<h3 id='warno'>WARNO — Warning Order</h3>
+
+**Military.** A short preliminary order alerting a subordinate unit to an upcoming mission so it can start planning before the full order arrives.
+
+**Naholo.** `/warno` writes the MISSION section of `OPERATION.md` — the direction the cycle commits to before any tasks get cut.
+
+<h3 id='recon'>RECON — Reconnaissance</h3>
+
+**Military.** A scouting mission run before the main action to gather intelligence and shape the plan.
+
+**Naholo.** `/recon` is the talk-it-out side branch — read the OP, answer questions, shape the freeform args for the next phase-changing skill. No edits land on disk.
+
+<h3 id='raid'>RAID — Raid</h3>
+
+**Military.** A swift, focused operation with a limited objective. No prolonged engagement.
+
+**Naholo.** `/raid` collapses `/warno` + `/opord` for small ops where architecture review would be overkill — real CONOPS and TRP, but Warning Orders marked `_N/A_`.
+
+<h3 id='opord'>OPORD — Operation Order</h3>
+
+**Military.** The full operations order. Five paragraphs — Situation, Mission, Execution, Service Support, Command and Signal — laying out the detail-level plan.
+
+**Naholo.** `/opord` cuts MISSION into single-commit-sized tasks and writes the EXECUTION section of `OPERATION.md`. Each task carries an Intent, an optional Scheme of Maneuver, and a Course of Action.
+
+<h3 id='splash'>SPLASH — Splash</h3>
+
+**Military.** Pilot radio call confirming a munition has hit its target. "Splash, one." → kill confirmed.
+
+**Naholo.** `/splash` ships one task — implements the code, runs the project's format + typecheck checks, appends an After-Action Report under the task, and flips the TASKS.md checkbox.
+
+<h3 id='sitrep'>SITREP — Situation Report</h3>
+
+**Military.** A standardized report of the current state of friendly forces, the enemy, and the mission.
+
+**Naholo.** `/sitrep` is the mid-cycle push — syncs local progress to the server, posts a one-sentence status log, and leaves the local working directory intact for continued work.
+
+<h3 id='exfil'>EXFIL — Exfiltration</h3>
+
+**Military.** The covert withdrawal of a unit from hostile territory after the mission is complete.
+
+**Naholo.** `/exfil` ends the cycle — runs the same sync as `/sitrep`, posts a summary log, optionally closes the operation, and deletes the local working directory.
+
+<h3 id='chop'>CHOP — Change of Operational Control</h3>
+
+**Military.** A formal handoff transferring a unit from one commander to another, usually because the unit is moving to a new area of responsibility.
+
+**Naholo.** The `/chop` → `/chopchop` / `/nochop` family splits one OP into two when scope has ballooned — carving Warning Orders and tasks off to a new OP under a new commander.
+
+<h3 id='sere'>S.E.R.E. — Survival, Evasion, Resistance, Escape</h3>
+
+**Military.** Training that prepares personnel for what to do when they're behind enemy lines without a working chain of command — survive, evade capture, resist exploitation, escape.
+
+**Naholo.** The S.E.R.E. chapter of the field manual — the recovery matrix when the cycle stalls. Pick up the pieces and keep moving.
+
+## Documents and sections
+
+<h3 id='situation'>SITUATION</h3>
+
+**Military.** The first paragraph of the OPORD. What is happening — enemy, friendly forces, terrain, time available. The "what is" before the "what we'll do."
+
+**Naholo.** `## SITUATION` in `OPERATION.md`. Three subsections — Pain, Suggested solution (optional), Notes (optional). Seeded by `/infil` from the OP's logs and notes.
+
+<h3 id='mission'>MISSION</h3>
+
+**Military.** The second paragraph of the OPORD. What the unit will do. The commitment.
+
+**Naholo.** `## MISSION` in `OPERATION.md`. Three subsections — Concept of Operations, Warning Orders, Target Reference Points. Written by `/warno`.
+
+<h3 id='conops'>CONOPS — Concept of Operations</h3>
+
+**Military.** The commander's high-level concept of how the unit will accomplish the mission, written before detail-level orders.
+
+**Naholo.** The two-or-three-sentence overview at the top of MISSION naming the chosen approach and tying it back to SITUATION's pain. Concept-level only — no file lists.
+
+<h3 id='trp'>TRP — Target Reference Points</h3>
+
+**Military.** Pre-registered points on the battlefield — terrain features, grid coordinates — that units use as common reference for fire, movement, and observation.
+
+**Naholo.** A curated, scannable map of files / folders / globs a fresh `/opord` session needs to read to cut EXECUTION. Lives at the tail of MISSION as `### Target Reference Points`.
+
+<h3 id='execution'>EXECUTION</h3>
+
+**Military.** The third paragraph of the OPORD. How the mission gets done — task organization, scheme of maneuver, sub-unit tasks, coordinating instructions.
+
+**Naholo.** `## EXECUTION` in `OPERATION.md`. One `### TASK N — Title` per task, in shipping order. Written by `/opord`.
+
+<h3 id='coa'>COA — Course of Action</h3>
+
+**Military.** A planned series of actions that accomplish a task or mission. The commander picks the best COA before issuing the order.
+
+**Naholo.** The per-task action list inside EXECUTION — `Add` / `Edit` / `Move` / `Delete` / `Run` / `Manual` steps that `/splash` walks when it ships the task.
+
+<h3 id='aar'>AAR — After-Action Report</h3>
+
+**Military.** A structured review after an event capturing what happened, what worked, what didn't, and what to change next time.
+
+**Naholo.** The plan-vs-shipped record. Written by `/splash` under each shipped task as `#### After-Action Report` — Deviations and Notes labels.
+
+## Entities
+
+<h3 id='op'>OP — Operation</h3>
+
+**Military.** A military action or mission. The unit of work above an individual task.
+
+**Naholo.** The naholo equivalent of a GitHub Issue — the unit a cycle runs against. Tasks live under it.
+
+<h3 id='opr'>OPR — Operator</h3>
+
+**Military.** A trained member of a unit assigned to carry out a mission. Used especially for special-operations personnel.
+
+**Naholo.** A person on a project — the human half of the cycle. The OPR drives the agent; the agent does the chores.
+
+<ChapterPager slug='glossary' />
