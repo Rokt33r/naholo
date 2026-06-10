@@ -34,7 +34,7 @@ Every skill in the pipeline ships you into a **phase** &mdash; `infil`, `warno`,
 
 `/sitrep` is a sync, not a phase &mdash; it pushes local progress and posts a log without ending the current phase. `/exfil` ends the cycle entirely: sync, optional close, delete local infiled dir.
 
-## /infil &mdash; pull the op local
+<h2 id='infil'>/infil &mdash; pull the op local</h2>
 
 `/infil {N}` fetches operation `{N}` from the server into the infiled directory &mdash; `.naholo/local/infiled/` inside the repo for team mode (`naholo init`), or `~/.naholo/covert-ops/{codename}/infiled/` for covert mode (`naholo covert init`, where each project gets its own codename folder under your home dir). Only one OP can be infiled at a time, so passing `{N}` while another OP is in flight errors &mdash; `/exfil` the current one first.
 
@@ -48,7 +48,7 @@ What lands on disk:
 
 `/infil` with **no args** is a refresh: 3-way merges the server state into your local copy without clobbering edits. Use this when a teammate added a note or a log on the same OP mid-cycle.
 
-## /warno &mdash; write MISSION
+<h2 id='warno'>/warno &mdash; write MISSION</h2>
 
 `/warno` is the **direction-setting** phase. It appends `## MISSION` to `OPERATION.md` with three subsections:
 
@@ -66,7 +66,7 @@ If CONOPS or the WO list keep growing past the size you can hold in your head, t
 
 Want to research or talk through it first? `/recon` drops the session into a read-only phase &mdash; pull files, ask questions, debate tradeoffs &mdash; then tell the agent to run `/warno` with the prompt you settled on. The discussion never touches disk; the decision lands when you hand off.
 
-## /opord &mdash; cut MISSION into tasks
+<h2 id='opord'>/opord &mdash; cut MISSION into tasks</h2>
 
 `/opord` is the **detail-cutting** phase. It reads the populated MISSION and writes `## EXECUTION`: one `### TASK N — Title` section per task. Each task carries:
 
@@ -85,7 +85,7 @@ If a revision you ask for would contradict a current Warning Order, the agent pu
 
 The chain is MISSION first, then EXECUTION.
 
-## /splash &mdash; ship one task
+<h2 id='splash'>/splash &mdash; ship one task</h2>
 
 `/splash` implements exactly one task per invocation. It reads the task&rsquo;s Intent + Scheme of Maneuver + Course of Action, writes the code, runs the project&rsquo;s format + typecheck checks, then appends an `#### After-Action Report` to the same task section. The checkbox flips in `TASKS.md`, the skill stops, and you review the AAR before deciding to ship the next task.
 
@@ -127,7 +127,7 @@ The bar: would a reviewer want this change as its own diff? Yes &rarr; new TASK.
 
 `/sitrep` does **not** end the current phase, so you can keep iterating after a checkpoint. Use it during long ops or multi-day work where teammates need visibility before `/exfil`.
 
-## /exfil &mdash; close + clean up
+<h2 id='exfil'>/exfil &mdash; close + clean up</h2>
 
 `/exfil` ends the cycle. It runs the same sync as `/sitrep`, posts a summary log, optionally closes the operation server-side, and deletes the local infiled directory. Run when the OP is done or paused indefinitely and you want to free the single-infil slot for another OP.
 

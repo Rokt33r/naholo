@@ -16,124 +16,93 @@ export const metadata = {
   </p>
 </div>
 
-This chapter is the on-ramp. Follow it once, end to end, and you will have driven the full cycle — from a blank operation to a closed one with a reviewed after-action.
+The on-ramp. Follow it once, end to end, and you will have driven the full cycle — from a blank operation to a closed one with a reviewed after-action. Two surfaces are in play: the **web app**, where you capture intel and review what your agent did, and your **coding agent** — today [Claude Code](https://claude.com/claude-code); Codex on the way. The `naholo` CLI sits underneath them; you install it once and your agent drives it from there.
 
-You will move between two surfaces:
+## Prerequisites
 
-- The **web app**, where you capture intel and review what your agent did.
-- Your **coding agent** — today that means [Claude Code](https://claude.com/claude-code); Codex support is on the way. The cycle runs there, inside your repo.
+One-time gear (detail in [Readiness](/field-manual/readiness)):
 
-The `naholo` CLI sits underneath your coding agent and your editor — you install it once, but during an operation you never type into it directly. Your agent does.
+- **Node.js LTS** for the `naholo` CLI.
+- **[Claude Code](https://claude.com/claude-code)** as your coding agent.
+- **VS Code + the Claude Code extension** — strongly recommended; the cycle's review windows hinge on hand-editing `OPERATION.md`.
 
 ## 1. Open a new operation
 
-Sign in to naholo, pick a project, and open a new operation. Give it a title that names the problem, not the solution.
+Sign in to naholo, pick a project, and open a new operation. Give it a title that names the problem, not the solution. Drop **logs** as you think — every requirement, link, or constraint goes in as a log. The agent reads every log when you infil, so don't squeeze the idea; let it land in pieces.
 
-Drop **logs** as you think. Every passing thought, requirement, link, or constraint goes in as a log. Don't squeeze the idea — let it land in pieces. The agent will read every log when you infil.
-
-If you're stuck on what to drop, these prompts usually land something useful:
-
-- What is the pain?
-- What does the end-state look like?
-- How would you approach it?
-
-You need at least one of pain or end-state. The approach and the concrete shape of what to build can be decided later, inside the op.
-
-Drop what you have right now — no squeezing. When you're done for the moment, hit the **Copy /infil** button on the operation page. That puts the `/infil <n>` slash command on your clipboard, ready to paste into your code agent.
+When you're done dropping for the moment, hit the **Copy /infil** button on the operation page. It puts the `/infil <n>` slash command on your clipboard, ready to paste into your agent.
 
 ## 2. Install the CLI
 
-Install the `naholo` binary globally from npm.
-
 ```bash
-# with npm
 npm install -g @naholo/cli
-
-# or with pnpm
-pnpm add -g @naholo/cli
-```
-
-Then log in and initialize.
-
-```bash
-# authenticate via browser (device flow)
 naholo login
-
-# in the root of your repo
 naholo init
 ```
 
-`naholo init` writes `.naholo/config.yml` (commit it) and `.mcp.json` (gitignored), then asks whether to install the agent skills (defaults to yes). On accept, it drops `/infil`, `/warno`, `/opord`, `/splash`, `/exfil` (and friends) into `.claude/skills/` for your Claude Code session.
+`naholo init` writes `.naholo/config.yml` (commit it) and `.mcp.json` (gitignored), then drops `/infil`, `/warno`, `/opord`, `/splash`, `/exfil` into `.claude/skills/` for your Claude Code session. Don't want naholo's footprint in the repo? Swap `naholo init` for `naholo covert init` — same outcome, project wiring lives under `~/.naholo/` instead.
 
-**Working solo?** Swap `naholo init` for `naholo covert init`. Covert mode keeps the project config under your home directory (`~/.naholo/covert-ops/`) instead of inside the repo, so there's nothing to commit. The caveat: each `git worktree` is its own working directory, so you'll need to `naholo covert init` once per worktree.
-
-If you dismissed the skill prompt during init — or if you upgraded the CLI and want to pull the latest skill versions — run it yourself:
-
-```bash
-naholo install-skills
-```
+Covert vs team setup, worktree caveats, and re-installing skills after a CLI upgrade live in [Readiness](/field-manual/readiness).
 
 ## 3. Run the operation
 
-Open Claude Code in your repo and run the chain. Each skill mutates exactly one document on disk and stops. You review between every step.
+Open Claude Code in your repo and run the chain. Each skill mutates exactly one document on disk and stops, so you review before the next step. The **happy path** is the chain run straight through:
+
+```
+/infil → /warno → /opord → /splash → /splash … → /exfil
+```
+
+Every step lands a review window. If you like what you see, run the next skill. If you don't — MISSION needs revising, a TASK needs rewriting, a shipped After-Action Report (AAR) needs a follow-up — re-run the same skill with feedback (`/warno "use the existing queue"`, `/opord "split TASK 3"`). Quick Start walks the happy path; [Workflow](/field-manual/workflow) covers every branch.
 
 ### `/infil <n>`
-
-Pulls operation `<n>` from the server into a local working directory and seeds `OPERATION.md` with the **SITUATION** — the pain, the suggested solution, the notes that fell out of your logs.
 
 ```
 /infil 42
 ```
 
-Open `OPERATION.md` and review SITUATION. If new intel surfaces while you read — a constraint you forgot, a related thread, a hard requirement — drop it in. Edit SITUATION directly in your editor, or tell the agent in chat ("add to SITUATION that …") and let it write. Either works. Still no squeezing; only what already came to mind.
+Pulls operation `<n>` from the server into a local working directory and seeds `OPERATION.md` with the **SITUATION** — the pain, the suggested solution, the notes that fell out of your logs. Open `OPERATION.md` and review SITUATION; add anything that surfaces while you read, either by hand-editing or telling the agent in chat.
+
+_Branches and side flows: [Workflow → `/infil`](/field-manual/workflow#infil)._
 
 ### `/warno`
-
-Writes the **MISSION**: the Concept of Operations (the approach), the Warning Orders (one architectural decision per bullet), and the Target Reference Points (a map of the files the next skill will need).
 
 ```
 /warno
 ```
 
-This is your **direction review**. Read MISSION and ask: can I picture, at the architecture level, how this gets tackled? Not the implementation — the shape. Which layer it lives in, which patterns it leans on, what gets traded off.
+Writes the **MISSION**: the Concept of Operations (the approach), the Warning Orders (one architectural decision per bullet), and the Target Reference Points (a map of the files the next skill will need). This is your **direction review**. Read MISSION and ask: can I picture, at the architecture level, how this gets tackled? Not the implementation — the shape. Which layer it lives in, which patterns it leans on, what gets traded off.
 
-If not, you're in the **warno phase** — chat with the agent ("split the storage out", "use the existing queue", "what about transactions?") or edit MISSION directly until the picture is sharp. Don't punt to `/opord` before the vision is clear; it just cuts tasks against whatever direction it finds.
-
-> Need to research before deciding? Run `/recon` — a read-only Q&A side branch that loads the OP and answers questions without touching anything. Poke at the code, ask "where does X live?" or "what would break if we did Y?", then come back to `/warno` once you know what to push for.
+_Branches and side flows: [Workflow → `/warno`](/field-manual/workflow#warno)._
 
 ### `/opord` + `/splash` — the per-task cycle
-
-After `/warno`, `/opord` cuts MISSION into every task at once. Then `/opord` and `/splash` team up as the per-task loop: `/opord` shapes the next task, `/splash` ships it.
-
-Cut the plan first:
 
 ```
 /opord
 ```
 
-This writes `## EXECUTION` to `OPERATION.md` and mirrors every task into `TASKS.md`. You're now in the **opord phase**. Don't try to review the whole list — tasks get reviewed one at a time, right before they ship.
+`/opord` cuts MISSION into tasks. It writes `## EXECUTION` to `OPERATION.md` (one task per section) and mirrors the list into `TASKS.md`. Each task carries an Intent (the success criterion), an optional Scheme of Maneuver (the shape of the change), and a Course of Action (the atomic steps). Tasks get reviewed one at a time, right before they ship — not as a whole list.
+
+_Branches and side flows: [Workflow → `/opord`](/field-manual/workflow#opord)._
 
 Then the per-task loop:
 
-1. **Review the next TASK and edit it if needed.** Read its Intent, Scheme of Maneuver, and Course of Action. If it's not one cohesive change you'd happily review as one diff, ask the agent to fix it: "split this task", "use the existing util", "add a backfill step". You can also hand-edit EXECUTION or `TASKS.md` directly.
-2. **Ship it.**
+1. **Review the next TASK.** Read Intent, Scheme of Maneuver, and Course of Action. If it's not one cohesive change you'd happily review as one diff, ask the agent to fix it: "split this task", "use the existing util", "add a backfill step".
+2. **Ship it.** `/splash`
+3. **Review the AAR and the diff.** Happy with both — loop to step 1 for the next TASK. Off-target on something small — chat the fix and let the agent rewrite the code and the AAR. Off-target on something bigger — re-run `/opord` to insert a new TASK and ship it in its own splash.
 
-   ```
-   /splash
-   ```
+Loop until every box in `TASKS.md` is `[x]`.
 
-3. **Review the AAR + changes and revise if needed.** Read **Deviations** and **Notes** in the After-Action Report, then the diff. For minor fixes, chat with the agent ("rename that helper", "wrong file, use the util") or hand-edit the code and ask the agent to update the AAR — it'll diff and rewrite. For anything bigger, don't pile it on this splash; invoke `/opord` to insert a new TASK and ship it in its own splash.
-4. **Loop back to step 1 for the next TASK.** You're still in the splash phase coming out of review — if you want to edit the upcoming TASK before shipping it, invoke `/opord "freeform"` first to re-enter the opord phase.
-
-Repeat until every box in `TASKS.md` is `[x]`.
+_Branches and side flows: [Workflow → `/splash`](/field-manual/workflow#splash)._
 
 ### `/exfil`
-
-When every task is `[x]`, exfil pushes everything back to the server, posts a summary log, optionally closes the operation, and deletes the local working directory.
 
 ```
 /exfil
 ```
+
+Pushes everything back to the server, posts a summary log, optionally closes the operation, and deletes the local working directory.
+
+_Branches and side flows: [Workflow → `/exfil`](/field-manual/workflow#exfil)._
 
 ## 4. Review the after-action
 
@@ -142,7 +111,5 @@ Return to the web app and open the closed operation. You get:
 - The **timeline** — every step the cycle went through.
 - The **logs** — your original intel, plus the summary log `/exfil` just posted.
 - The **agent stats** — token usage by skill, model, session count. So you can see what the operation actually cost.
-
-That's the cycle. One op, one chain, one review per phase. Ship the next one.
 
 <ChapterPager slug='quick-start' />
