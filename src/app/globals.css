@@ -177,6 +177,11 @@
   @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
 }
 
+.prose code::before,
+.prose code::after {
+  content: '';
+}
+
 .prose pre {
   @apply bg-muted p-4 rounded-lg mb-4 whitespace-pre-wrap;
 }
