@@ -64,7 +64,29 @@ Stay at the architecture and concept level. TASKS and shipped diffs are where de
 
 If CONOPS or the WO list keep growing past the size you can hold in your head, that is the signal the OP is doing the work of two. Stop adding WOs and run `/chop "..."` to draft a split.
 
-Want to research or talk through it first? `/recon` drops the session into a read-only phase &mdash; pull files, ask questions, debate tradeoffs &mdash; then tell the agent to run `/warno` with the prompt you settled on. The discussion never touches disk; the decision lands when you hand off.
+<h2 id='recon'>/recon &mdash; talk it out before you fire a prompt</h2>
+
+Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent reads `OPERATION.md`, answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno "..."` or `/opord "..."` figuring out what you want; figure it out in recon first.
+
+Reach for it when:
+
+- A Warning Order in MISSION sounds fishy or unsure after `/warno` &mdash; talk through the decision before keeping it, dropping it, or revising it.
+- You want to revise a TASK or a shipped change but the prompt is not obvious &mdash; work out what to ask before you ask.
+- Any other moment your intent is unclear and you want to think out loud against the loaded OP context.
+
+When the discussion lands the prompt, tell the agent to run the next skill &mdash; `/warno "..."`, `/opord "..."`, `/splash N "..."` &mdash; and it picks up where the conversation left off. `/recon` itself writes **nothing**: no `OPERATION.md` edits, no `TASKS.md` edits, no TIMELINE bullets, no server syncs.
+
+Runnable from any post-`/infil` state. The recon phase ends when a phase-changing skill (`/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
+
+If you ask the agent to silently do phase-shaped work mid-recon (e.g. &ldquo;rewrite MISSION to X&rdquo;), it routes you to invoke the right skill instead. The hand-off is explicit on purpose &mdash; recon&rsquo;s contract is that nothing lands on disk until you say so.
+
+## /raid &mdash; fresh-OP shortcut
+
+`/raid` collapses `/warno` + `/opord` into a single invocation for fresh OPs where architecture review would be overkill. It writes `## MISSION` with a real **Concept of Operations** and real **Target Reference Points**, marks the **Warning Orders** subsection `_N/A_`, then chains `/opord` to cut `## EXECUTION` and mirror `TASKS.md`. One handoff, two skills.
+
+Reach for it on small OPs whose architecture is obvious &mdash; bug fixes, doc updates, single-file features, anything where Warning Orders would be filler. If the OP genuinely has architectural decisions worth surfacing, run `/warno` instead and let the WO list earn its slot.
+
+`/raid` aborts if `## MISSION` or `## EXECUTION` already exists &mdash; the paths for revisions stay with `/warno` and `/opord`. Freeform args after `/raid` are forwarded to the chained `/opord`. The session lands in the **opord phase** when done; ship tasks with `/splash`.
 
 <h2 id='opord'>/opord &mdash; cut MISSION into tasks</h2>
 
@@ -144,17 +166,5 @@ When scope has ballooned and the current OP is doing the work of two, split it. 
 **`/nochop`** discards: deletes `CHOP.md` everywhere; neither OP is touched.
 
 While `CHOP.md` exists, `/warno` / `/opord` / `/splash` each surface a &ldquo;CHOP pending&rdquo; gate before running &mdash; their edits would desync the proposal, so you have to decide whether to revise CHOP after (proceed) or resolve CHOP first (cancel and pick `/chopchop` / `/nochop` / `/chop`).
-
-## /recon &mdash; read-only research and discussion
-
-`/recon` drops the session into a read-only phase. It loads `OPERATION.md` for context, then answers questions, pulls extra files (`LOGS.yml`, other notes, codebase) on demand, and lets you talk through tradeoffs with the agent before committing to a phase-changing skill. When you have decided, tell the agent to run the next skill &mdash; `/warno "..."`, `/opord "..."` &mdash; and it picks up from the discussion. `/recon` itself writes **nothing**: no `OPERATION.md` edits, no `TASKS.md` edits, no TIMELINE bullets, no server syncs.
-
-Runnable from any post-`/infil` state. Use it to research before a `/warno` revise, audit prior decisions, or get the lay of the land in a fresh session. The recon phase ends when a phase-changing skill (`/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
-
-If you ask the agent to silently do phase-shaped work mid-recon (e.g. &ldquo;rewrite MISSION to X&rdquo;), it routes you to invoke the right skill instead. The hand-off is explicit on purpose &mdash; recon&rsquo;s contract is that nothing lands on disk until you say so.
-
-## Run the chain
-
-That is every skill in depth. Need the precise contracts &mdash; argument shapes, file owners, MCP tools? [Logistics](/field-manual/logistics) is the interface reference. Want to extend the cycle or build your own? [Customize](/field-manual/customize). When the cycle stalls, [S.E.R.E.](/field-manual/sere) is the recovery matrix.
 
 <ChapterPager slug='workflow' />
