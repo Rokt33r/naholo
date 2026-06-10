@@ -130,6 +130,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
     Use real exported symbol names when the type/class will exist in code (`AgentSessionPayload`, `NaholoClient`, etc.). When the shape is anonymous in code (e.g., an inline request body object literal in a route handler with no exported type), use a placeholder name prefixed `sample_` in snake*case (`sample_request_body`, `sample_response_body`, `sample_hook_payload`) so the reader knows the name itself is illustrative, not a symbol to grep for. The `sample*\*` convention applies regardless of the chosen language.
 
   - **Linear / trivially simple flow**: a numbered list is acceptable instead of a diagram.
+  - **Outline-shaped tasks (new doc, doc restructure)**: list the doc's section headings; under **only the sections this task modifies**, add a short bullet list naming the core ideas — single short phrase or sentence each, not paragraphs or copy draft. Untouched sections stay heading-only.
 
   Example (control flow):
 
@@ -189,6 +190,19 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
     aiTitle: string | null
     // ...
   }
+  ```
+
+  Example (outline-shaped task, untagged fence):
+
+  ```
+  # Title
+  ## Section A
+    - core idea 1
+    - core idea 2
+  ## Section B (new — replaces old "Foo" section)
+    - what this section establishes
+    - why it replaces "Foo"
+  ## Section C
   ```
 
   Skip this section entirely if the task is a pure data/logic change with no flow, UI, or signature implications.
