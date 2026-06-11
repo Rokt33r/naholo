@@ -30,7 +30,7 @@ Plus three side branches:
 - **`/chop`** &rarr; **`/chopchop`** / **`/nochop`** &mdash; OP-splitting. Carve one OP into two when scope has ballooned.
 - **`/recon`** &mdash; read-only side branch. Research the OP, talk through tradeoffs, and hand off to the next skill without touching disk.
 
-Every skill in the pipeline ships you into a **phase** &mdash; `infil`, `warno`, `opord`, `splash`, `chop`. The phase name is the &ldquo;where are we&rdquo; signal: after `/warno` you&rsquo;re in the warno phase, and small follow-up edits (a single Warning Order tweak, a Concept of Operations rewrite) belong to that phase without needing to re-type `/warno` from scratch. Each skill enforces its own scope &mdash; if you ask for opord-shaped work in the warno phase, the agent routes you to `/opord` instead of doing it silently.
+Every skill in the pipeline ships you into a **phase** &mdash; `infil`, `warno`, `opord`, `splash`, `recon`, `chop`. The phase name is the &ldquo;where are we&rdquo; signal: after `/warno` you&rsquo;re in the warno phase, and small follow-up edits (a single Warning Order tweak, a Concept of Operations rewrite) belong to that phase without needing to re-type `/warno` from scratch. Each skill enforces its own scope &mdash; if you ask for opord-shaped work in the warno phase, the agent routes you to `/opord` instead of doing it silently.
 
 `/sitrep` is a sync, not a phase &mdash; it pushes local progress and posts a log without ending the current phase. `/exfil` ends the cycle entirely: sync, optional close, delete local infiled dir.
 
