@@ -1,4 +1,5 @@
 import { MonitorCog } from 'lucide-react'
+import Link from 'next/link'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
 
@@ -19,7 +20,7 @@ function BrandIcon({ slug, alt }: { slug: string; alt: string }) {
 export function Requirements() {
   return (
     <Section>
-      <BriefingLabel>{'// 04 · Field requirements'}</BriefingLabel>
+      <BriefingLabel>{'// 07 · Field requirements'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         Gear check.
       </h2>
@@ -40,7 +41,7 @@ export function Requirements() {
             </span>
           </div>
           <p className='mt-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400'>
-            OpenAI Codex and Google Gemini CLI will be supported later.
+            OpenAI Codex will be supported later.
           </p>
         </div>
 
@@ -100,6 +101,15 @@ export function Requirements() {
             </li>
           </ul>
         </div>
+      </div>
+
+      <div className='mt-10 flex justify-end'>
+        <Link
+          href='/field-manual/readiness#prerequisites'
+          className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
+        >
+          Read more: Prerequisites <span aria-hidden>→</span>
+        </Link>
       </div>
     </Section>
   )

@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import { ClosingCTA } from '@/components/landing/closing-cta'
-import { Features } from '@/components/landing/features'
+import { Doctrine } from '@/components/landing/doctrine'
+import { FieldToolkit } from '@/components/landing/field-toolkit'
 import { Hero } from '@/components/landing/hero'
+import { MissionHQ } from '@/components/landing/mission-hq'
 import { Requirements } from '@/components/landing/requirements'
-import { ClassifyOperation } from '@/components/landing/classify-operation'
+import { ClearanceClassification } from '@/components/landing/clearance-classification'
 import { TacticalOverview } from '@/components/landing/tactical-overview'
 import { getAuthUser } from '@/server/auth/permissions'
 
@@ -11,9 +13,9 @@ import { getAuthUser } from '@/server/auth/permissions'
 // reads as briefing/mission language. Legal and pricing pages stay Korean.
 
 export const metadata: Metadata = {
-  title: 'naholo — task force for your codebase',
+  title: 'naholo — coding ops, end to end',
   description:
-    'Brief the task, execute the plan, exfil with the diff. naholo runs your coding operations end to end.',
+    'AI coding without the spiral. naholo runs your coding ops end to end — infil into the codebase, brief the task, ship in splashes, exfil with the diff.',
 }
 
 export default async function LandingPage() {
@@ -25,10 +27,12 @@ export default async function LandingPage() {
   return (
     <div className='not-prose'>
       <Hero isAuthed={isAuthed} />
-      <Features />
+      <Doctrine />
       <TacticalOverview />
+      <MissionHQ />
+      <FieldToolkit />
+      <ClearanceClassification />
       <Requirements />
-      <ClassifyOperation />
       <ClosingCTA isAuthed={isAuthed} />
     </div>
   )

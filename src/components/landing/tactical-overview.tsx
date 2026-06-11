@@ -6,6 +6,7 @@ import {
   Radio,
   Siren,
 } from 'lucide-react'
+import Link from 'next/link'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
 
@@ -147,6 +148,15 @@ export function TacticalOverview() {
             </ul>
           </article>
         ))}
+      </div>
+
+      <div className='mt-10 flex justify-end'>
+        <Link
+          href='/field-manual/workflow'
+          className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
+        >
+          Read more: Workflow <span aria-hidden>→</span>
+        </Link>
       </div>
     </Section>
   )

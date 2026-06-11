@@ -8,7 +8,7 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
     <Section className='border-b-0'>
       <div className='mx-auto max-w-2xl text-center'>
         <BriefingLabel className='justify-center'>
-          {'// 06 · Deployment'}
+          {'// 08 · Deployment'}
         </BriefingLabel>
         <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
           Ready to deploy?
@@ -50,6 +50,15 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
               View on GitHub
             </a>
           </Button>
+        </div>
+
+        <div className='mt-6 flex justify-center'>
+          <Link
+            href='/field-manual/quick-start'
+            className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
+          >
+            Read more: Quick start <span aria-hidden>→</span>
+          </Link>
         </div>
 
         <div className='mt-12 flex flex-wrap items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>

@@ -20,17 +20,18 @@ export function Hero({ isAuthed }: { isAuthed: boolean }) {
         <div className='relative mt-10 max-w-3xl'>
           <CornerBrackets />
           <h1 className='text-4xl font-bold leading-[1.05] tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl lg:text-7xl'>
-            Task force for
+            Coding ops,
             <br />
-            your codebase
+            end to end
             <span className='font-mono text-amber-600 dark:text-amber-500'>
               .
             </span>
           </h1>
 
           <p className='mt-8 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300 sm:text-lg'>
-            Drop an operator into a battlefield of source code. Brief the task,
-            execute the plan, exfil with the diff — all under your command.
+            AI coding without the spiral. Infil into the codebase, brief the
+            task, ship in splashes, exfil with the diff — under your command,
+            not the model&apos;s.
           </p>
 
           <div className='mt-10 flex flex-wrap items-center gap-4'>
@@ -48,6 +49,15 @@ export function Hero({ isAuthed }: { isAuthed: boolean }) {
                 </Button>
               </>
             )}
+          </div>
+
+          <div className='mt-6'>
+            <Link
+              href='/field-manual/quick-start'
+              className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
+            >
+              Read more: Quick start <span aria-hidden>→</span>
+            </Link>
           </div>
         </div>
       </div>

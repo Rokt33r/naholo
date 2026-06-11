@@ -12,6 +12,9 @@ export default function FieldManualTopPage() {
       <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
         // 00 · Overview
       </p>
+      <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>
+        This We Will Code!
+      </h1>
 
       <p className='prose mt-8 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
         naholo provides the procedure between a half-formed idea and a shipped
