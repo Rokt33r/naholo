@@ -23,7 +23,13 @@ Common patterns:
 
 ### 1. Boot
 
-If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it. Read `currentOp` / `opTitle` inline from `<op_status>` for context narration; do not store them. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it.
+
+**If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
+
+If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+
+`<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them.
 
 ### 2. Load context
 

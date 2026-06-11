@@ -18,7 +18,13 @@ None. `/chopchop` always consumes `{operationDir}/notes/CHOP.md` as-is. If the u
 
 ### 1. Boot
 
-If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — the parent operation directory. Read `currentOp` / `opTitle` inline from `<op_status>` for the parent OP's `{parentNumber}` / `{parentTitle}`. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort. Otherwise skip the boot call — `opPath` is already cached.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — the parent operation directory.
+
+**If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
+
+If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+
+`<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them (`currentOp` / `opTitle` give the parent OP's `{parentNumber}` / `{parentTitle}`).
 
 ### 2. Load context
 

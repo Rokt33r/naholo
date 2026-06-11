@@ -24,7 +24,13 @@ Anything in quotes is an optional **first question**. When given, answer it afte
 
 ### 1. Boot
 
-If you haven't run `naholo agent boot` this session, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`. Read `currentOp` / `opTitle` inline from `<op_status>` for the readiness line. If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and stop. Otherwise skip the boot call — `opPath` is already cached.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}`.
+
+**If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
+
+If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and stop.
+
+`<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them (`currentOp` / `opTitle` for the readiness line).
 
 ### 2. Load context
 
