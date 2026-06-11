@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
@@ -5,19 +6,49 @@ import { Section } from './section'
 type Beat = {
   title: string
   body: string
-  caption: string
+  image: { src: string; alt: string; width: number; height: number }
 }
 
 const BEATS: Beat[] = [
   {
     title: 'Operations as issues',
     body: 'The OP is the unit of work — the cycle revolves around it. Drop context as logs (comments) and freeform notes (markdown) onto each operation; the CLI infils both into the local working dir when you start work.',
-    caption: 'OP detail page with logs and notes',
+    image: {
+      src: '/operation.png',
+      alt: 'OP detail page with logs and notes',
+      width: 1024,
+      height: 926,
+    },
   },
   {
     title: 'Per-OP usage stats',
     body: 'Token spend, model breakdown, session timing — all scoped to the OP. Approve the next splash with the receipt in hand.',
-    caption: 'Per-OP stats panel',
+    image: {
+      src: '/stats.png',
+      alt: 'Per-OP stats panel',
+      width: 1132,
+      height: 1150,
+    },
+  },
+]
+
+type IncomingItem = {
+  title: string
+  body: string
+}
+
+const INCOMING: IncomingItem[] = [
+  {
+    title: 'Campaigns & Kanban',
+    body: 'Campaigns roll ops into epics; watch them flow across a Kanban board.',
+  },
+  {
+    title: 'Token usage dashboard',
+    body: 'Per-op stats roll up into a team dashboard. Spend by operator, sliced by day/week/month.',
+  },
+  {
+    title: 'Corps',
+    body: 'A Corps groups projects and teams under one command. Bulk member control, shared settings, cross-project view.',
   },
 ]
 
@@ -47,40 +78,44 @@ export function MissionHQ() {
                 {beat.body}
               </p>
             </div>
-            <div className={cn(i % 2 === 1 && 'md:order-1')}>
-              <ScreenshotPlaceholder caption={beat.caption} />
+            <div
+              className={cn(
+                'aspect-square w-full overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800',
+                i % 2 === 1 && 'md:order-1',
+              )}
+            >
+              <Image
+                src={beat.image.src}
+                alt={beat.image.alt}
+                width={beat.image.width}
+                height={beat.image.height}
+                loading='eager'
+                className='block h-auto w-full'
+              />
             </div>
           </div>
         ))}
 
-        <div className='border-t border-zinc-200 pt-12 dark:border-zinc-800'>
-          <div className='flex items-center gap-3'>
-            <h3 className='text-xl font-semibold text-zinc-900 dark:text-zinc-50'>
-              Campaigns & Kanban
-            </h3>
-            <span className='rounded border border-amber-500/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-amber-600 dark:border-amber-400/40 dark:text-amber-500'>
-              [ INCOMING ]
-            </span>
-          </div>
-          <p className='mt-3 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-            Epics and board view in the next pass.
-          </p>
+        <div className='pt-12 dark:border-zinc-800'>
+          <span className='inline-block rounded border border-amber-500/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-amber-600 dark:border-amber-400/40 dark:text-amber-500'>
+            [ INCOMING ]
+          </span>
+          <ul className='mt-6 max-w space-y-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+            {INCOMING.map((item) => (
+              <li key={item.title} className='flex items-start gap-3'>
+                <span className='mt-2 h-1 w-1 flex-none rounded-full bg-emerald-500 dark:bg-emerald-400' />
+                <span>
+                  <strong className='font-semibold text-zinc-900 dark:text-zinc-50'>
+                    {item.title}
+                  </strong>
+                  {' — '}
+                  {item.body}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </Section>
-  )
-}
-
-function ScreenshotPlaceholder({ caption }: { caption: string }) {
-  return (
-    <div
-      className='flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50/50 p-6 dark:border-zinc-700 dark:bg-zinc-900/30'
-      role='img'
-      aria-label={`Screenshot placeholder: ${caption}`}
-    >
-      <span className='text-center font-mono text-xs uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600'>
-        [ Screenshot: {caption} ]
-      </span>
-    </div>
   )
 }
