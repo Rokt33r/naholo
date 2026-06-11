@@ -3,6 +3,7 @@ import { addTimelineCommand } from './add-timeline.js'
 import { bootCommand } from './boot.js'
 import { chopchopCommand } from './chopchop.js'
 import { exfilCommand } from './exfil.js'
+import { fobCommand } from './fob.js'
 import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
 import { opCommand } from './op.js'
@@ -17,6 +18,7 @@ export const agentCommand = new Command('agent').description(
 
 agentCommand.addCommand(infilCommand)
 agentCommand.addCommand(reinfilCommand)
+agentCommand.addCommand(fobCommand)
 agentCommand.addCommand(exfilCommand)
 agentCommand.addCommand(sitrepCommand)
 agentCommand.addCommand(addTimelineCommand)
