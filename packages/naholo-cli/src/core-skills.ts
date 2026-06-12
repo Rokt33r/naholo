@@ -1,5 +1,6 @@
 import infilContent from './skills/infil.md'
 import exfilContent from './skills/exfil.md'
+import fobContent from './skills/fob.md'
 import warnoContent from './skills/warno.md'
 import raidContent from './skills/raid.md'
 import opordContent from './skills/opord.md'
@@ -13,6 +14,7 @@ import reconContent from './skills/recon.md'
 export const CORE_LOADOUT_NAME = 'core'
 
 export const coreSkills: { name: string; content: string }[] = [
+  { name: 'fob', content: fobContent },
   { name: 'infil', content: infilContent },
   { name: 'exfil', content: exfilContent },
   { name: 'warno', content: warnoContent },
