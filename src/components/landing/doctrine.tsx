@@ -22,7 +22,7 @@ const DOCTRINES: DoctrineCard[] = [
   {
     title: 'Recoverable context',
     bullets: [
-      'Chat history drives the active session — until it fills up or starts to drift.',
+      'The session runs on chat history — until the context window fills or the agent starts hallucinating.',
       'TIMELINE is the catch-up doc: the next session reads it and picks up where the last one left off.',
       'No re-briefing, no `/compact` gymnastics.',
     ],
