@@ -12,8 +12,9 @@ const BEATS: Beat[] = [
     title: 'Skill installation',
     body: (
       <>
-        One command installs the essential six workflow skills and three side
-        branches — <code className='font-mono'>/recon</code> (talk-it-out),{' '}
+        One command installs the workflow skills and side branches —{' '}
+        <code className='font-mono'>/fob</code> (drop an idea, get an op),{' '}
+        <code className='font-mono'>/recon</code> (talk-it-out),{' '}
         <code className='font-mono'>/raid</code> (small-OP shortcut),{' '}
         <code className='font-mono'>/chop</code> (split an OP) — into your AI
         agent. No copy-paste, no setup ceremony.

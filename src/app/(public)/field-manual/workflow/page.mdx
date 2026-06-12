@@ -20,12 +20,13 @@ The cycle in [Quick Start](/field-manual/quick-start) was the round-trip view. T
 
 ## The cycle at a glance
 
-The core pipeline is five skills:
+The core pipeline:
 
 `/infil` &rarr; `/warno` &rarr; `/opord` &rarr; `/splash` (loop) &rarr; `/exfil`
 
-Plus three side branches:
+Side branches that plug into it:
 
+- **`/fob`** &mdash; always-safe op-creator. Drop a title + optional first log; spins up the OP server-side and chains `/infil` when no op is in flight.
 - **`/raid`** &mdash; fresh-OP shortcut. Collapses `/warno` + `/opord` for small OPs where architecture review is overkill.
 - **`/chop`** &rarr; **`/chopchop`** / **`/nochop`** &mdash; OP-splitting. Carve one OP into two when scope has ballooned.
 - **`/recon`** &mdash; read-only side branch. Research the OP, talk through tradeoffs, and hand off to the next skill without touching disk.
@@ -33,6 +34,20 @@ Plus three side branches:
 Every skill in the pipeline ships you into a **phase** &mdash; `infil`, `warno`, `opord`, `splash`, `recon`, `chop`. The phase name is the &ldquo;where are we&rdquo; signal: after `/warno` you&rsquo;re in the warno phase, and small follow-up edits (a single Warning Order tweak, a Concept of Operations rewrite) belong to that phase without needing to re-type `/warno` from scratch. Each skill enforces its own scope &mdash; if you ask for opord-shaped work in the warno phase, the agent routes you to `/opord` instead of doing it silently.
 
 `/sitrep` is a sync, not a phase &mdash; it pushes local progress and posts a log without ending the current phase. `/exfil` ends the cycle entirely: sync, optional close, delete local infiled dir.
+
+<h2 id='fob'>/fob &mdash; drop an idea, get an op</h2>
+
+`/fob` is another front door of the cycle when the OP does not exist on the server yet. Pass a one-line title and an optional first log, and `/fob` creates the operation server-side, posts the log when content is non-empty, and chains `/infil <n>` so the session lands infiled and ready for `/warno` or `/raid`.
+
+Arg shapes:
+
+- `/fob title-only` &mdash; title on the first line, no content. Creates the op, posts no log.
+- `/fob\n<content lines>` &mdash; empty first line, content after. `/fob` derives the title from the content, posts it as the first log.
+- `/fob title\n<content lines>` &mdash; title + log together.
+
+When an op is **already infiled**, `/fob` still creates the new op + log server-side &mdash; dropping an idea should never cost you your in-flight work &mdash; but it skips the `/infil` chain so the local infiled directory stays exactly as it was. The output names the new op number; switch to it later with `/exfil` then `/infil <n>` when you are ready.
+
+`/fob` does **not** research the codebase. It is a one-shot launcher whose job is to register the idea and (when the slot is free) drop you into the infil phase. Compare with `/raid`: `/raid` runs **after** `/infil` to collapse `/warno` + `/opord` for small OPs. The max-velocity path for a fresh small idea is `/fob` then `/raid "..."`.
 
 <h2 id='infil'>/infil &mdash; pull the op local</h2>
 
