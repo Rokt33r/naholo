@@ -81,19 +81,25 @@ If CONOPS or the WO list keep growing past the size you can hold in your head, t
 
 <h2 id='recon'>/recon &mdash; talk it out before you fire a prompt</h2>
 
-Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent reads `OPERATION.md`, answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno "..."` or `/opord "..."` figuring out what you want; figure it out in recon first.
+Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno "..."` or `/opord "..."` figuring out what you want; figure it out in recon first.
+
+`/recon` runs in one of two branches based on whether an op is infiled:
+
+- **Infiled** &mdash; the agent reads `OPERATION.md` + `TIMELINE.md` up front and answers with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno "..."`, `/opord "..."`, `/splash N "..."`).
+- **No infiled op** &mdash; the agent skips the OP context load and answers from the codebase alone, reading files on demand. If your question describes work you would want to track as an operation (a fix, a feature, a refactor), the agent points you at `/fob "<title>\n<content>"` to create + infil. `/fob` follows the same handoff rule as the other phase-changing skills (see below).
 
 Reach for it when:
 
 - A Warning Order in MISSION sounds fishy or unsure after `/warno` &mdash; talk through the decision before keeping it, dropping it, or revising it.
 - You want to revise a TASK or a shipped change but the prompt is not obvious &mdash; work out what to ask before you ask.
-- Any other moment your intent is unclear and you want to think out loud against the loaded OP context.
+- You want to think out loud about a piece of the codebase before deciding whether it deserves its own OP.
+- Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infiled).
 
-When the discussion lands the prompt, tell the agent to run the next skill &mdash; `/warno "..."`, `/opord "..."`, `/splash N "..."` &mdash; and it picks up where the conversation left off. `/recon` itself writes **nothing**: no `OPERATION.md` edits, no `TASKS.md` edits, no TIMELINE bullets, no server syncs.
+When the discussion lands the prompt, tell the agent to run the next skill &mdash; `/warno "..."`, `/opord "..."`, `/splash N "..."`, or `/fob "..."` on the no-op branch &mdash; and it picks up where the conversation left off. `/recon` itself writes **nothing**: no `OPERATION.md` edits, no `TASKS.md` edits, no TIMELINE bullets, no server syncs.
 
-Runnable from any post-`/infil` state. The recon phase ends when a phase-changing skill (`/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
+The recon phase ends when a phase-changing skill (`/infil` / `/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
 
-If you ask the agent to silently do phase-shaped work mid-recon (e.g. &ldquo;rewrite MISSION to X&rdquo;), it routes you to invoke the right skill instead. The hand-off is explicit on purpose &mdash; recon&rsquo;s contract is that nothing lands on disk until you say so.
+The handoff has two modes. **Name the skill** (`run opord`, `do a /warno to swap WO 2`, `fire /splash 4`) and the agent invokes it for you with whatever args the conversation has shaped &mdash; slash prefix and backticks are optional. **Describe phase-shaped work without naming the skill** (`rewrite MISSION to X`, `swap TASK 4 to handle nulls`) and the agent pushes back once: it names the right slash command, drafts the freeform args from your description, and stops &mdash; you re-fire (with edits) or confirm. Recon&rsquo;s contract is that nothing lands on disk until the explicit invocation happens.
 
 ## /raid &mdash; fresh-OP shortcut
 
