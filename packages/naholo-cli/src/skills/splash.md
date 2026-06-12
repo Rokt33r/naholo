@@ -107,7 +107,11 @@ Implement the code changes that satisfy the task intent:
 - Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the task scope. Do not refactor surrounding code, add features, or fix unrelated issues.
 
-After the COA finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you actually changed (e.g. a formatter on any tracked-file change, a type checker on any TS-source change). These are not listed on the COA — `/opord` deliberately omits them. If a verification fails, attempt to fix the failure as long as the fix stays within the task's scope; record the fix as a deviation in the AAR. If the fix would expand scope (touches files unrelated to the task, requires schema or contract changes, etc.), stop and surface the failure to the user rather than improvising.
+After the COA finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you changed (formatter on tracked-file changes, type checker on TS source). `/opord` deliberately omits these from the COA.
+
+If everything passes, record nothing in the AAR — no news is good news. Record the result only when the user explicitly asks for it.
+
+If a verification fails, fix it when the fix stays within the task's scope and record the fix under Deviations. If the fix would expand scope or doesn't work, flag the failure as a Notes bullet in the AAR.
 
 ### 7. Write the AAR (or update it for revision splashes)
 
