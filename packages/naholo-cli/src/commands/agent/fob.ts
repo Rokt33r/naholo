@@ -1,9 +1,7 @@
-import fs from 'node:fs'
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
 import { CliError, withErrorHandling } from '../../errors.js'
-import { getLocalOperationDir } from '../../lib/local-operations.js'
 
 export const fobCommand = new Command('fob')
   .description(
@@ -19,10 +17,6 @@ export const fobCommand = new Command('fob')
       const title = options.title.trim()
       if (title.length === 0) {
         throw new CliError('`-T` title must not be empty.')
-      }
-
-      if (fs.existsSync(getLocalOperationDir())) {
-        throw new CliError('Already infiled. Run "naholo agent exfil" first.')
       }
 
       const { client, projectSlug } = getCliContext()
