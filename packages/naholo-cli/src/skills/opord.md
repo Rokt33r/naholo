@@ -1,28 +1,28 @@
 ---
 name: opord
-description: Cut a warno'd Naholo operation's MISSION into single-commit-sized tasks — write EXECUTION in OPERATION.md, mirror to TASKS.md.
+description: Cut a warno'd Naholo operation's WARNING ORDER into single-commit-sized tasks — write OPERATION ORDER in OPERATION.md, mirror to TASKS.md.
 argument-hint: '["freeform plan-revision instructions"]'
 ---
 
-# Opord — Cut the Mission into Tasks
+# Opord — Cut the Warning Order into Tasks
 
-OPORD-style detail-cutter. Reads `## MISSION` (must already be populated by `/warno`), resolves any unanswered Warning Order alternatives, cuts the mission into single-commit-sized tasks, **appends `## EXECUTION`** to `OPERATION.md` when absent (revises in place when present), and mirrors the task list into `TASKS.md` as a flat checkbox list.
+OPORD-style detail-cutter. Reads `## WARNING ORDER` (must already be populated by `/warno`), resolves any unanswered Constraint alternatives, cuts the WARNO into single-commit-sized tasks, **appends `## OPERATION ORDER`** to `OPERATION.md` when absent (revises in place when present), and mirrors the task list into `TASKS.md` as a flat checkbox list.
 
-The skill name is the unambiguous "where are we" signal: re-running `/opord` is for any plan adjustment — split / merge / retitle / insert / drop / rewrite unfinished tasks, all the way up to a full restart. Direction changes — Concept of Operations rewrites, Warning Order revisions — belong to `/warno`, not `/opord`.
+`OPERATION.md` is a container holding the orders successively issued for one op: `## SITUATION` is shared context, `## WARNING ORDER` is the WARNO document (preliminary direction owned by `/warno`), `## OPERATION ORDER` is the OPORD document (the full task-cut plan owned by `/opord`). Re-running `/opord` is for any plan adjustment — split / merge / retitle / insert / drop / rewrite unfinished tasks, all the way up to a full restart. Direction changes — Concept of Operations rewrites, Constraint revisions — belong to `/warno`, not `/opord`.
 
 Each task is sized for one reviewable `/splash`; sub-tasks are deliberately not used. The bar is "could a fresh `/splash` session ship one task by reading only that task's section in OPERATION.md and the project conventions?"
 
 ## Arguments
 
-Anything passed as an argument is treated as **freeform instructions** describing how to revise EXECUTION. There is no keyword list — read the instructions like any other prompt and classify the intent in step 6 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise OPERATION ORDER. There is no keyword list — read the instructions like any other prompt and classify the intent in step 6 (re-run dispatch). Common patterns:
 
-- `/opord` (no args) — first run after `/warno`, or resume a partial EXECUTION draft.
+- `/opord` (no args) — first run after `/warno`, or resume a partial OPERATION ORDER draft.
 - `/opord "split TASK 3 into two — one for the schema, one for the migration"` — targeted edit.
 - `/opord "add a task to backfill the migration script"` — single insertion.
 - `/opord "drop TASK 7, rewrite TASK 4 to cover both routes"` — multi-task revision.
-- `/opord "rewrite EXECUTION from scratch"` — full restart of unfinished tasks.
+- `/opord "rewrite OPORD from scratch"` — full restart of unfinished tasks.
 
-With `## EXECUTION` already present, the default assumption is that the freeform args are plan-revision instructions (insert / drop / split / merge / retitle / rewrite unfinished tasks). MISSION-shaped instructions (Concept of Operations rewrite, Warning Order changes) belong to `/warno`, not `/opord`.
+With `## OPERATION ORDER` already present, the default assumption is that the freeform args are plan-revision instructions (insert / drop / split / merge / retitle / rewrite unfinished tasks). WARNO-shaped instructions (Concept of Operations rewrite, Constraint changes) belong to `/warno`, not `/opord`.
 
 ## What to do
 
@@ -44,7 +44,7 @@ Read these now:
 - `{operationDir}/TASKS.md` — the checklist
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-If MISSION includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/warno` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/opord` doesn't redo the discovery work.
+If the WARNO includes a `### Target Reference Points` subsection, treat it as the canonical map of what `/warno` already researched. In a fresh session, prefer reading those listed paths over re-walking the codebase from scratch — TRP exists precisely so `/opord` doesn't redo the discovery work.
 
 ### 3. Pending CHOP gate
 
@@ -72,39 +72,39 @@ Branch on the answer:
 
   > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
-### 4. Validate MISSION
+### 4. Validate WARNING ORDER
 
-`## MISSION` must already be populated. If MISSION is absent (no `## MISSION` heading) or missing any of the two required subsections (`### Concept of Operations`, `### Warning Orders`), stop and tell the user to run `/warno` first. `/opord` is the OPORD pass — without a populated MISSION it has nothing to cut.
+`## WARNING ORDER` must already be populated. If WARNING ORDER is absent (no `## WARNING ORDER` heading) or missing any of the two required subsections (`### Concept of Operations`, `### Constraints`), stop and tell the user to run `/warno` first. `/opord` is the OPORD pass — without a populated WARNO it has nothing to cut.
 
 `### Target Reference Points` is optional — its absence is not a validation failure. If it's missing, `/opord` proceeds normally (and may have to research the codebase itself).
 
-### 5. Resolve Warning Order alternatives
+### 5. Resolve Constraint alternatives
 
-For each `### Warning Orders` bullet that has a `- ? <prompt> (opt-a / opt-b) >` sub-bullet, resolve it in place:
+For each `### Constraints` bullet that has a `- ? <prompt> (opt-a / opt-b) >` sub-bullet, resolve it in place:
 
-- **No answer written** (nothing after the trailing `>`) → replace the `- ? ...` sub-bullet with `- Rejected: opt-a, opt-b`. The bold-label chosen path stays as-is. If a `- Rejected:` already exists on the WO, merge into it (comma-join).
-- **User wrote an answer matching one of the listed options** → rewrite the WO's bold label to commit to that option, then replace the sub-bullet with `- Rejected: <original chosen + remaining alts>`.
+- **No answer written** (nothing after the trailing `>`) → replace the `- ? ...` sub-bullet with `- Rejected: opt-a, opt-b`. The bold-label chosen path stays as-is. If a `- Rejected:` already exists on the Constraint, merge into it (comma-join).
+- **User wrote an answer matching one of the listed options** → rewrite the Constraint's bold label to commit to that option, then replace the sub-bullet with `- Rejected: <original chosen + remaining alts>`.
 - **User wrote a free-form answer** (something not in the listed options) → rewrite the bold label to that answer, replace the sub-bullet with `- Rejected: opt-a, opt-b`.
 
 No reasons on rejected items unless the user wrote them in. When in doubt, treat the answer as empty and collapse to Rejected.
 
-### 6. Re-run dispatch + write EXECUTION
+### 6. Re-run dispatch + write OPERATION ORDER
 
-Inspect the current state of `## EXECUTION` and any freeform args. Branch:
+Inspect the current state of `## OPERATION ORDER` and any freeform args. Branch:
 
-- **EXECUTION absent (no `## EXECUTION` heading), no args** → fresh write. Append `## EXECUTION` after the last MISSION content, then cut MISSION into single-commit-sized tasks and populate EXECUTION (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 8).
-- **EXECUTION present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## EXECUTION` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify EXECUTION, do not touch TASKS.md, do not append a TIMELINE bullet.
+- **OPERATION ORDER absent (no `## OPERATION ORDER` heading), no args** → fresh write. Append `## OPERATION ORDER` after the last WARNING ORDER content, then cut the WARNO into single-commit-sized tasks and populate OPERATION ORDER (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 8).
+- **OPERATION ORDER present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## OPERATION ORDER` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify OPERATION ORDER, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided, classify intent**:
-  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Course of Action steps). Apply the described edits in place.
+  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap SOM steps). Apply the described edits in place.
   - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, append at the next free integer after the last existing task.
   - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present.
-  - **Full restart** — args explicitly say start over (e.g., "rewrite EXECUTION from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite EXECUTION and renew all tasks even finished.
+  - **Full restart** — args explicitly say start over (e.g., "rewrite OPERATION ORDER from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite OPERATION ORDER and renew all tasks even finished.
 
-### 7. Write OPERATION.md EXECUTION
+### 7. Write OPERATION.md OPERATION ORDER
 
-One `### TASK N — Title` subsection per task, in order. Each task section has three subsections — **`#### Intent`**, **`#### Scheme of Maneuver`** (optional), and **`#### Course of Action`** — in that order.
+One `### TASK N — Title` subsection per task, in order. Each task section has two subsections — **`#### Intent`** and **`#### Scheme of Maneuver`** — in that order.
 
-- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from COA). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Intent is the skim-anchor — concrete shapes are reviewed in SOM, concrete steps in COA. Examples:
+- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from SOM). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Intent is the skim-anchor — concrete shapes and concrete steps both live in SOM. Examples:
 
   ```
   #### Intent
@@ -124,7 +124,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   Slim `stats-record` to a `sessions.yml` upsert; transport moves out of the Stop hook entirely.
   ```
 
-- `#### Scheme of Maneuver` (optional, but **required** when the task introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, **DB schema (table column lists), DTOs, or API request/response shapes**). The Intent must stay a one-or-two-sentence success criterion — if the task ships a structure (columns, fields, signature), the structure goes here, not in the Goal. Use code-fenced ASCII for visual artifacts:
+- `#### Scheme of Maneuver` — the per-task body. **Mandatory.** Always contains an **action list** (Add / Edit / Move / Delete / Run / Manual) that `/splash` walks when shipping the task. Optionally preceded by an **ASCII artifact** — control-flow diagram, UI wireframe, schema layout, signature diff, or outline — when the task introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, DB schema (table column lists), DTOs, API request/response shapes, or document structure. When you include an artifact, place it above the action list. Pick the artifact shape that best fits the change:
   - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches. Untagged fence.
   - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions. Untagged fence.
   - **Schema layout**: a fenced block listing each column with its type, constraints, and FK relationships (one column per line). Tag with `sql` if you're writing literal DDL; otherwise leave the fence untagged.
@@ -141,6 +141,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   Example (control flow):
 
   ```
+  // auth control flow
   request ── has session? ─┬─yes──► load user ──► handler
                            └─no───► 401
   ```
@@ -211,9 +212,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   ## Section C
   ```
 
-  Skip this section entirely if the task is a pure data/logic change with no flow, UI, or signature implications.
-
-- `#### Course of Action` — the atomic steps that ship this task. Each item is one of six verbs:
+  The **action list** — always present, below any optional artifact — names the atomic steps that ship this task. Each item is one of six verbs:
   - `Add {path}` — one-line purpose
   - `Edit {path}` — one-line description of what changes
   - `Move {oldPath} → {newPath}` — one-line description (e.g. "rename for clarity", "relocate into shared lib"). Use `→` (Unicode arrow). Sub-bullets only when symbols' signatures change as part of the move; pure relocations get no sub-bullets.
@@ -226,6 +225,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   Example:
 
   ```
+
   - Edit packages/naholo-cli/src/lib/local-operations.ts
     - `getLocalOperationDir`, `getNotesDir`, `getBaseDir`, `getTasksPath`,
       `getBaseTasksPath`, `getBaseNotesDir`: drop the `operationNumber` arg
@@ -240,24 +240,24 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
 
   Include all steps you can predict; `/splash` may add files in its AAR if it discovers more.
 
-  Do **not** list general post-edit verification commands (formatters, type checkers, etc.) that already live in `CLAUDE.md` or `.claude/rules/` — `/splash` reads those rules and runs the verifications itself. COA should only carry steps that are specific to this task. Project-owned actions the agent must not run (e.g. database migrations) still belong on the COA as `Manual: {action}` so `/splash` surfaces them.
+  Do **not** list general post-edit verification commands (formatters, type checkers, etc.) that already live in `CLAUDE.md` or `.claude/rules/` — `/splash` reads those rules and runs the verifications itself. The action list should only carry steps that are specific to this task. Project-owned actions the agent must not run (e.g. database migrations) still belong on the action list as `Manual: {action}` so `/splash` surfaces them.
 
-`/opord`'s per-task template ends at `#### Course of Action`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the task.
+`/opord`'s per-task template ends at `#### Scheme of Maneuver`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the task.
 
 Single-commit sizing rules:
 
 A single-commit-sized task is one cohesive change that a reviewer can read as a single diff — one motivation, one verb in the title, no unrelated edits riding along. If you'd struggle to write its commit message without an "and", split it.
 
 - Each task should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
-- **Intent is the approach summary only.** Concrete shapes live in SOM, concrete steps live in COA — Intent must stay a single skim-readable headline.
+- **Intent is the approach summary only.** Concrete shapes and concrete steps both live in SOM — Intent must stay a single skim-readable headline.
 - **Compound titles are a split tell.** If a task title needs a comma, "and", or "+" to describe it ("Slim X, relocate Y, strip Z"), each clause is a split candidate. Split until every title is a single verb + object.
-- No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (Course of Action sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
+- No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (SOM action-list sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
-- An intent that says "do A or B" is a bug — pick one and explain the reasoning in MISSION's Warning Orders (or ask `/warno` to add the decision if it's missing).
+- An intent that says "do A or B" is a bug — pick one and explain the reasoning in the WARNO's Constraints (or ask `/warno` to add the decision if it's missing).
 
 ### 8. Mirror to TASKS.md
 
-Sync `TASKS.md` to match the EXECUTION task list:
+Sync `TASKS.md` to match the OPERATION ORDER task list:
 
 - Heading stays `# TASKS — OP #{n}`.
 - One `- [ ] N. Title` line per `### TASK N — Title`, in order. Flat — no indentation, no sub-bullets.
@@ -275,19 +275,19 @@ Show the plan state. Use markdown link syntax. Print as raw markdown — no surr
 
 The summary's primary link points at the **most-affected scope** of this run, so the user can jump straight to what changed:
 
-- **Fresh write / full restart** → link to `## EXECUTION` (the whole section is new). Label: `EXECUTION`.
+- **Fresh write / full restart** → link to `## OPERATION ORDER` (the whole section is new). Label: `OPERATION ORDER`.
 - **Targeted edit on a single task** → link to that task's `### TASK N — Title` heading. Label: `TASK N`.
 - **Insertion of one new task** → link to the inserted task's heading. Label: `TASK N`.
 - **Multi-task revision / multiple insertions** → list one link per affected task on its own bullet. Labels: `TASK N`.
 
-Resolve `<line>` by reading back `OPERATION.md` after writing EXECUTION and locating the matching heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
+Resolve `<line>` by reading back `OPERATION.md` after writing OPERATION ORDER and locating the matching heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
 
 Example (fresh write, printed directly, not fenced):
 
 Plan complete for OP #42: "Implement user auth"
 
 - Tasks: 6 total (0 done, 6 remaining)
-- Execution: [EXECUTION]({operationDir}/notes/OPERATION.md#L<line>)
+- OPORD: [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<line>)
 - Tasks: [TASKS.md]({operationDir}/TASKS.md)
 
 Example (targeted edit on TASK 4):
@@ -301,8 +301,8 @@ Plan adjusted for OP #42: "Implement user auth"
 Next:
 
 - Looks good → run `/splash` to ship TASK 1
-- Plan adjustment (insert, drop, split, retitle, rewrite unfinished tasks) → re-run `/opord "freeform instructions"` or edit EXECUTION directly
-- Direction change → re-run `/warno "freeform instructions"` to revise MISSION
+- Plan adjustment (insert, drop, split, retitle, rewrite unfinished tasks) → re-run `/opord "freeform instructions"` or edit OPERATION ORDER directly
+- Direction change → re-run `/warno "freeform instructions"` to revise the WARNO
 - Optionally → `/sitrep` to push current plan to the server
 
 ## Post-opord phase
@@ -311,22 +311,22 @@ Once this skill returns, the session is in the **opord** phase. The phase persis
 
 While in the opord phase:
 
-- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite Course of Action steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
+- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite SOM steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
 - **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
-  - MISSION rewrite (Concept of Operations / Warning Orders / Target Reference Points) → `/warno`
+  - WARNO rewrite (Concept of Operations / Constraints / Target Reference Points) → `/warno`
   - Implementing a task → `/splash`
   - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
 
 ## Rules
 
-- **EXECUTION-only**: `/opord` writes (or revises) `## EXECUTION` and mirrors to `TASKS.md`. It does NOT touch `## MISSION` — direction changes belong to `/warno`.
-- **MISSION must exist**: abort with a "run `/warno` first" message if MISSION is absent or missing required subsections.
+- **OPORD-only**: `/opord` writes (or revises) `## OPERATION ORDER` and mirrors to `TASKS.md`. It does NOT touch `## WARNING ORDER` — direction changes belong to `/warno`.
+- **WARNING ORDER must exist**: abort with a "run `/warno` first" message if WARNING ORDER is absent or missing required subsections.
 - **No sub-tasks**: every task is flat. If you feel the urge to sub-bullet, split into two tasks.
 - **Completed tasks are immutable**: a task with a `#### After-Action Report` heading MUST NOT be edited, renumbered, or removed.
-- **Decisions commit to one path**: every task Intent headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/warno` to add the missing Warning Order.
+- **Decisions commit to one path**: every task Intent headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/warno` to add the missing Constraint.
 - **Preserve `[ref]` links** in TASKS.md.
 - **Respect existing done states**: don't uncheck `[x]` items in TASKS.md.
-- **OPERATION.md has exactly three top-level sections**: SITUATION, MISSION, EXECUTION. Nothing else. Per-task progress lives in EXECUTION's AARs; chronological events live in TIMELINE.md.
+- **OPERATION.md has exactly three top-level sections**: SITUATION, WARNING ORDER, OPERATION ORDER. Nothing else. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **Shipped tasks are immutable integers**: a task with a `#### After-Action Report` heading keeps its integer forever — never renumber it, never re-slot it. Unshipped tasks may be re-slotted (e.g., inserting "before TASK 6" bumps later unshipped tasks by 1). Numbering is plain `TASK 1`, `TASK 2`, …; no letter-suffix. (Historical letter-suffix tasks — e.g. `TASK 3a` — stay as-is; they're immutable AAR records from before this doctrine.)
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TASKS.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
