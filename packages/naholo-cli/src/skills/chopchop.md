@@ -31,7 +31,7 @@ If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <
 Read these now:
 
 - `{operationDir}/notes/CHOP.md` — required. If missing, stop and tell the user to run `/chop "freeform"` first.
-- `{operationDir}/notes/OPERATION.md` — re-read every invocation so manual mid-session edits land; needed for parity checks against the parent's MISSION/EXECUTION and for the TRP allocation in step 4
+- `{operationDir}/notes/OPERATION.md` — re-read every invocation so manual mid-session edits land; needed for parity checks against the parent's WARNING ORDER/OPERATION ORDER and for the TRP allocation in step 4
 - `{operationDir}/TASKS.md` — needed for the shipped/unshipped state on parent tasks
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that
 
@@ -41,23 +41,23 @@ Before allocating TRP, before shelling out to the CLI, before any side effect: c
 
 Build from `CHOP.md` (skip `## Intent` — it's a human-readable summary `/chop` writes for the user; `/chopchop` ignores it):
 
-- The `# CURRENT OP #{n}: {title}` header (must parse), the `## SITUATION` / `### Pain` body, the `## MISSION` block (CONOPS + WO labels), and the `## EXECUTION` checklist. Each task item is `- [ ] TASK n — {title}` or `- [x] TASK n — {title}` — checkbox state encodes shipped (`[x]`) vs. unshipped (`[ ]`).
-- The `# NEW OP: {newTitle}` header (must parse), the `## SITUATION` / `### Pain` body, the `## MISSION` block (CONOPS + WO labels), and the `## EXECUTION` checklist (renumbered 1..N, same checkbox semantics).
+- The `# CURRENT OP #{n}: {title}` header (must parse), the `## SITUATION` / `### Pain` body, the `## WARNING ORDER` block (CONOPS + Constraint labels), and the `## OPERATION ORDER` checklist. Each task item is `- [ ] TASK n — {title}` or `- [x] TASK n — {title}` — checkbox state encodes shipped (`[x]`) vs. unshipped (`[ ]`).
+- The `# NEW OP: {newTitle}` header (must parse), the `## SITUATION` / `### Pain` body, the `## WARNING ORDER` block (CONOPS + Constraint labels), and the `## OPERATION ORDER` checklist (renumbered 1..N, same checkbox semantics).
 
 Then build four sets and one duplicate report:
 
-- **Parent WO labels** — bold labels of every bullet in the parent's `OPERATION.md ## MISSION ### Warning Orders`.
-- **CHOP WO labels** — bold labels in CHOP CURRENT OP `### Warning Orders` ∪ CHOP NEW OP `### Warning Orders`.
-- **Parent task titles** — the `{title}` portion of every `### TASK n — {title}` heading in the parent's `## EXECUTION`.
-- **CHOP task titles** — the text after `TASK n — ` on every checkbox item in CHOP CURRENT OP `## EXECUTION` ∪ CHOP NEW OP `## EXECUTION`. Checkbox state is informational and is **not** part of the symbol.
-- **Duplicate titles** — any `{title}` that appears more than once across the parent's EXECUTION sections, or more than once across the combined CHOP EXECUTION checklists.
+- **Parent Constraint labels** — bold labels of every bullet in the parent's `OPERATION.md ## WARNING ORDER ### Constraints`.
+- **CHOP Constraint labels** — bold labels in CHOP CURRENT OP `### Constraints` ∪ CHOP NEW OP `### Constraints`.
+- **Parent task titles** — the `{title}` portion of every `### TASK n — {title}` heading in the parent's `## OPERATION ORDER`.
+- **CHOP task titles** — the text after `TASK n — ` on every checkbox item in CHOP CURRENT OP `## OPERATION ORDER` ∪ CHOP NEW OP `## OPERATION ORDER`. Checkbox state is informational and is **not** part of the symbol.
+- **Duplicate titles** — any `{title}` that appears more than once across the parent's OPERATION ORDER sections, or more than once across the combined CHOP OPERATION ORDER checklists.
 
 Validate, in this order. Any failure aborts before any modification — do not allocate TRP, do not run the CLI, do not call `add-timeline`:
 
 1. **CURRENT OP header parses** — must be `# CURRENT OP #{n}: {title}` and `{n}` must equal `{parentNumber}`.
 2. **NEW OP header parses** — must be `# NEW OP: {title}`.
 3. **SITUATION presence** — both `# CURRENT OP` and `# NEW OP` blocks must contain a `## SITUATION` heading with a non-empty `### Pain` body. `### Notes` is optional. Pain/Notes bodies are free-form prose — no symbol-parity check.
-4. **WO parity** — Parent WO labels set must equal CHOP WO labels set.
+4. **Constraint parity** — Parent Constraint labels set must equal CHOP Constraint labels set.
 5. **Task parity** — Parent task titles set must equal CHOP task titles set.
 6. **No duplicate task titles** — duplicates on either side make the apply-time parent→CHOP mapping ambiguous. Do not attempt source-order resolution; refuse.
 
@@ -71,7 +71,7 @@ On any failure, collect every mismatch + duplicate report and print the abort re
 >
 > - {one-line description per missing or malformed header, or per missing SITUATION/Pain block}
 >
-> Warning Orders mismatch:
+> Constraints mismatch:
 >
 > - In CHOP but not on parent:
 >   - `{bold-label}`
@@ -80,7 +80,7 @@ On any failure, collect every mismatch + duplicate report and print the abort re
 >   - `{bold-label}`
 >   - `{bold-label}`
 >
-> EXECUTION tasks mismatch:
+> OPERATION ORDER tasks mismatch:
 >
 > - In CHOP but not on parent:
 >   - `TASK n — {title}`
@@ -93,23 +93,23 @@ On any failure, collect every mismatch + duplicate report and print the abort re
 > - Duplicate titles in CHOP (apply mapping ambiguous):
 >   - `{title}` ({M} occurrences)
 >
-> Run `/chop "freeform — bring CHOP back into sync with the parent's current MISSION/EXECUTION"` to refresh the proposal, then re-run `/chopchop`. (Alternatively, hand-edit [CHOP.md]({operationDir}/notes/CHOP.md) to match the parent.)
+> Run `/chop "freeform — bring CHOP back into sync with the parent's current WARNING ORDER/OPERATION ORDER"` to refresh the proposal, then re-run `/chopchop`. (Alternatively, hand-edit [CHOP.md]({operationDir}/notes/CHOP.md) to match the parent.)
 
-Common causes: `/warno` ran between `/chop` and `/chopchop` and added or dropped a WO; `/opord` cut new tasks or retitled existing ones; the user hand-edited `CHOP.md` and introduced a typo in a WO label or task title.
+Common causes: `/warno` ran between `/chop` and `/chopchop` and added or dropped a Constraint; `/opord` cut new tasks or retitled existing ones; the user hand-edited `CHOP.md` and introduced a typo in a Constraint label or task title.
 
-When validation passes, the parent↔CHOP mapping is unambiguous: every CHOP task title resolves to exactly one `### TASK m — {title}` section on the parent (by literal title match), and every WO bold label resolves to exactly one parent WO bullet. The CLI relies on that guarantee.
+When validation passes, the parent↔CHOP mapping is unambiguous: every CHOP task title resolves to exactly one `### TASK m — {title}` section on the parent (by literal title match), and every Constraint bold label resolves to exactly one parent Constraint bullet. The CLI relies on that guarantee.
 
 ### 4. Allocate Target Reference Points into `CHOP.md`
 
-Read the parent's `### Target Reference Points`. For each TRP entry, decide based on the carved vs. surviving WOs:
+Read the parent's `### Target Reference Points`. For each TRP entry, decide based on the carved vs. surviving Constraints:
 
-- **Supports only carved WOs** → write to NEW OP only.
-- **Supports only surviving WOs** → write to CURRENT OP only.
+- **Supports only carved Constraints** → write to NEW OP only.
+- **Supports only surviving Constraints** → write to CURRENT OP only.
 - **Supports both** → write to both sides (duplicates are fine — TRP is a curated map, not a single-source-of-truth index).
 
 This is a judgment call per entry; the user does not review the allocation. Lean toward duplication when in doubt — a TRP entry that's slightly out of scope on one side is cheap; a missing one is expensive.
 
-Then **overwrite** the `### Target Reference Points` block under each side's `## MISSION` in `{operationDir}/notes/CHOP.md` with the allocated entries. Always rewrites — does **not** honor user hand-edits to existing TRP blocks. The user's TRP review channel is editing the parent's MISSION TRP before `/chopchop`, not editing TRP inside `CHOP.md`.
+Then **overwrite** the `### Target Reference Points` block under each side's `## WARNING ORDER` in `{operationDir}/notes/CHOP.md` with the allocated entries. Always rewrites — does **not** honor user hand-edits to existing TRP blocks. The user's TRP review channel is editing the parent's WARNING ORDER TRP before `/chopchop`, not editing TRP inside `CHOP.md`.
 
 Format per entry follows the manual's TRP rules: backtick-wrapped paths, folder paths end with `/`, noun-only tags, no sub-bullets. Omit the `### Target Reference Points` heading entirely on a side when the side has zero entries (mirrors the `OPERATION.md` omit-when-empty convention).
 
@@ -121,7 +121,7 @@ Shell out via Bash:
 naholo agent chopchop
 ```
 
-The CLI consumes `CHOP.md` as the source of truth and performs the entire apply pass: creates the new OP server-side, seeds its `OPERATION.md` + tasks (verbatim from CHOP + parent EXECUTION sections), posts the seed log, patches the parent's `## SITUATION` / `## MISSION` / `## EXECUTION` in place, renames the parent server-side when the title differs, runs `pushOp` on the parent, deletes `CHOP.md` (server then local), and stamps a `chopchop` TIMELINE bullet. Exit code 0 on success; non-zero with a CliError message on stderr otherwise.
+The CLI consumes `CHOP.md` as the source of truth and performs the entire apply pass: creates the new OP server-side, seeds its `OPERATION.md` + tasks (verbatim from CHOP + parent OPERATION ORDER sections), posts the seed log, patches the parent's `## SITUATION` / `## WARNING ORDER` / `## OPERATION ORDER` in place, renames the parent server-side when the title differs, runs `pushOp` on the parent, deletes `CHOP.md` (server then local), and stamps a `chopchop` TIMELINE bullet. Exit code 0 on success; non-zero with a CliError message on stderr otherwise.
 
 On non-zero exit, surface the CLI's stderr to the user verbatim and stop. The CLI leaves `CHOP.md` in place on failure so the user can retry.
 
@@ -162,14 +162,14 @@ Print as raw markdown — no surrounding fence. Use markdown link syntax.
 
 > Next:
 >
-> - `/warno "freeform"` — adjust [MISSION]({operationDir}/notes/OPERATION.md#L{missionLine}) on the parent.
-> - `/opord` — cut the parent [MISSION]({operationDir}/notes/OPERATION.md#L{missionLine}) into EXECUTION tasks.
+> - `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) on the parent.
+> - `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) into OPERATION ORDER tasks.
 
 `execution-ready`:
 
 > Next:
 >
-> - `/opord "freeform"` — revise the parent's [EXECUTION]({operationDir}/notes/OPERATION.md#L{executionLine}) (insert / drop / rewrite unfinished tasks).
+> - `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L{executionLine}) (insert / drop / rewrite unfinished tasks).
 > - `/splash` — ship [TASK {nextTaskNumber} — {nextTaskTitle}]({operationDir}/notes/OPERATION.md#L{nextTaskLine})
 
 `all-shipped`:
@@ -188,8 +188,8 @@ Substitute `{missionLine}`, `{executionLine}`, `{nextTaskLine}`, `{nextTaskNumbe
 
 If the user asks for follow-up work on the parent without explicitly invoking a skill, **push back once**. Surface the skill that owns the work — picking the most plausible suggestion from the prompt, or from the `parentOpState` value the CLI returned in step 5 if the prompt is ambiguous — and wait for them to invoke it. Common mappings:
 
-- Rewriting parent `## MISSION` → suggest `/warno "..."`
-- Cutting tasks / editing parent `## EXECUTION` or `TASKS.md` → suggest `/opord "..."`
+- Rewriting parent `## WARNING ORDER` → suggest `/warno "..."`
+- Cutting tasks / editing parent `## OPERATION ORDER` or `TASKS.md` → suggest `/opord "..."`
 - Implementing a parent task → suggest `/splash {N}`
 - Drafting another split → suggest `/chop "..."` (the chop phase has ended; `CHOP.md` is gone)
 - Pushing the parent's pruned state → suggest `/sitrep` (checkpoint) or `/exfil` (final)
@@ -201,8 +201,8 @@ If the user pushes back, rephrases the request, or otherwise signals they want t
 
 - **`CHOP.md` is mandatory** — if it doesn't exist, stop and point the user at `/chop`. `/chopchop` cannot improvise a split from freeform args.
 - **No freeform args** — the only customization channel between `/chop` and `/chopchop` is hand-editing `CHOP.md`.
-- **TRP allocation is regenerated on every `/chopchop` run** — user hand-edits to TRP blocks in `CHOP.md` are not preserved. The user's TRP review channel is editing the parent's MISSION TRP before `/chopchop`.
+- **TRP allocation is regenerated on every `/chopchop` run** — user hand-edits to TRP blocks in `CHOP.md` are not preserved. The user's TRP review channel is editing the parent's WARNING ORDER TRP before `/chopchop`.
 - **Trust `CHOP.md` on shipped scope** — if it lists a shipped task under `# NEW OP`, the CLI carries the task with its AAR intact. The shipped-or-not decision is `/chop`'s gate, not `/chopchop`'s.
-- **CLI owns apply semantics** — verbatim WO / task-section transfer, no-renumbering on the parent, new-OP renumber-from-1, server-then-local CHOP delete, and the parent rename are all CLI responsibilities. The skill validates and shells out; it does not edit `OPERATION.md`, `TASKS.md`, or call MCP tools.
+- **CLI owns apply semantics** — verbatim Constraint / task-section transfer, no-renumbering on the parent, new-OP renumber-from-1, server-then-local CHOP delete, and the parent rename are all CLI responsibilities. The skill validates and shells out; it does not edit `OPERATION.md`, `TASKS.md`, or call MCP tools.
 - **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
 - Print the summary as raw markdown — no surrounding fence.

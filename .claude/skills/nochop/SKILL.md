@@ -1,12 +1,12 @@
 ---
 name: nochop
-description: Discard the in-flight CHOP proposal. Deletes `notes/CHOP.md` from both the local infiled dir and the parent OP server-side, stamps TIMELINE, and points the user at the next action based on the parent's `OPERATION.md` state. The parent OP's MISSION/EXECUTION are not modified.
+description: Discard the in-flight CHOP proposal. Deletes `notes/CHOP.md` from both the local infiled dir and the parent OP server-side, stamps TIMELINE, and points the user at the next action based on the parent's `OPERATION.md` state. The parent OP's WARNING ORDER/OPERATION ORDER are not modified.
 argument-hint: ''
 ---
 
 # Nochop — Abort the CHOP
 
-The bail-out half of the OP-splitting workflow. `/nochop` exists for the case where `/chop` drafted a proposal that the user no longer wants — wrong cleave line, new info from the codebase, scope changed, whatever. It deletes `notes/CHOP.md` locally and removes the same note from the parent OP server-side, stamps a TIMELINE event, and ends the chop phase. The parent OP's `MISSION` / `EXECUTION` / `TASKS.md` are untouched.
+The bail-out half of the OP-splitting workflow. `/nochop` exists for the case where `/chop` drafted a proposal that the user no longer wants — wrong cleave line, new info from the codebase, scope changed, whatever. It deletes `notes/CHOP.md` locally and removes the same note from the parent OP server-side, stamps a TIMELINE event, and ends the chop phase. The parent OP's `WARNING ORDER` / `OPERATION ORDER` / `TASKS.md` are untouched.
 
 This skill takes no args. It is a one-line cleanup, not a planning skill.
 
@@ -59,9 +59,9 @@ naholo agent add-timeline -T nochop 'Discarded CHOP proposal.'
 
 From the OPERATION.md + TASKS.md already loaded in step 2, pick one of:
 
-- **`mission-only`** — `## EXECUTION` is absent on the parent, or present but contains zero `### TASK n —` sections.
-- **`execution-ready`** — `## EXECUTION` exists and `TASKS.md` has at least one `- [ ]` row.
-- **`all-shipped`** — `## EXECUTION` exists and every `TASKS.md` row is `- [x]`. The parent is finished and ready to close out.
+- **`mission-only`** — `## OPERATION ORDER` is absent on the parent, or present but contains zero `### TASK n —` sections.
+- **`execution-ready`** — `## OPERATION ORDER` exists and `TASKS.md` has at least one `- [ ]` row.
+- **`all-shipped`** — `## OPERATION ORDER` exists and every `TASKS.md` row is `- [x]`. The parent is finished and ready to close out.
 
 ### 6. Print summary
 
@@ -77,14 +77,14 @@ Show the result. Use markdown link syntax. Print as raw markdown — no surround
 
 > Next:
 >
-> - `/warno "freeform"` — adjust [MISSION]({operationDir}/notes/OPERATION.md#L<mission-line>) on the parent.
-> - `/opord` — cut the parent [MISSION]({operationDir}/notes/OPERATION.md#L<mission-line>) into EXECUTION tasks.
+> - `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) on the parent.
+> - `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) into OPERATION ORDER tasks.
 
 `execution-ready`:
 
 > Next:
 >
-> - `/opord "freeform"` — revise the parent's [EXECUTION]({operationDir}/notes/OPERATION.md#L<execution-line>) (insert / drop / rewrite unfinished tasks).
+> - `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<operation-order-line>) (insert / drop / rewrite unfinished tasks).
 > - `/splash` — ship [TASK {N} — {title}]({operationDir}/notes/OPERATION.md#L<task-line>)
 
 TASK {N} should be the first unchecked task.
@@ -99,8 +99,8 @@ For `all-shipped`, do not append `/warno`, `/opord`, `/splash`, `/sitrep`, or an
 
 Line-anchor resolution (per the manual's `### Link format`):
 
-- `<mission-line>` — locate the `## MISSION` heading in `OPERATION.md`.
-- `<execution-line>` — locate the `## EXECUTION` heading.
+- `<warning-order-line>` — locate the `## WARNING ORDER` heading in `OPERATION.md`.
+- `<operation-order-line>` — locate the `## OPERATION ORDER` heading.
 - `<task-line>` (only needed for `execution-ready`) — pick the first `- [ ] {N}. {title}` row from `TASKS.md` in source order. Substitute `{N}` and `{title}` in the `/splash` bullet from that row, then locate `### TASK {N} — {title}` in `OPERATION.md` and use that heading's line. By construction, `execution-ready` guarantees at least one unchecked row exists.
 
 ## Post-nochop phase
@@ -109,8 +109,8 @@ Line-anchor resolution (per the manual's `### Link format`):
 
 If the user asks for follow-up work on the parent without explicitly invoking a skill, **push back once**. Surface the skill that owns the work — picking the most plausible suggestion from the prompt, or from the parent's mode determined in step 5 (`mission-only` / `execution-ready` / `all-shipped`) if the prompt is ambiguous — and wait for them to invoke it. Common mappings:
 
-- Rewriting parent `## MISSION` → suggest `/warno "..."`
-- Cutting tasks / editing parent `## EXECUTION` or `TASKS.md` → suggest `/opord "..."`
+- Rewriting parent `## WARNING ORDER` → suggest `/warno "..."`
+- Cutting tasks / editing parent `## OPERATION ORDER` or `TASKS.md` → suggest `/opord "..."`
 - Implementing a parent task → suggest `/splash {N}`
 - Drafting a fresh chop → suggest `/chop "..."`
 - Pushing to the server → suggest `/sitrep` (checkpoint) or `/exfil` (final)

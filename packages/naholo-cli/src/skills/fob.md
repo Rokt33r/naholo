@@ -84,12 +84,12 @@ Branch on `<op_status>` from step 1:
 - **Chained-`/infil` branch** — the session lands in the **infil** phase, anchored to the new op (declared by the chained `/infil`).
 - **Skipped-`/infil` branch** — the session phase is unchanged from whatever was active before `/fob` ran (the infiled op and its phase stay exactly as they were). The new op exists on the server with its first log, but the local infiled directory is untouched.
 
-In either case `/fob` itself has no follow-up edit surface — any further refinement to SITUATION belongs to the infil phase, MISSION direction belongs to `/warno`, and any plan-cutting belongs to `/opord` or `/raid`.
+In either case `/fob` itself has no follow-up edit surface — any further refinement to SITUATION belongs to the infil phase, the WARNO belongs to `/warno`, and any plan-cutting belongs to `/opord` or `/raid`.
 
 ## Rules
 
 - **Server I/O lives in the CLI, not the skill** — `/fob` never calls MCP tools and never posts to the server directly. The only side effects it owns are the prompt parse, the CLI call, and the conditional `/infil` chain.
-- **No codebase research** — `/fob` is intentionally light. If the user wants planning context, they run `/recon` after infil, or `/warno` to research and write MISSION.
+- **No codebase research** — `/fob` is intentionally light. If the user wants planning context, they run `/recon` after infil, or `/warno` to research and write the WARNO.
 - **`-T` is mandatory at the CLI**: the skill is responsible for resolving a non-empty title before the CLI call (either from the user's first line or generated from content). Never call `naholo agent fob` with an empty title.
 - **`-C` is optional**: only pass it when the user supplied content. Empty content means "create the op, no first log."
 - **Never chain `/infil` while another op is already infiled**: chaining would clobber the in-flight infiled directory. Instead print the `Infiled op exists, skipped /infil. To infil, /exfil first and /infil {opNumber} again.` hint so the user can switch deliberately.
