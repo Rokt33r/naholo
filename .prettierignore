@@ -1,6 +1,6 @@
-node/modules
+node_modules
 .next
 pnpm-lock.yaml
 package-lock.json
 .mcp.json
-.claude/settings.json
+.claude

@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch src --watch ../naholo-api/src",
-    "typecheck": "tsc"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@inquirer/checkbox": "^5.0.6",

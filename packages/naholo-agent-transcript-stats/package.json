@@ -6,7 +6,8 @@
     "./claude-code": "./src/claude-code/index.ts"
   },
   "scripts": {
-    "inspect-transcript": "tsx scripts/inspect-transcript.ts"
+    "inspect-transcript": "tsx scripts/inspect-transcript.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^4.1.12"

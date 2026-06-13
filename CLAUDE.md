@@ -51,9 +51,19 @@ Additional project rules live in [.claude/rules/](./.claude/rules/) and are load
 
 - `pnpm run dev` — dev server
 - `pnpm run build` — production build (do NOT run for verification)
-- `pnpm test-types` — type check. Run after editing whenever any TypeScript source file has changed. No permission prompt needed.
-- `pnpm format` — format code with prettier. Run after editing whenever any tracked file has changed. No permission prompt needed.
 - **Do NOT run `db:generate` or `db:migrate`** — leave DB migrations to the user
+
+## Post-edit scripts
+
+Run these after editing. No permission prompt needed for any of them.
+
+- **Always** — `pnpm format`, on any edit to any tracked file.
+- **Typecheck** — pick the script for the workspace you edited. The root `typecheck` only covers the Next.js app (`src/`); editing under `packages/*` without running the matching filtered script will silently miss errors.
+  - Edits under `src/` (Next.js app) → `pnpm typecheck`
+  - Edits under `packages/naholo-cli/` → `pnpm --filter @naholo/cli typecheck`
+  - Edits under `packages/naholo-api/` → `pnpm --filter naholo-api typecheck`
+  - Edits under `packages/naholo-agent-transcript-stats/` → `pnpm --filter naholo-agent-transcript-stats typecheck`
+  - Edits spanning multiple workspaces → run the script for each touched workspace.
 
 ## Domain Model
 
