@@ -34,7 +34,7 @@ export const dumpOpCommand = new Command('dump-op')
       const tasks = await client.listTasks(projectSlug, operationNumber)
       const notes = await client.listNotes(projectSlug, operationNumber)
       const logs = await client.listOperationLogs(projectSlug, operationNumber)
-      const sessions = await client.listAgentSessions(
+      const sessions = await client.listAgentTranscripts(
         projectSlug,
         operationNumber,
       )
@@ -75,13 +75,13 @@ export const dumpOpCommand = new Command('dump-op')
         if (!session.hasTranscript) {
           continue
         }
-        const text = await client.getAgentSessionTranscript(
+        const text = await client.getAgentTranscriptBody(
           projectSlug,
           operationNumber,
-          session.sessionId,
+          session.transcriptId,
         )
         fs.writeFileSync(
-          path.join(transcriptsDir, `${session.sessionId}.jsonl`),
+          path.join(transcriptsDir, `${session.transcriptId}.jsonl`),
           text,
         )
         transcriptCount += 1
