@@ -3,9 +3,9 @@ import { extractHeadingBody } from './markdown-utils.js'
 export type ChopOpSide = {
   title: string
   situation: string
-  mission: {
-    coo: string
-    woBlock: string
+  warningOrder: {
+    conops: string
+    constraintsBlock: string
     trpBlock: string
   }
   taskLines: Array<{ done: boolean; title: string }>
@@ -58,14 +58,13 @@ export function parseChopMd(md: string): ParsedChopMd {
 
 export function composeNewOpOperationMd(input: {
   chop: ParsedChopMd
-  parentExecutionByTitle: Map<string, string>
+  parentTaskMap: Map<string, string>
   parentNumber: number
   parentTitle: string
   newNumber: number
   carveDate: string
 }): string {
-  const { chop, parentExecutionByTitle, parentNumber, parentTitle, newNumber } =
-    input
+  const { chop, parentTaskMap, parentNumber, parentTitle, newNumber } = input
 
   const situation = appendCarvedNotesBullet(
     chop.newOp.situation,
@@ -81,16 +80,16 @@ export function composeNewOpOperationMd(input: {
   parts.push('')
   parts.push(situation.trim())
   parts.push('')
-  parts.push('## MISSION')
+  parts.push('## WARNING ORDER')
   parts.push('')
   parts.push('### Concept of Operations')
   parts.push('')
-  parts.push(chop.newOp.mission.coo.trim())
+  parts.push(chop.newOp.warningOrder.conops.trim())
   parts.push('')
-  parts.push('### Warning Orders')
+  parts.push('### Constraints')
   parts.push('')
-  parts.push(chop.newOp.mission.woBlock.trim())
-  const trp = chop.newOp.mission.trpBlock.trim()
+  parts.push(chop.newOp.warningOrder.constraintsBlock.trim())
+  const trp = chop.newOp.warningOrder.trpBlock.trim()
   if (trp.length > 0) {
     parts.push('')
     parts.push('### Target Reference Points')
@@ -99,11 +98,11 @@ export function composeNewOpOperationMd(input: {
   }
   if (chop.newOp.taskLines.length > 0) {
     parts.push('')
-    parts.push('## EXECUTION')
+    parts.push('## OPERATION ORDER')
     parts.push('')
     chop.newOp.taskLines.forEach((task, index) => {
       const newTaskNumber = index + 1
-      const parentSection = parentExecutionByTitle.get(task.title)
+      const parentSection = parentTaskMap.get(task.title)
       if (parentSection == null) {
         throw new Error(
           `New OP TASK ${newTaskNumber} title "${task.title}" has no matching task section on the parent.`,
@@ -127,17 +126,20 @@ export function composeNewOpOperationMd(input: {
 
 function parseOpSideBody(block: string): Omit<ChopOpSide, 'title'> {
   const situation = extractHeadingBody(block, '## SITUATION')
-  const missionBody = extractHeadingBody(block, '## MISSION')
-  const executionBody = extractHeadingBody(block, '## EXECUTION')
+  const warningOrderBody = extractHeadingBody(block, '## WARNING ORDER')
+  const operationOrderBody = extractHeadingBody(block, '## OPERATION ORDER')
 
   return {
     situation,
-    mission: {
-      coo: extractHeadingBody(missionBody, '### Concept of Operations'),
-      woBlock: extractHeadingBody(missionBody, '### Warning Orders'),
-      trpBlock: extractHeadingBody(missionBody, '### Target Reference Points'),
+    warningOrder: {
+      conops: extractHeadingBody(warningOrderBody, '### Concept of Operations'),
+      constraintsBlock: extractHeadingBody(warningOrderBody, '### Constraints'),
+      trpBlock: extractHeadingBody(
+        warningOrderBody,
+        '### Target Reference Points',
+      ),
     },
-    taskLines: parseTaskCheckboxes(executionBody),
+    taskLines: parseTaskCheckboxes(operationOrderBody),
   }
 }
 

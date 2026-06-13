@@ -4,12 +4,12 @@ export type ParsedOperationMd = {
   number: number
   title: string
   situation: string
-  mission: {
-    coo: string
-    woBlock: string
+  warningOrder: {
+    conops: string
+    constraintsBlock: string
     trpBlock: string
   }
-  executionByTitle: Map<string, string>
+  taskMap: Map<string, string>
 }
 
 export function parseOperationMd(md: string): ParsedOperationMd {
@@ -21,34 +21,40 @@ export function parseOperationMd(md: string): ParsedOperationMd {
   const title = headingMatch[2]
 
   const situation = extractHeadingBody(md, '## SITUATION')
-  const missionBody = extractHeadingBody(md, '## MISSION')
-  const executionBody = extractHeadingBody(md, '## EXECUTION')
+  const warningOrderBody = extractHeadingBody(md, '## WARNING ORDER')
+  const operationOrderBody = extractHeadingBody(md, '## OPERATION ORDER')
 
-  const coo = extractHeadingBody(missionBody, '### Concept of Operations')
-  const woBlock = extractHeadingBody(missionBody, '### Warning Orders')
+  const conops = extractHeadingBody(
+    warningOrderBody,
+    '### Concept of Operations',
+  )
+  const constraintsBlock = extractHeadingBody(
+    warningOrderBody,
+    '### Constraints',
+  )
   const trpBlock = extractHeadingBody(
-    missionBody,
+    warningOrderBody,
     '### Target Reference Points',
   )
 
-  const executionByTitle = parseExecutionSections(executionBody)
+  const taskMap = parseTaskSections(operationOrderBody)
 
   return {
     number,
     title,
     situation,
-    mission: { coo, woBlock, trpBlock },
-    executionByTitle,
+    warningOrder: { conops, constraintsBlock, trpBlock },
+    taskMap,
   }
 }
 
-export function pruneCarvedWosFromBlock(
-  woBlock: string,
+export function pruneCarvedConstraintsFromBlock(
+  constraintsBlock: string,
   carvedLabels: Set<string>,
 ): string {
-  const bullets = parseWoBullets(woBlock)
+  const bullets = parseConstraintBullets(constraintsBlock)
   const kept = bullets.filter((b) => !carvedLabels.has(b.label))
-  return joinWoBullets(kept)
+  return joinConstraintBullets(kept)
 }
 
 export function composeParentOperationMd(parsed: ParsedOperationMd): string {
@@ -59,27 +65,27 @@ export function composeParentOperationMd(parsed: ParsedOperationMd): string {
   parts.push('')
   parts.push(parsed.situation.trim())
   parts.push('')
-  parts.push('## MISSION')
+  parts.push('## WARNING ORDER')
   parts.push('')
   parts.push('### Concept of Operations')
   parts.push('')
-  parts.push(parsed.mission.coo.trim())
+  parts.push(parsed.warningOrder.conops.trim())
   parts.push('')
-  parts.push('### Warning Orders')
+  parts.push('### Constraints')
   parts.push('')
-  parts.push(parsed.mission.woBlock.trim())
-  const trp = parsed.mission.trpBlock.trim()
+  parts.push(parsed.warningOrder.constraintsBlock.trim())
+  const trp = parsed.warningOrder.trpBlock.trim()
   if (trp.length > 0) {
     parts.push('')
     parts.push('### Target Reference Points')
     parts.push('')
     parts.push(trp)
   }
-  if (parsed.executionByTitle.size > 0) {
+  if (parsed.taskMap.size > 0) {
     parts.push('')
-    parts.push('## EXECUTION')
+    parts.push('## OPERATION ORDER')
     parts.push('')
-    for (const section of parsed.executionByTitle.values()) {
+    for (const section of parsed.taskMap.values()) {
       parts.push(section.trim())
       parts.push('')
     }
@@ -92,16 +98,16 @@ export function composeParentOperationMd(parsed: ParsedOperationMd): string {
   )
 }
 
-export function parseWarningOrderLabels(woBlock: string): string[] {
-  return parseWoBullets(woBlock).map((b) => b.label)
+export function parseConstraintLabels(constraintsBlock: string): string[] {
+  return parseConstraintBullets(constraintsBlock).map((b) => b.label)
 }
 
-type WoBullet = { label: string; body: string[] }
+type ConstraintBullet = { label: string; body: string[] }
 
-function parseWoBullets(woBlock: string): WoBullet[] {
-  const bullets: WoBullet[] = []
-  let current: WoBullet | null = null
-  for (const line of woBlock.split('\n')) {
+function parseConstraintBullets(constraintsBlock: string): ConstraintBullet[] {
+  const bullets: ConstraintBullet[] = []
+  let current: ConstraintBullet | null = null
+  for (const line of constraintsBlock.split('\n')) {
     const labelMatch = line.match(/^- \*\*(.+?)\*\*/)
     if (labelMatch != null) {
       if (current != null) {
@@ -131,16 +137,16 @@ function parseWoBullets(woBlock: string): WoBullet[] {
   return bullets
 }
 
-function joinWoBullets(bullets: WoBullet[]): string {
+function joinConstraintBullets(bullets: ConstraintBullet[]): string {
   return bullets.map((b) => b.body.join('\n')).join('\n')
 }
 
-function parseExecutionSections(executionBody: string): Map<string, string> {
+function parseTaskSections(operationOrderBody: string): Map<string, string> {
   const map = new Map<string, string>()
-  if (executionBody.trim().length === 0) {
+  if (operationOrderBody.trim().length === 0) {
     return map
   }
-  const lines = executionBody.split('\n')
+  const lines = operationOrderBody.split('\n')
   let currentTitle: string | null = null
   let currentLines: string[] = []
   const flush = () => {

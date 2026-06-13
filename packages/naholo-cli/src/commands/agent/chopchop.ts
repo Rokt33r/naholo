@@ -12,9 +12,9 @@ import {
 } from '../../lib/local-operations.js'
 import {
   composeParentOperationMd,
+  parseConstraintLabels,
   parseOperationMd,
-  parseWarningOrderLabels,
-  pruneCarvedWosFromBlock,
+  pruneCarvedConstraintsFromBlock,
 } from '../../lib/operation-md.js'
 import { pushOp } from '../../lib/push-op.js'
 
@@ -64,8 +64,8 @@ export const chopchopCommand = new Command('chopchop')
         )
       }
 
-      const carvedWoLabels = new Set(
-        parseWarningOrderLabels(chop.newOp.mission.woBlock),
+      const carvedConstraintLabels = new Set(
+        parseConstraintLabels(chop.newOp.warningOrder.constraintsBlock),
       )
       const carvedTaskTitles = new Set(chop.newOp.taskLines.map((t) => t.title))
 
@@ -78,7 +78,7 @@ export const chopchopCommand = new Command('chopchop')
       const carveDate = new Date().toISOString().slice(0, 10)
       const newOperationMd = composeNewOpOperationMd({
         chop,
-        parentExecutionByTitle: parent.executionByTitle,
+        parentTaskMap: parent.taskMap,
         parentNumber,
         parentTitle: chop.currentOp.title,
         newNumber,
@@ -112,16 +112,16 @@ export const chopchopCommand = new Command('chopchop')
         ...parent,
         title: chop.currentOp.title,
         situation: chop.currentOp.situation,
-        mission: {
-          coo: chop.currentOp.mission.coo,
-          woBlock: pruneCarvedWosFromBlock(
-            parent.mission.woBlock,
-            carvedWoLabels,
+        warningOrder: {
+          conops: chop.currentOp.warningOrder.conops,
+          constraintsBlock: pruneCarvedConstraintsFromBlock(
+            parent.warningOrder.constraintsBlock,
+            carvedConstraintLabels,
           ),
-          trpBlock: chop.currentOp.mission.trpBlock,
+          trpBlock: chop.currentOp.warningOrder.trpBlock,
         },
-        executionByTitle: new Map(
-          [...parent.executionByTitle.entries()].filter(
+        taskMap: new Map(
+          [...parent.taskMap.entries()].filter(
             ([title]) => !carvedTaskTitles.has(title),
           ),
         ),
@@ -158,7 +158,7 @@ export const chopchopCommand = new Command('chopchop')
         renamedFrom.length > 0
           ? `; renamed parent "${renamedFrom}" → "${renamedTo}"`
           : ''
-      const timelineSummary = `Applied CHOP: spawned OP #${newNumber} "${chop.newOp.title}"; moved WOs: ${[...carvedWoLabels].join(', ') || 'none'}; moved tasks: ${chop.newOp.taskLines.length}${renameClause}.`
+      const timelineSummary = `Applied CHOP: spawned OP #${newNumber} "${chop.newOp.title}"; moved constraints: ${[...carvedConstraintLabels].join(', ') || 'none'}; moved tasks: ${chop.newOp.taskLines.length}${renameClause}.`
       appendTimelineBullet('chopchop', timelineSummary)
 
       const finalParentMd = fs.readFileSync(operationPath, 'utf-8')
@@ -169,7 +169,7 @@ export const chopchopCommand = new Command('chopchop')
         newNumber,
         newTitle: chop.newOp.title,
         newUrl,
-        movedWos: carvedWoLabels.size,
+        movedConstraints: carvedConstraintLabels.size,
         movedTasks: chop.newOp.taskLines.length,
         parentOperationMd: finalParentMd,
         parentTasksMd: finalTasksMd,
@@ -227,7 +227,7 @@ function computeResultBlock(input: {
   newNumber: number
   newTitle: string
   newUrl: string
-  movedWos: number
+  movedConstraints: number
   movedTasks: number
   parentOperationMd: string
   parentTasksMd: string
@@ -261,7 +261,7 @@ function computeResultBlock(input: {
     ['newNumber', String(input.newNumber)],
     ['newTitle', input.newTitle],
     ['newUrl', input.newUrl],
-    ['movedWos', String(input.movedWos)],
+    ['movedConstraints', String(input.movedConstraints)],
     ['movedTasks', String(input.movedTasks)],
     ['missionLine', missionLine > 0 ? String(missionLine) : 'n/a'],
     ['parentOpState', parentOpState],

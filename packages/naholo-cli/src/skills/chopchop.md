@@ -133,7 +133,7 @@ parentTitle: <string>
 newNumber: <int>
 newTitle: <string>
 newUrl: <url>
-movedWos: <int>
+movedConstraints: <int>
 movedTasks: <int>
 missionLine: <int or n/a>
 parentOpState: mission-only | execution-ready | all-shipped
@@ -154,7 +154,7 @@ Print as raw markdown — no surrounding fence. Use markdown link syntax.
 > CHOP applied on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATION.md)
 >
 > - Spawned: OP #{newNumber} {newTitle} — [open on Naholo]({newUrl})
-> - Moved to new OP: {movedWos} Warning Orders, {movedTasks} task(s)
+> - Moved to new OP: {movedConstraints} Constraints, {movedTasks} task(s)
 
 **Then append the next-actions block** that matches the `parentOpState` field from the CLI's result block.
 
