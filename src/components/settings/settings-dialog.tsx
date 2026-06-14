@@ -2,10 +2,11 @@
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, User, Terminal } from 'lucide-react'
+import { Pencil, User, Palette, Terminal } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
 import { ProjectSettingsTab } from '@/components/settings/project-settings-tab'
 import { UserSettingsTab } from '@/components/settings/user-settings-tab'
+import { AppearanceSettingsTab } from '@/components/settings/appearance-settings-tab'
 import { CliInstallTab } from '@/components/settings/cli-install-tab'
 
 type SettingsDialogProps = {
@@ -38,6 +39,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <User className='size-4' />
               User
             </TabsTrigger>
+            <TabsTrigger value='appearance'>
+              <Palette className='size-4' />
+              Appearance
+            </TabsTrigger>
             <TabsTrigger value='cli'>
               <Terminal className='size-4' />
               CLI
@@ -51,6 +56,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           )}
           <TabsContent value='user' className='overflow-y-auto'>
             <UserSettingsTab />
+          </TabsContent>
+          <TabsContent value='appearance' className='overflow-y-auto'>
+            <AppearanceSettingsTab />
           </TabsContent>
           <TabsContent value='cli' className='overflow-y-auto'>
             <CliInstallTab />
