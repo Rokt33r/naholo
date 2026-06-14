@@ -25,7 +25,7 @@ Anything in quotes after is freeform context for the splash. Common patterns:
 
 ### 1. Boot
 
-**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — every file path in this skill composes on top of it.
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 

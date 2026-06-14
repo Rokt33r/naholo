@@ -21,7 +21,7 @@ Anything passed as an argument is treated as the `/fob` prompt. The first line i
 
 ### 1. Boot
 
-**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — though `/fob`'s job is to leave the session infiled to a brand-new op, so `{operationDir}` is populated by the chained `/infil` later, not by `/fob` itself.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — though `/fob`'s job is to leave the session infiled to a brand-new op, so `{operationDir}` is populated by the chained `/infil` later, not by `/fob` itself.
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 

@@ -18,7 +18,7 @@ None.
 
 ### 1. Boot
 
-**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — the parent operation directory.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — the parent operation directory.
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 

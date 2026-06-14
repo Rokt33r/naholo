@@ -129,7 +129,7 @@ Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge
 
 Argless. The single boot call every skill runs once per session. Prints three XML-delimited blocks to stdout:
 
-- `<personality>…</personality>` — the active CLI profile's soul text (empty body when no soul is configured).
+- `<personality>…</personality>` — the active CLI profile's soul text. Absent entirely when no soul is configured.
 - `<manual>…</manual>` — the full text of this manual.
 - `<op_status>…</op_status>` — YAML payload (`currentOp`, `opTitle`, `opPath`, `opNotes`) when an op is infiled, or the literal `No infiled operation.` body in the empty state.
 

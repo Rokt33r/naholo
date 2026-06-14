@@ -26,7 +26,7 @@ Optional operation number (e.g., `42`).
 
    Either way, capture the absolute operation directory from the `Local:` line — call this `{operationDir}`.
 
-2. **Boot once**: **If you haven't run `naholo agent boot` this session**, run it now via the Bash tool. Adopt `<personality>` as your voice (skip if empty), adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>`. **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status. `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read them inline if needed but do not store them (they drift later in this same skill once OPERATION.md / TIMELINE.md land).
+2. **Boot once**: **If you haven't run `naholo agent boot` this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>`. **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status. `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read them inline if needed but do not store them (they drift later in this same skill once OPERATION.md / TIMELINE.md land).
 
 3. **Read context**:
    - **Title**: from `opTitle` in `<op_status>` (matches the `Title:` line of infil's stdout).
