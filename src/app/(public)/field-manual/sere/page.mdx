@@ -35,22 +35,22 @@ S.E.R.E. is the military acronym for **Survival, Evasion, Resistance, Escape** �
 
 ## Stuck on a call
 
-**Situation.** A Warning Order, a TASK, or a pending change doesn&rsquo;t sit right. You feel the call is wrong but can&rsquo;t yet name the fix &mdash; or you can&rsquo;t tell what fix the agent would even agree with. Re-running `/warno` or `/opord` blind would just churn.
+**Situation.** A Constraint, a TASK, or a pending change doesn&rsquo;t sit right. You feel the call is wrong but can&rsquo;t yet name the fix &mdash; or you can&rsquo;t tell what fix the agent would even agree with. Re-running `/warno` or `/opord` blind would just churn.
 
-**Move.** Drop into `/recon` for a read-only research-and-discussion phase. Pull the relevant files, talk through tradeoffs with the agent, share the pain you can&rsquo;t yet name. The agent suggests alternatives; you suggest your own. Nothing lands on disk yet. When you have a concrete prompt, tell the agent `/warno ...` (for direction changes), `/opord ...` (for task changes), or combine them &mdash; `run /warno and /opord to update related WOs and TASKs` &mdash; when the idea has solidified enough to touch both layers. The discussion hands off into the right phase skill.
+**Move.** Drop into `/recon` for a read-only research-and-discussion phase. Pull the relevant files, talk through tradeoffs with the agent, share the pain you can&rsquo;t yet name. The agent suggests alternatives; you suggest your own. Nothing lands on disk yet. When you have a concrete prompt, tell the agent `/warno ...` (for direction changes), `/opord ...` (for task changes), or combine them &mdash; `run /warno and /opord to update related Constraints and TASKs` &mdash; when the idea has solidified enough to touch both layers. The discussion hands off into the right phase skill.
 
-## Task conflicts with Warning Orders
+## Task conflicts with Constraints
 
-**Situation.** You ask the agent to reshape a task — split it, merge two, rewrite the approach — and the agent pushes back: the change would contradict a current Warning Order. The task can&rsquo;t move without MISSION moving first.
+**Situation.** You ask the agent to reshape a task — split it, merge two, rewrite the approach — and the agent pushes back: the change would contradict a current Constraint. The task can&rsquo;t move without the WARNO moving first.
 
-**Move.** Review the pushback. The agent will print a drafted `/warno "..."` prompt as part of the response — the MISSION revision it thinks is needed. From there:
+**Move.** Review the pushback. The agent will print a drafted `/warno "..."` prompt as part of the response — the WARNO revision it thinks is needed. From there:
 
-- If the drafted prompt looks right, tell the agent `run /warno and /opord for me` — it&rsquo;ll revise MISSION, then re-cut the affected tasks under the new Warning Orders.
-- If the draft needs tweaks, copy it, edit it, and submit it yourself. The agent runs against the prompt you actually wanted. `/opord` follows after MISSION has settled so EXECUTION re-aligns with the new direction.
+- If the drafted prompt looks right, tell the agent `run /warno and /opord for me` — it&rsquo;ll revise the WARNO, then re-cut the affected tasks under the new Constraints.
+- If the draft needs tweaks, copy it, edit it, and submit it yourself. The agent runs against the prompt you actually wanted. `/opord` follows after the WARNO has settled so OPERATION ORDER re-aligns with the new direction.
 
 ## Scope ballooned
 
-**Situation.** The CONOPS is bloated, the Warning Orders have multiplied past the point you can hold them in your head, or the task list is doing the work of two operations. These are the concrete signs the op should split.
+**Situation.** The CONOPS is bloated, the Constraints have multiplied past the point you can hold them in your head, or the task list is doing the work of two operations. These are the concrete signs the op should split.
 
 **Move.** Run `/chop ...` to draft a split proposal at `notes/CHOP.md`. Review the proposal (or hand-edit it), then either `/chopchop` to apply the split and spawn a new OP, or `/nochop` to discard it. One op, one cohesive ship — bigger isn&rsquo;t better.
 

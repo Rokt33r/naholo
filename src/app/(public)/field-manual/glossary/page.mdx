@@ -16,7 +16,7 @@ export const metadata = {
   </p>
 </div>
 
-Naholo's vocabulary is borrowed from OPORD (operations order) doctrine — the five-paragraph order the U.S. military uses to brief a mission. Each entry below names the military origin briefly, then how the concept maps into the naholo cycle.
+Naholo's vocabulary is borrowed from military doctrine. Each entry below names the military origin briefly, then how the concept maps into the naholo cycle.
 
 ## Skills
 
@@ -36,7 +36,7 @@ Naholo's vocabulary is borrowed from OPORD (operations order) doctrine — the f
 
 **Military.** A short preliminary order alerting a subordinate unit to an upcoming mission so it can start planning before the full order arrives.
 
-**Naholo.** `/warno` writes the MISSION section of `OPERATION.md` — the direction the cycle commits to before any tasks get cut.
+**Naholo.** `/warno` writes the WARNO into `OPERATION.md` as `## WARNING ORDER` — the direction the cycle commits to before any tasks get cut.
 
 <h3 id='recon'>RECON — Reconnaissance</h3>
 
@@ -48,13 +48,13 @@ Naholo's vocabulary is borrowed from OPORD (operations order) doctrine — the f
 
 **Military.** A swift, focused operation with a limited objective. No prolonged engagement.
 
-**Naholo.** `/raid` collapses `/warno` + `/opord` for small ops where architecture review would be overkill — real CONOPS and TRP, but Warning Orders marked `_N/A_`.
+**Naholo.** `/raid` collapses `/warno` + `/opord` for small ops where architecture review would be overkill.
 
 <h3 id='opord'>OPORD — Operation Order</h3>
 
 **Military.** The full operations order. Five paragraphs — Situation, Mission, Execution, Service Support, Command and Signal — laying out the detail-level plan.
 
-**Naholo.** `/opord` cuts MISSION into single-commit-sized tasks and writes the EXECUTION section of `OPERATION.md`. Each task carries an Intent, an optional Scheme of Maneuver, and a Course of Action.
+**Naholo.** `/opord` cuts the WARNO into single-commit-sized tasks and writes the OPORD into `OPERATION.md` as `## OPERATION ORDER`.
 
 <h3 id='splash'>SPLASH — Splash</h3>
 
@@ -78,7 +78,7 @@ Naholo's vocabulary is borrowed from OPORD (operations order) doctrine — the f
 
 **Military.** A formal handoff transferring a unit from one commander to another, usually because the unit is moving to a new area of responsibility.
 
-**Naholo.** The `/chop` → `/chopchop` / `/nochop` family splits one OP into two when scope has ballooned — carving Warning Orders and tasks off to a new OP under a new commander.
+**Naholo.** The `/chop` → `/chopchop` / `/nochop` family splits one OP into two when scope has ballooned — carving Constraints and tasks off to a new OP under a new commander.
 
 <h3 id='sere'>S.E.R.E. — Survival, Evasion, Resistance, Escape</h3>
 
@@ -92,43 +92,37 @@ Naholo's vocabulary is borrowed from OPORD (operations order) doctrine — the f
 
 **Military.** The first paragraph of the OPORD. What is happening — enemy, friendly forces, terrain, time available. The "what is" before the "what we'll do."
 
-**Naholo.** `## SITUATION` in `OPERATION.md`. Three subsections — Pain, Suggested solution (optional), Notes (optional). Seeded by `/infil` from the OP's logs and notes.
+**Naholo.** `## SITUATION` in `OPERATION.md` — the shared context that sits above both the WARNING ORDER and the OPERATION ORDER. Three subsections: Pain, Suggested solution (optional), Notes (optional). Seeded by `/infil` from the OP's logs and notes.
 
-<h3 id='mission'>MISSION</h3>
+<h3 id='warning-orders'>WARNING ORDER</h3>
 
-**Military.** The second paragraph of the OPORD. What the unit will do. The commitment.
+**Military.** A preliminary order issued before the full Operation Order, setting direction so the unit can start planning early.
 
-**Naholo.** `## MISSION` in `OPERATION.md`. Three subsections — Concept of Operations, Warning Orders, Target Reference Points. Written by `/warno`.
+**Naholo.** `## WARNING ORDER` in `OPERATION.md` — the WARNO document. Three subsections. Written by `/warno` before any tasks get cut.
 
 <h3 id='conops'>CONOPS — Concept of Operations</h3>
 
 **Military.** The commander's high-level concept of how the unit will accomplish the mission, written before detail-level orders.
 
-**Naholo.** The two-or-three-sentence overview at the top of MISSION naming the chosen approach and tying it back to SITUATION's pain. Concept-level only — no file lists.
+**Naholo.** The two-or-three-sentence overview at the top of WARNING ORDER — the WARNO's preliminary direction, naming the chosen approach and tying it back to SITUATION's pain. Concept-level only — no file lists.
 
 <h3 id='trp'>TRP — Target Reference Points</h3>
 
 **Military.** Pre-registered points on the battlefield — terrain features, grid coordinates — that units use as common reference for fire, movement, and observation.
 
-**Naholo.** A curated, scannable map of files / folders / globs a fresh `/opord` session needs to read to cut EXECUTION. Lives at the tail of MISSION as `### Target Reference Points`.
+**Naholo.** A curated, scannable map of files / folders / globs a fresh `/opord` session needs to read to cut OPERATION ORDER. Lives at the tail of WARNING ORDER as `### Target Reference Points` — shared reference markers set in the WARNO so the OPORD downstream can lean on them.
 
-<h3 id='execution'>EXECUTION</h3>
+<h3 id='operation-orders'>OPERATION ORDER</h3>
 
-**Military.** The third paragraph of the OPORD. How the mission gets done — task organization, scheme of maneuver, sub-unit tasks, coordinating instructions.
+**Military.** The full operations order — the detail-level plan that follows the Warning Order. Five paragraphs: Situation, Mission, Execution, Service Support, Command and Signal.
 
-**Naholo.** `## EXECUTION` in `OPERATION.md`. One `### TASK N — Title` per task, in shipping order. Written by `/opord`.
+**Naholo.** `## OPERATION ORDER` in `OPERATION.md` — the OPORD document, the detail-level plan that follows the WARNO. Written by `/opord`.
 
 <h3 id='som'>SOM — Scheme of Maneuver</h3>
 
 **Military.** Inside EXECUTION, the visual-spatial plan: how forces move, engage, and reach the objective. The "picture" of the operation.
 
-**Naholo.** Optional per-task `#### Scheme of Maneuver` in EXECUTION — an ASCII diagram of control flow, a UI wireframe, a schema column listing, or a before-after signature diff. Required when the task changes control flow, UI layout, public signatures, DB schema, DTOs, or API shapes; skipped on pure data/logic edits.
-
-<h3 id='coa'>COA — Course of Action</h3>
-
-**Military.** A planned series of actions that accomplish a task or mission. The commander picks the best COA before issuing the order.
-
-**Naholo.** The per-task action list inside EXECUTION — `Add` / `Edit` / `Move` / `Delete` / `Run` / `Manual` steps that `/splash` walks when it ships the task.
+**Naholo.** The mandatory per-task `#### Scheme of Maneuver` in OPERATION ORDER — an action list (Add / Edit / Move / Delete / Run / Manual) that `/splash` walks when shipping the task, optionally preceded by an ASCII artifact (control-flow diagram, UI wireframe, schema layout, signature diff, or outline) when the task changes control flow, UI, signatures, schema, DTOs, or API shapes.
 
 <h3 id='aar'>AAR — After-Action Report</h3>
 
