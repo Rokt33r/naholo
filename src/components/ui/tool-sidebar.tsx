@@ -36,8 +36,9 @@ function ToolSidebarButton({
         <button
           className={cn(
             'flex size-10 items-center justify-center rounded-md transition-colors',
-            'hover:bg-accent hover:text-accent-foreground',
-            isActive && 'bg-accent text-accent-foreground',
+            'hover:bg-tool-sidebar-active hover:text-accent-foreground',
+            isActive &&
+              'bg-tool-sidebar-active/60 text-tool-sidebar-foreground',
             className,
           )}
           {...props}

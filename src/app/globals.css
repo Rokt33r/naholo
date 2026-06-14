@@ -36,6 +36,7 @@
   --tooltip-foreground: oklch(0.985 0 0);
   --tool-sidebar: oklch(0.965 0 0);
   --tool-sidebar-foreground: oklch(0.145 0 0);
+  --tool-sidebar-active: oklch(0.86 0 0);
   --sidebar: hsl(0 0% 98%);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
   --sidebar-primary: hsl(240 5.9% 10%);
@@ -75,6 +76,7 @@
   --tooltip-foreground: oklch(0.985 0 0);
   --tool-sidebar: oklch(0.205 0 0);
   --tool-sidebar-foreground: oklch(0.985 0 0);
+  --tool-sidebar-active: oklch(0.32 0 0);
   --sidebar: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -118,6 +120,7 @@
   --color-tooltip-foreground: var(--tooltip-foreground);
   --color-tool-sidebar: var(--tool-sidebar);
   --color-tool-sidebar-foreground: var(--tool-sidebar-foreground);
+  --color-tool-sidebar-active: var(--tool-sidebar-active);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
