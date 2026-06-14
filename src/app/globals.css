@@ -168,7 +168,7 @@
 }
 
 .prose :where(code):not(:where(.not-prose, .not-prose *)) {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+  @apply bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono;
 }
 
 .prose :where(code):not(:where(.not-prose, .not-prose *))::before,
@@ -177,7 +177,7 @@
 }
 
 .prose :where(pre):not(:where(.not-prose, .not-prose *)) {
-  @apply bg-muted p-4 rounded-lg mb-4 whitespace-pre-wrap;
+  @apply bg-muted text-foreground p-4 rounded-lg mb-4 whitespace-pre-wrap;
 }
 
 .prose :where(pre code):not(:where(.not-prose, .not-prose *)) {
