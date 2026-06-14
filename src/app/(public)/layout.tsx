@@ -2,6 +2,7 @@ import { Github } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import icon from '@/app/icon.png'
+import { ThemeSwitcher } from '@/components/theme-switcher'
 import { getAuthUser } from '@/server/auth/permissions'
 
 // Placeholder — owner will replace with the actual public repo URL once the
@@ -75,6 +76,7 @@ export default async function PublicLayout({
                 </Link>
               </>
             )}
+            <ThemeSwitcher />
           </div>
         </nav>
       </header>
