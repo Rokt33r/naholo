@@ -33,15 +33,15 @@ const COMMANDS: Command[] = [
     code: '/warno',
     name: 'Warno',
     body: 'Research the codebase and lock in the architecture decisions before any tasks are cut.',
-    artefacts: ['OPERATION.MISSION'],
+    artefacts: ['WARNING ORDER'],
     Icon: Siren,
   },
   {
     index: '03',
     code: '/opord',
     name: 'Opord',
-    body: 'Cut the mission into single-commit-sized tasks. Each task ships in one splash.',
-    artefacts: ['OPERATION.EXECUTION', 'TASKS'],
+    body: 'Cut the WARNO into single-commit-sized tasks. Each task ships in one splash.',
+    artefacts: ['OPERATION ORDER', 'TASKS'],
     Icon: ListChecks,
   },
   {
@@ -57,7 +57,7 @@ const COMMANDS: Command[] = [
     code: '/sitrep',
     name: 'Sitrep',
     body: 'Push a mid-mission checkpoint. Server-side tasks, notes, and a summary log sync — no extract yet.',
-    artefacts: ['Log entry', 'Server sync'],
+    artefacts: ['Sitrep Log', 'Server sync'],
     Icon: Radio,
   },
   {
@@ -65,7 +65,7 @@ const COMMANDS: Command[] = [
     code: '/exfil',
     name: 'Exfil',
     body: 'Close out the operation. Final sync, debrief log, and an optional close on the issue. Extract.',
-    artefacts: ['Debrief log', 'Operation close'],
+    artefacts: ['Debrief log', 'Server sync', 'Operation close'],
     Icon: PlaneTakeoff,
   },
 ]
