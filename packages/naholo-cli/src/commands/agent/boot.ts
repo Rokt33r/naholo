@@ -10,10 +10,14 @@ export const bootCommand = new Command('boot')
   )
   .action(
     withErrorHandling(async () => {
-      const personality = getActiveProfile()?.profile.soul ?? ''
+      const soul = getActiveProfile()?.profile.soul
+      const personalityBlock =
+        soul != null && soul !== ''
+          ? `<personality>\n${soul}\n</personality>\n\n`
+          : ''
       const opStatusBody = renderOpStatusYaml() ?? 'No infiled operation.\n'
       process.stdout.write(
-        `<personality>\n${personality}\n</personality>\n\n` +
+        personalityBlock +
           `<manual>\n${manualText}\n</manual>\n\n` +
           `<op_status>\n${opStatusBody}</op_status>\n`,
       )
