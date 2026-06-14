@@ -107,7 +107,7 @@ export function TacticalOverview() {
       </p>
 
       <div className='mt-12 flex justify-center'>
-        <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-3 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm'>
+        <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-3 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm max-[480px]:-mx-4 max-[480px]:p-2 max-[480px]:text-[10px] max-[400px]:text-[8px]'>
           {TACTIC_DIAGRAM}
         </pre>
       </div>
