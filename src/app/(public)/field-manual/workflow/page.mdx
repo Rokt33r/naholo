@@ -45,6 +45,20 @@ Arg shapes:
 - `/fob\n<content lines>` &mdash; empty first line, content after. `/fob` derives the title from the content, posts it as the first log.
 - `/fob title\n<content lines>` &mdash; title + log together.
 
+````sh
+/fob Fix hydration error # <- will become title
+
+# ↓the contents below will be stored as a log
+Here's the error message.
+
+```
+Compiling /field-manual ...
+ GET /field-manual 200 in 7.2s (next.js: 7.0s, application-code: 281ms)
+ GET /field-manual/quick-start 200 in 2.2s (next.js: 2.1s, application-code: 72ms)
+[browser] In HTML, <p> cannot be a descendant of <p>.
+```
+````
+
 When an op is **already infiled**, `/fob` still creates the new op + log server-side &mdash; dropping an idea should never cost you your in-flight work &mdash; but it skips the `/infil` chain so the local infiled directory stays exactly as it was. The output names the new op number; switch to it later with `/exfil` then `/infil <n>` when you are ready.
 
 `/fob` does **not** research the codebase. It is a one-shot launcher whose job is to register the idea and (when the slot is free) drop you into the infil phase. Compare with `/raid`: `/raid` runs **after** `/infil` to collapse `/warno` + `/opord` for small OPs. The max-velocity path for a fresh small idea is `/fob` then `/raid "..."`.
