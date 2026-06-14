@@ -28,9 +28,28 @@ One-time gear (detail in [Readiness](/field-manual/readiness)):
 
 ## 1. Open a new operation
 
-Sign in to naholo, pick a project, and open a new operation. Give it a title that names the problem, not the solution. Drop **logs** as you think — every requirement, link, or constraint goes in as a log. The agent reads every log when you infil, so don't squeeze the idea; let it land in pieces.
+Sign in to naholo, create a project, and open a new operation. Give it a title that names the problem, not the solution. Drop **logs** as you think — every requirement, link, or constraint goes in as a log. The agent reads every log when you infil, so don't squeeze the idea; let it land in pieces.
 
 When you're done dropping for the moment, hit the **Copy /infil** button on the operation page. It puts the `/infil <n>` slash command on your clipboard, ready to paste into your agent.
+
+### Alternative on-ramp: `/recon` → `/fob`
+
+Once the CLI is installed (Section 2), you can skip creating the op in the web app — you still need to sign in and create a project there — and drop the idea straight into your agent. [`/recon`](/field-manual/workflow#recon) lets the agent explore the codebase from a vague prompt and talk the shape out with you; when the direction lands, ask it to fire [`/fob`](/field-manual/workflow#fob) and it spins up the operation server-side and chains `/infil` in one gesture.
+
+```
+User: /recon We're keeping tfstate locally. We'd like to share tfstate
+      more easily but securely so we can modify cloud assets from other
+      devices.
+
+Agent: You can use a versioned S3 bucket as the tfstate backend — locked
+       down with bucket policies and a DynamoDB lock table for safety.
+
+User: Sounds good. Run /fob for me.
+
+Agent: [runs /fob, creates the OP server-side, chains /infil]
+```
+
+Same destination as the web-app path — CLI-first instead of browser-first. Reach for it when you'd rather think out loud against the codebase before committing to a title.
 
 ## 2. Install the CLI
 
