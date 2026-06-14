@@ -4,10 +4,9 @@ import Link from 'next/link'
 import icon from '@/app/icon.png'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import { getAuthUser } from '@/server/auth/permissions'
+import { MobilePublicNavMenu } from './_components/mobile-public-nav-menu'
 
-// Placeholder — owner will replace with the actual public repo URL once the
-// project is open-sourced.
-const GITHUB_URL = 'https://github.com/'
+const GITHUB_URL = 'https://github.com/rokt33r/naholo'
 
 export default async function PublicLayout({
   children,
@@ -31,52 +30,59 @@ export default async function PublicLayout({
               Alpha
             </span>
           </Link>
-          <div className='flex items-center gap-6'>
+          <div className='flex items-center gap-4 md:gap-6'>
             <a
               href={GITHUB_URL}
               aria-label='Source repo'
               target='_blank'
               rel='noopener noreferrer'
-              className='text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+              className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
             >
-              <Github className='size-4' />
+              Github
             </a>
             <Link
               href='/field-manual'
-              className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+              className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
             >
               Field Manual
             </Link>
             <Link
               href='/pricing'
-              className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+              className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
             >
               Pricing
             </Link>
-            {isAuthed ? (
-              <Link
-                href='/app'
-                className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-              >
-                Enter ops room
-              </Link>
-            ) : (
-              <>
+            <div className='hidden items-center gap-4 min-[426px]:flex md:gap-6'>
+              {isAuthed ? (
                 <Link
-                  href='/sign-in'
+                  href='/app'
                   className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
                 >
-                  Sign In
+                  Enter ops room
                 </Link>
-                <Link
-                  href='/sign-up'
-                  className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-            <ThemeSwitcher />
+              ) : (
+                <>
+                  <Link
+                    href='/sign-in'
+                    className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href='/sign-up'
+                    className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+            <div className='hidden md:inline-flex'>
+              <ThemeSwitcher />
+            </div>
+            <div className='md:hidden'>
+              <MobilePublicNavMenu githubUrl={GITHUB_URL} isAuthed={isAuthed} />
+            </div>
           </div>
         </nav>
       </header>

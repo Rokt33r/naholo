@@ -24,7 +24,7 @@ const THEME_OPTIONS: ThemeOption[] = [
 ]
 
 export function ThemeSwitcher() {
-  const { theme, resolvedTheme, setTheme } = useTheme()
+  const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -41,21 +41,36 @@ export function ThemeSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
-        {THEME_OPTIONS.map((option) => {
-          const Icon = option.icon
-          const isActive = mounted && theme === option.value
-          return (
-            <DropdownMenuItem
-              key={option.value}
-              onSelect={() => setTheme(option.value)}
-            >
-              <Icon className='size-4' />
-              <span className='flex-1'>{option.label}</span>
-              {isActive ? <Check className='size-4' /> : null}
-            </DropdownMenuItem>
-          )
-        })}
+        <ThemeMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+export function ThemeMenuItems() {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  return (
+    <>
+      {THEME_OPTIONS.map((option) => {
+        const Icon = option.icon
+        const isActive = mounted && theme === option.value
+        return (
+          <DropdownMenuItem
+            key={option.value}
+            onSelect={() => setTheme(option.value)}
+          >
+            <Icon className='size-4' />
+            <span className='flex-1'>{option.label}</span>
+            {isActive ? <Check className='size-4' /> : null}
+          </DropdownMenuItem>
+        )
+      })}
+    </>
   )
 }
