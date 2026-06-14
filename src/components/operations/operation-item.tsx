@@ -35,8 +35,8 @@ export function OperationItem({
     <button
       onClick={handleClick}
       className={cn(
-        'w-full px-3 py-3 text-left transition-colors hover:bg-ring rounded-md',
-        isActive && 'bg-accent hover:bg-accent',
+        'w-full px-3 py-3 text-left transition-colors hover:bg-accent rounded-md',
+        isActive && 'bg-accent/50 hover:bg-accent',
       )}
     >
       {/* Row 1: Title and progress */}
