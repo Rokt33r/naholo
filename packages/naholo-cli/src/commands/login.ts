@@ -10,6 +10,7 @@ import { writeGlobalClaudeConfig } from '../claude-code-config.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
 import { hasNaholoHooks, installNaholoHooks } from '../lib/claude-settings.js'
+import { pickLocale } from '../locale.js'
 import { listProfiles, readProfile, writeProfile } from '../profile.js'
 
 export const loginCommand = new Command('login')
@@ -148,7 +149,8 @@ export const loginCommand = new Command('login')
           tokenName: string
         }
 
-        // 10. Save profile
+        // 10. Pick locale, then save profile
+        const locale = await pickLocale()
         ensureNaholoHomeDir()
         const createdAt = new Date().toISOString()
         writeProfile(profileName, {
@@ -156,6 +158,7 @@ export const loginCommand = new Command('login')
           token,
           tokenName,
           createdAt,
+          locale,
         })
         setDefaultProfile(profileName)
 
