@@ -42,12 +42,6 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
       }
 
       try {
-        emitOperationLink(opYml)
-      } catch (error) {
-        appendHookError('claude-code-stop', String(error))
-      }
-
-      try {
         await registerAgentSessionTranscript(
           hook.session_id,
           hook.transcript_path,
@@ -57,15 +51,6 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
       }
     }),
   )
-
-function emitOperationLink(opYml: OpYml): void {
-  const operationMdPath = path.join(getNotesDir(), 'OPERATION.md')
-  if (!fs.existsSync(operationMdPath)) {
-    return
-  }
-  const systemMessage = `[Current OP: #${opYml.number}](file://${operationMdPath})`
-  console.log(JSON.stringify({ systemMessage }))
-}
 
 async function registerAgentSessionTranscript(
   sessionId: string,
