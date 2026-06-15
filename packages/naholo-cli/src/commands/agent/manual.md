@@ -174,3 +174,18 @@ Rendered shapes:
 - Task target: `[TASK 2](/abs/path/notes/OPERATION.md#L68)`
 - AAR target: `[TASK 1 - AAR](/abs/path/notes/OPERATION.md#L61)`
 - Whole-file target (no specific heading): `[OPERATION.md](/abs/path/notes/OPERATION.md)`
+
+## Locale
+
+`naholo agent boot` always emits a `<locale>{Name}</locale>` line, where `{Name}` is either `English` or the English name of another language (`Korean`, `Japanese`, `Chinese`, …). Treat this block as an explicit language signal — never infer the target language from existing OPERATION.md prose.
+
+When `{Name}` is non-English:
+
+- Write OPERATION.md prose bodies (SITUATION's Pain / Suggested solution / Notes, WARNING ORDER's Concept of Operations, Constraint reasoning halves, AAR Deviations/Notes prose) and chat replies in `{Name}`.
+- Write `### TASK N — Title` titles in `{Name}` — the title is prose, not a Naholo term. The `### TASK N — ` prefix stays English (it's a structural token); only the title that follows the em dash is translated.
+- Keep all Naholo terms in English: `SITUATION`, `WARNING ORDER`, `OPERATION ORDER`, `Pain`, `Suggested solution`, `Notes`, `Concept of Operations`, `Constraints`, `Target Reference Points`, `Intent`, `Scheme of Maneuver`, `After-Action Report`, `Deviations`, `TASK`, and the SOM action verbs `Add` / `Edit` / `Move` / `Delete` / `Run` / `Manual`.
+- Keep file paths, command names, code identifiers, and skill names (`/infil`, `/warno`, `/opord`, `/splash`, `/sitrep`, `/exfil`) in English.
+- In `TIMELINE.md`, stage labels (`infil`, `warno`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop`, `raid`) stay English; the summary half after `:` is written in `{Name}`.
+- `TASKS.md` heading `# TASKS — OP #{n}` stays English; each checkbox line copies its title verbatim from the matching `### TASK N — Title`.
+
+When `{Name}` is `English`, write everything in English — same as the legacy behavior.
