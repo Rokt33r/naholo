@@ -14,8 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAction } from '@/lib/use-action'
-import { createOperationAction } from '@/app/app/actions'
+import { useCreateOperation } from '@/hooks/use-operations'
 
 type CreateOperationDialogProps = {
   projectSlug: string
@@ -32,7 +31,8 @@ export function CreateOperationDialog({
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
 
-  const { execute: createOperation, loading } = useAction(createOperationAction)
+  const createOperation = useCreateOperation(projectSlug)
+  const isPending = createOperation.isPending
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,18 +41,19 @@ export function CreateOperationDialog({
       return
     }
 
-    const result = await createOperation(projectSlug, title.trim())
-
-    if (result.success) {
-      setOpen(false)
-      setTitle('')
-      onOperationCreated?.()
-      router.push(
-        `/app/projects/${projectSlug}/operations/${result.data.number}`,
-      )
-    } else {
-      alert('Failed to create operation: ' + result.error.message)
-    }
+    createOperation.mutate(
+      { title: title.trim() },
+      {
+        onSuccess: (result) => {
+          setOpen(false)
+          setTitle('')
+          onOperationCreated?.()
+          router.push(
+            `/app/projects/${projectSlug}/operations/${result.number}`,
+          )
+        },
+      },
+    )
   }
 
   return (
@@ -74,7 +75,7 @@ export function CreateOperationDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder='Operation title'
-                disabled={loading}
+                disabled={isPending}
                 autoFocus
               />
             </div>
@@ -84,12 +85,12 @@ export function CreateOperationDialog({
               type='button'
               variant='outline'
               onClick={() => setOpen(false)}
-              disabled={loading}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={!title.trim() || loading}>
-              {loading ? 'Creating...' : 'Create Operation'}
+            <Button type='submit' disabled={!title.trim() || isPending}>
+              {isPending ? 'Creating...' : 'Create Operation'}
             </Button>
           </DialogFooter>
         </form>

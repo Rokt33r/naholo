@@ -87,6 +87,40 @@ export function useOperation(projectSlug: string, operationNumber: number) {
 }
 
 /**
+ * Hook to create an operation
+ */
+export function useCreateOperation(projectSlug: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ title }: { title: string }) => {
+      const response = await mutationFetch(
+        `/api/projects/${projectSlug}/operations`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title }),
+        },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to create operation')
+      }
+      return response.json() as Promise<{ id: string; number: number }>
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create operation',
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['operations', projectSlug],
+      })
+    },
+  })
+}
+
+/**
  * Hook to update an operation's title with optimistic updates
  */
 export function useUpdateOperationTitle(

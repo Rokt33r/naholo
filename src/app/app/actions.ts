@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache'
 import {
   getAuthUser,
   requireAdminProjectOperator,
-  requireProjectOperator,
   requireOperationAccess,
 } from '@/server/auth/permissions'
 import type { ReturnResult } from '@/lib/return-result'
@@ -16,7 +15,6 @@ import {
   deleteProject,
 } from '@/server/services/project'
 import { createProjectOperator } from '@/server/services/project-operator'
-import { createOperation } from '@/server/services/operation'
 import { createOperationLog } from '@/server/services/operation-log'
 import {
   createTask,
@@ -86,28 +84,6 @@ export async function deleteProjectAction(
   const result = await deleteProject(project.id)
   if (result.success) {
     revalidatePath('/app')
-  }
-
-  return result
-}
-
-/**
- * Operations
- */
-
-export async function createOperationAction(
-  projectSlug: string,
-  title: string,
-): Promise<ReturnResult<{ id: string; number: number }>> {
-  const { projectOperator, project } = await requireProjectOperator(projectSlug)
-
-  const result = await createOperation({
-    projectOperatorId: projectOperator.id,
-    projectId: project.id,
-    title,
-  })
-  if (result.success) {
-    revalidatePath(`/app/projects/${projectSlug}`)
   }
 
   return result
