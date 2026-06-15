@@ -179,13 +179,17 @@ Rendered shapes:
 
 `naholo agent boot` always emits a `<locale>{Name}</locale>` line, where `{Name}` is either `English` or the English name of another language (`Korean`, `Japanese`, `Chinese`, …). Treat this block as an explicit language signal — never infer the target language from existing OPERATION.md prose.
 
-When `{Name}` is non-English:
+When `{Name}` is non-English, three surfaces all switch to `{Name}` — none takes priority, none is optional:
 
-- Write OPERATION.md prose bodies (SITUATION's Pain / Suggested solution / Notes, WARNING ORDER's Concept of Operations, Constraint reasoning halves, AAR Deviations/Notes prose) and chat replies in `{Name}`.
+- **OPERATION.md prose** — SITUATION's Pain / Suggested solution / Notes, WARNING ORDER's Concept of Operations, Constraint reasoning halves, AAR Deviations/Notes prose.
+- **Chat replies** — every message the agent sends to the user, including end-of-skill summaries and intermediate progress updates.
+- **TIMELINE.md summary bodies** — the half after `:` on each `- {YYYY-MM-DD HH:MM} — {stage}: {summary}` line. Stage labels (`infil`, `warno`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop`, `raid`) stay English.
+
+Other rules:
+
 - Write `### TASK N — Title` titles in `{Name}` — the title is prose, not a Naholo term. The `### TASK N — ` prefix stays English (it's a structural token); only the title that follows the em dash is translated.
 - Keep all Naholo terms in English: `SITUATION`, `WARNING ORDER`, `OPERATION ORDER`, `Pain`, `Suggested solution`, `Notes`, `Concept of Operations`, `Constraints`, `Target Reference Points`, `Intent`, `Scheme of Maneuver`, `After-Action Report`, `Deviations`, `TASK`, and the SOM action verbs `Add` / `Edit` / `Move` / `Delete` / `Run` / `Manual`.
 - Keep file paths, command names, code identifiers, and skill names (`/infil`, `/warno`, `/opord`, `/splash`, `/sitrep`, `/exfil`) in English.
-- In `TIMELINE.md`, stage labels (`infil`, `warno`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop`, `raid`) stay English; the summary half after `:` is written in `{Name}`.
 - `TASKS.md` heading `# TASKS — OP #{n}` stays English; each checkbox line copies its title verbatim from the matching `### TASK N — Title`.
 
 When `{Name}` is `English`, write everything in English — same as the legacy behavior.
