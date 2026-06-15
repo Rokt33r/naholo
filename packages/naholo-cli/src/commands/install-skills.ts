@@ -4,7 +4,7 @@ import { Command } from 'commander'
 import select from '@inquirer/select'
 import { coreSkills } from '../core-skills.js'
 import { withErrorHandling } from '../errors.js'
-import { writeSkillFile } from '../skills.js'
+import { splitSkill, writeSkillFile } from '../skills.js'
 
 const CLAUDE_SKILLS_DIR = '.claude/skills'
 
@@ -25,15 +25,17 @@ export async function installSkills(
   for (const skill of skills) {
     const skillPath = path.resolve(CLAUDE_SKILLS_DIR, skill.name, 'SKILL.md')
     const exists = fs.existsSync(skillPath)
+    const { frontmatter } = splitSkill(skill.content)
+    const stub = `${frontmatter}\nRun \`naholo agent skills ${skill.name}\` and follow stdout.\n`
 
     if (!exists) {
-      writeSkillFile(skill.name, skill.content)
+      writeSkillFile(skill.name, stub)
       console.log(`  Created: ${skill.name}`)
       continue
     }
 
     if (overwriteAll) {
-      writeSkillFile(skill.name, skill.content)
+      writeSkillFile(skill.name, stub)
       console.log(`  Overwritten: ${skill.name}`)
       continue
     }
@@ -67,7 +69,7 @@ export async function installSkills(
       overwriteAll = true
     }
 
-    writeSkillFile(skill.name, skill.content)
+    writeSkillFile(skill.name, stub)
     console.log(`  Overwritten: ${skill.name}`)
   }
 }
