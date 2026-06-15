@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { localeCommand } from './locale.js'
 import { soulCommand } from './soul.js'
 
 export const configCommand = new Command('config').description(
@@ -6,3 +7,4 @@ export const configCommand = new Command('config').description(
 )
 
 configCommand.addCommand(soulCommand)
+configCommand.addCommand(localeCommand)
