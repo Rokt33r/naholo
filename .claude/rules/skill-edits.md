@@ -13,6 +13,15 @@ When the user asks to edit a core skill:
 
 Edits to `.claude/skills/{name}/SKILL.md` are lost the next time someone runs `naholo install-skills`, so they don't survive.
 
+## Editing the agent manual
+
+The agent manual at `packages/naholo-cli/src/commands/agent/manual.md` is bundled into the `naholo` CLI at build time and read cold on every `naholo agent boot`.
+
+When the user asks to edit the manual:
+
+1. Edit `packages/naholo-cli/src/commands/agent/manual.md`.
+2. Do **not** add a `Manual: rebuild the naholo CLI` (or equivalent) action item to any SOM, AAR, or chat reply. The user owns the CLI rebuild loop out of band; agents stop at the source edit.
+
 ## Writing skill prose
 
 Skill bodies and the agent manual (`packages/naholo-cli/src/commands/agent/manual.md`) are read cold by every new session. Describe current behavior only.
