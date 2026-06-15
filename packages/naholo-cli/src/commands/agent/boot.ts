@@ -6,19 +6,22 @@ import manualText from './manual.md'
 
 export const bootCommand = new Command('boot')
   .description(
-    'Print personality, manual, and op status in one XML-delimited payload',
+    'Print personality, manual, locale, and op status in one XML-delimited payload',
   )
   .action(
     withErrorHandling(async () => {
-      const soul = getActiveProfile()?.profile.soul
+      const profile = getActiveProfile()?.profile
+      const soul = profile?.soul
       const personalityBlock =
         soul != null && soul !== ''
           ? `<personality>\n${soul}\n</personality>\n\n`
           : ''
+      const locale = profile?.locale ?? 'English'
       const opStatusBody = renderOpStatusYaml() ?? 'No infiled operation.\n'
       process.stdout.write(
         personalityBlock +
           `<manual>\n${manualText}\n</manual>\n\n` +
+          `<locale>${locale}</locale>\n\n` +
           `<op_status>\n${opStatusBody}</op_status>\n`,
       )
     }),
