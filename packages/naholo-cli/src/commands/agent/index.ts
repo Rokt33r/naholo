@@ -10,6 +10,7 @@ import { opCommand } from './op.js'
 import { opUrlCommand } from './op-url.js'
 import { reinfilCommand } from './reinfil.js'
 import { sitrepCommand } from './sitrep.js'
+import { skillsCommand } from './skills.js'
 import { claudeCodeStopCommand } from './claude-code-stop.js'
 
 export const agentCommand = new Command('agent').description(
@@ -28,3 +29,4 @@ agentCommand.addCommand(opCommand)
 agentCommand.addCommand(opUrlCommand)
 agentCommand.addCommand(claudeCodeStopCommand)
 agentCommand.addCommand(chopchopCommand)
+agentCommand.addCommand(skillsCommand)
