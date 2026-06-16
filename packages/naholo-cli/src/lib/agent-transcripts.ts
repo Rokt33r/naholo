@@ -1,9 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import readline from 'node:readline'
-import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
 import { z } from 'zod'
-import { getLocalOperationDir } from './local-operations.js'
 
 export type LocalSubagentTranscriptEntry = z.infer<
   typeof localSubagentTranscriptEntrySchema
@@ -12,39 +10,6 @@ export type LocalSubagentTranscriptEntry = z.infer<
 export type LocalAgentTranscriptEntry = z.infer<
   typeof localAgentTranscriptEntrySchema
 >
-
-export function getTranscriptsYmlPath(): string {
-  return path.join(getLocalOperationDir(), 'agent-transcripts.yml')
-}
-
-export function readLocalAgentTranscriptsYml(): LocalAgentTranscriptEntry[] {
-  const ymlPath = getTranscriptsYmlPath()
-  if (!fs.existsSync(ymlPath)) {
-    return []
-  }
-  const raw = fs.readFileSync(ymlPath, 'utf-8')
-  const parsed = yamlParse(raw)
-  if (!Array.isArray(parsed)) {
-    return []
-  }
-  const result: LocalAgentTranscriptEntry[] = []
-  for (const entry of parsed) {
-    const validated = localAgentTranscriptEntrySchema.safeParse(entry)
-    if (validated.success) {
-      result.push(validated.data)
-    }
-  }
-  return result
-}
-
-export function upsertLocalAgentTranscriptEntry(
-  entry: LocalAgentTranscriptEntry,
-): void {
-  const existing = readLocalAgentTranscriptsYml()
-  const next = existing.filter((e) => e.transcript_id !== entry.transcript_id)
-  next.push(entry)
-  writeAgentTranscriptsYml(next)
-}
 
 // Lists `{dirname(parentTranscriptPath)}/subagents/agent-*.jsonl`. Returns the
 // agentId + absolute path for each file; returns [] when the subagents dir is absent.
@@ -141,9 +106,3 @@ export const localAgentTranscriptEntrySchema = z.object({
   last_message_at: z.string(),
   subagents: z.array(localSubagentTranscriptEntrySchema).default([]),
 })
-
-function writeAgentTranscriptsYml(entries: LocalAgentTranscriptEntry[]): void {
-  const ymlPath = getTranscriptsYmlPath()
-  fs.mkdirSync(path.dirname(ymlPath), { recursive: true })
-  fs.writeFileSync(ymlPath, yamlStringify(entries))
-}
