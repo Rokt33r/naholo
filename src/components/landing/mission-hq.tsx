@@ -22,7 +22,7 @@ const BEATS: Beat[] = [
   },
   {
     title: 'Per-OP usage stats',
-    body: 'Token spend, model breakdown, session timing — all scoped to the OP. Approve the next splash with the receipt in hand.',
+    body: 'Tokens spent, model breakdown, and session timing are all recorded to the OP on exfil. Review the usage and run the next op more efficiently.',
     image: {
       src: '/stats.png',
       alt: 'Per-OP stats panel',
@@ -44,11 +44,11 @@ const INCOMING: IncomingItem[] = [
   },
   {
     title: 'Token usage dashboard',
-    body: 'Per-op stats roll up into a team dashboard. Spend by operator, sliced by day/week/month.',
+    body: 'Per-op stats roll up into a project dashboard that breaks spend down by operator across the day, week, or month.',
   },
   {
     title: 'Corps',
-    body: 'A Corps groups projects and teams under one command. Bulk member control, shared settings, cross-project view.',
+    body: 'A Corps groups projects and teams under one command, with bulk member control, shared settings, and a cross-project view.',
   },
 ]
 
@@ -60,8 +60,8 @@ export function MissionHQ() {
         Plan ops the way you plan issues.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-        An issue tracker for your codebase ops. Operations are issues. Logs are
-        comments. Notes are markdown scratchpads.
+        The web app is an issue tracker for your codebase: operations are the
+        issues, logs are the comments, and notes are markdown scratchpads.
       </p>
 
       <div className='mt-12 space-y-12'>
