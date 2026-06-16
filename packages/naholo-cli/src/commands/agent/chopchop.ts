@@ -2,14 +2,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { composeNewOpOperationMd, parseChopMd } from '../../lib/chop-md.js'
 import {
-  getNotesDir,
-  getTasksPath,
-  readOpYml,
-  writeOpYml,
-} from '../../lib/local-operations.js'
+  CliError,
+  NoInfiledOpCliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
+import { composeNewOpOperationMd, parseChopMd } from '../../lib/chop-md.js'
+import { getProjectState, type ProjectState } from '../../lib/project-state.js'
 import {
   composeParentOperationMd,
   parseConstraintLabels,
@@ -24,20 +24,24 @@ export const chopchopCommand = new Command('chopchop')
   )
   .action(
     withErrorHandling(async () => {
-      const opYml = readOpYml()
+      const cliContext = getCliContext()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new CliError(
-          'No infiled operation. Run "naholo agent infil <n>" first.',
-        )
+        throw new NoInfiledOpCliError()
       }
       const parentNumber = opYml.number
       const originalParentTitle = opYml.title
-      const { client, projectSlug } = getCliContext()
+      const projectSlug = projectState.config.projectSlug
+      const { client } = cliContext
 
-      const notesDir = getNotesDir()
+      const notesDir = projectState.getNotesDir()
       const chopPath = path.join(notesDir, 'CHOP.md')
       const operationPath = path.join(notesDir, 'OPERATION.md')
-      const tasksPath = getTasksPath()
+      const tasksPath = projectState.getTasksPath()
 
       if (!fs.existsSync(chopPath)) {
         throw new CliError(
@@ -138,12 +142,15 @@ export const chopchopCommand = new Command('chopchop')
         await client.updateOperation(projectSlug, parentNumber, {
           title: chop.currentOp.title,
         })
-        writeOpYml({ number: parentNumber, title: chop.currentOp.title })
+        projectState.writeOpYml({
+          number: parentNumber,
+          title: chop.currentOp.title,
+        })
         renamedFrom = originalParentTitle
         renamedTo = chop.currentOp.title
       }
 
-      await pushOp()
+      await pushOp(cliContext, projectState)
 
       try {
         await client.deleteNote(projectSlug, parentNumber, 'CHOP')
@@ -159,7 +166,7 @@ export const chopchopCommand = new Command('chopchop')
           ? `; renamed parent "${renamedFrom}" → "${renamedTo}"`
           : ''
       const timelineSummary = `Applied CHOP: spawned OP #${newNumber} "${chop.newOp.title}"; moved constraints: ${[...carvedConstraintLabels].join(', ') || 'none'}; moved tasks: ${chop.newOp.taskLines.length}${renameClause}.`
-      appendTimelineBullet('chopchop', timelineSummary)
+      appendTimelineBullet(projectState, 'chopchop', timelineSummary)
 
       const finalParentMd = fs.readFileSync(operationPath, 'utf-8')
       const finalTasksMd = fs.readFileSync(tasksPath, 'utf-8')
@@ -199,11 +206,16 @@ function isNotFoundError(error: unknown): boolean {
   return /\b404\b/.test(error.message) || /not found/i.test(error.message)
 }
 
-function appendTimelineBullet(type: string, contents: string): void {
-  const timelinePath = path.join(getNotesDir(), 'TIMELINE.md')
-  const opYml = readOpYml()
+function appendTimelineBullet(
+  projectState: ProjectState,
+  type: string,
+  contents: string,
+): void {
+  const notesDir = projectState.getNotesDir()
+  const timelinePath = path.join(notesDir, 'TIMELINE.md')
+  const opYml = projectState.readOpYml()
   if (!fs.existsSync(timelinePath) && opYml != null) {
-    fs.mkdirSync(getNotesDir(), { recursive: true })
+    fs.mkdirSync(notesDir, { recursive: true })
     fs.writeFileSync(timelinePath, `# TIMELINE — OP #${opYml.number}\n\n`)
   }
   const timestamp = formatLocalTimestamp(new Date())

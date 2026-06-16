@@ -7,7 +7,6 @@ import { fobCommand } from './fob.js'
 import { infilCommand } from './infil.js'
 import { manCommand } from './man.js'
 import { opCommand } from './op.js'
-import { opUrlCommand } from './op-url.js'
 import { reinfilCommand } from './reinfil.js'
 import { sitrepCommand } from './sitrep.js'
 import { skillsCommand } from './skills.js'
@@ -26,7 +25,6 @@ agentCommand.addCommand(addTimelineCommand)
 agentCommand.addCommand(bootCommand)
 agentCommand.addCommand(manCommand)
 agentCommand.addCommand(opCommand)
-agentCommand.addCommand(opUrlCommand)
 agentCommand.addCommand(claudeCodeStopCommand)
 agentCommand.addCommand(chopchopCommand)
 agentCommand.addCommand(skillsCommand)

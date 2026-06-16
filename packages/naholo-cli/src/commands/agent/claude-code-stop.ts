@@ -1,16 +1,12 @@
 import fs from 'node:fs'
-import path from 'node:path'
 import { Command } from 'commander'
 import { withErrorHandling } from '../../errors.js'
 import {
   type LocalSubagentTranscriptEntry,
   listSubagentTranscriptFiles,
-  readLocalAgentTranscriptsYml,
   resolveTranscriptMeta,
-  upsertLocalAgentTranscriptEntry,
 } from '../../lib/agent-transcripts.js'
-import { appendHookError } from '../../lib/hook-errors.js'
-import { readOpYml } from '../../lib/local-operations.js'
+import { getProjectState, type ProjectState } from '../../lib/project-state.js'
 
 interface HookPayload {
   session_id?: unknown
@@ -32,29 +28,36 @@ export const claudeCodeStopCommand = new Command('claude-code-stop')
         return
       }
 
-      const opYml = readOpYml()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        return
+      }
+
+      const opYml = projectState.readOpYml()
       if (opYml == null) {
         return
       }
 
       try {
         await registerAgentSessionTranscript(
+          projectState,
           hook.session_id,
           hook.transcript_path,
         )
       } catch (error) {
-        appendHookError('claude-code-stop', String(error))
+        projectState.appendHookError('claude-code-stop', String(error))
       }
     }),
   )
 
 async function registerAgentSessionTranscript(
+  projectState: ProjectState,
   sessionId: string,
   transcriptPath: string,
 ): Promise<void> {
-  const previous = readLocalAgentTranscriptsYml().find(
-    (e) => e.transcript_id === sessionId,
-  )
+  const previous = projectState
+    .readLocalAgentTranscripts()
+    .find((e) => e.transcript_id === sessionId)
 
   const { firstTimestamp, lastTimestamp, title } = await resolveTranscriptMeta(
     transcriptPath,
@@ -109,7 +112,7 @@ async function registerAgentSessionTranscript(
     })
   }
 
-  upsertLocalAgentTranscriptEntry({
+  projectState.upsertLocalAgentTranscript({
     transcript_id: sessionId,
     transcript_path: transcriptPath,
     title,

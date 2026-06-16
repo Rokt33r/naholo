@@ -3,16 +3,13 @@ import path from 'node:path'
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
 import {
-  getBaseNotesDir,
-  getBaseTasksPath,
-  getLocalOperationDir,
-  getNotesDir,
-  getTasksPath,
-  writeOpYml,
-} from '../../lib/local-operations.js'
+  CliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
+import { getProjectState } from '../../lib/project-state.js'
+import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
 
 export const infilCommand = new Command('infil')
   .description('Initial fetch of an operation from server to local')
@@ -30,12 +27,19 @@ export const infilCommand = new Command('infil')
         )
       }
 
-      const localDir = getLocalOperationDir()
-      if (fs.existsSync(localDir)) {
+      const cliContext = getCliContext()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+
+      const infiledDir = projectState.getInfiledDir()
+      if (fs.existsSync(infiledDir)) {
         throw new CliError('Already infiled. Run "naholo agent exfil" first.')
       }
 
-      const { client, projectSlug } = getCliContext()
+      const projectSlug = projectState.config.projectSlug
+      const { client } = cliContext
 
       const [serverOperation, serverTasks, serverNotes, serverLogs] =
         await Promise.all([
@@ -45,8 +49,8 @@ export const infilCommand = new Command('infil')
           client.listOperationLogs(projectSlug, opNum),
         ])
 
-      const notesDir = getNotesDir()
-      const baseNotesDir = getBaseNotesDir()
+      const notesDir = projectState.getNotesDir()
+      const baseNotesDir = projectState.getBaseNotesDir()
 
       fs.mkdirSync(notesDir, { recursive: true })
       fs.mkdirSync(baseNotesDir, { recursive: true })
@@ -56,8 +60,8 @@ export const infilCommand = new Command('infil')
           ? `# TASKS — OP #${opNum}\n\n${formatTasksMarkdown(serverTasks)}\n`
           : `# TASKS — OP #${opNum}\n\n_(no tasks yet)_\n`
 
-      fs.writeFileSync(getTasksPath(), tasksMd)
-      fs.writeFileSync(getBaseTasksPath(), tasksMd)
+      fs.writeFileSync(projectState.getTasksPath(), tasksMd)
+      fs.writeFileSync(projectState.getBaseTasksPath(), tasksMd)
 
       for (const note of serverNotes) {
         const filename = `${note.name}.md`
@@ -72,11 +76,11 @@ export const infilCommand = new Command('infil')
         content: log.content,
       }))
       fs.writeFileSync(
-        path.join(localDir, 'LOGS.yml'),
+        path.join(infiledDir, 'LOGS.yml'),
         yamlStringify(logEntries),
       )
 
-      writeOpYml({ number: opNum, title: serverOperation.title })
+      projectState.writeOpYml({ number: opNum, title: serverOperation.title })
 
       const doneCount = serverTasks.filter((o) => o.done).length
       console.log(`Infiled operation #${opNum}`)
@@ -88,6 +92,6 @@ export const infilCommand = new Command('infil')
         `  Notes: ${serverNotes.length}${serverNotes.length > 0 ? ` (${serverNotes.map((n) => n.name).join(', ')})` : ''}`,
       )
       console.log(`  Logs: ${serverLogs.length} entries`)
-      console.log(`  Local: ${localDir}/`)
+      console.log(`  Local: ${infiledDir}/`)
     }),
   )

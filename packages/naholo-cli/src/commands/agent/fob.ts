@@ -1,7 +1,12 @@
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
-import { CliError, withErrorHandling } from '../../errors.js'
+import {
+  CliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
+import { getProjectState } from '../../lib/project-state.js'
 
 export const fobCommand = new Command('fob')
   .description(
@@ -19,7 +24,13 @@ export const fobCommand = new Command('fob')
         throw new CliError('`-T` title must not be empty.')
       }
 
-      const { client, projectSlug } = getCliContext()
+      const cliContext = getCliContext()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const projectSlug = projectState.config.projectSlug
+      const { client } = cliContext
 
       const operation = await client.createOperation(projectSlug, { title })
 

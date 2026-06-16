@@ -1,7 +1,12 @@
 import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { readOpYml } from '../../lib/local-operations.js'
+import {
+  CliError,
+  NoInfiledOpCliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
+import { getProjectState } from '../../lib/project-state.js'
 import { pushOp } from '../../lib/push-op.js'
 
 export const sitrepCommand = new Command('sitrep')
@@ -14,17 +19,22 @@ export const sitrepCommand = new Command('sitrep')
         throw new CliError('`--log` content must not be empty.')
       }
 
-      const opYml = readOpYml()
+      const cliContext = getCliContext()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new CliError(
-          'No infiled operation. Run "naholo agent infil <n>" first.',
-        )
+        throw new NoInfiledOpCliError()
       }
       const opNum = opYml.number
-      const { client, projectSlug } = getCliContext()
+      const projectSlug = projectState.config.projectSlug
 
-      await pushOp()
+      await pushOp(cliContext, projectState)
 
-      await client.createOperationLog(projectSlug, opNum, { content: log })
+      await cliContext.client.createOperationLog(projectSlug, opNum, {
+        content: log,
+      })
     }),
   )

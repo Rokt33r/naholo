@@ -1,9 +1,12 @@
 import fs from 'node:fs'
 import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { readLocalAgentTranscriptsYml } from '../../lib/agent-transcripts.js'
-import { getLocalOperationDir, readOpYml } from '../../lib/local-operations.js'
+import {
+  NoInfiledOpCliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
+import { getProjectState } from '../../lib/project-state.js'
 import { pushOp } from '../../lib/push-op.js'
 
 export const exfilCommand = new Command('exfil')
@@ -13,22 +16,26 @@ export const exfilCommand = new Command('exfil')
   .option('--close', 'Close the operation after syncing')
   .action(
     withErrorHandling(async (options: { close?: boolean }) => {
-      const opYml = readOpYml()
+      const cliContext = getCliContext()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new CliError(
-          'No infiled operation. Run "naholo agent infil <n>" first.',
-        )
+        throw new NoInfiledOpCliError()
       }
       const opNum = opYml.number
       const close = options.close === true
-      const localDir = getLocalOperationDir()
-      const { client, projectSlug, currentProfile } = getCliContext()
+      const infiledDir = projectState.getInfiledDir()
+      const projectSlug = projectState.config.projectSlug
+      const { client, currentProfile } = cliContext
       const baseUrl = currentProfile.profile.baseUrl.replace(/\/$/, '')
       const opUrl = `${baseUrl}/app/projects/${projectSlug}/operations/${opNum}`
 
-      await pushOp()
+      await pushOp(cliContext, projectState)
 
-      const transcripts = readLocalAgentTranscriptsYml()
+      const transcripts = projectState.readLocalAgentTranscripts()
       for (const entry of transcripts) {
         const buffer = fs.readFileSync(entry.transcript_path)
         const transcript = buffer.toString('utf-8')
@@ -70,7 +77,7 @@ export const exfilCommand = new Command('exfil')
         await client.closeOperation(projectSlug, opNum)
       }
 
-      fs.rmSync(localDir, { recursive: true, force: true })
+      fs.rmSync(infiledDir, { recursive: true, force: true })
 
       console.log(opUrl)
     }),

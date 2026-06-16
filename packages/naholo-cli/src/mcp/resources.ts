@@ -3,13 +3,14 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import { readOpYml } from '../lib/local-operations.js'
+import type { ProjectState } from '../lib/project-state.js'
 import { formatTasksMarkdown } from '../lib/tasks-markdown.js'
 
 export function registerResources(
   server: McpServer,
   client: NaholoClient,
   projectSlug: string,
+  projectState: ProjectState,
 ): void {
   server.registerResource(
     'project',
@@ -102,7 +103,7 @@ export function registerResources(
     'naholo://local/infiled',
     { description: 'Currently infiled operation' },
     async (uri) => {
-      const opYml = readOpYml()
+      const opYml = projectState.readOpYml()
       const text = opYml == null ? '' : `#${opYml.number} ${opYml.title}`
       return {
         contents: [{ uri: uri.href, mimeType: 'text/plain', text }],

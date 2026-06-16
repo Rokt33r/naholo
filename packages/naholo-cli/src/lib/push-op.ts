@@ -1,15 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { getCliContext } from '../context.js'
-import { CliError } from '../errors.js'
-import {
-  getBaseNotesDir,
-  getBaseTasksPath,
-  getLocalOperationDir,
-  getNotesDir,
-  getTasksPath,
-  readOpYml,
-} from './local-operations.js'
+import type { CliContext } from '../context.js'
+import { NoInfiledOpCliError } from '../errors.js'
+import type { ProjectState } from './project-state.js'
 import { parseTasksMarkdown } from './tasks-markdown.js'
 
 export interface PushResult {
@@ -21,19 +14,21 @@ export interface PushResult {
   localDir: string
 }
 
-export async function pushOp(): Promise<PushResult> {
-  const opYml = readOpYml()
+export async function pushOp(
+  cliContext: CliContext,
+  projectState: ProjectState,
+): Promise<PushResult> {
+  const opYml = projectState.readOpYml()
   if (opYml == null) {
-    throw new CliError(
-      'No infiled operation. Run "naholo agent infil <n>" first.',
-    )
+    throw new NoInfiledOpCliError()
   }
   const opNum = opYml.number
-  const { client, projectSlug } = getCliContext()
-  const localDir = getLocalOperationDir()
+  const { client } = cliContext
+  const projectSlug = projectState.config.projectSlug
+  const localDir = projectState.getInfiledDir()
 
   // --- Sync tasks ---
-  const tasksPath = getTasksPath()
+  const tasksPath = projectState.getTasksPath()
   const tasksMd = fs.readFileSync(tasksPath, 'utf-8')
   const tasks = parseTasksMarkdown(tasksMd)
 
@@ -57,7 +52,7 @@ export async function pushOp(): Promise<PushResult> {
   }
 
   // --- Sync notes ---
-  const notesDir = getNotesDir()
+  const notesDir = projectState.getNotesDir()
   const serverNotes = await client.listNotes(projectSlug, opNum)
   const serverNoteMap = new Map(serverNotes.map((n) => [n.name, n]))
 
@@ -85,8 +80,8 @@ export async function pushOp(): Promise<PushResult> {
   }
 
   // --- Update .base/ ---
-  const baseObjectivesPath = getBaseTasksPath()
-  const baseNotesDir = getBaseNotesDir()
+  const baseObjectivesPath = projectState.getBaseTasksPath()
+  const baseNotesDir = projectState.getBaseNotesDir()
   fs.mkdirSync(baseNotesDir, { recursive: true })
 
   const currentObjectivesMd = fs.readFileSync(tasksPath, 'utf-8')

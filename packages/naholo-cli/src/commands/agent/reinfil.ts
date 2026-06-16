@@ -4,21 +4,20 @@ import { Command } from 'commander'
 import type { OperationLog } from 'naholo-api/types'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
-import { CliError, withErrorHandling } from '../../errors.js'
+import {
+  NoInfiledOpCliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
 import { mergeTasks } from '../../lib/merge-tasks.js'
+import { getProjectState, type ProjectState } from '../../lib/project-state.js'
 import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
 import { threeWayMerge } from '../../lib/three-way-merge.js'
-import {
-  getLocalOperationDir,
-  getNotesDir,
-  getBaseNotesDir,
-  getTasksPath,
-  getBaseTasksPath,
-  readOpYml,
-  writeOpYml,
-} from '../../lib/local-operations.js'
 
-function writeLogsYaml(serverLogs: OperationLog[]): void {
+function writeLogsYaml(
+  projectState: ProjectState,
+  serverLogs: OperationLog[],
+): void {
   // Server is source of truth — overwrite local LOGS.yml on every pull.
   const entries = serverLogs.map((log) => ({
     id: log.id,
@@ -26,7 +25,7 @@ function writeLogsYaml(serverLogs: OperationLog[]): void {
     author: log.projectOperator?.name ?? null,
     content: log.content,
   }))
-  const logsPath = path.join(getLocalOperationDir(), 'LOGS.yml')
+  const logsPath = path.join(projectState.getInfiledDir(), 'LOGS.yml')
   fs.writeFileSync(logsPath, yamlStringify(entries))
 }
 
@@ -34,15 +33,19 @@ export const reinfilCommand = new Command('reinfil')
   .description('Refresh the currently infiled operation from the server')
   .action(
     withErrorHandling(async () => {
-      const opYml = readOpYml()
+      const cliContext = getCliContext()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new CliError(
-          'No infiled operation. Run "naholo agent infil <n>" first.',
-        )
+        throw new NoInfiledOpCliError()
       }
       const opNum = opYml.number
+      const projectSlug = projectState.config.projectSlug
 
-      const { client, projectSlug } = getCliContext()
+      const { client } = cliContext
       const [serverOperation, serverTasks, serverNotes, serverLogs] =
         await Promise.all([
           client.getOperation(projectSlug, opNum),
@@ -51,15 +54,15 @@ export const reinfilCommand = new Command('reinfil')
           client.listOperationLogs(projectSlug, opNum),
         ])
 
-      const notesDir = getNotesDir()
-      const baseNotesDir = getBaseNotesDir()
+      const notesDir = projectState.getNotesDir()
+      const baseNotesDir = projectState.getBaseNotesDir()
 
       // Ensure dirs exist (they should, but just in case)
       fs.mkdirSync(notesDir, { recursive: true })
       fs.mkdirSync(baseNotesDir, { recursive: true })
 
       // --- Merge TASKS.md (structured, not text merge) ---
-      const tasksPath = getTasksPath()
+      const tasksPath = projectState.getTasksPath()
       const localTasksMd = fs.existsSync(tasksPath)
         ? fs.readFileSync(tasksPath, 'utf-8')
         : ''
@@ -96,7 +99,7 @@ export const reinfilCommand = new Command('reinfil')
       }
 
       // Update .base/ with server state
-      fs.writeFileSync(getBaseTasksPath(), serverTasksMd)
+      fs.writeFileSync(projectState.getBaseTasksPath(), serverTasksMd)
       for (const serverNote of serverNotes) {
         fs.writeFileSync(
           path.join(baseNotesDir, `${serverNote.name}.md`),
@@ -104,10 +107,13 @@ export const reinfilCommand = new Command('reinfil')
         )
       }
 
-      writeLogsYaml(serverLogs)
+      writeLogsYaml(projectState, serverLogs)
 
       // Refresh op.yml title from server (preserve number).
-      writeOpYml({ number: opNum, title: serverOperation.title })
+      projectState.writeOpYml({
+        number: opNum,
+        title: serverOperation.title,
+      })
 
       // Report
       console.log(
@@ -137,7 +143,7 @@ export const reinfilCommand = new Command('reinfil')
         console.log(`  Conflicts: ${conflictNames}`)
       }
       console.log(`  Logs: ${serverLogs.length} entries`)
-      console.log(`  Local: ${getLocalOperationDir()}/`)
+      console.log(`  Local: ${projectState.getInfiledDir()}/`)
     }),
   )
 

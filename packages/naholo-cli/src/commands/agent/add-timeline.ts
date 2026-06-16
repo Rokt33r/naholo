@@ -1,8 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { getNotesDir, readOpYml } from '../../lib/local-operations.js'
+import {
+  NoInfiledOpCliError,
+  NoProjectStateCliError,
+  withErrorHandling,
+} from '../../errors.js'
+import { getProjectState } from '../../lib/project-state.js'
 
 function formatLocalTimestamp(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -25,16 +29,19 @@ export const addTimelineCommand = new Command('add-timeline')
   .argument('<contents>', 'Summary text written after the colon')
   .action(
     withErrorHandling(async (contents: string, options: { type: string }) => {
-      const opYml = readOpYml()
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new CliError(
-          'No infiled operation. Run "naholo agent infil <n>" first.',
-        )
+        throw new NoInfiledOpCliError()
       }
 
-      const timelinePath = path.join(getNotesDir(), 'TIMELINE.md')
+      const notesDir = projectState.getNotesDir()
+      const timelinePath = path.join(notesDir, 'TIMELINE.md')
       if (!fs.existsSync(timelinePath)) {
-        fs.mkdirSync(getNotesDir(), { recursive: true })
+        fs.mkdirSync(notesDir, { recursive: true })
         fs.writeFileSync(timelinePath, `# TIMELINE — OP #${opYml.number}\n\n`)
       }
 

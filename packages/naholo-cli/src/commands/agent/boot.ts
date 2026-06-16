@@ -1,6 +1,6 @@
 import { Command } from 'commander'
-import { withErrorHandling } from '../../errors.js'
-import { renderOpStatusYaml } from '../../lib/local-operations.js'
+import { NoProjectStateCliError, withErrorHandling } from '../../errors.js'
+import { getProjectState } from '../../lib/project-state.js'
 import { getActiveProfile } from '../../profile.js'
 import manualText from './manual.md'
 
@@ -17,7 +17,12 @@ export const bootCommand = new Command('boot')
           ? `<personality>\n${soul}\n</personality>\n\n`
           : ''
       const locale = profile?.locale ?? 'English'
-      const opStatusBody = renderOpStatusYaml() ?? 'No infiled operation.\n'
+      const projectState = getProjectState()
+      if (projectState == null) {
+        throw new NoProjectStateCliError()
+      }
+      const opStatusBody =
+        projectState.renderOpStatusYaml() ?? 'No infiled operation.\n'
       process.stdout.write(
         personalityBlock +
           `<manual>\n${manualText}\n</manual>\n\n` +
