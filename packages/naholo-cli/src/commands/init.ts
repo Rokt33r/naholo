@@ -6,7 +6,10 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { getActiveProfile } from '../profile.js'
-import { writeProjectConfig, writeGitignore } from '../project-config.js'
+import {
+  writeProjectConfigInCwdNaholoDir,
+  writeGitignoreInCwdNaholoDir,
+} from '../project-config.js'
 import { installSkills } from './install-skills.js'
 
 export const initCommand = new Command('init')
@@ -46,13 +49,13 @@ export const initCommand = new Command('init')
       })
 
       // 3. Write .naholo/config.yml
-      writeProjectConfig({
+      writeProjectConfigInCwdNaholoDir({
         projectId: selectedProject.id,
         projectSlug: selectedProject.slug,
       })
 
       // 4. Write .naholo/.gitignore
-      writeGitignore()
+      writeGitignoreInCwdNaholoDir()
 
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)

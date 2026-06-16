@@ -1,21 +1,29 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml'
-import {
-  getCovertOpsDir,
-  readCovertOpsProjectConfig,
-} from '../covert-config.js'
+import { getCovertOpsDir } from '../covert-config.js'
+import { CliError } from '../errors.js'
+import { resolveProjectConfig } from '../project-config.js'
 
-export function getNaholoLocalDir(): string {
-  const covertEntry = readCovertOpsProjectConfig(process.cwd())
-  if (covertEntry != null) {
-    return path.join(getCovertOpsDir(), covertEntry.codeName)
+export function getNaholoLocalDir(): string | null {
+  const resolved = resolveProjectConfig()
+  if (resolved == null) {
+    return null
   }
-  return path.resolve('.naholo/local')
+  if (resolved.kind === 'covert') {
+    return path.join(getCovertOpsDir(), resolved.config.codeName)
+  }
+  return path.join(resolved.root, '.naholo/local')
 }
 
 export function getLocalOperationDir(): string {
-  return path.join(getNaholoLocalDir(), 'infiled')
+  const local = getNaholoLocalDir()
+  if (local == null) {
+    throw new CliError(
+      'No .naholo/config.yml found in this directory or any ancestor up to your home directory, and no covert mode entry matches. Run "naholo init" or "naholo covert init" to initialize.',
+    )
+  }
+  return path.join(local, 'infiled')
 }
 
 export function getBaseDir(): string {
@@ -48,7 +56,11 @@ export function getOpYmlPath(): string {
 }
 
 export function readOpYml(): OpYml | null {
-  const ymlPath = getOpYmlPath()
+  const local = getNaholoLocalDir()
+  if (local == null) {
+    return null
+  }
+  const ymlPath = path.join(local, 'infiled', 'op.yml')
   if (!fs.existsSync(ymlPath)) {
     return null
   }

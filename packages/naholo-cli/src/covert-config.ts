@@ -39,17 +39,6 @@ export function writeCovertOpsConfig(config: CovertOpsConfig): void {
   fs.writeFileSync(getCovertOpsConfigPath(), stringify(config), 'utf-8')
 }
 
-export function readCovertOpsProjectConfig(
-  projectPath: string,
-): CovertOpsProjectConfig | null {
-  const config = readCovertOpsConfig()
-  const entry = config.projects[projectPath]
-  if (entry == null) {
-    return null
-  }
-  return entry
-}
-
 export function collectExistingCodeNames(config: CovertOpsConfig): Set<string> {
   return new Set(Object.values(config.projects).map((p) => p.codeName))
 }

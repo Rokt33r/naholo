@@ -10,11 +10,7 @@ import {
   upsertLocalAgentTranscriptEntry,
 } from '../../lib/agent-transcripts.js'
 import { appendHookError } from '../../lib/hook-errors.js'
-import {
-  type OpYml,
-  getNotesDir,
-  readOpYml,
-} from '../../lib/local-operations.js'
+import { readOpYml } from '../../lib/local-operations.js'
 
 interface HookPayload {
   session_id?: unknown
