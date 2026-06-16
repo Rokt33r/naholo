@@ -29,9 +29,9 @@ export function Hero({ isAuthed }: { isAuthed: boolean }) {
           </h1>
 
           <p className='mt-8 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300 sm:text-lg'>
-            AI coding without the spiral. Infil into the codebase, brief the
-            task, ship in splashes, exfil with the diff — under your command,
-            not the model&apos;s.
+            AI coding without the vicious spiral. Infil into the codebase, brief
+            the task, ship in splashes, exfil with the diff — under your
+            command, not the model&apos;s.
           </p>
 
           <div className='mt-10 flex flex-wrap items-center gap-4'>
