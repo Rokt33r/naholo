@@ -13,27 +13,27 @@ const DOCTRINES: DoctrineCard[] = [
   {
     title: 'Discipline',
     bullets: [
-      'One fixed loop: brief → plan → ship → debrief. No vibe-coding spirals.',
-      'Plans and changes scoped tight enough that a human can review them.',
-      'Mid-session pivots survive — the workflow is built for course correction.',
+      'One solid loop: brief → plan → ship → debrief. No vibe-coding spirals.',
+      'Work breaks down into reviewable chunks: architecture decisions land in the plan, then the plan is chopped into single-commit-sized tasks.',
+      'The loop fully covers mid-session pivots, flexible but durable. A request that contradicts an architecture decision raises a review flag, so you decide whether to abort or override it.',
     ],
     Icon: ShieldAlert,
   },
   {
-    title: 'Recoverable context',
+    title: 'Ruggedized context',
     bullets: [
-      'The session runs on chat history — until the context window fills or the agent starts hallucinating.',
-      'TIMELINE is the catch-up doc: the next session reads it and picks up where the last one left off.',
-      'No re-briefing, no `/compact` gymnastics.',
+      "Naholo's skills make agents keep durable, user-controllable context in the filesystem.",
+      'OPERATION.md holds the canonical state of the operation, and TIMELINE.md tracks progress and any course changes.',
+      'You never run /compact. When an agent starts hallucinating or the context window fills up, open a new session and it catches up on the operation instantly.',
     ],
     Icon: History,
   },
   {
     title: 'Transparent spend',
     bullets: [
-      'Token usage pins to the OP, not to a chat thread.',
-      'See exactly where the budget went, per skill, per session.',
-      'Every operation has a receipt before the next splash.',
+      'Token usage pins to the OP, not just a chat thread, and uploads to the server on exfil.',
+      'Review token usage and estimated budgets per skill and per session.',
+      'A project-wide token usage and budget dashboard is under construction.',
     ],
     Icon: Gauge,
   },
