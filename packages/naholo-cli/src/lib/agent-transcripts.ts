@@ -133,7 +133,7 @@ const localSubagentTranscriptEntrySchema = z.object({
   size_bytes: z.number(),
 })
 
-const localAgentTranscriptEntrySchema = z.object({
+export const localAgentTranscriptEntrySchema = z.object({
   transcript_id: z.string(),
   transcript_path: z.string(),
   title: z.string().nullable(),
