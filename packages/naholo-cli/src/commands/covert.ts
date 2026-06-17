@@ -17,6 +17,7 @@ import {
   writeCovertOpsConfig,
 } from '../covert-config.js'
 import { generateCodeName } from '../lib/codename.js'
+import { getProjectState } from '../lib/project-state.js'
 import { installSkills } from './install-skills.js'
 
 export const covertCommand = new Command('covert').description(
@@ -36,6 +37,23 @@ covertCommand
       const active = getActiveProfile(profileOverride)
       if (active == null) {
         throw new CliError('Not logged in. Run "naholo login" to authenticate.')
+      }
+
+      // Warn when cwd is already a naholo project or sits inside one.
+      const existing = getProjectState(process.cwd())
+      if (existing != null) {
+        console.log()
+        console.log(
+          `A naholo ${existing.kind} project is already configured at: ${existing.root}`,
+        )
+        console.log(`You are initializing at: ${process.cwd()}`)
+        const proceed = await confirm({
+          message: 'Initialize anyway?',
+          default: false,
+        })
+        if (!proceed) {
+          return
+        }
       }
 
       const { profile } = active

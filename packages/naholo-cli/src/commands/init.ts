@@ -5,6 +5,7 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
+import { getProjectState } from '../lib/project-state.js'
 import { getActiveProfile } from '../profile.js'
 import {
   writeProjectConfigInCwdNaholoDir,
@@ -23,6 +24,23 @@ export const initCommand = new Command('init')
       const active = getActiveProfile(profileOverride)
       if (active == null) {
         throw new CliError('Not logged in. Run "naholo login" to authenticate.')
+      }
+
+      // Warn when cwd is already a naholo project or sits inside one.
+      const existing = getProjectState(process.cwd())
+      if (existing != null) {
+        console.log()
+        console.log(
+          `A naholo ${existing.kind} project is already configured at: ${existing.root}`,
+        )
+        console.log(`You are initializing at: ${process.cwd()}`)
+        const proceed = await confirm({
+          message: 'Initialize anyway?',
+          default: false,
+        })
+        if (!proceed) {
+          return
+        }
       }
 
       const { profile } = active
