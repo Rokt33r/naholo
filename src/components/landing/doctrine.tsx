@@ -1,4 +1,4 @@
-import { Gauge, History, ShieldAlert } from 'lucide-react'
+import { Gauge, Stone, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
@@ -26,7 +26,7 @@ const DOCTRINES: DoctrineCard[] = [
       'OPERATION.md holds the canonical state of the operation, and TIMELINE.md tracks progress and any course changes.',
       'You never run /compact. When an agent starts hallucinating or the context window fills up, open a new session and it catches up on the operation instantly.',
     ],
-    Icon: History,
+    Icon: Stone,
   },
   {
     title: 'Transparent spend',
@@ -47,8 +47,10 @@ export function Doctrine() {
         Built for developers, not vibe coders.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-        Every change moves through a written military-style OP cycle —
-        disciplined, recoverable, and accountable.
+        Ship every change through a written, military-style OP cycle that stays
+        disciplined, recoverable, and accountable. A web app plans the ops, a
+        CLI gives agents every tool they need in your codebase, and AI skills
+        drive the cycle.
       </p>
 
       <div className='mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
