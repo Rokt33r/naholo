@@ -35,9 +35,13 @@ function pricingFromInput(basePrice: number): ModelPricing {
   }
 }
 
+// https://platform.claude.com/docs/en/about-claude/pricing
 export const PRICING: PricingTable = {
-  recordedDate: '2026-05-14',
+  recordedDate: '2026-06-17',
   modelPricingMap: {
+    'claude-fable-5': pricingFromInput(10),
+    'claude-mythos-5': pricingFromInput(10),
+    'claude-opus-4-8': pricingFromInput(5),
     'claude-opus-4-7': pricingFromInput(5),
     'claude-opus-4-6': pricingFromInput(5),
     'claude-opus-4-5': pricingFromInput(5),
