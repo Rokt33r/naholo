@@ -14,8 +14,8 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
           Ready to deploy?
         </h2>
         <p className='mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-          Stand up your first operation, or fork it and spin up your own
-          instance. Available under MIT as open source.
+          Start your first operation, or fork it and spin up your own instance.
+          Available under MIT as open source.
         </p>
 
         <div className='mt-10 flex flex-wrap items-center justify-center gap-4'>

@@ -66,8 +66,8 @@ export function Requirements() {
             </div>
           </div>
           <p className='mt-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400'>
-            May work on other Unix systems — not yet confirmed. Linux and
-            Windows will be supported later.
+            May work on other Unix systems(not yet confirmed). Linux and Windows
+            will be supported later.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export function Requirements() {
               <span className='mt-2 h-1 w-1 flex-none rounded-full bg-zinc-400 dark:bg-zinc-600' />
               <span>
                 Doesn&apos;t work well with chat-only tools like Claude Code
-                Desktop — editing experience is limited.
+                Desktop due to its limited editing experience.
               </span>
             </li>
           </ul>

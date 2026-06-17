@@ -12,12 +12,24 @@ const BEATS: Beat[] = [
     title: 'Skill installation',
     body: (
       <>
-        One command installs the workflow skills and side branches —{' '}
-        <code className='font-mono'>/fob</code> (drop an idea, get an op),{' '}
-        <code className='font-mono'>/recon</code> (talk-it-out),{' '}
-        <code className='font-mono'>/raid</code> (small-OP shortcut),{' '}
-        <code className='font-mono'>/chop</code> (split an OP) — into your AI
-        agent. No copy-paste, no setup ceremony.
+        One command installs the workflow skills into your AI agent, along with
+        the side branches:{' '}
+        <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
+          /fob
+        </code>{' '}
+        starts an OP from the codebase,{' '}
+        <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
+          /recon
+        </code>{' '}
+        talks one out,{' '}
+        <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
+          /raid
+        </code>{' '}
+        is the small-OP shortcut, and{' '}
+        <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
+          /chop
+        </code>{' '}
+        splits an OP.
       </>
     ),
   },
@@ -31,7 +43,7 @@ const BEATS: Beat[] = [
   },
   {
     title: 'Worktree-aware',
-    body: 'Concurrent sessions in different worktrees register against the right OP each. No mixing.',
+    body: 'Concurrent sessions in different worktrees each register against the right OP, so nothing gets crossed.',
   },
 ]
 
@@ -43,8 +55,9 @@ export function FieldToolkit() {
         Skills and tools on the ground.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-        A local CLI that wires your AI agent into the OP — MCP tools for Mission
-        HQ, per-OP session tracking, worktree-safe.
+        A local CLI wires your AI agent into the OP: it exposes MCP tools and
+        commands for Mission HQ, tracks each session per OP, and stays
+        worktree-safe.
       </p>
 
       <ul className='mt-10 max-w-3xl space-y-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>

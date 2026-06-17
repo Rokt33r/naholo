@@ -8,11 +8,12 @@ export function ClearanceClassification() {
     <Section>
       <BriefingLabel>{'// 06 · Clearance classification'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
-        Classify your op.
+        Classify your project.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-        Same loop, different clearance. Classify based on how much control you
-        have over the codebase.
+        The loop is the same either way; what changes is how naholo lives in
+        your codebase. Classify your project by how much control you have over
+        it.
       </p>
 
       <div className='mt-12 grid grid-cols-1 gap-6 md:grid-cols-2'>
@@ -28,12 +29,13 @@ export function ClearanceClassification() {
             Covert Ops
           </h3>
           <p className='mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300'>
-            Deploying to territory you don&apos;t control. No base set up — no
-            config committed, no trace left. Kit stays in your ruck (
+            You deploy into territory you don&apos;t control, so no base goes
+            up: nothing is committed and no trace is left behind. Your kit stays
+            in your ruck (
             <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
               ~/.naholo
             </code>
-            ). Start with{' '}
+            ). Run{' '}
             <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
               naholo covert init
             </code>{' '}
@@ -41,7 +43,7 @@ export function ClearanceClassification() {
           </p>
           <p className='mt-6 border-t border-zinc-200 pt-6 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:text-zinc-300'>
             Choose this when you&apos;re working on a team project but
-            don&apos;t want to — or can&apos;t — introduce naholo to the rest of
+            don&apos;t want to, or can&apos;t, introduce naholo to the rest of
             the team. You&apos;ll need to run{' '}
             <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
               naholo covert init
@@ -62,12 +64,12 @@ export function ClearanceClassification() {
             Full Control
           </h3>
           <p className='mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300'>
-            Your territory, your rules. Deploy a full base at{' '}
+            This is your territory, so you set the rules. Deploy a full base at{' '}
             <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
               .naholo/
             </code>{' '}
-            in the project root — config checked in, every operator runs the
-            same loop. Start with{' '}
+            in the project root with config checked into source, so every
+            operator runs the same loop. Run{' '}
             <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
               naholo init
             </code>{' '}
@@ -76,7 +78,7 @@ export function ClearanceClassification() {
           <p className='mt-6 border-t border-zinc-200 pt-6 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:text-zinc-300'>
             Choose this when you own the repo or have the authority to introduce
             naholo to your team. Config lives in source, so new worktrees work
-            out of the box — no extra setup required.
+            out of the box; no extra setup required.
           </p>
         </article>
       </div>
