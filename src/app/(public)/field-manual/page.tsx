@@ -21,8 +21,7 @@ export default function FieldManualTopPage() {
         change. The manual walks an operator through breaking the idea into a
         direction, the direction into a plan, and the plan into reviewable
         chunks the agent ships one at a time. At every step you get a window to
-        review — direction, plan, code — without drowning yourself or the agent
-        in context.
+        review without drowning yourself or the agent in context.
       </p>
 
       <div className='mt-6 max-w-2xl space-y-3'>

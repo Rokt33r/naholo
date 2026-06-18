@@ -16,31 +16,31 @@ export const chapters: Chapter[] = [
     slug: 'quick-start',
     number: '01',
     label: 'Quick Start',
-    body: 'Open an op, install the CLI, run the chain, ship your first operation.',
+    body: 'Learn the cycle by running it once.',
   },
   {
     slug: 'primer',
     number: '02',
     label: 'Primer',
-    body: 'Why the default agent loop breaks, and how to fix it.',
+    body: 'Let the agent move fast. Keep the judgment yours.',
   },
   {
     slug: 'readiness',
     number: '03',
     label: 'Readiness',
-    body: 'One-time setup before your first operation.',
+    body: 'One-time setup before the first /infil.',
   },
   {
     slug: 'workflow',
     number: '04',
     label: 'Workflow',
-    body: 'Every skill explained in depth.',
+    body: 'Each skill, in depth.',
   },
   {
     slug: 'logistics',
     number: '05',
     label: 'Logistics',
-    body: 'The interface reference for argument shapes, file owners, and MCP tools.',
+    body: 'The precise contracts for every skill, file, and tool.',
   },
   {
     slug: 'sere',
@@ -52,13 +52,13 @@ export const chapters: Chapter[] = [
     slug: 'customize',
     number: '07',
     label: 'Customize',
-    body: 'Bend or extend the cycle with your own skills and rules.',
+    body: 'From bundled cycle to a team-owned binary.',
   },
   {
     slug: 'glossary',
     number: '08',
     label: 'Glossary',
-    body: 'Military terms naholo borrows, and what we mean by them.',
+    body: 'Military terms, naholo usage.',
   },
 ]
 
