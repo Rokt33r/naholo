@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { Command } from 'commander'
+import { pruneTranscriptForDownload } from 'naholo-agent-transcripts/claude-code'
 import { getCliContext } from '../../context.js'
 import {
   NoInfiledOpCliError,
@@ -35,10 +36,16 @@ export const exfilCommand = new Command('exfil')
 
       await pushOp(cliContext, projectState)
 
+      const mode = projectState.config.uploadTranscriptsOnExfil ?? 'none'
       const transcripts = projectState.readLocalAgentTranscripts()
+
       for (const entry of transcripts) {
-        const buffer = fs.readFileSync(entry.transcript_path)
-        const transcript = buffer.toString('utf-8')
+        if (mode === 'none') {
+          continue
+        }
+        const raw = fs.readFileSync(entry.transcript_path, 'utf-8')
+        const transcript =
+          mode === 'redacted' ? pruneTranscriptForDownload(raw) : raw
         await client.recordAgentTranscript(
           projectSlug,
           opNum,
@@ -48,20 +55,21 @@ export const exfilCommand = new Command('exfil')
             startedAt: entry.started_at,
             endedAt: entry.last_message_at,
             transcript,
-            transcriptSizeBytes: buffer.byteLength,
+            transcriptSizeBytes: Buffer.byteLength(transcript, 'utf-8'),
           },
         )
 
         for (const subagent of entry.subagents) {
-          const subBuffer = fs.readFileSync(subagent.transcript_path)
-          const subTranscript = subBuffer.toString('utf-8')
+          const subRaw = fs.readFileSync(subagent.transcript_path, 'utf-8')
+          const subTranscript =
+            mode === 'redacted' ? pruneTranscriptForDownload(subRaw) : subRaw
           const syntheticId = `${entry.transcript_id}-subagent-${subagent.agentId}`
           await client.recordAgentTranscript(projectSlug, opNum, syntheticId, {
             title: null,
             startedAt: subagent.started_at,
             endedAt: subagent.last_message_at,
             transcript: subTranscript,
-            transcriptSizeBytes: subBuffer.byteLength,
+            transcriptSizeBytes: Buffer.byteLength(subTranscript, 'utf-8'),
           })
         }
       }
