@@ -7,6 +7,10 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
+import {
+  getProjectSettingsPath,
+  installNaholoHooks,
+} from '../lib/claude-settings.js'
 import { getActiveProfile } from '../profile.js'
 import {
   collectExistingCodeNames,
@@ -101,6 +105,21 @@ covertCommand
       console.log(`Config stored in ${getCovertOpsConfigPath()}`)
       console.log('No files written to the project repo.')
       console.log()
+
+      // Prompt to install the Claude Code Stop hook (user-local settings file)
+      const installHook = await confirm({
+        message:
+          'Install the Claude Code Stop hook in this project? (Writes to `.claude/settings.local.json` so it stays user-local; records agent-session transcripts locally.)',
+        default: true,
+      })
+      if (installHook) {
+        const projectState = getProjectState(process.cwd())
+        if (projectState != null) {
+          const settingsPath = getProjectSettingsPath(projectState)
+          installNaholoHooks(settingsPath)
+          console.log(`Naholo hooks installed in ${settingsPath}`)
+        }
+      }
 
       // Prompt to install core skills
       const installCore = await confirm({

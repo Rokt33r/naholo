@@ -5,6 +5,10 @@ import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
+import {
+  getProjectSettingsPath,
+  installNaholoHooks,
+} from '../lib/claude-settings.js'
 import { getProjectState } from '../lib/project-state.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -79,7 +83,22 @@ export const initCommand = new Command('init')
       console.log(`Project initialized: ${selectedProject.name}`)
       console.log()
 
-      // 5. Prompt to install core skills
+      // 5. Prompt to install the Claude Code Stop hook
+      const installHook = await confirm({
+        message:
+          'Install the Claude Code Stop hook in this project? (Records agent-session transcripts locally; upload is gated by `uploadTranscriptsOnExfil` in the project config.)',
+        default: true,
+      })
+      if (installHook) {
+        const projectState = getProjectState(process.cwd())
+        if (projectState != null) {
+          const settingsPath = getProjectSettingsPath(projectState)
+          installNaholoHooks(settingsPath)
+          console.log(`Naholo hooks installed in ${settingsPath}`)
+        }
+      }
+
+      // 6. Prompt to install core skills
       const installCore = await confirm({
         message: 'Install core skills?',
         default: true,
