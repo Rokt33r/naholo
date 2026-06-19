@@ -300,7 +300,7 @@ Plan adjusted for OP #42: "Implement user auth"
 
 Next:
 
-- Looks good → run `/splash` to ship TASK 1
+- Looks good → run `/splash` to ship [TASK 1]({operationDir}/notes/OPERATION.md#L<line>)
 - Plan adjustment (insert, drop, split, retitle, rewrite unfinished tasks) → re-run `/opord "freeform instructions"` or edit OPERATION ORDER directly
 - Direction change → re-run `/warno "freeform instructions"` to revise the WARNO
 - Optionally → `/sitrep` to push current plan to the server
