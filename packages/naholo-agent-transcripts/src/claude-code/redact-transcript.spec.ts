@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 
-import { pruneTranscriptForDownload } from './prune-transcript'
+import { redactTranscript } from './redact-transcript'
 
-describe('pruneTranscriptForDownload', () => {
+describe('redactTranscript', () => {
   it('preserves keep-list strings verbatim and redacts text content', () => {
     const input = JSON.stringify({
       type: 'assistant',
@@ -17,7 +17,7 @@ describe('pruneTranscriptForDownload', () => {
         content: [{ type: 'text', text: 'hello world' }],
       },
     })
-    const parsed = JSON.parse(pruneTranscriptForDownload(input))
+    const parsed = JSON.parse(redactTranscript(input))
     expect(parsed.type).toBe('assistant')
     expect(parsed.timestamp).toBe('2026-06-15T15:34:58.678Z')
     expect(parsed.userType).toBe('external')
@@ -44,7 +44,7 @@ describe('pruneTranscriptForDownload', () => {
         ],
       },
     })
-    const parsed = JSON.parse(pruneTranscriptForDownload(input))
+    const parsed = JSON.parse(redactTranscript(input))
     const block = parsed.message.content[0]
     expect(block.type).toBe('tool_use')
     expect(block.name).toBe('Bash')
@@ -69,7 +69,7 @@ describe('pruneTranscriptForDownload', () => {
         sessionId: uuid2,
       }),
     ].join('\n')
-    const out = pruneTranscriptForDownload(lines).split('\n')
+    const out = redactTranscript(lines).split('\n')
     const r0 = JSON.parse(out[0])
     const r1 = JSON.parse(out[1])
 
@@ -92,7 +92,7 @@ describe('pruneTranscriptForDownload', () => {
         ],
       },
     })
-    const parsed = JSON.parse(pruneTranscriptForDownload(input))
+    const parsed = JSON.parse(redactTranscript(input))
     expect(parsed.message.id).toBe('_uuid_1_')
     expect(parsed.message.content[0].id).toBe('_uuid_2_')
     expect(parsed.message.content[1].tool_use_id).toBe('_uuid_2_')
@@ -101,8 +101,8 @@ describe('pruneTranscriptForDownload', () => {
   it('resets the id map between separate calls', () => {
     const uuid = '019ecbeb-f374-7788-9b44-0a6469952f60'
     const line = JSON.stringify({ uuid })
-    const a = JSON.parse(pruneTranscriptForDownload(line))
-    const b = JSON.parse(pruneTranscriptForDownload(line))
+    const a = JSON.parse(redactTranscript(line))
+    const b = JSON.parse(redactTranscript(line))
     expect(a.uuid).toBe('_uuid_1_')
     expect(b.uuid).toBe('_uuid_1_')
   })
@@ -127,7 +127,7 @@ describe('pruneTranscriptForDownload', () => {
         is_error: false,
       },
     })
-    const parsed = JSON.parse(pruneTranscriptForDownload(input))
+    const parsed = JSON.parse(redactTranscript(input))
     const block = parsed.message.content[0]
     expect(block.type).toBe('tool_result')
     expect(block.tool_use_id).toBe('_uuid_1_')
@@ -148,7 +148,7 @@ describe('pruneTranscriptForDownload', () => {
       gitBranch: 'feature/secret',
       summary: 'private',
     })
-    const parsed = JSON.parse(pruneTranscriptForDownload(input))
+    const parsed = JSON.parse(redactTranscript(input))
     expect(parsed.type).toBe('user')
     expect(parsed.surpriseField).toBe('_redacted_')
     expect(parsed.cwd).toBe('_redacted_')
@@ -159,21 +159,19 @@ describe('pruneTranscriptForDownload', () => {
 
   it('marks invalid JSON lines with a pruneError and continues', () => {
     const input = 'not valid json\n' + JSON.stringify({ type: 'user' })
-    const out = pruneTranscriptForDownload(input).split('\n')
+    const out = redactTranscript(input).split('\n')
     expect(JSON.parse(out[0])).toEqual({ pruneError: 'invalid_json' })
     expect(JSON.parse(out[1]).type).toBe('user')
   })
 
   it('marks non-object top-level values with a pruneError', () => {
-    const out = pruneTranscriptForDownload(JSON.stringify('just a string'))
+    const out = redactTranscript(JSON.stringify('just a string'))
     expect(JSON.parse(out)).toEqual({ pruneError: 'non_object' })
   })
 
   it('preserves the trailing newline when input has one', () => {
-    expect(pruneTranscriptForDownload('')).toBe('')
-    const withNl = pruneTranscriptForDownload(
-      JSON.stringify({ type: 'user' }) + '\n',
-    )
+    expect(redactTranscript('')).toBe('')
+    const withNl = redactTranscript(JSON.stringify({ type: 'user' }) + '\n')
     expect(withNl.endsWith('\n')).toBe(true)
   })
 })

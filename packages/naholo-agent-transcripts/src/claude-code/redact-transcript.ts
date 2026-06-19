@@ -1,4 +1,4 @@
-export function pruneTranscriptForDownload(transcriptText: string): string {
+export function redactTranscript(transcriptText: string): string {
   const idMap = new Map<string, string>()
   const out: string[] = []
   for (const line of transcriptText.split('\n')) {

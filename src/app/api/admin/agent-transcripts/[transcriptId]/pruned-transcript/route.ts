@@ -4,7 +4,7 @@ import { requireAppAdmin } from '@/server/auth/permissions'
 import { db } from '@/server/db'
 import { operationAgentTranscripts } from '@/server/db/schema'
 import { getFileStorageAdapter } from '@/server/file-storage'
-import { pruneTranscriptForDownload } from 'naholo-agent-transcripts/claude-code'
+import { redactTranscript } from 'naholo-agent-transcripts/claude-code'
 
 export async function GET(
   _request: Request,
@@ -31,9 +31,9 @@ export async function GET(
 
   const key = `agent-transcripts/${row.projectId}/${row.operationId}/${row.transcriptId}`
   const transcript = await getFileStorageAdapter().getObject(key)
-  const pruned = pruneTranscriptForDownload(transcript)
+  const redacted = redactTranscript(transcript)
 
-  return new NextResponse(pruned, {
+  return new NextResponse(redacted, {
     status: 200,
     headers: {
       'Content-Type': 'application/x-ndjson',

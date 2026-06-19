@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { Command } from 'commander'
-import { pruneTranscriptForDownload } from 'naholo-agent-transcripts/claude-code'
+import { redactTranscript } from 'naholo-agent-transcripts/claude-code'
 import { getCliContext } from '../../context.js'
 import {
   NoInfiledOpCliError,
@@ -44,8 +44,7 @@ export const exfilCommand = new Command('exfil')
           continue
         }
         const raw = fs.readFileSync(entry.transcript_path, 'utf-8')
-        const transcript =
-          mode === 'redacted' ? pruneTranscriptForDownload(raw) : raw
+        const transcript = mode === 'redacted' ? redactTranscript(raw) : raw
         await client.recordAgentTranscript(
           projectSlug,
           opNum,
@@ -62,7 +61,7 @@ export const exfilCommand = new Command('exfil')
         for (const subagent of entry.subagents) {
           const subRaw = fs.readFileSync(subagent.transcript_path, 'utf-8')
           const subTranscript =
-            mode === 'redacted' ? pruneTranscriptForDownload(subRaw) : subRaw
+            mode === 'redacted' ? redactTranscript(subRaw) : subRaw
           const syntheticId = `${entry.transcript_id}-subagent-${subagent.agentId}`
           await client.recordAgentTranscript(projectSlug, opNum, syntheticId, {
             title: null,
