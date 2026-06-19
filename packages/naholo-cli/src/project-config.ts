@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { stringify } from 'yaml'
+import { parse, stringify } from 'yaml'
 
 export type UploadTranscriptsOnExfil = 'none' | 'redacted' | 'full'
 
@@ -28,4 +28,15 @@ export function writeGitignoreInCwdNaholoDir(): void {
     'local/\n',
     'utf-8',
   )
+}
+
+export function setProjectConfigUploadMode(
+  rootDir: string,
+  mode: UploadTranscriptsOnExfil,
+): void {
+  const configPath = path.join(rootDir, PROJECT_CONFIG_DIR, PROJECT_CONFIG_FILE)
+  const raw = fs.readFileSync(configPath, 'utf-8')
+  const config = parse(raw) as ProjectConfig
+  config.uploadTranscriptsOnExfil = mode
+  fs.writeFileSync(configPath, stringify(config), 'utf-8')
 }

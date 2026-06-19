@@ -2,7 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { parse, stringify } from 'yaml'
 import { ensureNaholoHomeDir, getNaholoHomeDir } from './global-config.js'
-import type { ProjectConfig } from './project-config.js'
+import type {
+  ProjectConfig,
+  UploadTranscriptsOnExfil,
+} from './project-config.js'
 
 export interface CovertOpsProjectConfig extends ProjectConfig {
   codeName: string
@@ -41,6 +44,19 @@ export function writeCovertOpsConfig(config: CovertOpsConfig): void {
 
 export function collectExistingCodeNames(config: CovertOpsConfig): Set<string> {
   return new Set(Object.values(config.projects).map((p) => p.codeName))
+}
+
+export function setCovertProjectConfigUploadMode(
+  cwd: string,
+  mode: UploadTranscriptsOnExfil,
+): void {
+  const config = readCovertOpsConfig()
+  const entry = config.projects[cwd]
+  if (entry == null) {
+    throw new Error(`No covert config entry for ${cwd}`)
+  }
+  entry.uploadTranscriptsOnExfil = mode
+  writeCovertOpsConfig(config)
 }
 
 export function removeCovertOpsProjectConfig(targetPath: string): boolean {

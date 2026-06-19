@@ -8,6 +8,7 @@ import { installHooksCommand } from './commands/install-hooks.js'
 import { installSkillsCommand } from './commands/install-skills.js'
 import { loginCommand } from './commands/login.js'
 import { mcpCommand } from './commands/mcp.js'
+import { projectConfigCommand } from './commands/project-config.js'
 import { agentCommand } from './commands/agent/index.js'
 import { configCommand } from './commands/config/index.js'
 import { covertCommand } from './commands/covert.js'
@@ -31,6 +32,7 @@ program.addCommand(installSkillsCommand)
 program.addCommand(loginCommand)
 program.addCommand(logoutCommand)
 program.addCommand(mcpCommand)
+program.addCommand(projectConfigCommand)
 program.addCommand(agentCommand)
 program.addCommand(configCommand)
 program.addCommand(covertCommand)
