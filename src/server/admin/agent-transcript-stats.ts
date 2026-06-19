@@ -5,7 +5,7 @@ import {
   type AgentTranscriptStatsV1,
   CLAUDE_CODE_V1,
   aggregateClaudeCodeV1,
-} from 'naholo-agent-transcript-stats/claude-code'
+} from 'naholo-agent-transcripts/claude-code'
 import { db } from '../db'
 import { operationAgentTranscripts, operations, projects } from '../db/schema'
 import { getFileStorageAdapter } from '../file-storage'

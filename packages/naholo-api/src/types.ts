@@ -153,7 +153,7 @@ export type UserApiToken = {
 
 // ---- Agent transcripts ----
 
-import type { AgentTranscriptStatsV1 } from 'naholo-agent-transcript-stats/claude-code'
+import type { AgentTranscriptStatsV1 } from 'naholo-agent-transcripts/claude-code'
 
 export type AgentTranscriptSummary = {
   id: string

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { AgentTranscriptStatsV1 } from 'naholo-agent-transcript-stats/claude-code'
+import type { AgentTranscriptStatsV1 } from 'naholo-agent-transcripts/claude-code'
 import { fetcher } from '@/lib/fetcher'
 
 export type AgentTranscriptSummary = {

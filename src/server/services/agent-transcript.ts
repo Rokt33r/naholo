@@ -3,11 +3,11 @@ import { and, asc, eq } from 'drizzle-orm'
 import type {
   AgentTranscriptStatsError,
   AgentTranscriptStatsV1,
-} from 'naholo-agent-transcript-stats/claude-code'
+} from 'naholo-agent-transcripts/claude-code'
 import {
   CLAUDE_CODE_V1,
   aggregateClaudeCodeV1,
-} from 'naholo-agent-transcript-stats/claude-code'
+} from 'naholo-agent-transcripts/claude-code'
 import { db } from '../db'
 import { operationAgentTranscripts } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'

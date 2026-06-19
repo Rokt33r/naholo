@@ -1,4 +1,4 @@
-import type { ModelTokenUsage } from 'naholo-agent-transcript-stats/claude-code'
+import type { ModelTokenUsage } from 'naholo-agent-transcripts/claude-code'
 import {
   calculateCost,
   calculateWeightedTokens,

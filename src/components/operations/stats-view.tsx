@@ -5,7 +5,7 @@ import {
   CLAUDE_CODE_V1,
   type AgentTranscriptStatsV1,
   type ModelTokenUsage,
-} from 'naholo-agent-transcript-stats/claude-code'
+} from 'naholo-agent-transcripts/claude-code'
 import {
   calculateCost,
   calculateWeightedTokens,

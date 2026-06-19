@@ -62,7 +62,7 @@ Run these after editing. No permission prompt needed for any of them.
   - Edits under `src/` (Next.js app) → `pnpm typecheck`
   - Edits under `packages/naholo-cli/` → `pnpm --filter @naholo/cli typecheck`
   - Edits under `packages/naholo-api/` → `pnpm --filter naholo-api typecheck`
-  - Edits under `packages/naholo-agent-transcript-stats/` → `pnpm --filter naholo-agent-transcript-stats typecheck`
+  - Edits under `packages/naholo-agent-transcripts/` → `pnpm --filter naholo-agent-transcripts typecheck`
   - Edits spanning multiple workspaces → run the script for each touched workspace.
 
 ## Domain Model

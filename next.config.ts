@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   deploymentId: process.env.DEPLOYMENT_ID,
   pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
-  transpilePackages: ['naholo-agent-transcript-stats'],
+  transpilePackages: ['naholo-agent-transcripts'],
   experimental: {
     webpackMemoryOptimizations: true,
   },

@@ -11,7 +11,7 @@ import {
 import type {
   AgentTranscriptStatsV1,
   AgentTranscriptStatsError,
-} from 'naholo-agent-transcript-stats/claude-code'
+} from 'naholo-agent-transcripts/claude-code'
 import { uuidV7IdColumn } from '../schema-helpers'
 import { relations } from 'drizzle-orm'
 import { operations } from './operations'

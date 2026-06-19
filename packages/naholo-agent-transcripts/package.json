@@ -1,5 +1,5 @@
 {
-  "name": "naholo-agent-transcript-stats",
+  "name": "naholo-agent-transcripts",
   "version": "0.1.0",
   "type": "module",
   "exports": {

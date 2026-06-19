@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { getDefaultParser } from '../src/claude-code/default-parser.js'
-import type { AgentTranscriptStatsError } from '../src/claude-code/types.js'
+import { getDefaultParser } from '../src/claude-code/default-parser'
+import type { AgentTranscriptStatsError } from '../src/claude-code/types'
 
 type EntryErrorRow = {
   lineNumber: number
@@ -12,7 +12,7 @@ function main(): void {
   const arg = process.argv[2]
   if (arg == null || arg.length === 0) {
     console.error(
-      'Usage: pnpm --filter naholo-agent-transcript-stats inspect-transcript <path-to-transcript.jsonl>',
+      'Usage: pnpm --filter naholo-agent-transcripts inspect-transcript <path-to-transcript.jsonl>',
     )
     process.exit(2)
   }
