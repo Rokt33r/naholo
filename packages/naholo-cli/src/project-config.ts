@@ -2,9 +2,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { stringify } from 'yaml'
 
+export type UploadTranscriptsOnExfil = 'none' | 'redacted' | 'full'
+
 export interface ProjectConfig {
   projectId: string
   projectSlug: string
+  uploadTranscriptsOnExfil?: UploadTranscriptsOnExfil
 }
 
 const PROJECT_CONFIG_DIR = '.naholo'
