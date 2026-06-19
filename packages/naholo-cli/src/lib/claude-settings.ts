@@ -1,5 +1,7 @@
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
+import type { ProjectState } from './project-state.js'
 
 const STOP_HOOK_COMMAND = 'naholo agent claude-code-stop'
 
@@ -104,4 +106,75 @@ export function installNaholoHooks(
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
   return 'added'
+}
+
+export function getProjectSettingsPath(projectState: ProjectState): string {
+  const filename =
+    projectState.kind === 'covert' ? 'settings.local.json' : 'settings.json'
+  return path.join(projectState.root, '.claude', filename)
+}
+
+export function uninstallGlobalNaholoHooks(): boolean {
+  const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
+  if (!fs.existsSync(settingsPath)) {
+    return false
+  }
+  const settings = readSettings(settingsPath)
+  const removed = removeCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
+  if (!removed) {
+    return false
+  }
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+  return true
+}
+
+function removeCommandHook(
+  settings: ClaudeSettings,
+  event: string,
+  command: string,
+): boolean {
+  const entries = settings.hooks?.[event]
+  if (!Array.isArray(entries)) {
+    return false
+  }
+  let changed = false
+  const next: HookEntry[] = []
+  for (const entry of entries) {
+    if (entry == null || typeof entry !== 'object') {
+      next.push(entry as HookEntry)
+      continue
+    }
+    const inner = (entry as HookEntry).hooks
+    if (!Array.isArray(inner)) {
+      next.push(entry as HookEntry)
+      continue
+    }
+    const remaining = inner.filter(
+      (h) =>
+        !(
+          h != null &&
+          typeof h === 'object' &&
+          h.type === 'command' &&
+          h.command === command
+        ),
+    )
+    if (remaining.length === inner.length) {
+      next.push(entry as HookEntry)
+      continue
+    }
+    changed = true
+    if (remaining.length > 0) {
+      next.push({ ...(entry as HookEntry), hooks: remaining })
+    }
+  }
+  if (!changed) {
+    return false
+  }
+  const hooks = settings.hooks as NonNullable<ClaudeSettings['hooks']>
+  if (next.length > 0) {
+    hooks[event] = next
+  } else {
+    delete hooks[event]
+  }
+  return true
 }
