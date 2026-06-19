@@ -114,8 +114,7 @@ export function getProjectSettingsPath(projectState: ProjectState): string {
   return path.join(projectState.root, '.claude', filename)
 }
 
-export function uninstallGlobalNaholoHooks(): boolean {
-  const settingsPath = path.join(os.homedir(), '.claude', 'settings.json')
+export function uninstallNaholoHooks(settingsPath: string): boolean {
   if (!fs.existsSync(settingsPath)) {
     return false
   }
@@ -126,6 +125,12 @@ export function uninstallGlobalNaholoHooks(): boolean {
   }
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
   return true
+}
+
+export function uninstallGlobalNaholoHooks(): boolean {
+  return uninstallNaholoHooks(
+    path.join(os.homedir(), '.claude', 'settings.json'),
+  )
 }
 
 function removeCommandHook(

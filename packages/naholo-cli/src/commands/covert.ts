@@ -10,6 +10,7 @@ import { CliError, withErrorHandling } from '../errors.js'
 import {
   getProjectSettingsPath,
   installNaholoHooks,
+  uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -20,6 +21,7 @@ import {
   removeCovertOpsProjectConfig,
   writeCovertOpsConfig,
 } from '../covert-config.js'
+import type { UploadTranscriptsOnExfil } from '../project-config.js'
 import { generateCodeName } from '../lib/codename.js'
 import { getProjectState } from '../lib/project-state.js'
 import { installSkills } from './install-skills.js'
@@ -83,7 +85,19 @@ covertCommand
         })),
       })
 
-      // 3. Write covert config
+      // 3. Prompt for transcript upload mode
+      const uploadTranscriptsOnExfil = await select<UploadTranscriptsOnExfil>({
+        message:
+          'Send agent-session transcripts to the Naholo server on exfil?',
+        default: 'none',
+        choices: [
+          { name: 'No', value: 'none' },
+          { name: 'Redacted (stats only)', value: 'redacted' },
+          { name: 'Full', value: 'full' },
+        ],
+      })
+
+      // 4. Write covert config with the chosen upload mode (including 'none')
       const cwd = process.cwd()
       const config = readCovertOpsConfig()
       const codeName = generateCodeName(collectExistingCodeNames(config))
@@ -91,6 +105,7 @@ covertCommand
         projectId: selectedProject.id,
         projectSlug: selectedProject.slug,
         codeName,
+        uploadTranscriptsOnExfil,
       }
       writeCovertOpsConfig(config)
 
@@ -106,16 +121,16 @@ covertCommand
       console.log('No files written to the project repo.')
       console.log()
 
-      // Prompt to install the Claude Code Stop hook (user-local settings file)
-      const installHook = await confirm({
-        message:
-          'Install the Claude Code Stop hook in this project? (Writes to `.claude/settings.local.json` so it stays user-local; records agent-session transcripts locally.)',
-        default: true,
-      })
-      if (installHook) {
-        const projectState = getProjectState(process.cwd())
-        if (projectState != null) {
-          const settingsPath = getProjectSettingsPath(projectState)
+      // 5. Install or uninstall the Claude Code Stop hook based on the chosen upload mode
+      const projectState = getProjectState(process.cwd())
+      if (projectState != null) {
+        const settingsPath = getProjectSettingsPath(projectState)
+        if (uploadTranscriptsOnExfil === 'none') {
+          const removed = uninstallNaholoHooks(settingsPath)
+          if (removed) {
+            console.log(`Removed Naholo hook from ${settingsPath}`)
+          }
+        } else {
           installNaholoHooks(settingsPath)
           console.log(`Naholo hooks installed in ${settingsPath}`)
         }

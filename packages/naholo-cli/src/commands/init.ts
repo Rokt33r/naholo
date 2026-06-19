@@ -8,12 +8,15 @@ import { CliError, withErrorHandling } from '../errors.js'
 import {
   getProjectSettingsPath,
   installNaholoHooks,
+  uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
 import { getProjectState } from '../lib/project-state.js'
 import { getActiveProfile } from '../profile.js'
 import {
   writeProjectConfigInCwdNaholoDir,
   writeGitignoreInCwdNaholoDir,
+  type ProjectConfig,
+  type UploadTranscriptsOnExfil,
 } from '../project-config.js'
 import { installSkills } from './install-skills.js'
 
@@ -70,35 +73,49 @@ export const initCommand = new Command('init')
         })),
       })
 
-      // 3. Write .naholo/config.yml
-      writeProjectConfigInCwdNaholoDir({
-        projectId: selectedProject.id,
-        projectSlug: selectedProject.slug,
+      // 3. Prompt for transcript upload mode
+      const uploadTranscriptsOnExfil = await select<UploadTranscriptsOnExfil>({
+        message:
+          'Send agent-session transcripts to the Naholo server on exfil?',
+        default: 'none',
+        choices: [
+          { name: 'No', value: 'none' },
+          { name: 'Redacted (stats only)', value: 'redacted' },
+          { name: 'Full', value: 'full' },
+        ],
       })
 
-      // 4. Write .naholo/.gitignore
+      // 4. Write .naholo/config.yml with the chosen upload mode (including 'none')
+      const projectConfig: ProjectConfig = {
+        projectId: selectedProject.id,
+        projectSlug: selectedProject.slug,
+        uploadTranscriptsOnExfil,
+      }
+      writeProjectConfigInCwdNaholoDir(projectConfig)
+
+      // 5. Write .naholo/.gitignore
       writeGitignoreInCwdNaholoDir()
 
       console.log()
       console.log(`Project initialized: ${selectedProject.name}`)
       console.log()
 
-      // 5. Prompt to install the Claude Code Stop hook
-      const installHook = await confirm({
-        message:
-          'Install the Claude Code Stop hook in this project? (Records agent-session transcripts locally; upload is gated by `uploadTranscriptsOnExfil` in the project config.)',
-        default: true,
-      })
-      if (installHook) {
-        const projectState = getProjectState(process.cwd())
-        if (projectState != null) {
-          const settingsPath = getProjectSettingsPath(projectState)
+      // 6. Install or uninstall the Claude Code Stop hook based on the chosen upload mode
+      const projectState = getProjectState(process.cwd())
+      if (projectState != null) {
+        const settingsPath = getProjectSettingsPath(projectState)
+        if (uploadTranscriptsOnExfil === 'none') {
+          const removed = uninstallNaholoHooks(settingsPath)
+          if (removed) {
+            console.log(`Removed Naholo hook from ${settingsPath}`)
+          }
+        } else {
           installNaholoHooks(settingsPath)
           console.log(`Naholo hooks installed in ${settingsPath}`)
         }
       }
 
-      // 6. Prompt to install core skills
+      // 7. Prompt to install core skills
       const installCore = await confirm({
         message: 'Install core skills?',
         default: true,
