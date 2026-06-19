@@ -1,5 +1,3 @@
-import 'server-only'
-
 export function pruneTranscriptForDownload(transcriptText: string): string {
   const idMap = new Map<string, string>()
   const out: string[] = []

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { requireAppAdmin } from '@/server/auth/permissions'
 import { db } from '@/server/db'
 import { operationAgentTranscripts } from '@/server/db/schema'
 import { getFileStorageAdapter } from '@/server/file-storage'
-import { pruneTranscriptForDownload } from '@/server/admin/prune-transcript'
+import { pruneTranscriptForDownload } from 'naholo-agent-transcripts/claude-code'
 
 export async function GET(
   _request: Request,
