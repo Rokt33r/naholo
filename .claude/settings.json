@@ -8,7 +8,21 @@
       "Edit(/.claude/skills/sitrep/**)",
       "Bash(pnpm test-types *)",
       "Bash(pnpm format *)",
-      "Bash(naholo agent *)"
+      "Bash(naholo agent *)",
+      "Bash(pnpm vitest *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "naholo agent claude-code-stop"
+          }
+        ]
+      }
     ]
   }
 }
