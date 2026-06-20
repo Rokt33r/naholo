@@ -5,7 +5,7 @@ import type { OperationLog } from 'naholo-api/types'
 import { stringify as yamlStringify } from 'yaml'
 import { getCliContext } from '../../context.js'
 import {
-  NoInfiledOpCliError,
+  NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
 } from '../../errors.js'
@@ -25,12 +25,12 @@ function writeLogsYaml(
     author: log.projectOperator?.name ?? null,
     content: log.content,
   }))
-  const logsPath = path.join(projectState.getInfiledDir(), 'LOGS.yml')
+  const logsPath = path.join(projectState.getInfilledDir(), 'LOGS.yml')
   fs.writeFileSync(logsPath, yamlStringify(entries))
 }
 
 export const reinfilCommand = new Command('reinfil')
-  .description('Refresh the currently infiled operation from the server')
+  .description('Refresh the currently infilled operation from the server')
   .action(
     withErrorHandling(async () => {
       const cliContext = getCliContext()
@@ -40,7 +40,7 @@ export const reinfilCommand = new Command('reinfil')
       }
       const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new NoInfiledOpCliError()
+        throw new NoInfilledOpCliError()
       }
       const opNum = opYml.number
       const projectSlug = projectState.config.projectSlug
@@ -143,7 +143,7 @@ export const reinfilCommand = new Command('reinfil')
         console.log(`  Conflicts: ${conflictNames}`)
       }
       console.log(`  Logs: ${serverLogs.length} entries`)
-      console.log(`  Local: ${projectState.getInfiledDir()}/`)
+      console.log(`  Local: ${projectState.getInfilledDir()}/`)
     }),
   )
 

@@ -33,9 +33,9 @@ export const infilCommand = new Command('infil')
         throw new NoProjectStateCliError()
       }
 
-      const infiledDir = projectState.getInfiledDir()
-      if (fs.existsSync(infiledDir)) {
-        throw new CliError('Already infiled. Run "naholo agent exfil" first.')
+      const infilledDir = projectState.getInfilledDir()
+      if (fs.existsSync(infilledDir)) {
+        throw new CliError('Already infilled. Run "naholo agent exfil" first.')
       }
 
       const projectSlug = projectState.config.projectSlug
@@ -76,14 +76,14 @@ export const infilCommand = new Command('infil')
         content: log.content,
       }))
       fs.writeFileSync(
-        path.join(infiledDir, 'LOGS.yml'),
+        path.join(infilledDir, 'LOGS.yml'),
         yamlStringify(logEntries),
       )
 
       projectState.writeOpYml({ number: opNum, title: serverOperation.title })
 
       const doneCount = serverTasks.filter((o) => o.done).length
-      console.log(`Infiled operation #${opNum}`)
+      console.log(`Infilled operation #${opNum}`)
       console.log(`  Title: ${serverOperation.title}`)
       console.log(
         `  Tasks: ${serverTasks.length} (${doneCount} done, ${serverTasks.length - doneCount} remaining)`,
@@ -92,6 +92,6 @@ export const infilCommand = new Command('infil')
         `  Notes: ${serverNotes.length}${serverNotes.length > 0 ? ` (${serverNotes.map((n) => n.name).join(', ')})` : ''}`,
       )
       console.log(`  Logs: ${serverLogs.length} entries`)
-      console.log(`  Local: ${infiledDir}/`)
+      console.log(`  Local: ${infilledDir}/`)
     }),
   )

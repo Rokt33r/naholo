@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
 import {
   CliError,
-  NoInfiledOpCliError,
+  NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
 } from '../../errors.js'
@@ -10,7 +10,7 @@ import { getProjectState } from '../../lib/project-state.js'
 import { pushOp } from '../../lib/push-op.js'
 
 export const sitrepCommand = new Command('sitrep')
-  .description('Push the infiled operation and post an operation log')
+  .description('Push the infilled operation and post an operation log')
   .requiredOption('--log <content>', 'Log content posted to the operation feed')
   .action(
     withErrorHandling(async (options: { log: string }) => {
@@ -26,7 +26,7 @@ export const sitrepCommand = new Command('sitrep')
       }
       const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new NoInfiledOpCliError()
+        throw new NoInfilledOpCliError()
       }
       const opNum = opYml.number
       const projectSlug = projectState.config.projectSlug

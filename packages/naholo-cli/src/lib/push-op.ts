@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { CliContext } from '../context.js'
-import { NoInfiledOpCliError } from '../errors.js'
+import { NoInfilledOpCliError } from '../errors.js'
 import type { ProjectState } from './project-state.js'
 import { parseTasksMarkdown } from './tasks-markdown.js'
 
@@ -20,12 +20,12 @@ export async function pushOp(
 ): Promise<PushResult> {
   const opYml = projectState.readOpYml()
   if (opYml == null) {
-    throw new NoInfiledOpCliError()
+    throw new NoInfilledOpCliError()
   }
   const opNum = opYml.number
   const { client } = cliContext
   const projectSlug = projectState.config.projectSlug
-  const localDir = projectState.getInfiledDir()
+  const localDir = projectState.getInfilledDir()
 
   // --- Sync tasks ---
   const tasksPath = projectState.getTasksPath()

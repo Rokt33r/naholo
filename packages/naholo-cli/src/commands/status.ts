@@ -33,15 +33,15 @@ export const statusCommand = new Command('status')
 
       const opStatus = projectState.getOpStatusFields()
       if (opStatus != null) {
-        const infiledOp: Record<string, unknown> = {
+        const infilledOp: Record<string, unknown> = {
           number: opStatus.currentOp,
           title: opStatus.opTitle,
           path: opStatus.opPath,
         }
         if (opStatus.opNotes.length > 0) {
-          infiledOp.notes = opStatus.opNotes
+          infilledOp.notes = opStatus.opNotes
         }
-        payload.infiledOp = infiledOp
+        payload.infilledOp = infilledOp
       }
 
       process.stdout.write(yamlStringify(payload))

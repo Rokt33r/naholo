@@ -47,16 +47,16 @@ export class ProjectState {
     return path.join(this.root, '.naholo/local')
   }
 
-  getInfiledDir(): string {
-    return path.join(this.getNaholoLocalDir(), 'infiled')
+  getInfilledDir(): string {
+    return path.join(this.getNaholoLocalDir(), 'infilled')
   }
 
   getNotesDir(): string {
-    return path.join(this.getInfiledDir(), 'notes')
+    return path.join(this.getInfilledDir(), 'notes')
   }
 
   getBaseDir(): string {
-    return path.join(this.getInfiledDir(), '.base')
+    return path.join(this.getInfilledDir(), '.base')
   }
 
   getBaseNotesDir(): string {
@@ -64,7 +64,7 @@ export class ProjectState {
   }
 
   getTasksPath(): string {
-    return path.join(this.getInfiledDir(), 'TASKS.md')
+    return path.join(this.getInfilledDir(), 'TASKS.md')
   }
 
   getBaseTasksPath(): string {
@@ -72,11 +72,11 @@ export class ProjectState {
   }
 
   getOpYmlPath(): string {
-    return path.join(this.getInfiledDir(), 'op.yml')
+    return path.join(this.getInfilledDir(), 'op.yml')
   }
 
   getAgentTranscriptsYmlPath(): string {
-    return path.join(this.getInfiledDir(), 'agent-transcripts.yml')
+    return path.join(this.getInfilledDir(), 'agent-transcripts.yml')
   }
 
   readOpYml(): OpYml | null {
@@ -97,7 +97,7 @@ export class ProjectState {
   }
 
   writeOpYml(info: OpYml): void {
-    fs.mkdirSync(this.getInfiledDir(), { recursive: true })
+    fs.mkdirSync(this.getInfilledDir(), { recursive: true })
     fs.writeFileSync(this.getOpYmlPath(), yamlStringify(info))
   }
 
@@ -106,10 +106,10 @@ export class ProjectState {
     if (opYml == null) {
       return null
     }
-    const infiledDir = this.getInfiledDir()
-    const opPath = infiledDir.endsWith(path.sep)
-      ? infiledDir
-      : infiledDir + path.sep
+    const infilledDir = this.getInfilledDir()
+    const opPath = infilledDir.endsWith(path.sep)
+      ? infilledDir
+      : infilledDir + path.sep
     const notesDir = this.getNotesDir()
     const opNotes = fs.existsSync(notesDir)
       ? fs

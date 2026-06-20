@@ -15,7 +15,7 @@ interface HookPayload {
 
 export const claudeCodeStopCommand = new Command('claude-code-stop')
   .description(
-    'Claude Code Stop hook handler: register the current agent session against the infiled op',
+    'Claude Code Stop hook handler: register the current agent session against the infilled op',
   )
   .action(
     withErrorHandling(async () => {

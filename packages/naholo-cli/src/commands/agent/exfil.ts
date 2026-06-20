@@ -3,7 +3,7 @@ import { Command } from 'commander'
 import { redactTranscript } from 'naholo-agent-transcripts/claude-code'
 import { getCliContext } from '../../context.js'
 import {
-  NoInfiledOpCliError,
+  NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
 } from '../../errors.js'
@@ -12,7 +12,7 @@ import { pushOp } from '../../lib/push-op.js'
 
 export const exfilCommand = new Command('exfil')
   .description(
-    'Push, drain registered transcripts, post a one-sentence log, optionally close, and remove the infiled dir',
+    'Push, drain registered transcripts, post a one-sentence log, optionally close, and remove the infilled dir',
   )
   .option('--close', 'Close the operation after syncing')
   .action(
@@ -24,11 +24,11 @@ export const exfilCommand = new Command('exfil')
       }
       const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new NoInfiledOpCliError()
+        throw new NoInfilledOpCliError()
       }
       const opNum = opYml.number
       const close = options.close === true
-      const infiledDir = projectState.getInfiledDir()
+      const infilledDir = projectState.getInfilledDir()
       const projectSlug = projectState.config.projectSlug
       const { client, currentProfile } = cliContext
       const baseUrl = currentProfile.profile.baseUrl.replace(/\/$/, '')
@@ -84,7 +84,7 @@ export const exfilCommand = new Command('exfil')
         await client.closeOperation(projectSlug, opNum)
       }
 
-      fs.rmSync(infiledDir, { recursive: true, force: true })
+      fs.rmSync(infilledDir, { recursive: true, force: true })
 
       console.log(opUrl)
     }),

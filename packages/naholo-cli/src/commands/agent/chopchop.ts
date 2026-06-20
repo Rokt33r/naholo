@@ -4,7 +4,7 @@ import { Command } from 'commander'
 import { getCliContext } from '../../context.js'
 import {
   CliError,
-  NoInfiledOpCliError,
+  NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
 } from '../../errors.js'
@@ -31,7 +31,7 @@ export const chopchopCommand = new Command('chopchop')
       }
       const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new NoInfiledOpCliError()
+        throw new NoInfilledOpCliError()
       }
       const parentNumber = opYml.number
       const originalParentTitle = opYml.title
@@ -64,7 +64,7 @@ export const chopchopCommand = new Command('chopchop')
 
       if (chop.currentOp.number !== parentNumber) {
         throw new CliError(
-          `CHOP CURRENT OP number (#${chop.currentOp.number}) does not match the infiled OP (#${parentNumber}).`,
+          `CHOP CURRENT OP number (#${chop.currentOp.number}) does not match the infilled OP (#${parentNumber}).`,
         )
       }
 

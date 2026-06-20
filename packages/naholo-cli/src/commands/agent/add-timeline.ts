@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
 import {
-  NoInfiledOpCliError,
+  NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
 } from '../../errors.js'
@@ -20,7 +20,7 @@ function formatLocalTimestamp(date: Date): string {
 
 export const addTimelineCommand = new Command('add-timeline')
   .description(
-    "Append a bullet to the infiled operation's TIMELINE.md (skill-event log)",
+    "Append a bullet to the infilled operation's TIMELINE.md (skill-event log)",
   )
   .requiredOption(
     '-T, --type <type>',
@@ -35,7 +35,7 @@ export const addTimelineCommand = new Command('add-timeline')
       }
       const opYml = projectState.readOpYml()
       if (opYml == null) {
-        throw new NoInfiledOpCliError()
+        throw new NoInfilledOpCliError()
       }
 
       const notesDir = projectState.getNotesDir()

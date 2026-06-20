@@ -22,7 +22,7 @@ export const bootCommand = new Command('boot')
         throw new NoProjectStateCliError()
       }
       const opStatusBody =
-        projectState.renderOpStatusYaml() ?? 'No infiled operation.\n'
+        projectState.renderOpStatusYaml() ?? 'No infilled operation.\n'
       process.stdout.write(
         personalityBlock +
           `<manual>\n${manualText}\n</manual>\n\n` +

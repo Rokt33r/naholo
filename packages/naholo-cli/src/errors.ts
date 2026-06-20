@@ -14,10 +14,10 @@ export class NoProjectStateCliError extends CliError {
   }
 }
 
-export class NoInfiledOpCliError extends CliError {
+export class NoInfilledOpCliError extends CliError {
   constructor() {
-    super('No infiled operation. Run "naholo agent infil <n>" first.')
-    this.name = 'NoInfiledOpCliError'
+    super('No infilled operation. Run "naholo agent infil <n>" first.')
+    this.name = 'NoInfilledOpCliError'
   }
 }
 

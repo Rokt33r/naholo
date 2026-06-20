@@ -99,9 +99,9 @@ export function registerResources(
   )
 
   server.registerResource(
-    'local-infiled',
-    'naholo://local/infiled',
-    { description: 'Currently infiled operation' },
+    'local-infilled',
+    'naholo://local/infilled',
+    { description: 'Currently infilled operation' },
     async (uri) => {
       const opYml = projectState.readOpYml()
       const text = opYml == null ? '' : `#${opYml.number} ${opYml.title}`
