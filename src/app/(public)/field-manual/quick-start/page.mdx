@@ -11,25 +11,25 @@ export const metadata = {
   <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>Learn the cycle by running it once.</p>
 </div>
 
-The on-ramp. Follow it once, end to end, and you will have driven the full cycle — from a blank operation to a closed one with a reviewed after-action. Two surfaces are in play: the **web app**, where you capture intel and review what your agent did, and your **coding agent** — today [Claude Code](https://claude.com/claude-code); Codex on the way. The `naholo` CLI sits underneath them; you install it once and your agent drives it from there.
+Follow the on-ramp once, end to end, and you will have driven the full cycle from a blank operation to a closed one with a reviewed after-action. Two surfaces are in play: the **web app**, where you capture intel and review what your agent did, and your **coding agent**, [Claude Code](https://claude.com/claude-code); Codex is on the way. The `naholo` CLI sits underneath them. You install it once and your agent drives it from there.
 
 ## Prerequisites
 
-One-time gear (detail in [Readiness](/field-manual/readiness)):
+One-time gear (details under [Readiness](/field-manual/readiness)):
 
 - **Node.js LTS** for the `naholo` CLI.
 - **[Claude Code](https://claude.com/claude-code)** as your coding agent.
-- **VS Code + the Claude Code extension** — strongly recommended; the cycle's review windows hinge on hand-editing `OPERATION.md`.
+- **VS Code + the Claude Code extension** strongly recommended; the cycle's review windows hinge on hand-editing `OPERATION.md`.
 
 ## 1. Open a new operation
 
-Sign in to naholo, create a project, and open a new operation. Give it a title that names the problem, not the solution. Drop **logs** as you think — every requirement, link, or constraint goes in as a log. The agent reads every log when you infil, so don't squeeze the idea; let it land in pieces.
+Sign in to naholo, create a project, and open a new operation. Give it a title that names the problem, not the solution. Drop **logs** as you think of every pain, constraint, or reference. The agent reads every log when you infil, so don't squeeze the idea; let it land in pieces.
 
 When you're done dropping for the moment, hit the **Copy /infil** button on the operation page. It puts the `/infil <n>` slash command on your clipboard, ready to paste into your agent.
 
 ### Alternative on-ramp: `/recon` → `/fob`
 
-Once the CLI is installed (Section 2), you can skip creating the op in the web app — you still need to sign in and create a project there — and drop the idea straight into your agent. [`/recon`](/field-manual/workflow#recon) lets the agent explore the codebase from a vague prompt and talk the shape out with you; when the direction lands, ask it to fire [`/fob`](/field-manual/workflow#fob) and it spins up the operation server-side and chains `/infil` in one gesture.
+Once the CLI is installed (Section 2), you can skip creating the op in the web app and drop the idea straight into your agent. [`/recon`](/field-manual/workflow#recon) lets the agent explore the codebase from a vague prompt and talk the shape out with you. When the direction lands, ask it to fire [`/fob`](/field-manual/workflow#fob) and it spins up the operation server-side and chains `/infil` in one gesture.
 
 ```
 User: /recon We're keeping tfstate locally. We'd like to share tfstate
@@ -44,7 +44,7 @@ User: Sounds good. Run /fob for me.
 Agent: [runs /fob, creates the OP server-side, chains /infil]
 ```
 
-Same destination as the web-app path — CLI-first instead of browser-first. Reach for it when you'd rather think out loud against the codebase before committing to a title.
+With the same destination as the web-app path, CLI-first is better for when you'd rather think out loud against the codebase before committing to a title.
 
 ## 2. Install the CLI
 
@@ -54,7 +54,7 @@ naholo login
 naholo init
 ```
 
-`naholo init` writes `.naholo/config.yml` (commit it) and `.mcp.json` (gitignored), then drops `/infil`, `/warno`, `/opord`, `/splash`, `/exfil` into `.claude/skills/` for your Claude Code session. Don't want naholo's footprint in the repo? Swap `naholo init` for `naholo covert init` — same outcome, project wiring lives under `~/.naholo/` instead.
+`naholo init` writes `.naholo/config.yml` (commit it) and `.mcp.json` (gitignored), then drops `/infil`, `/warno`, `/opord`, `/splash`, `/exfil` into `.claude/skills/` for your Claude Code session. Don't want naholo's footprint in the repo? Swap `naholo init` for `naholo covert init` for the same outcome, project wiring lives under `~/.naholo/` instead.
 
 Covert vs team setup, worktree caveats, and re-installing skills after a CLI upgrade live in [Readiness](/field-manual/readiness).
 
@@ -66,7 +66,7 @@ Open Claude Code in your repo and run the chain. Each skill mutates exactly one 
 /infil → /warno → /opord → /splash → /splash … → /exfil
 ```
 
-Every step lands a review window. If you like what you see, run the next skill. If you don't — the WARNO needs revising, a TASK needs rewriting, a shipped After-Action Report (AAR) needs a follow-up — re-run the same skill with feedback (`/warno "use the existing queue"`, `/opord "split TASK 3"`). Quick Start walks the happy path; [Workflow](/field-manual/workflow) covers every branch.
+Every step lands a review window. If you like what you see, run the next skill. If you don't, tell the agent what went wrong so it can adjust the output. Quick Start walks the happy path; [Workflow](/field-manual/workflow) covers every branch.
 
 ### `/infil <n>`
 
@@ -74,7 +74,7 @@ Every step lands a review window. If you like what you see, run the next skill. 
 /infil 42
 ```
 
-Pulls operation `<n>` from the server into a local working directory and seeds `OPERATION.md` with the **SITUATION** — the pain, the suggested solution, the notes that fell out of your logs. Open `OPERATION.md` and review SITUATION; add anything that surfaces while you read, either by hand-editing or telling the agent in chat.
+Pulls operation `<n>` from the server into a local working directory and seeds `OPERATION.md` with the **SITUATION**, which holds the pain and the suggested solution pulled from your logs and notes. Open `OPERATION.md` and review SITUATION; add anything that surfaces while you read, either by hand-editing or telling the agent in chat.
 
 _Branches and side flows: [Workflow → `/infil`](/field-manual/workflow#infil)._
 
@@ -84,7 +84,7 @@ _Branches and side flows: [Workflow → `/infil`](/field-manual/workflow#infil).
 /warno
 ```
 
-Writes the **WARNING ORDER**: the Concept of Operations (the approach), the Constraints (one architectural decision per bullet), and the Target Reference Points (a map of the files the next skill will need). This is your **direction review**. Read the WARNO and ask: can I picture, at the architecture level, how this gets tackled? Not the implementation — the shape. Which layer it lives in, which patterns it leans on, what gets traded off.
+Writes the **WARNING ORDER**: the Concept of Operations (the approach), the Constraints (one architectural decision per bullet), and the Target Reference Points (a map of the files the next skill will need). This is your **direction review**: read the Constraints. If anything is off or missing, address it, either by hand-editing or telling the agent in chat.
 
 _Branches and side flows: [Workflow → `/warno`](/field-manual/workflow#warno)._
 
@@ -94,7 +94,7 @@ _Branches and side flows: [Workflow → `/warno`](/field-manual/workflow#warno).
 /opord
 ```
 
-`/opord` cuts the WARNO into tasks. It writes `## OPERATION ORDER` to `OPERATION.md` (one task per section) and mirrors the list into `TASKS.md`. Each task carries an Intent (the success criterion) and a Scheme of Maneuver — an action list of atomic steps, optionally preceded by an ASCII artifact that names the shape of the change. Tasks get reviewed one at a time, right before they ship — not as a whole list.
+`/opord` cuts the WARNO into tasks. It writes `## OPERATION ORDER` to `OPERATION.md` (one task per section) and mirrors the list into `TASKS.md`. Each task carries an Intent (the success criterion) and a Scheme of Maneuver, which is an action list of atomic steps, optionally preceded by an ASCII artifact that names the shape of the change. Tasks get reviewed one at a time, right before they ship, rather than as a whole list.
 
 _Branches and side flows: [Workflow → `/opord`](/field-manual/workflow#opord)._
 
@@ -102,7 +102,7 @@ Then the per-task loop:
 
 1. **Review the next TASK.** Read Intent and Scheme of Maneuver. If it's not one cohesive change you'd happily review as one diff, ask the agent to fix it: "split this task", "use the existing util", "add a backfill step".
 2. **Ship it.** `/splash`
-3. **Review the AAR and the diff.** Happy with both — loop to step 1 for the next TASK. Off-target on something small — chat the fix and let the agent rewrite the code and the AAR. Off-target on something bigger — re-run `/opord` to insert a new TASK and ship it in its own splash.
+3. **Review the AAR and the diff.** If you're happy with both, loop to step 1 for the next TASK. To off-target to something small, chat the fix and let the agent rewrite the code and the AAR. To off-target to something bigger, re-run `/opord` to insert a new TASK and ship it in its own splash.
 
 Loop until every box in `TASKS.md` is `[x]`.
 
@@ -122,8 +122,8 @@ _Branches and side flows: [Workflow → `/exfil`](/field-manual/workflow#exfil).
 
 Return to the web app and open the closed operation. You get:
 
-- The **timeline** — every step the cycle went through.
-- The **logs** — your original intel, plus the summary log `/exfil` just posted.
-- The **agent stats** — token usage by skill, model, session count. So you can see what the operation actually cost.
+- The **timeline**: every step the cycle went through.
+- The **logs**: your original intel, plus the summary log `/exfil` just posted.
+- The **agent stats**: token usage by skill, model and session count, so you can see what the operation actually cost.
 
 <ChapterPager slug='quick-start' />
