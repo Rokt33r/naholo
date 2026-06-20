@@ -1,6 +1,6 @@
 ---
 name: chop
-description: Draft a CHOP proposal for splitting the currently infiled Naholo operation. Writes `notes/CHOP.md` showing how WARNING ORDER.Constraints and OPERATION ORDER tasks split between the current OP and a proposed new OP, for user review. No server calls, no pruning — `/chopchop` applies the proposal once the user is satisfied.
+description: Draft a CHOP proposal for splitting the currently infilled Naholo operation. Writes `notes/CHOP.md` showing how WARNING ORDER.Constraints and OPERATION ORDER tasks split between the current OP and a proposed new OP, for user review. No server calls, no pruning — `/chopchop` applies the proposal once the user is satisfied.
 argument-hint: '"freeform — what to carve off"'
 ---
 
@@ -40,7 +40,7 @@ Args are mandatory whether or not `CHOP.md` already exists — both fresh draft 
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+If `<op_status>` carries `No infilled operation.`, tell the user to run `/infil <opNum>` first and abort.
 
 `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them (`currentOp` / `opTitle` give the parent OP's `{parentNumber}` / `{parentTitle}`).
 

@@ -26,31 +26,31 @@ Operational vocabulary used by the skills (written in full in docs; may be abbre
 
 The agent-facing lifecycle for an operation is a one-way pipeline from server to local, then back:
 
-1. **`/fob "<title>\n<content>"`** — Input: no infiled operation. Light pre-infil idea-drop: parses the prompt into a title (first line) + optional first log (remaining lines), runs `naholo agent fob` to create the op server-side (and post the log when content is non-empty), then chains `/infil <n>` via the `Skill` tool so the session lands infiled and ready for `/warno` or `/raid`. Aborts when an op is already infiled. Does **not** research the codebase.
-2. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)** pulls operation `{n}` from the server into the local infiled directory. **Re-infil (`/infil` no args)** refreshes the currently infiled op via 3-way merge. Either mode seeds `notes/OPERATION.md` if missing (only `## SITUATION`, filled from logs/notes — `## WARNING ORDER` and `## OPERATION ORDER` are appended by their owning skills). Only one op can be infiled at a time; never pushes.
-3. **`/warno ["freeform"]`** — Input: infiled operation. The WARNO-writing skill. Researches the codebase and **appends `## WARNING ORDER`** (heading + Concept of Operations / Constraints / Target Reference Points) to `OPERATION.md` when WARNING ORDER is absent; revises in place when it already exists. Does NOT touch `## OPERATION ORDER` or `TASKS.md` — those are `/opord`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are WARNO-scoped (revise Concept of Operations, swap Constraints, refresh Target Reference Points); OPORD-shaped instructions belong to `/opord`. Stops with a "next: `/opord`" pointer.
-4. **`/raid ["freeform"]`** — Input: fresh infiled operation (no `## WARNING ORDER` and no `## OPERATION ORDER` yet). The `/warno` + `/opord` collapse for small ops where architecture review is overkill. Researches the codebase, appends `## WARNING ORDER` to `OPERATION.md` with a real Concept of Operations + real Target Reference Points but `### Constraints` body marked `_N/A_`, then chains `/opord` via the `Skill` tool to cut tasks and mirror `TASKS.md`. Forwards freeform args to the chained `/opord`. Aborts when WARNING ORDER or OPERATION ORDER already exists — use `/warno` or `/opord` for revisions. Lands the session in the post-opord phase (the chained `/opord` declares it).
+1. **`/fob "<title>\n<content>"`** — Input: no infilled operation. Light pre-infil idea-drop: parses the prompt into a title (first line) + optional first log (remaining lines), runs `naholo agent fob` to create the op server-side (and post the log when content is non-empty), then chains `/infil <n>` via the `Skill` tool so the session lands infilled and ready for `/warno` or `/raid`. Aborts when an op is already infilled. Does **not** research the codebase.
+2. **`/infil [n]`** — Two modes. **Fresh infil (`/infil {n}`)** pulls operation `{n}` from the server into the local infilled directory. **Re-infil (`/infil` no args)** refreshes the currently infilled op via 3-way merge. Either mode seeds `notes/OPERATION.md` if missing (only `## SITUATION`, filled from logs/notes — `## WARNING ORDER` and `## OPERATION ORDER` are appended by their owning skills). Only one op can be infilled at a time; never pushes.
+3. **`/warno ["freeform"]`** — Input: infilled operation. The WARNO-writing skill. Researches the codebase and **appends `## WARNING ORDER`** (heading + Concept of Operations / Constraints / Target Reference Points) to `OPERATION.md` when WARNING ORDER is absent; revises in place when it already exists. Does NOT touch `## OPERATION ORDER` or `TASKS.md` — those are `/opord`'s job. Resumable — re-running picks up where the previous run left off. Freeform args are WARNO-scoped (revise Concept of Operations, swap Constraints, refresh Target Reference Points); OPORD-shaped instructions belong to `/opord`. Stops with a "next: `/opord`" pointer.
+4. **`/raid ["freeform"]`** — Input: fresh infilled operation (no `## WARNING ORDER` and no `## OPERATION ORDER` yet). The `/warno` + `/opord` collapse for small ops where architecture review is overkill. Researches the codebase, appends `## WARNING ORDER` to `OPERATION.md` with a real Concept of Operations + real Target Reference Points but `### Constraints` body marked `_N/A_`, then chains `/opord` via the `Skill` tool to cut tasks and mirror `TASKS.md`. Forwards freeform args to the chained `/opord`. Aborts when WARNING ORDER or OPERATION ORDER already exists — use `/warno` or `/opord` for revisions. Lands the session in the post-opord phase (the chained `/opord` declares it).
 5. **`/opord ["freeform"]`** — Input: warno-completed operation (WARNING ORDER populated). OPORD-style detail-cutter and plan revisor. Resolves any unanswered Constraint alternatives, cuts WARNING ORDER into single-commit-sized tasks, **appends `## OPERATION ORDER`** (one `### TASK N — Title` per task with `#### Intent` + `#### Scheme of Maneuver`; **no `#### After-Action Report` heading** — `/splash` adds that when it ships the task), and mirrors the task list into `TASKS.md` as a flat checkbox list. With `## OPERATION ORDER` already present, freeform args drive plan revisions — insert, drop, split, merge, retitle, rewrite — applied only to unfinished tasks. Completed tasks (those with a populated AAR) are immutable. New tasks append at the next free integer; never letter-suffix, never re-slot existing tasks.
 6. **`/splash [N] ["freeform"]`** — Input: opord-completed operation with at least one unchecked task. With `N`, ships TASK N. Without `N`, picks the next unchecked task from `TASKS.md`. Reads the task's Intent + Scheme of Maneuver from OPERATION.md, implements code, runs format + typecheck, **adds the `#### After-Action Report` heading + body** to the target task section (or overwrites the body in place when shipping a revision splash), flips `- [ ]` → `- [x]` in TASKS.md, appends a TIMELINE.md bullet. Stops after one task.
-7. **`/chop "freeform"`** — Input: infiled operation in warno or opord phase. Drafts a CHOP proposal at `notes/CHOP.md` showing how the parent OP's Constraints and OPERATION ORDER tasks would split between the current OP and a new OP. **Does not touch the server, does not touch `OPERATION.md`**. Re-runnable: with `CHOP.md` already present, freeform args revise the existing proposal in place. Args are mandatory in both fresh and revision modes. Enters the **chop** phase; `/warno`, `/opord`, `/splash` may still run but each surfaces a "CHOP pending" `AskUserQuestion` gate first since they will desync the proposal.
-8. **`/chopchop`** — Input: infiled operation with `notes/CHOP.md` present. Applies the proposal: spawns a new OP server-side seeded with the carved SITUATION + WARNING ORDER + OPERATION ORDER (Scheme of Maneuver and AAR carry over verbatim when present), prunes the same scope from the parent's local `OPERATION.md` + `TASKS.md`, and deletes `CHOP.md` both locally and server-side. Ends the chop phase. No args.
-9. **`/nochop`** — Input: infiled operation with `notes/CHOP.md` present. Discards the proposal by deleting `CHOP.md` both locally and server-side. Parent OP is not modified. Ends the chop phase. No args.
+7. **`/chop "freeform"`** — Input: infilled operation in warno or opord phase. Drafts a CHOP proposal at `notes/CHOP.md` showing how the parent OP's Constraints and OPERATION ORDER tasks would split between the current OP and a new OP. **Does not touch the server, does not touch `OPERATION.md`**. Re-runnable: with `CHOP.md` already present, freeform args revise the existing proposal in place. Args are mandatory in both fresh and revision modes. Enters the **chop** phase; `/warno`, `/opord`, `/splash` may still run but each surfaces a "CHOP pending" `AskUserQuestion` gate first since they will desync the proposal.
+8. **`/chopchop`** — Input: infilled operation with `notes/CHOP.md` present. Applies the proposal: spawns a new OP server-side seeded with the carved SITUATION + WARNING ORDER + OPERATION ORDER (Scheme of Maneuver and AAR carry over verbatim when present), prunes the same scope from the parent's local `OPERATION.md` + `TASKS.md`, and deletes `CHOP.md` both locally and server-side. Ends the chop phase. No args.
+9. **`/nochop`** — Input: infilled operation with `notes/CHOP.md` present. Discards the proposal by deleting `CHOP.md` both locally and server-side. Parent OP is not modified. Ends the chop phase. No args.
 10. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (tasks + all notes including `TIMELINE.md` and any in-flight `CHOP.md`), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
 11. **`/exfil ["close"|"don't close"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation, deletes local dir.
 
-**Read-only side branch — `/recon ["first question"]`**: Input: infiled operation. Loads `OPERATION.md` + `TIMELINE.md` and drops the session into a passive Q&A phase — answers questions about the OP and pulls extra files (`LOGS.yml`, other notes, codebase) on demand. Writes nothing — no `OPERATION.md` edits, no `TASKS.md` edits, no `add-timeline` bullets, no server syncs. Runnable from any post-`/infil` state without disturbing WARNING ORDER / OPERATION ORDER / AAR content. Phase-changing skills (`/warno`, `/opord`, `/splash`, `/chop`, `/chopchop`, `/nochop`) and `/exfil` end the recon phase.
+**Read-only side branch — `/recon ["first question"]`**: Input: infilled operation. Loads `OPERATION.md` + `TIMELINE.md` and drops the session into a passive Q&A phase — answers questions about the OP and pulls extra files (`LOGS.yml`, other notes, codebase) on demand. Writes nothing — no `OPERATION.md` edits, no `TASKS.md` edits, no `add-timeline` bullets, no server syncs. Runnable from any post-`/infil` state without disturbing WARNING ORDER / OPERATION ORDER / AAR content. Phase-changing skills (`/warno`, `/opord`, `/splash`, `/chop`, `/chopchop`, `/nochop`) and `/exfil` end the recon phase.
 
 The canonical happy-path cycle: `/infil → /warno → /opord → /splash → (user reviews AAR) → /splash → … → /exfil`. When the op doesn't exist on the server yet, `/fob "<title>\n<content>"` opens the cycle by creating the op and chaining `/infil` in one gesture. Small fresh OPs may collapse `/warno → /opord` into a single `/raid` invocation. Mid-cycle revisions: `/opord "freeform"` between splashes adjusts the unfinished plan (insert, drop, split, rewrite); re-run `/warno` for direction (WARNO) changes.
 
 **OP-splitting side branch**: when the scope inside one OP grows large enough that two OPs would be cleaner, run `/chop "freeform"` to draft the split into `notes/CHOP.md`, review (or hand-edit) the doc, then `/chopchop` to apply or `/nochop` to discard. Plugs in between any two cycle steps in the warno or opord phase.
 
-## Infiled files
+## Infilled files
 
-The infiled directory (`.naholo/local/infiled/`) is the agent's full working set for the active op. It holds CLI state, the checklist, the live OP document, the skill-event log, free-form notes, a server-log snapshot, and the 3-way-merge baseline. Files marked _fixed contract_ have a layout the skills depend on; everything else is either free-form or CLI-owned.
+The infilled directory (`.naholo/local/infilled/`) is the agent's full working set for the active op. It holds CLI state, the checklist, the live OP document, the skill-event log, free-form notes, a server-log snapshot, and the 3-way-merge baseline. Files marked _fixed contract_ have a layout the skills depend on; everything else is either free-form or CLI-owned.
 
 ### `op.yml`
 
-CLI state at the infiled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent reinfil`. Agents do not edit it directly.
+CLI state at the infilled root: `{ number, title }`. Written by `naholo agent infil` and refreshed by `naholo agent reinfil`. Agents do not edit it directly.
 
 ### `TASKS.md`
 
@@ -115,7 +115,7 @@ When a skill prints a list of notes (infil summary, sitrep recap, etc.), the ord
 
 ### `naholo agent infil <n>`
 
-Initial fetch. Takes the server op number, creates `.naholo/local/infiled/`, writes `op.yml`, and pulls tasks/notes/.base/LOGS.yml. Errors with `Already infiled. Run "naholo agent exfil" first.` when an op is already infiled. Agents use this during `/infil`.
+Initial fetch. Takes the server op number, creates `.naholo/local/infilled/`, writes `op.yml`, and pulls tasks/notes/.base/LOGS.yml. Errors with `Already infilled. Run "naholo agent exfil" first.` when an op is already infilled. Agents use this during `/infil`.
 
 ### `naholo agent reinfil`
 
@@ -123,7 +123,7 @@ Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge
 
 - 3-way merges notes line-by-line (via diff3) and structurally merges tasks by ID. Reports `updated`/`kept-local`/`merged`/`conflict`/`created`/`unchanged` per file.
 - Refreshes `op.yml.title` from the server.
-- Errors with `No infiled operation` when nothing is infiled. Switching ops requires `exfil` then `infil`. Never runs pushes.
+- Errors with `No infilled operation` when nothing is infilled. Switching ops requires `exfil` then `infil`. Never runs pushes.
 
 ### `naholo agent boot`
 
@@ -131,7 +131,7 @@ Argless. The single boot call every skill runs once per session. Prints three XM
 
 - `<personality>…</personality>` — the active CLI profile's soul text. Absent entirely when no soul is configured.
 - `<manual>…</manual>` — the full text of this manual.
-- `<op_status>…</op_status>` — YAML payload (`currentOp`, `opTitle`, `opPath`, `opNotes`) when an op is infiled, or the literal `No infiled operation.` body in the empty state.
+- `<op_status>…</op_status>` — YAML payload (`currentOp`, `opTitle`, `opPath`, `opNotes`) when an op is infilled, or the literal `No infilled operation.` body in the empty state.
 
 Skills cache **only `opPath`** from `<op_status>` after the first boot — every other file path in the session composes on top of it. `currentOp`, `opTitle`, and `opNotes` are read inline when the boot fires and not stored.
 
@@ -142,23 +142,23 @@ Argless. Prints the op status YAML — same shape as `boot`'s `<op_status>` bloc
 ```yaml
 currentOp: 181
 opTitle: compact skill booting
-opPath: /abs/path/to/.naholo/local/infiled/
+opPath: /abs/path/to/.naholo/local/infilled/
 opNotes:
   - OPERATION
   - TIMELINE
 ```
 
-Errors with bare `No infiled operation.` when `op.yml` is absent. Troubleshooting-only: an agent runs it when it has lost track of which op is infiled or wants to confirm op state without re-emitting the full `boot` payload. Skills don't call it in their normal flow.
+Errors with bare `No infilled operation.` when `op.yml` is absent. Troubleshooting-only: an agent runs it when it has lost track of which op is infilled or wants to confirm op state without re-emitting the full `boot` payload. Skills don't call it in their normal flow.
 
 ### `naholo agent man`
 
 Prints this manual to stdout. No arguments, no I/O.
 
-### Troubleshooting: "No infiled operation" mid-session
+### Troubleshooting: "No infilled operation" mid-session
 
-The infiled directory is resolved against the shell's working directory — the CLI walks `process.cwd()` looking for `.naholo/local/infiled/`. If any `naholo agent *` command returns `No infiled operation` after it was working earlier in the session, the shell's cwd has likely drifted out of the directory where the op was infiled. Do not assume the op was exfiled or the directory deleted.
+The infilled directory is resolved against the shell's working directory — the CLI walks `process.cwd()` looking for `.naholo/local/infilled/`. If any `naholo agent *` command returns `No infilled operation` after it was working earlier in the session, the shell's cwd has likely drifted out of the directory where the op was infilled. Do not assume the op was exfiled or the directory deleted.
 
-Recovery: run `pwd`, then `cd` back to the directory where the op was infiled (the one containing `.naholo/local/infiled/`), and re-run the command.
+Recovery: run `pwd`, then `cd` back to the directory where the op was infilled (the one containing `.naholo/local/infilled/`), and re-run the command.
 
 ## Chat output
 

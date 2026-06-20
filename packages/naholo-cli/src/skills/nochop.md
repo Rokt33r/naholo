@@ -1,6 +1,6 @@
 ---
 name: nochop
-description: Discard the in-flight CHOP proposal. Deletes `notes/CHOP.md` from both the local infiled dir and the parent OP server-side, stamps TIMELINE, and points the user at the next action based on the parent's `OPERATION.md` state. The parent OP's WARNING ORDER/OPERATION ORDER are not modified.
+description: Discard the in-flight CHOP proposal. Deletes `notes/CHOP.md` from both the local infilled dir and the parent OP server-side, stamps TIMELINE, and points the user at the next action based on the parent's `OPERATION.md` state. The parent OP's WARNING ORDER/OPERATION ORDER are not modified.
 argument-hint: ''
 ---
 
@@ -22,7 +22,7 @@ None.
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+If `<op_status>` carries `No infilled operation.`, tell the user to run `/infil <opNum>` first and abort.
 
 `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them (`currentOp` / `opTitle` give the parent OP's `{parentNumber}` / `{parentTitle}`).
 
@@ -43,7 +43,7 @@ Read these now:
 Discard the proposal on both sides:
 
 - **Server first**: call `mcp__naholo__delete_note` with `operationNumber: {parentNumber}`, `name: 'CHOP'`. Swallow a 404 silently — the proposal may never have been `/sitrep`-ed to the server.
-- **Local second**: delete `{operationDir}/notes/CHOP.md` from the infiled dir.
+- **Local second**: delete `{operationDir}/notes/CHOP.md` from the infilled dir.
 
 Server before local prevents the next `/sitrep` from re-pushing a lingering local file if the server delete fails.
 

@@ -1,6 +1,6 @@
 ---
 name: splash
-description: Ship one task from an infiled Naholo operation — implement code, write the AAR, check the TASKS box.
+description: Ship one task from an infilled Naholo operation — implement code, write the AAR, check the TASKS box.
 argument-hint: '[N] ["freeform"]'
 ---
 
@@ -29,7 +29,7 @@ Anything in quotes after is freeform context for the splash. Common patterns:
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+If `<op_status>` carries `No infilled operation.`, tell the user to run `/infil <opNum>` first and abort.
 
 `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them.
 

@@ -1,6 +1,6 @@
 ---
 name: exfil
-description: Sync local operation changes back to Naholo and clean up — pushes tasks/notes, drains transcripts, posts a log, optionally closes, removes the infiled dir.
+description: Sync local operation changes back to Naholo and clean up — pushes tasks/notes, drains transcripts, posts a log, optionally closes, removes the infilled dir.
 argument-hint: '["close"|"don\'t close"|"freeform"]'
 model: sonnet
 ---
@@ -27,7 +27,7 @@ If no instructions are given, ask the user whether to close.
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-If `<op_status>` carries `No infiled operation.`, tell the user there's no infiled operation to exfil and stop.
+If `<op_status>` carries `No infilled operation.`, tell the user there's no infilled operation to exfil and stop.
 
 `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them.
 

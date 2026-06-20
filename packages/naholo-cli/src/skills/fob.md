@@ -1,12 +1,12 @@
 ---
 name: fob
-description: Forward Operating Base — drop an idea, get an op. Creates a new operation server-side (with an optional first log) and chains `/infil` when no op is already infiled.
+description: Forward Operating Base — drop an idea, get an op. Creates a new operation server-side (with an optional first log) and chains `/infil` when no op is already infilled.
 argument-hint: '[<title>\n<content lines...>]'
 ---
 
 # Fob — Forward Operating Base
 
-Light idea-drop skill. Parses a freeform `/fob` prompt into a title + optional first log, calls `naholo agent fob` to create the operation server-side, then chains `/infil <n>` via the `Skill` tool so the session lands in the infil phase ready for `/warno` or `/raid`. Does **not** research the codebase — that's `/warno`'s job. When an op is already infiled, the new op + optional log still land on the server but `/fob` skips the `/infil` chain so the in-flight infiled state stays intact.
+Light idea-drop skill. Parses a freeform `/fob` prompt into a title + optional first log, calls `naholo agent fob` to create the operation server-side, then chains `/infil <n>` via the `Skill` tool so the session lands in the infil phase ready for `/warno` or `/raid`. Does **not** research the codebase — that's `/warno`'s job. When an op is already infilled, the new op + optional log still land on the server but `/fob` skips the `/infil` chain so the in-flight infilled state stays intact.
 
 ## Arguments
 
@@ -21,7 +21,7 @@ Anything passed as an argument is treated as the `/fob` prompt. The first line i
 
 ### 1. Boot
 
-**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — though `/fob`'s job is to leave the session infiled to a brand-new op, so `{operationDir}` is populated by the chained `/infil` later, not by `/fob` itself.
+**If you haven't run `naholo agent boot` in this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>` as `{operationDir}` — though `/fob`'s job is to leave the session infilled to a brand-new op, so `{operationDir}` is populated by the chained `/infil` later, not by `/fob` itself.
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
@@ -65,14 +65,14 @@ Quote both arg values so the shell preserves embedded spaces and newlines. The C
 
 Parse the stdout YAML and read `opNumber`. If the CLI errors (network failure, auth, etc.), surface the error message verbatim and stop — do not retry.
 
-### 6. Chain `/infil` (or skip when already infiled)
+### 6. Chain `/infil` (or skip when already infilled)
 
 Branch on `<op_status>` from step 1:
 
-- **`No infiled operation.`** → invoke the `infil` skill through the `Skill` tool with the new `opNumber` as its argument. `/infil` handles the server-to-local fetch, the directory layout, and the SITUATION seeding in `OPERATION.md`. `/fob` does not seed any files itself — every on-disk output of this branch comes from the chained `/infil`. Once `/infil` returns, the session is in the **infil** phase, anchored to the new op, and `/infil`'s own end-of-skill summary is the final output the user sees.
-- **`currentOp` present** → do **not** chain `/infil`; clobbering the in-flight infiled directory would lose the user's current work. Print the following raw markdown (no surrounding fence) and stop:
+- **`No infilled operation.`** → invoke the `infil` skill through the `Skill` tool with the new `opNumber` as its argument. `/infil` handles the server-to-local fetch, the directory layout, and the SITUATION seeding in `OPERATION.md`. `/fob` does not seed any files itself — every on-disk output of this branch comes from the chained `/infil`. Once `/infil` returns, the session is in the **infil** phase, anchored to the new op, and `/infil`'s own end-of-skill summary is the final output the user sees.
+- **`currentOp` present** → do **not** chain `/infil`; clobbering the in-flight infilled directory would lose the user's current work. Print the following raw markdown (no surrounding fence) and stop:
 
-  > Infiled op exists, skipped /infil.
+  > Infilled op exists, skipped /infil.
   > To infil, /exfil first and /infil {opNumber} again.
 
   Substitute `{opNumber}` with the value parsed in step 5.
@@ -82,7 +82,7 @@ Branch on `<op_status>` from step 1:
 `/fob` ends in one of two states:
 
 - **Chained-`/infil` branch** — the session lands in the **infil** phase, anchored to the new op (declared by the chained `/infil`).
-- **Skipped-`/infil` branch** — the session phase is unchanged from whatever was active before `/fob` ran (the infiled op and its phase stay exactly as they were). The new op exists on the server with its first log, but the local infiled directory is untouched.
+- **Skipped-`/infil` branch** — the session phase is unchanged from whatever was active before `/fob` ran (the infilled op and its phase stay exactly as they were). The new op exists on the server with its first log, but the local infilled directory is untouched.
 
 In either case `/fob` itself has no follow-up edit surface — any further refinement to SITUATION belongs to the infil phase, the WARNO belongs to `/warno`, and any plan-cutting belongs to `/opord` or `/raid`.
 
@@ -92,6 +92,6 @@ In either case `/fob` itself has no follow-up edit surface — any further refin
 - **No codebase research** — `/fob` is intentionally light. If the user wants planning context, they run `/recon` after infil, or `/warno` to research and write the WARNO.
 - **`-T` is mandatory at the CLI**: the skill is responsible for resolving a non-empty title before the CLI call (either from the user's first line or generated from content). Never call `naholo agent fob` with an empty title.
 - **`-C` is optional**: only pass it when the user supplied content. Empty content means "create the op, no first log."
-- **Never chain `/infil` while another op is already infiled**: chaining would clobber the in-flight infiled directory. Instead print the `Infiled op exists, skipped /infil. To infil, /exfil first and /infil {opNumber} again.` hint so the user can switch deliberately.
+- **Never chain `/infil` while another op is already infilled**: chaining would clobber the in-flight infilled directory. Instead print the `Infilled op exists, skipped /infil. To infil, /exfil first and /infil {opNumber} again.` hint so the user can switch deliberately.
 - **Always read `opNumber` from the CLI's YAML stdout** — do not parse other lines, do not regex against human prose. The contract is `opNumber: <n>`.
 - **Always use absolute filesystem paths in link targets** in any abort messages this skill prints — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths.

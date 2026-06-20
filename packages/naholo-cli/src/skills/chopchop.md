@@ -6,7 +6,7 @@ argument-hint: ''
 
 # Chopchop — Apply the CHOP
 
-The second half of the OP-splitting workflow. `/chopchop` validates `notes/CHOP.md` against the parent's current `OPERATION.md`, allocates TRP into `CHOP.md` per side, and shells out to `naholo agent chopchop` — the CLI does every server call, file edit, push, and cleanup in one transactional pass. After `/chopchop`, the parent stays infiled in whatever phase it was already in; the new OP exists server-side only until someone runs `/exfil` on the parent and `/infil <newNumber>` in a fresh session.
+The second half of the OP-splitting workflow. `/chopchop` validates `notes/CHOP.md` against the parent's current `OPERATION.md`, allocates TRP into `CHOP.md` per side, and shells out to `naholo agent chopchop` — the CLI does every server call, file edit, push, and cleanup in one transactional pass. After `/chopchop`, the parent stays infilled in whatever phase it was already in; the new OP exists server-side only until someone runs `/exfil` on the parent and `/infil <newNumber>` in a fresh session.
 
 This skill takes no freeform args — everything it needs is in `CHOP.md`. The user's editing pass on `CHOP.md` between `/chop` and `/chopchop` is the only customization channel.
 
@@ -22,7 +22,7 @@ None. `/chopchop` always consumes `{operationDir}/notes/CHOP.md` as-is. If the u
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+If `<op_status>` carries `No infilled operation.`, tell the user to run `/infil <opNum>` first and abort.
 
 `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them (`currentOp` / `opTitle` give the parent OP's `{parentNumber}` / `{parentTitle}`).
 

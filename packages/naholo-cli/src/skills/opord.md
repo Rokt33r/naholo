@@ -32,7 +32,7 @@ With `## OPERATION ORDER` already present, the default assumption is that the fr
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-If `<op_status>` carries `No infiled operation.`, tell the user to run `/infil <opNum>` first and abort.
+If `<op_status>` carries `No infilled operation.`, tell the user to run `/infil <opNum>` first and abort.
 
 `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read from it whenever this skill needs them.
 
@@ -229,12 +229,12 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   - Edit packages/naholo-cli/src/lib/local-operations.ts
     - `getLocalOperationDir`, `getNotesDir`, `getBaseDir`, `getTasksPath`,
       `getBaseTasksPath`, `getBaseNotesDir`: drop the `operationNumber` arg
-    - `readOpYml`, `writeOpYml`: new — read/write `op.yml` at the infiled root
+    - `readOpYml`, `writeOpYml`: new — read/write `op.yml` at the infilled root
   - Add packages/naholo-cli/src/commands/agent/infil.ts
     - `infil` subcommand: writes op.yml and pulls data
-  - Move packages/naholo-cli/src/lib/local-operations.ts → packages/naholo-cli/src/lib/infiled.ts — rename now that "operations" plural is gone
+  - Move packages/naholo-cli/src/lib/local-operations.ts → packages/naholo-cli/src/lib/infilled.ts — rename now that "operations" plural is gone
   - Delete packages/naholo-cli/src/commands/agent/op-list.ts — superseded by `op`
-  - Run `mv .naholo/local/operations/122 .naholo/local/infiled` — migrate this op's data
+  - Run `mv .naholo/local/operations/122 .naholo/local/infilled` — migrate this op's data
   - Manual: run `pnpm db:migrate` after the schema edit lands (CLAUDE.md forbids the agent from running it)
   ```
 
