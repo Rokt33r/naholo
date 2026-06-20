@@ -28,11 +28,11 @@ Side branches that plug into it:
 
 Every skill in the pipeline ships you into a **phase** &mdash; `infil`, `warno`, `opord`, `splash`, `recon`, `chop`. The phase name is the &ldquo;where are we&rdquo; signal: after `/warno` you&rsquo;re in the warno phase, and small follow-up edits (a single Constraint tweak, a Concept of Operations rewrite) belong to that phase without needing to re-type `/warno` from scratch. Each skill enforces its own scope &mdash; if you ask for opord-shaped work in the warno phase, the agent routes you to `/opord` instead of doing it silently.
 
-`/sitrep` is a sync, not a phase &mdash; it pushes local progress and posts a log without ending the current phase. `/exfil` ends the cycle entirely: sync, optional close, delete local infiled dir.
+`/sitrep` is a sync, not a phase &mdash; it pushes local progress and posts a log without ending the current phase. `/exfil` ends the cycle entirely: sync, optional close, delete local infilled dir.
 
 <h2 id='fob'>/fob &mdash; drop an idea, get an op</h2>
 
-`/fob` is another front door of the cycle when the OP does not exist on the server yet. Pass a one-line title and an optional first log, and `/fob` creates the operation server-side, posts the log when content is non-empty, and chains `/infil <n>` so the session lands infiled and ready for `/warno` or `/raid`.
+`/fob` is another front door of the cycle when the OP does not exist on the server yet. Pass a one-line title and an optional first log, and `/fob` creates the operation server-side, posts the log when content is non-empty, and chains `/infil <n>` so the session lands infilled and ready for `/warno` or `/raid`.
 
 Arg shapes:
 
@@ -54,13 +54,13 @@ Compiling /field-manual ...
 ```
 ````
 
-When an op is **already infiled**, `/fob` still creates the new op + log server-side &mdash; dropping an idea should never cost you your in-flight work &mdash; but it skips the `/infil` chain so the local infiled directory stays exactly as it was. The output names the new op number; switch to it later with `/exfil` then `/infil <n>` when you are ready.
+When an op is **already infilled**, `/fob` still creates the new op + log server-side &mdash; dropping an idea should never cost you your in-flight work &mdash; but it skips the `/infil` chain so the local infilled directory stays exactly as it was. The output names the new op number; switch to it later with `/exfil` then `/infil <n>` when you are ready.
 
 `/fob` does **not** research the codebase. It is a one-shot launcher whose job is to register the idea and (when the slot is free) drop you into the infil phase. Compare with `/raid`: `/raid` runs **after** `/infil` to collapse `/warno` + `/opord` for small OPs. The max-velocity path for a fresh small idea is `/fob` then `/raid "..."`.
 
 <h2 id='infil'>/infil &mdash; pull the op local</h2>
 
-`/infil {N}` fetches operation `{N}` from the server into the infiled directory &mdash; `.naholo/local/infiled/` inside the repo for team mode (`naholo init`), or `~/.naholo/covert-ops/{codename}/infiled/` for covert mode (`naholo covert init`, where each project gets its own codename folder under your home dir). Only one OP can be infiled at a time, so passing `{N}` while another OP is in flight errors &mdash; `/exfil` the current one first.
+`/infil {N}` fetches operation `{N}` from the server into the infilled directory &mdash; `.naholo/local/infilled/` inside the repo for team mode (`naholo init`), or `~/.naholo/covert-ops/{codename}/infilled/` for covert mode (`naholo covert init`, where each project gets its own codename folder under your home dir). Only one OP can be infilled at a time, so passing `{N}` while another OP is in flight errors &mdash; `/exfil` the current one first.
 
 What lands on disk:
 
@@ -92,17 +92,17 @@ If CONOPS or the Constraint list keep growing past the size you can hold in your
 
 Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno "..."` or `/opord "..."` figuring out what you want; figure it out in recon first.
 
-`/recon` runs in one of two branches based on whether an op is infiled:
+`/recon` runs in one of two branches based on whether an op is infilled:
 
-- **Infiled** &mdash; the agent reads `OPERATION.md` + `TIMELINE.md` up front and answers with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno "..."`, `/opord "..."`, `/splash N "..."`).
-- **No infiled op** &mdash; the agent skips the OP context load and answers from the codebase alone, reading files on demand. If your question describes work you would want to track as an operation (a fix, a feature, a refactor), the agent points you at `/fob "<title>\n<content>"` to create + infil. `/fob` follows the same handoff rule as the other phase-changing skills (see below).
+- **Infilled** &mdash; the agent reads `OPERATION.md` + `TIMELINE.md` up front and answers with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno "..."`, `/opord "..."`, `/splash N "..."`).
+- **No infilled op** &mdash; the agent skips the OP context load and answers from the codebase alone, reading files on demand. If your question describes work you would want to track as an operation (a fix, a feature, a refactor), the agent points you at `/fob "<title>\n<content>"` to create + infil. `/fob` follows the same handoff rule as the other phase-changing skills (see below).
 
 Reach for it when:
 
 - A Constraint in the WARNO sounds fishy or unsure after `/warno` &mdash; talk through the decision before keeping it, dropping it, or revising it.
 - You want to revise a TASK or a shipped change but the prompt is not obvious &mdash; work out what to ask before you ask.
 - You want to think out loud about a piece of the codebase before deciding whether it deserves its own OP.
-- Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infiled).
+- Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infilled).
 
 When the discussion lands the prompt, tell the agent to run the next skill &mdash; `/warno "..."`, `/opord "..."`, `/splash N "..."`, or `/fob "..."` on the no-op branch &mdash; and it picks up where the conversation left off. `/recon` itself writes **nothing**: no `OPERATION.md` edits, no `TASKS.md` edits, no TIMELINE bullets, no server syncs.
 
@@ -174,13 +174,13 @@ The bar: would a reviewer want this change as its own diff? Yes &rarr; new TASK.
 
 ## /sitrep &mdash; checkpoint sync
 
-`/sitrep` is the mid-cycle push. It syncs the current state of local tasks and notes to the server, posts a short summary log, and leaves the local infiled directory intact for continued work. Optional freeform args become extra context for the summary log.
+`/sitrep` is the mid-cycle push. It syncs the current state of local tasks and notes to the server, posts a short summary log, and leaves the local infilled directory intact for continued work. Optional freeform args become extra context for the summary log.
 
 `/sitrep` does **not** end the current phase, so you can keep iterating after a checkpoint. Use it during long ops or multi-day work where teammates need visibility before `/exfil`.
 
 <h2 id='exfil'>/exfil &mdash; close + clean up</h2>
 
-`/exfil` ends the cycle. It runs the same sync as `/sitrep`, posts a summary log, optionally closes the operation server-side, and deletes the local infiled directory. Run when the OP is done or paused indefinitely and you want to free the single-infil slot for another OP.
+`/exfil` ends the cycle. It runs the same sync as `/sitrep`, posts a summary log, optionally closes the operation server-side, and deletes the local infilled directory. Run when the OP is done or paused indefinitely and you want to free the single-infil slot for another OP.
 
 `/exfil` decides whether to close the OP from `TASKS.md`: every task done &rarr; close; anything still open &rarr; pause and ask. Override the default with a freeform hint &mdash; `/exfil "close"` closes even with unfinished tasks, `/exfil "don't close"` keeps the OP open server-side even when every task shipped.
 

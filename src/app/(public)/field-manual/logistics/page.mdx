@@ -33,7 +33,7 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 
 ## File layout per op
 
-The infiled directory is `.naholo/local/infiled/` (team mode) or `~/.naholo/covert-ops/{codename}/infiled/` (covert mode). What lives inside:
+The infilled directory is `.naholo/local/infilled/` (team mode) or `~/.naholo/covert-ops/{codename}/infilled/` (covert mode). What lives inside:
 
 | File           | Role                                                                                                                                                                                                                                                                                     | Owned by                                                                                                                                                                                                             |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -85,12 +85,12 @@ The agent shells out to these. The CLI owns timestamps, merge logic, and sync I/
 | -------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `naholo agent boot`                                | Every skill (first invocation per session)   | Print personality + manual + `locale` + `op_status`. The session&rsquo;s single context-load call. |
 | `naholo agent infil <n>`                           | `/infil` (with `N`)                          | Fresh fetch of operation `{n}` from the server.                                                    |
-| `naholo agent reinfil`                             | `/infil` (no args)                           | Argless refresh-only. 3-way-merges server state into the local infiled copy.                       |
-| `naholo agent op`                                  | Troubleshooting only                         | Re-emit the `op_status` YAML when the session has lost track of which OP is infiled.               |
+| `naholo agent reinfil`                             | `/infil` (no args)                           | Argless refresh-only. 3-way-merges server state into the local infilled copy.                      |
+| `naholo agent op`                                  | Troubleshooting only                         | Re-emit the `op_status` YAML when the session has lost track of which OP is infilled.              |
 | `naholo agent man`                                 | Troubleshooting only                         | Print the full manual to stdout.                                                                   |
 | `naholo agent add-timeline -T <stage> '<summary>'` | Every phase-changing skill + in-phase tweaks | Append a TIMELINE bullet with the right timestamp + stage label.                                   |
 | `naholo agent sitrep`                              | `/sitrep`                                    | Push local tasks + notes to the server, post a summary log.                                        |
-| `naholo agent exfil [--close]`                     | `/exfil`                                     | Same as sitrep + optional close + delete local infiled dir.                                        |
+| `naholo agent exfil [--close]`                     | `/exfil`                                     | Same as sitrep + optional close + delete local infilled dir.                                       |
 
 The only call required at the top of every session is `naholo agent boot`. Everything else fires when its owning skill does work.
 
@@ -120,7 +120,7 @@ The naholo CLI exposes a Model Context Protocol server as a parallel agent-facin
 | `naholo://operations/{operationNumber}`       | Full operation context (tasks + notes + recent logs) |
 | `naholo://operations/{operationNumber}/tasks` | All tasks for an operation                           |
 | `naholo://operations/{operationNumber}/notes` | All notes for an operation                           |
-| `naholo://local/infiled`                      | Currently infiled operation                          |
+| `naholo://local/infilled`                     | Currently infilled operation                         |
 
 ## Where to look next
 
