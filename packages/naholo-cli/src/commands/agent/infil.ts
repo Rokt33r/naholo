@@ -82,6 +82,10 @@ export const infilCommand = new Command('infil')
 
       projectState.writeOpYml({ number: opNum, title: serverOperation.title })
 
+      await client.createOperationLog(projectSlug, opNum, {
+        content: `Infil — OP #${opNum}.`,
+      })
+
       const doneCount = serverTasks.filter((o) => o.done).length
       console.log(`Infilled operation #${opNum}`)
       console.log(`  Title: ${serverOperation.title}`)

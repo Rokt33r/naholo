@@ -113,18 +113,6 @@ When a skill prints a list of notes (infil summary, sitrep recap, etc.), the ord
 
 ## Commands
 
-### `naholo agent infil <n>`
-
-Initial fetch. Takes the server op number, creates `.naholo/local/infilled/`, writes `op.yml`, and pulls tasks/notes/.base/LOGS.yml. Errors with `Already infilled. Run "naholo agent exfil" first.` when an op is already infilled. Agents use this during `/infil`.
-
-### `naholo agent reinfil`
-
-Argless refresh-only. Reads the op number from `op.yml` and runs the 3-way merge against the server.
-
-- 3-way merges notes line-by-line (via diff3) and structurally merges tasks by ID. Reports `updated`/`kept-local`/`merged`/`conflict`/`created`/`unchanged` per file.
-- Refreshes `op.yml.title` from the server.
-- Errors with `No infilled operation` when nothing is infilled. Switching ops requires `exfil` then `infil`. Never runs pushes.
-
 ### `naholo agent boot`
 
 Argless. The single boot call every skill runs once per session. Prints three XML-delimited blocks to stdout:

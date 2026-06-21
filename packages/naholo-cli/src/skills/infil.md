@@ -106,6 +106,7 @@ While in the infil phase:
 
 - **Use `naholo agent infil` for all file I/O from server** — do not manually create directories, manage `.base/` files, or sync tasks/notes. The CLI handles all of that.
 - **Infil never pushes**. If OPERATION.md is missing, write it locally via the `Write` tool only — no `create_note` MCP call, no re-pull. User syncs upstream later via `/sitrep` or `/exfil`.
+- **`naholo agent infil` owns the entry log post** — a fresh infil posts an entry log to the server as part of the CLI command, exactly as `naholo agent exfil` owns its log post. The agent never posts an infil log directly. Re-infil (`naholo agent reinfil`) is a silent refresh and posts nothing.
 - On re-run, the CLI handles 3-way merge automatically. If conflicts are reported, tell the user and wait for resolution.
 - Do NOT implement any code — only fetch and write local files.
 - Do NOT write `## WARNING ORDER` or `## OPERATION ORDER` headings — `/warno` appends the WARNO, `/opord` appends the OPORD.

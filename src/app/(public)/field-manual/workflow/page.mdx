@@ -70,7 +70,9 @@ What lands on disk:
 - `LOGS.yml` &mdash; server-side log snapshot for reference.
 - `.base/` &mdash; 3-way merge baseline owned by the sync commands.
 
-`/infil` with **no args** is a refresh: 3-way merges the server state into your local copy without clobbering edits. Use this when a teammate added a note or a log on the same OP mid-cycle.
+A fresh `/infil {N}` posts an entry log to the OP server-side once the fetch lands &mdash; the bookend to `/exfil`&rsquo;s summary log, so the feed shows when the op was picked up.
+
+`/infil` with **no args** is a refresh: 3-way merges the server state into your local copy without clobbering edits. Use this when a teammate added a note or a log on the same OP mid-cycle. A refresh posts no log &mdash; only the fresh pull leaves an entry.
 
 <h2 id='warno'>/warno &mdash; write the WARNO</h2>
 
