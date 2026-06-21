@@ -12,11 +12,21 @@ The WARNO-writing skill. Researches the codebase and writes `## WARNING ORDER` (
 
 ## Arguments
 
-Anything passed as an argument is treated as **freeform instructions** describing how to revise the WARNO. There is no keyword list — read the instructions like any other prompt and classify the intent in step 5 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise the WARNO. There is no keyword list — read the instructions like any other prompt. First check them against `## Wrong-intent pushback`: if they ask for work another skill owns, push back and stop; otherwise classify the in-scope intent in step 5 (re-run dispatch). Common patterns:
 
 - `/warno` (no args) — first run, or resume a partial WARNO draft.
 - `/warno "rework architecture decisions about plan mode"` — targeted edit.
 - `/warno "rewrite the WARNO from scratch"` — full restart.
+
+## Wrong-intent pushback
+
+`/warno` owns the WARNO and nothing else. Before acting on freeform args, classify their intent: if they ask for work `/warno` does not own, do **not** silently do it — name the owning skill, tell the user to run it, and stop. This routing is identical whether the wrong-intent prompt arrives as the args of a direct `/warno` call or as a follow-up request after the phase (see Post-warno phase):
+
+- Cutting tasks / editing `## OPERATION ORDER` or `TASKS.md` → `/opord`
+- Implementing a task → `/splash`
+- Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
+
+In-scope WARNO work — Concept of Operations rewrite, Constraint changes, Target Reference Points refresh — proceeds through the normal dispatch below.
 
 ## What to do
 
@@ -90,7 +100,7 @@ Inspect the current state of OPERATION.md WARNING ORDER and any freeform args. B
 
 - **WARNING ORDER absent (no `## WARNING ORDER` heading at all), no args** → fresh write. Append `## WARNING ORDER` itself plus all three subsections (Concept of Operations, Constraints, Target Reference Points) after the last `## SITUATION` content. Run `naholo agent add-timeline -T warno 'Drafted WARNO.'`.
 - **WARNING ORDER present, no args** → stop. The skill cannot tell whether a present WARNO is finished or still in progress, and silently editing it risks clobbering committed direction. Tell the user to either re-run with freeform args describing the change (`/warno "…"`) or delete the `## WARNING ORDER` section from `OPERATION.md` and re-run `/warno` for a fresh write. Do not modify the WARNO, do not append a TIMELINE bullet.
-- **Args provided, classify intent**:
+- **Args provided** → first run them through `## Wrong-intent pushback`: if the intent belongs to another skill, name the owner and stop. Otherwise classify the in-scope intent:
   - **Targeted edit** — args describe partial changes to the WARNO (Concept of Operations, Constraints, Target Reference Points). Apply the described edits in place; refresh TRP if the edit changes which paths are relevant. Run `naholo agent add-timeline -T warno '{summary}'`.
   - **Full restart** — args explicitly say start over (e.g., "rewrite the WARNO from scratch"). Replace the WARNO wholesale (including TRP). If `## OPERATION ORDER` already has content, use `AskUserQuestion` to ask whether to **keep OPERATION ORDER** (let `/opord` reconcile it against the new WARNO later) or **flush OPERATION ORDER** (delete every task section — including shipped ones — and leave OPERATION ORDER empty for `/opord` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Run `naholo agent add-timeline -T warno '{summary, including kept/flushed OPERATION ORDER}'`.
 
@@ -164,10 +174,7 @@ Once this skill returns, the session is in the **warno** phase. The phase persis
 While in the warno phase:
 
 - **In-phase follow-up edits** — any WARNO-related touch-up the user asks for (rewording Concept of Operations, adding / dropping / flipping a Constraint, refreshing Target Reference Points) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T warno '<summary>'` per discrete event so a future fresh session sees what changed.
-- **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
-  - Cutting tasks / editing `## OPERATION ORDER` or `TASKS.md` → `/opord`
-  - Implementing a task → `/splash`
-  - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
+- **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
 

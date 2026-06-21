@@ -14,7 +14,7 @@ Each task is sized for one reviewable `/splash`; sub-tasks are deliberately not 
 
 ## Arguments
 
-Anything passed as an argument is treated as **freeform instructions** describing how to revise OPERATION ORDER. There is no keyword list — read the instructions like any other prompt and classify the intent in step 6 (re-run dispatch). Common patterns:
+Anything passed as an argument is treated as **freeform instructions** describing how to revise OPERATION ORDER. There is no keyword list — read the instructions like any other prompt. First check them against `## Wrong-intent pushback`: if they ask for work another skill owns, push back and stop; otherwise classify the in-scope intent in step 6 (re-run dispatch). Common patterns:
 
 - `/opord` (no args) — first run after `/warno`, or resume a partial OPERATION ORDER draft.
 - `/opord "split TASK 3 into two — one for the schema, one for the migration"` — targeted edit.
@@ -23,6 +23,16 @@ Anything passed as an argument is treated as **freeform instructions** describin
 - `/opord "rewrite OPORD from scratch"` — full restart of unfinished tasks.
 
 With `## OPERATION ORDER` already present, the default assumption is that the freeform args are plan-revision instructions (insert / drop / split / merge / retitle / rewrite unfinished tasks). WARNO-shaped instructions (Concept of Operations rewrite, Constraint changes) belong to `/warno`, not `/opord`.
+
+## Wrong-intent pushback
+
+`/opord` owns OPERATION ORDER and nothing else. Before acting on freeform args, classify their intent: if they ask for work `/opord` does not own, do **not** silently do it — name the owning skill, tell the user to run it, and stop. This routing is identical whether the wrong-intent prompt arrives as the args of a direct `/opord` call or as a follow-up request after the phase (see Post-opord phase):
+
+- WARNO rewrite (Concept of Operations / Constraints / Target Reference Points) → `/warno`
+- Implementing a task → `/splash`
+- Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
+
+In-scope plan-revision work — insert / drop / split / merge / retitle / rewrite unfinished tasks — proceeds through the normal dispatch below.
 
 ## What to do
 
@@ -94,7 +104,7 @@ Inspect the current state of `## OPERATION ORDER` and any freeform args. Branch:
 
 - **OPERATION ORDER absent (no `## OPERATION ORDER` heading), no args** → fresh write. Append `## OPERATION ORDER` after the last WARNING ORDER content, then cut the WARNO into single-commit-sized tasks and populate OPERATION ORDER (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 8).
 - **OPERATION ORDER present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## OPERATION ORDER` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify OPERATION ORDER, do not touch TASKS.md, do not append a TIMELINE bullet.
-- **Args provided, classify intent**:
+- **Args provided** → first run them through `## Wrong-intent pushback`: if the intent belongs to another skill, name the owner and stop. Otherwise classify the in-scope intent:
   - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap SOM steps). Apply the described edits in place.
   - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, append at the next free integer after the last existing task.
   - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present.
@@ -312,10 +322,7 @@ Once this skill returns, the session is in the **opord** phase. The phase persis
 While in the opord phase:
 
 - **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite SOM steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
-- **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
-  - WARNO rewrite (Concept of Operations / Constraints / Target Reference Points) → `/warno`
-  - Implementing a task → `/splash`
-  - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
+- **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
 

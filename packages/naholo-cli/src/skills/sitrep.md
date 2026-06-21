@@ -2,7 +2,6 @@
 name: sitrep
 description: Sync local progress to Naholo and post a one-sentence status log; does not close or clean up.
 argument-hint: '["freeform"]'
-model: sonnet
 ---
 
 # Sitrep — Sync Progress

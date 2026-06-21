@@ -15,11 +15,22 @@ First positional token (optional):
 - **Integer `N`** — ship TASK N specifically. Required to skip ahead past earlier unchecked tasks, or to re-run on an already-shipped task and revise its AAR. Even when the user just inserted a new task via `/opord`, the default is still first-unchecked — they must pass `N` to target it.
 - **No integer** — ship the **first** unchecked task in `TASKS.md`, top to bottom. Task numbers define order; never reorder based on recency, recent `/opord` activity, or implied intent.
 
-Anything in quotes after is freeform context for the splash. Common patterns:
+Anything in quotes after is freeform context for the splash — implementation hints, reference docs, AAR tweaks. If that context actually asks for work another skill owns (a plan revision, a WARNO rewrite, a server push), check it against `## Wrong-intent pushback` and push back instead of widening the splash. Common patterns:
 
 - `/splash 3 "ref docs/style.md"` — extra reference docs to read
 - `/splash 2 "use the existing helper in src/utils/foo.ts"` — implementation hint
 - `/splash 5 "tweak: the AAR should mention the migration"` — revision instruction when re-running on a shipped task
+
+## Wrong-intent pushback
+
+`/splash` ships exactly one task's code and AAR — nothing else. The freeform half of the args is implementation context, not a revision instruction; if it (or a follow-up request after the phase) asks for work `/splash` does not own, do **not** silently do it — name the owning skill, tell the user to run it, and stop. This routing is identical whether the wrong-intent prompt arrives as the args of a direct `/splash` call or as a follow-up after the phase (see Post-splash phase):
+
+- Editing a different (not just-shipped) task, inserting/dropping tasks, or any plan revision → `/opord`
+- WARNO rewrite (Concept of Operations / Constraints / Target Reference Points) → `/warno`
+- Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
+- Shipping the next task → re-run `/splash`
+
+In-scope work — implementing the targeted task and writing its AAR, with the freeform context folded in as a hint — proceeds through the normal flow below. (Scope expansion that still belongs to _this_ task is handled by step 5's two-option gate, not here.)
 
 ## What to do
 
@@ -204,11 +215,7 @@ Once this skill returns, the session is in the **splash** phase — anchored to 
 While in the splash phase:
 
 - **In-phase follow-up edits** — late-discovered deviations, AAR rewordings, small implementation tweaks on the just-shipped task, and `Notes` additions in the AAR are part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T splash '<summary>'` per discrete event so a future fresh session sees what changed.
-- **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
-  - Editing a different (not just-shipped) task, inserting/dropping tasks, or any plan revision → `/opord`
-  - WARNO rewrite (Concept of Operations / Constraints / Target Reference Points) → `/warno`
-  - Pushing to the server → `/sitrep` (checkpoint) or `/exfil` (final)
-  - Shipping the next task → re-run `/splash` (starts a new splash phase anchored to that task)
+- **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
 
