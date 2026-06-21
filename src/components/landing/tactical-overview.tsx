@@ -8,6 +8,9 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { BriefingLabel } from './briefing-label'
+import { CollectIntelMockup } from './mockups/collect-intel-mockup'
+import { OperateTerminalMockup } from './mockups/operate-terminal-mockup'
+import { RetrospectMockup } from './mockups/retrospect-mockup'
 import { Section } from './section'
 
 type Command = {
@@ -70,6 +73,30 @@ const COMMANDS: Command[] = [
   },
 ]
 
+type Step = {
+  index: string
+  title: string
+  body: string
+}
+
+const STEPS: Step[] = [
+  {
+    index: '01',
+    title: 'Collect intel',
+    body: 'Drop intel into the web app — logs are comments, notes are markdown.',
+  },
+  {
+    index: '02',
+    title: 'Operate',
+    body: 'Put an agent on your codebase: run /infil <opNum>.',
+  },
+  {
+    index: '03',
+    title: 'Retrospect',
+    body: 'Exfil pushes notes and usage back — review how the op went and what it cost.',
+  },
+]
+
 const TACTIC_DIAGRAM = `┌────────────────────────────────────────────────────────┐
 │  Mission HQ: Naholo web app                            │
 │                                                        │
@@ -102,9 +129,28 @@ export function TacticalOverview() {
         One cycle. Every op.
       </h2>
       <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-        Two landscapes, one loop. Intel lives in Mission HQ. Code lives in the
-        battlefield. AI skills sync between them or operate on the ground.
+        Every operation runs the same three moves: collect intel in the web app,
+        operate on your codebase through an AI skill, then retrospect once it
+        ships. Here&apos;s the loop, end to end.
       </p>
+
+      <div className='mt-12 space-y-12'>
+        {STEPS.map((step) => (
+          <div key={step.index}>
+            <div className='font-mono text-sm uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+              {step.index}
+              <span className='mx-1.5 text-zinc-400 dark:text-zinc-600'>·</span>
+              {step.title}
+            </div>
+            <p className='mt-3 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+              {step.body}
+            </p>
+            <div className='mt-5'>
+              <StepSlot index={step.index} />
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div className='mt-12 flex justify-center'>
         <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-3 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm max-[480px]:-mx-4 max-[480px]:p-2 max-[480px]:text-[10px] max-[400px]:text-[8px]'>
@@ -160,4 +206,17 @@ export function TacticalOverview() {
       </div>
     </Section>
   )
+}
+
+function StepSlot({ index }: { index: string }) {
+  switch (index) {
+    case '01':
+      return <CollectIntelMockup />
+    case '02':
+      return <OperateTerminalMockup />
+    case '03':
+      return <RetrospectMockup />
+    default:
+      return null
+  }
 }
