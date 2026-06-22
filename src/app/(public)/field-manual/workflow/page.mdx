@@ -19,6 +19,34 @@ The core pipeline:
 
 `/infil` &rarr; `/warno` &rarr; `/opord` &rarr; `/splash` (loop) &rarr; `/exfil`
 
+The same loop, drawn out — the web app holds the OP, your codebase is where the agent works, and the skills move data and progress between them:
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Mission HQ: Naholo web app                            │
+│                                                        │
+│  [Ideation: Drop intel as logs or notes]               │
+└────────────────────────────────────────────────────────┘
+  │ /infil           ^ /sitrep          ^ /exfil
+  v (pull OP data)   │ (push OP data)   │ (push + close)
+┌────────────────────────────────────────────────────────┐
+│ Battlefield: Your codebase                             │
+│                                                        │
+│ /warno (write architecture decisions)                  │
+│          ↓                                             │
+│   [Review architecture decisions]                      │
+│          ↓                                             │
+│ /opord (cut into single-commit tasks)                  │
+│          ↓                                             │
+│   [Review specs]                                       │
+│          ↓                                             │
+│ /splash (ship one task)  ◂┐                            │
+│          ↓                │ [Repeat]                   │
+│   [Review diff]           │ (/opord if revising tasks) │
+│          └────────────────┘                            │
+└────────────────────────────────────────────────────────┘
+```
+
 Side branches that plug into it:
 
 - **`/fob`** &mdash; always-safe op-creator. Drop a title + optional first log; spins up the OP server-side and chains `/infil` when no op is in flight.
