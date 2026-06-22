@@ -248,7 +248,6 @@ async function main() {
         title: transcript.title,
         startedAt: new Date(transcript.startedAt),
         endedAt: new Date(transcript.endedAt),
-        transcriptSizeBytes: transcript.transcriptSizeBytes,
         transcriptText,
       })
       if (!upserted.success) {

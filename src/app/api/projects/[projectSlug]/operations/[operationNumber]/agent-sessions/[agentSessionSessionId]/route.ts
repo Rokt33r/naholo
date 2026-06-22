@@ -49,7 +49,6 @@ const putAgentSessionSchema = z.object({
   startedAt: z.iso.datetime(),
   endedAt: z.iso.datetime(),
   transcript: z.string().nullable(),
-  transcriptSizeBytes: z.number().int().nonnegative(),
 })
 
 export async function PUT(request: NextRequest, context: RouteContext) {
@@ -92,7 +91,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       title: validation.data.title,
       startedAt: new Date(validation.data.startedAt),
       endedAt: new Date(validation.data.endedAt),
-      transcriptSizeBytes: validation.data.transcriptSizeBytes,
       transcriptText: transcript,
     })
     if (!upserted.success) {

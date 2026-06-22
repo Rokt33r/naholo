@@ -36,7 +36,6 @@ export async function upsertAgentTranscript(data: {
   title: string | null
   startedAt: Date
   endedAt: Date
-  transcriptSizeBytes: number
   transcriptText: string | null
 }): Promise<ReturnResult<{ id: string }>> {
   const transcriptColumns = computeTranscriptColumns(data.transcriptText)
@@ -51,7 +50,7 @@ export async function upsertAgentTranscript(data: {
       title: data.title,
       startedAt: data.startedAt,
       endedAt: data.endedAt,
-      transcriptSizeBytes: data.transcriptSizeBytes,
+      transcriptSizeBytes: transcriptColumns.transcriptSizeBytes,
       hasTranscript: transcriptColumns.hasTranscript,
       stats: transcriptColumns.stats,
       statsFormat: transcriptColumns.statsFormat,
@@ -68,7 +67,7 @@ export async function upsertAgentTranscript(data: {
         title: data.title,
         startedAt: data.startedAt,
         endedAt: data.endedAt,
-        transcriptSizeBytes: data.transcriptSizeBytes,
+        transcriptSizeBytes: transcriptColumns.transcriptSizeBytes,
         hasTranscript: transcriptColumns.hasTranscript,
         stats: transcriptColumns.stats,
         statsFormat: transcriptColumns.statsFormat,
@@ -156,6 +155,7 @@ function toSummary(row: {
 }
 
 function computeTranscriptColumns(transcriptText: string | null): {
+  transcriptSizeBytes: number
   hasTranscript: boolean
   stats: AgentTranscriptStatsV1 | null
   statsFormat: 'claude-code-v1' | null
@@ -163,6 +163,7 @@ function computeTranscriptColumns(transcriptText: string | null): {
 } {
   if (transcriptText == null) {
     return {
+      transcriptSizeBytes: 0,
       hasTranscript: false,
       stats: null,
       statsFormat: null,
@@ -171,6 +172,7 @@ function computeTranscriptColumns(transcriptText: string | null): {
   }
   const { stats, errors } = aggregateClaudeCodeV1(transcriptText)
   return {
+    transcriptSizeBytes: Buffer.byteLength(transcriptText, 'utf-8'),
     hasTranscript: true,
     stats,
     statsFormat: CLAUDE_CODE_V1,
