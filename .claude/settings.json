@@ -9,7 +9,9 @@
       "Bash(pnpm test-types *)",
       "Bash(pnpm format *)",
       "Bash(naholo agent *)",
-      "Bash(pnpm vitest *)"
+      "Bash(pnpm vitest *)",
+      "Bash(pnpm --filter @naholo/cli typecheck)",
+      "Bash(pnpm typecheck *)"
     ]
   },
   "hooks": {
