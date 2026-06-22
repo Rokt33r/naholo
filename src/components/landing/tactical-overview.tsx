@@ -76,24 +76,39 @@ const COMMANDS: Command[] = [
 type Step = {
   index: string
   title: string
-  body: string
+  body: React.ReactNode
 }
 
 const STEPS: Step[] = [
   {
     index: '01',
     title: 'Collect intel',
-    body: 'Drop intel into the web app — logs are comments, notes are markdown.',
+    body: 'Drop intel into the web app — small ideas as comment logs, big ones as markdown notes. Naholo is not an AI chat wrapper; you are just seeding the context. The real research and dev happen in your codebase once the op starts.',
   },
   {
     index: '02',
-    title: 'Operate',
-    body: 'Put an agent on your codebase: run /infil <opNum>.',
+    title: 'Operate the cycle',
+    body: (
+      <>
+        Put an agent on your codebase with <Cmd>{'/infil <opNum>'}</Cmd> — it
+        pulls the seeded context down through the Naholo CLI and sets up the op.
+        From there the cycle runs, end to end: <Cmd>/infil</Cmd> →{' '}
+        <Cmd>/warno</Cmd> → <Cmd>/opord</Cmd> → <Cmd>/splash</Cmd> (repeat,{' '}
+        <Cmd>/opord</Cmd> when tasks need adjusting) → <Cmd>/exfil</Cmd>.
+      </>
+    ),
   },
   {
     index: '03',
-    title: 'Retrospect',
-    body: 'Exfil pushes notes and usage back — review how the op went and what it cost.',
+    title: 'Debrief the spend',
+    body: (
+      <>
+        On <Cmd>/exfil</Cmd>, your notes and optional agent usage stats push
+        back to the server. Review how the op went and what it cost — priced at
+        Claude API rates, not subsidized plan rates — so the next op runs
+        leaner.
+      </>
+    ),
   },
 ]
 
@@ -136,17 +151,24 @@ export function TacticalOverview() {
 
       <div className='mt-12 space-y-12'>
         {STEPS.map((step) => (
-          <div key={step.index}>
-            <div className='font-mono text-sm uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
-              {step.index}
-              <span className='mx-1.5 text-zinc-400 dark:text-zinc-600'>·</span>
-              {step.title}
-            </div>
-            <p className='mt-3 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-              {step.body}
-            </p>
-            <div className='mt-5'>
+          <div
+            key={step.index}
+            className='grid grid-cols-1 items-center gap-8 md:grid-cols-2'
+          >
+            <div className='w-full'>
               <StepSlot index={step.index} />
+            </div>
+            <div>
+              <div className='font-mono text-sm uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+                {step.index}
+                <span className='mx-1.5 text-zinc-400 dark:text-zinc-600'>
+                  ·
+                </span>
+                {step.title}
+              </div>
+              <p className='mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+                {step.body}
+              </p>
             </div>
           </div>
         ))}
@@ -196,15 +218,29 @@ export function TacticalOverview() {
         ))}
       </div>
 
-      <div className='mt-10 flex justify-end'>
+      <div className='mt-10 flex flex-wrap justify-end gap-x-6 gap-y-2'>
+        <Link
+          href='/field-manual/quick-start'
+          className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
+        >
+          Read more: Quick start <span aria-hidden>→</span>
+        </Link>
         <Link
           href='/field-manual/workflow'
           className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
         >
-          Read more: Workflow <span aria-hidden>→</span>
+          Workflow <span aria-hidden>→</span>
         </Link>
       </div>
     </Section>
+  )
+}
+
+function Cmd({ children }: { children: React.ReactNode }) {
+  return (
+    <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
+      {children}
+    </code>
   )
 }
 

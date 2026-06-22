@@ -58,8 +58,8 @@ const TOOLS_BREAKDOWN =
 
 export function RetrospectMockup() {
   return (
-    <BrowserFrame title='naholo'>
-      <div className='flex flex-col gap-4 rounded-md border p-4 text-sm'>
+    <BrowserFrame title='NAHOLO OPERATION STATS'>
+      <div className='flex flex-col gap-4 text-sm'>
         {/* Totals */}
         <div className='grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-4'>
           <Stat label='Approx. cost' value='$52.98' />

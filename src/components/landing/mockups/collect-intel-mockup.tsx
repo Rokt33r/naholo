@@ -20,7 +20,7 @@ export function CollectIntelMockup() {
   const [tab, setTab] = useState<'comms' | 'note'>('comms')
 
   return (
-    <BrowserFrame title='naholo'>
+    <BrowserFrame title='NAHOLO OPERATION LOGS/NOTES'>
       {/* Operation header */}
       <div className='flex items-center gap-2'>
         <CircleDot className='size-4 shrink-0 text-green-600' />

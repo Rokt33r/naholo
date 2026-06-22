@@ -18,8 +18,8 @@ export function OperateTerminalMockup() {
       </div>
 
       {/* Terminal body */}
-      <div className='overflow-x-auto p-4 font-mono text-xs leading-relaxed text-zinc-300 sm:text-sm'>
-        <div className='min-w-max whitespace-pre'>
+      <div className='p-4 font-mono text-xs leading-relaxed text-zinc-300 sm:text-sm'>
+        <div className='whitespace-pre-wrap break-words'>
           <div>
             <span className='text-amber-400'>❯</span>{' '}
             <span className='text-zinc-100'>/infil 222</span>
@@ -51,17 +51,7 @@ export function OperateTerminalMockup() {
           <div>{' '}</div>
           <div>
             {
-              'Seeded ## SITUATION from the logs — the gist: full transcripts upload on exfil'
-            }
-          </div>
-          <div>
-            {
-              'and can leak secrets, so strip every user and agent message and redact tool'
-            }
-          </div>
-          <div>
-            {
-              'output down to the fields stats need. Folded transcript-schema in as reference.'
+              'Seeded ## SITUATION from the logs — the gist: full transcripts upload on exfil and can leak secrets, so strip every user and agent message and redact tool output down to the fields stats need. Folded transcript-schema in as reference.'
             }
           </div>
           <div>{' '}</div>
