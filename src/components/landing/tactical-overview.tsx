@@ -7,6 +7,7 @@ import {
   Siren,
 } from 'lucide-react'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { BriefingLabel } from './briefing-label'
 import { InlineCode } from './inline-code'
 import { CollectIntelMockup } from './mockups/collect-intel-mockup'
@@ -176,7 +177,9 @@ export function TacticalOverview() {
         {STEPS.map((step) => (
           <div key={step.index}>
             <div className='grid grid-cols-1 items-center gap-8 md:grid-cols-2'>
-              <div className='w-full'>
+              <div
+                className={cn('w-full', step.index !== '02' && 'md:order-2')}
+              >
                 <StepSlot index={step.index} />
               </div>
               <div>
