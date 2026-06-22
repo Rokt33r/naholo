@@ -83,18 +83,19 @@ const STEPS: Step[] = [
   {
     index: '01',
     title: 'Collect intel',
-    body: 'Drop intel into the web app — small ideas as comment logs, big ones as markdown notes. Naholo is not an AI chat wrapper; you are just seeding the context. The real research and dev happen in your codebase once the op starts.',
+    body: 'Drop intel into the web app: leave small ideas as comment logs and bigger ones as markdown notes. Naholo is not an AI chat wrapper, just a place to seed context. The real research and development happen in your codebase once the operation starts.',
   },
   {
     index: '02',
     title: 'Operate the cycle',
     body: (
       <>
-        Put an agent on your codebase with <Cmd>{'/infil <opNum>'}</Cmd> — it
-        pulls the seeded context down through the Naholo CLI and sets up the op.
-        From there the cycle runs, end to end: <Cmd>/infil</Cmd> →{' '}
-        <Cmd>/warno</Cmd> → <Cmd>/opord</Cmd> → <Cmd>/splash</Cmd> (repeat,{' '}
-        <Cmd>/opord</Cmd> when tasks need adjusting) → <Cmd>/exfil</Cmd>.
+        Put an agent on your codebase by running <Cmd>{'/infil <opNum>'}</Cmd>,
+        which pulls the seeded context down through the Naholo CLI and sets up
+        the operation. From there the cycle runs in order: <Cmd>/infil</Cmd>,{' '}
+        <Cmd>/warno</Cmd>, <Cmd>/opord</Cmd>, and a <Cmd>/splash</Cmd> for each
+        task. Loop back to <Cmd>/opord</Cmd> whenever the plan needs adjusting,
+        then finish with <Cmd>/exfil</Cmd>.
       </>
     ),
   },
@@ -103,10 +104,10 @@ const STEPS: Step[] = [
     title: 'Debrief the spend',
     body: (
       <>
-        On <Cmd>/exfil</Cmd>, your notes and optional agent usage stats push
-        back to the server. Review how the op went and what it cost — priced at
-        Claude API rates, not subsidized plan rates — so the next op runs
-        leaner.
+        When you run <Cmd>/exfil</Cmd>, your notes and optional agent usage
+        stats push back to the server. Review how the operation went and what it
+        cost, measured at Claude API rates rather than subsidized plan rates, so
+        the next one runs leaner.
       </>
     ),
   },
@@ -151,70 +152,75 @@ export function TacticalOverview() {
 
       <div className='mt-12 space-y-12'>
         {STEPS.map((step) => (
-          <div
-            key={step.index}
-            className='grid grid-cols-1 items-center gap-8 md:grid-cols-2'
-          >
-            <div className='w-full'>
-              <StepSlot index={step.index} />
-            </div>
-            <div>
-              <div className='font-mono text-sm uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
-                {step.index}
-                <span className='mx-1.5 text-zinc-400 dark:text-zinc-600'>
-                  ·
-                </span>
-                {step.title}
+          <div key={step.index}>
+            <div className='grid grid-cols-1 items-center gap-8 md:grid-cols-2'>
+              <div className='w-full'>
+                <StepSlot index={step.index} />
               </div>
-              <p className='mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-                {step.body}
-              </p>
+              <div>
+                <div className='font-mono text-sm uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>
+                  {step.index}
+                  <span className='mx-1.5 text-zinc-400 dark:text-zinc-600'>
+                    ·
+                  </span>
+                  {step.title}
+                </div>
+                <p className='mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+                  {step.body}
+                </p>
+              </div>
             </div>
+
+            {step.index === '02' && (
+              <>
+                <div className='mt-12 flex justify-center'>
+                  <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-3 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm max-[480px]:-mx-4 max-[480px]:p-2 max-[480px]:text-[10px] max-[400px]:text-[8px]'>
+                    {TACTIC_DIAGRAM}
+                  </pre>
+                </div>
+
+                <div className='mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+                  {COMMANDS.map((cmd) => (
+                    <article
+                      key={cmd.code}
+                      className='rounded-lg border border-zinc-200 bg-white/50 p-6 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/50'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <cmd.Icon className='h-5 w-5 text-amber-500 dark:text-amber-400' />
+                        <div className='font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+                          {cmd.index}
+                          <span className='mx-1 text-zinc-400 dark:text-zinc-600'>
+                            ·
+                          </span>
+                          <code className='font-mono text-amber-600 dark:text-amber-500'>
+                            {cmd.code}
+                          </code>
+                        </div>
+                      </div>
+
+                      <h3 className='mt-4 text-xl font-semibold text-zinc-900 dark:text-zinc-50'>
+                        {cmd.name}
+                      </h3>
+                      <p className='mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300'>
+                        {cmd.body}
+                      </p>
+
+                      <ul className='mt-4 flex flex-wrap gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800'>
+                        {cmd.artefacts.map((a) => (
+                          <li
+                            key={a}
+                            className='rounded border border-zinc-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
+                          >
+                            {a}
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        ))}
-      </div>
-
-      <div className='mt-12 flex justify-center'>
-        <pre className='overflow-x-auto rounded-lg border border-zinc-200 bg-white/40 p-3 font-mono text-xs leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 sm:text-sm max-[480px]:-mx-4 max-[480px]:p-2 max-[480px]:text-[10px] max-[400px]:text-[8px]'>
-          {TACTIC_DIAGRAM}
-        </pre>
-      </div>
-
-      <div className='mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        {COMMANDS.map((cmd) => (
-          <article
-            key={cmd.code}
-            className='rounded-lg border border-zinc-200 bg-white/50 p-6 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/50'
-          >
-            <div className='flex items-center gap-2'>
-              <cmd.Icon className='h-5 w-5 text-amber-500 dark:text-amber-400' />
-              <div className='font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
-                {cmd.index}
-                <span className='mx-1 text-zinc-400 dark:text-zinc-600'>·</span>
-                <code className='font-mono text-amber-600 dark:text-amber-500'>
-                  {cmd.code}
-                </code>
-              </div>
-            </div>
-
-            <h3 className='mt-4 text-xl font-semibold text-zinc-900 dark:text-zinc-50'>
-              {cmd.name}
-            </h3>
-            <p className='mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300'>
-              {cmd.body}
-            </p>
-
-            <ul className='mt-4 flex flex-wrap gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800'>
-              {cmd.artefacts.map((a) => (
-                <li
-                  key={a}
-                  className='rounded border border-zinc-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
-                >
-                  {a}
-                </li>
-              ))}
-            </ul>
-          </article>
         ))}
       </div>
 
