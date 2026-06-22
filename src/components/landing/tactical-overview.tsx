@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { BriefingLabel } from './briefing-label'
+import { InlineCode } from './inline-code'
 import { CollectIntelMockup } from './mockups/collect-intel-mockup'
 import { OperateTerminalMockup } from './mockups/operate-terminal-mockup'
 import { RetrospectMockup } from './mockups/retrospect-mockup'
@@ -90,12 +91,14 @@ const STEPS: Step[] = [
     title: 'Operate the cycle',
     body: (
       <>
-        Put an agent on your codebase by running <Cmd>{'/infil <opNum>'}</Cmd>,
-        which pulls the seeded context down through the Naholo CLI and sets up
-        the operation. From there the cycle runs in order: <Cmd>/infil</Cmd>,{' '}
-        <Cmd>/warno</Cmd>, <Cmd>/opord</Cmd>, and a <Cmd>/splash</Cmd> for each
-        task. Loop back to <Cmd>/opord</Cmd> whenever the plan needs adjusting,
-        then finish with <Cmd>/exfil</Cmd>.
+        Put an agent on your codebase by running{' '}
+        <InlineCode>{'/infil <opNum>'}</InlineCode>, which pulls the seeded
+        context down through the Naholo CLI and sets up the operation. From
+        there the cycle runs in order: <InlineCode>/infil</InlineCode>,{' '}
+        <InlineCode>/warno</InlineCode>, <InlineCode>/opord</InlineCode>, and a{' '}
+        <InlineCode>/splash</InlineCode> for each task. Loop back to{' '}
+        <InlineCode>/opord</InlineCode> whenever the plan needs adjusting, then
+        finish with <InlineCode>/exfil</InlineCode>.
       </>
     ),
   },
@@ -104,10 +107,10 @@ const STEPS: Step[] = [
     title: 'Debrief the spend',
     body: (
       <>
-        When you run <Cmd>/exfil</Cmd>, your notes and optional agent usage
-        stats push back to the server. Review how the operation went and what it
-        cost, measured at Claude API rates rather than subsidized plan rates, so
-        the next one runs leaner.
+        When you run <InlineCode>/exfil</InlineCode>, your notes and optional
+        agent usage stats push back to the server. Review how the operation went
+        and what it cost, measured at Claude API rates rather than subsidized
+        plan rates, so the next one runs leaner.
       </>
     ),
   },
@@ -278,14 +281,6 @@ export function TacticalOverview() {
         </ul>
       </div>
     </Section>
-  )
-}
-
-function Cmd({ children }: { children: React.ReactNode }) {
-  return (
-    <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
-      {children}
-    </code>
   )
 }
 

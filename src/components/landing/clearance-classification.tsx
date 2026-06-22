@@ -1,6 +1,7 @@
 import { TowerControl, VenetianMask } from 'lucide-react'
 import Link from 'next/link'
 import { BriefingLabel } from './briefing-label'
+import { InlineCode } from './inline-code'
 import { Section } from './section'
 
 export function ClearanceClassification() {
@@ -31,24 +32,15 @@ export function ClearanceClassification() {
           <p className='mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300'>
             You deploy into territory you don&apos;t control, so no base goes
             up: nothing is committed and no trace is left behind. Your kit stays
-            in your ruck (
-            <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
-              ~/.naholo
-            </code>
-            ). Run{' '}
-            <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
-              naholo covert init
-            </code>{' '}
-            and go dark.
+            in your ruck (<InlineCode>~/.naholo</InlineCode>
+            ). Run <InlineCode>naholo covert init</InlineCode> and go dark.
           </p>
           <p className='mt-6 border-t border-zinc-200 pt-6 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:text-zinc-300'>
             Choose this when you&apos;re working on a team project but
             don&apos;t want to, or can&apos;t, introduce naholo to the rest of
             the team. You&apos;ll need to run{' '}
-            <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
-              naholo covert init
-            </code>{' '}
-            each time you create a new worktree.
+            <InlineCode>naholo covert init</InlineCode> each time you create a
+            new worktree.
           </p>
         </article>
 
@@ -65,15 +57,10 @@ export function ClearanceClassification() {
           </h3>
           <p className='mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300'>
             This is your territory, so you set the rules. Deploy a full base at{' '}
-            <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
-              .naholo/
-            </code>{' '}
-            in the project root with config checked into source, so every
-            operator runs the same loop. Run{' '}
-            <code className='rounded bg-zinc-100 px-1 py-0.5 font-mono text-xs dark:bg-zinc-800'>
-              naholo init
-            </code>{' '}
-            and push forward with your team.
+            <InlineCode>.naholo/</InlineCode> in the project root with config
+            checked into source, so every operator runs the same loop. Run{' '}
+            <InlineCode>naholo init</InlineCode> and push forward with your
+            team.
           </p>
           <p className='mt-6 border-t border-zinc-200 pt-6 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:text-zinc-300'>
             Choose this when you own the repo or have the authority to introduce
