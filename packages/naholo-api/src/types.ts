@@ -175,5 +175,4 @@ export type AgentTranscriptPayload = {
   // null = caller is recording the transcript but opting out of body upload;
   // server leaves has_transcript=false and skips the storage write.
   transcript: string | null
-  transcriptSizeBytes: number
 }

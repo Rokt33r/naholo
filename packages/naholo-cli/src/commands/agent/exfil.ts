@@ -54,7 +54,6 @@ export const exfilCommand = new Command('exfil')
             startedAt: entry.started_at,
             endedAt: entry.last_message_at,
             transcript,
-            transcriptSizeBytes: Buffer.byteLength(transcript, 'utf-8'),
           },
         )
 
@@ -68,7 +67,6 @@ export const exfilCommand = new Command('exfil')
             startedAt: subagent.started_at,
             endedAt: subagent.last_message_at,
             transcript: subTranscript,
-            transcriptSizeBytes: Buffer.byteLength(subTranscript, 'utf-8'),
           })
         }
       }
