@@ -25,13 +25,11 @@ const STEPS: Step[] = [
     body: (
       <>
         Put an agent on your codebase by running{' '}
-        <InlineCode>{'/infil <opNum>'}</InlineCode>, which pulls the seeded
-        context down through the Naholo CLI and sets up the operation. From
-        there the cycle runs in order: <InlineCode>/infil</InlineCode>,{' '}
-        <InlineCode>/warno</InlineCode>, <InlineCode>/opord</InlineCode>, and a{' '}
-        <InlineCode>/splash</InlineCode> for each task. Loop back to{' '}
-        <InlineCode>/opord</InlineCode> whenever the plan needs adjusting, then
-        finish with <InlineCode>/exfil</InlineCode>.
+        <InlineCode>{'/infil <opNum>'}</InlineCode>. After each step it spells
+        out what to review and what comes next, then waits on your call: wave it
+        on to the next skill, or reply with a tweak to revise what it just did.
+        The review is always yours; the agent just keeps you moving toward{' '}
+        <InlineCode>/exfil</InlineCode>.
       </>
     ),
   },
