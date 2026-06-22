@@ -137,6 +137,26 @@ const TACTIC_DIAGRAM = `┌─────────────────�
 │          └────────────────┘                            │
 └────────────────────────────────────────────────────────┘`
 
+type IncomingItem = {
+  title: string
+  body: string
+}
+
+const INCOMING: IncomingItem[] = [
+  {
+    title: 'Campaigns & Kanban',
+    body: 'Campaigns roll ops into epics; watch them flow across a Kanban board.',
+  },
+  {
+    title: 'Token usage dashboard',
+    body: 'Per-op stats roll up into a project dashboard that breaks spend down by operator across the day, week, or month.',
+  },
+  {
+    title: 'Corps',
+    body: 'A Corps groups projects and teams under one command, with bulk member control, shared settings, and a cross-project view.',
+  },
+]
+
 export function TacticalOverview() {
   return (
     <Section>
@@ -149,7 +169,6 @@ export function TacticalOverview() {
         operate on your codebase through an AI skill, then retrospect once it
         ships. Here&apos;s the loop, end to end.
       </p>
-
       <div className='mt-12 space-y-12'>
         {STEPS.map((step) => (
           <div key={step.index}>
@@ -237,6 +256,26 @@ export function TacticalOverview() {
         >
           Workflow <span aria-hidden>→</span>
         </Link>
+      </div>
+
+      <div className='mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800'>
+        <span className='inline-block rounded border border-amber-500/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-amber-600 dark:border-amber-400/40 dark:text-amber-500'>
+          [ INCOMING FEATURES]
+        </span>
+        <ul className='mt-6 space-y-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+          {INCOMING.map((item) => (
+            <li key={item.title} className='flex items-start gap-3'>
+              <span className='mt-2 h-1 w-1 flex-none rounded-full bg-emerald-500 dark:bg-emerald-400' />
+              <span>
+                <strong className='font-semibold text-zinc-900 dark:text-zinc-50'>
+                  {item.title}
+                </strong>
+                {' — '}
+                {item.body}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </Section>
   )

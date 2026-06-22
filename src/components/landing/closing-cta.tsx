@@ -8,7 +8,7 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
     <Section className='border-b-0'>
       <div className='mx-auto max-w-2xl text-center'>
         <BriefingLabel className='justify-center'>
-          {'// 08 · Deployment'}
+          {'// 06 · Deployment'}
         </BriefingLabel>
         <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
           Ready to deploy?

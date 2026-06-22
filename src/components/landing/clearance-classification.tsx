@@ -6,7 +6,7 @@ import { Section } from './section'
 export function ClearanceClassification() {
   return (
     <Section>
-      <BriefingLabel>{'// 06 · Clearance classification'}</BriefingLabel>
+      <BriefingLabel>{'// 04 · Clearance classification'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         Classify your project.
       </h2>

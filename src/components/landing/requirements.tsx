@@ -20,7 +20,7 @@ function BrandIcon({ slug, alt }: { slug: string; alt: string }) {
 export function Requirements() {
   return (
     <Section>
-      <BriefingLabel>{'// 07 · Field requirements'}</BriefingLabel>
+      <BriefingLabel>{'// 05 · Field requirements'}</BriefingLabel>
       <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         Gear check.
       </h2>

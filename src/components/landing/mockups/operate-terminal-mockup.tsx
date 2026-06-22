@@ -13,7 +13,7 @@ export function OperateTerminalMockup() {
           <span className='size-2.5 rounded-full bg-zinc-700' />
         </div>
         <span className='font-mono text-[11px] uppercase tracking-[0.15em] text-zinc-500'>
-          claude code cli
+          claude code
         </span>
       </div>
 

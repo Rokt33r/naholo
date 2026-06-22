@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import { ClosingCTA } from '@/components/landing/closing-cta'
 import { Doctrine } from '@/components/landing/doctrine'
-import { FieldToolkit } from '@/components/landing/field-toolkit'
 import { Hero } from '@/components/landing/hero'
-import { MissionHQ } from '@/components/landing/mission-hq'
 import { Requirements } from '@/components/landing/requirements'
 import { ClearanceClassification } from '@/components/landing/clearance-classification'
 import { TacticalOverview } from '@/components/landing/tactical-overview'
@@ -29,8 +27,6 @@ export default async function LandingPage() {
       <Hero isAuthed={isAuthed} />
       <Doctrine />
       <TacticalOverview />
-      <MissionHQ />
-      <FieldToolkit />
       <ClearanceClassification />
       <Requirements />
       <ClosingCTA isAuthed={isAuthed} />
