@@ -89,6 +89,13 @@ Optional operation number (e.g., `42`).
 
    Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line. Include the CLI output details (tasks updated/inserted, notes merged) in the summary.
 
+   Close the summary with a `Next:` block (printed as raw markdown, part of the summary output):
+
+   Next:
+   - Looks good → run `/warno` to research the codebase and cut the WARNING ORDER
+   - Small op, skip the review → `/raid` to stub the WARNO and cut tasks in one pass
+   - Idea still rough → `/recon` to research and talk it through before committing to a WARNO
+
 ## Post-infil phase
 
 Once this skill returns, the session is in the **infil** phase. The phase persists until a different phase-changing skill runs (`/warno`, `/opord`, `/splash`), `/exfil` cleans up the workflow, or the session ends. `/sitrep` is a sync-only operation and does **not** end the phase.
