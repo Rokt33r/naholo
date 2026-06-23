@@ -146,10 +146,11 @@ Examples:
 
 ### 7. Print summary
 
-Show the warno state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
+Show the warno state. Use markdown link syntax. Resolve `<line>` by reading back `OPERATION.md` after writing the WARNO and locating the `## WARNING ORDER` heading; the link label stays semantic per the manual's `## Chat output` → `### Link format` rule (no `#L<line>` in the label).
 
-Example (printed directly, not fenced):
+Output template — print raw, per the manual's `## Chat output` rule:
 
+```md
 Warno complete for OP #42: "Implement user auth"
 
 - WARNO: Concept of Operations + 4 Constraints + 6 TRP entries
@@ -159,13 +160,12 @@ Warno complete for OP #42: "Implement user auth"
   - [src/server/services/operator.ts](src/server/services/operator.ts)
 - WARNO: [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<line>)
 
-Resolve `<line>` by reading back `OPERATION.md` after writing the WARNO and locating the `## WARNING ORDER` heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
-
 Next:
 
 - Looks good → run `/opord` to cut the WARNO into tasks
 - Refine the WARNO → give a prompt directly (post-warno phase), or hand-edit the WARNING ORDER
 - Optionally → `/sitrep` to push current WARNO to the server
+```
 
 ## Post-warno phase
 

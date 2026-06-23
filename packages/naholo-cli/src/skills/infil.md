@@ -90,7 +90,7 @@ Output a summary using markdown link syntax for clickable paths. Print as raw ma
 
 If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
-Output template — **print the contents raw, without the fence**. The fence below only marks where the template starts and ends so it's not mistaken for skill prose; emitting the backticks would break the `[text](path)` links per the manual's `## Chat output` rule. Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line, and fold in the CLI output details (tasks updated/inserted, notes merged).
+Output template — print raw, per the manual's `## Chat output` rule. Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line, and fold in the CLI output details (tasks updated/inserted, notes merged).
 
 ```md
 Infilled operation #42: "Implement user auth"

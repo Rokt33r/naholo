@@ -50,9 +50,9 @@ Run with the composed line. On non-zero exit, surface the CLI's error and stop â
 
 ### 5. Print the confirmation
 
-Print as raw markdown (no surrounding fence):
+Output template â€” print raw, per the manual's `## Chat output` rule:
 
-```
+```md
 Sitrep synced for OP #{currentOp}.
 ```
 

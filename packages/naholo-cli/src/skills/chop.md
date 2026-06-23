@@ -180,10 +180,11 @@ naholo agent add-timeline -T chop 'Revised CHOP.md: {one-sentence summary of wha
 
 ### 6. Print summary
 
-Show the chop draft state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
+Show the chop draft state. Use markdown link syntax.
 
-Example (printed directly, not fenced):
+Output template — print raw, per the manual's `## Chat output` rule:
 
+```md
 CHOP proposal drafted on OP #{parentNumber}: "{parentTitle}"
 
 - Carved: {N} constraint(s), {M} unshipped task(s)
@@ -196,6 +197,7 @@ Next:
 - Looks good → `/chopchop` to apply (spawns the new OP server-side and prunes the parent).
 - Want to tweak the split → edit `CHOP.md` directly (move bullets between the CURRENT and NEW OP sections, rename the new OP, rewrite either Concept of Operations), then `/chopchop`.
 - Abandon the proposal → delete `CHOP.md` and the chop never happened.
+```
 
 ## Post-chop phase
 

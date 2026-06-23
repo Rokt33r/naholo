@@ -147,36 +147,44 @@ The CLI computes the line anchors and the `parentOpState` itself — the skill d
 
 ### 6. Print summary
 
-Print as raw markdown — no surrounding fence. Use markdown link syntax.
+Use markdown link syntax. The blocks below are output templates — print them raw, per the manual's `## Chat output` rule.
 
 **Heading + result block** (always printed):
 
-> CHOP applied on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATION.md)
->
-> - Spawned: OP #{newNumber} {newTitle} — [open on Naholo]({newUrl})
-> - Moved to new OP: {movedConstraints} Constraints, {movedTasks} task(s)
+```md
+CHOP applied on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATION.md)
+
+- Spawned: OP #{newNumber} {newTitle} — [open on Naholo]({newUrl})
+- Moved to new OP: {movedConstraints} Constraints, {movedTasks} task(s)
+```
 
 **Then append the next-actions block** that matches the `parentOpState` field from the CLI's result block.
 
 `mission-only`:
 
-> Next:
->
-> - `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) on the parent.
-> - `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) into OPERATION ORDER tasks.
+```md
+Next:
+
+- `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) on the parent.
+- `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) into OPERATION ORDER tasks.
+```
 
 `execution-ready`:
 
-> Next:
->
-> - `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L{executionLine}) (insert / drop / rewrite unfinished tasks).
-> - `/splash` — ship [TASK {nextTaskNumber} — {nextTaskTitle}]({operationDir}/notes/OPERATION.md#L{nextTaskLine})
+```md
+Next:
+
+- `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L{executionLine}) (insert / drop / rewrite unfinished tasks).
+- `/splash` — ship [TASK {nextTaskNumber} — {nextTaskTitle}]({operationDir}/notes/OPERATION.md#L{nextTaskLine})
+```
 
 `all-shipped`:
 
-> Next:
->
-> - `/exfil` — every task on the parent is shipped; sync and close out the operation.
+```md
+Next:
+
+- `/exfil` — every task on the parent is shipped; sync and close out the operation.
+```
 
 For `all-shipped`, do not append `/warno`, `/opord`, `/splash`, `/sitrep`, or any other skill — just the single `/exfil` bullet. For `mission-only` and `execution-ready`, the listed bullets are the only next-step pointers; do not invent additional options.
 

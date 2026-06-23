@@ -292,28 +292,38 @@ The summary's primary link points at the **most-affected scope** of this run, so
 
 Resolve `<line>` by reading back `OPERATION.md` after writing OPERATION ORDER and locating the matching heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
 
-Example (fresh write, printed directly, not fenced):
+The summaries and `Next:` block below are output templates — print them raw, per the manual's `## Chat output` rule.
 
+Example (fresh write):
+
+```md
 Plan complete for OP #42: "Implement user auth"
 
 - Tasks: 6 total (0 done, 6 remaining)
 - OPORD: [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<line>)
 - Tasks: [TASKS.md]({operationDir}/TASKS.md)
+```
 
 Example (targeted edit on TASK 4):
 
+```md
 Plan adjusted for OP #42: "Implement user auth"
 
 - Tasks: 6 total (3 done, 3 remaining)
 - Edited: [TASK 4]({operationDir}/notes/OPERATION.md#L<line>)
 - Tasks: [TASKS.md]({operationDir}/TASKS.md)
+```
 
+Then append the `Next:` block:
+
+```md
 Next:
 
 - Looks good → run `/splash` to ship [TASK 1]({operationDir}/notes/OPERATION.md#L<line>)
 - Revise unfinished tasks → give a prompt directly (post-opord phase), or hand-edit OPERATION ORDER
 - Direction change → re-run `/warno "freeform instructions"` to revise the WARNO
 - Optionally → `/sitrep` to push current plan to the server
+```
 
 ## Post-opord phase
 

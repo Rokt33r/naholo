@@ -152,7 +152,7 @@ Recovery: run `pwd`, then `cd` back to the directory where the op was infilled (
 
 ## Chat output
 
-When printing an end-of-skill summary to the user (infil recap, warno summary, splash AAR digest, sitrep/exfil report), output raw markdown lines directly — **never wrap the summary block in a codeblock fence**. Fenced summaries break `[text](path)` link rendering in the Naholo UI. Files written to disk can still contain fenced code examples; this rule applies only to chat output.
+Print chat output — end-of-skill summaries (infil recap, warno summary, splash AAR digest, sitrep/exfil report) and every other message — as raw markdown lines, **never inside a codeblock fence**; fencing turns `[text](path)` links into literal text. When a skill's source wraps its output template in a ` ```md ` fence, that fence only marks the template's boundaries in the doc — reproduce its contents, not the fence.
 
 ### Link format
 

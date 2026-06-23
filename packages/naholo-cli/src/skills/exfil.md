@@ -58,9 +58,9 @@ Pass `--close` when closing, no flag when leaving open. On non-zero exit, surfac
 
 ### 6. Print the completion line
 
-Print as raw markdown (no surrounding fence):
+Output template — print raw, per the manual's `## Chat output` rule:
 
-```
+```md
 Exfil complete — [OP #{currentOp}: "{opTitle}"]({url})
 ```
 

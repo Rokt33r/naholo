@@ -65,35 +65,43 @@ From the OPERATION.md + TASKS.md already loaded in step 2, pick one of:
 
 ### 6. Print summary
 
-Show the result. Use markdown link syntax. Print as raw markdown — no surrounding fence.
+Show the result. Use markdown link syntax. The blocks below are output templates — print them raw, per the manual's `## Chat output` rule.
 
 **Heading line** (always printed):
 
-> CHOP discarded on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATION.md). Parent unchanged.
+```md
+CHOP discarded on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATION.md). Parent unchanged.
+```
 
 **Then append the next-actions block** that matches the mode you determined in step 5.
 
 `mission-only`:
 
-> Next:
->
-> - `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) on the parent.
-> - `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) into OPERATION ORDER tasks.
+```md
+Next:
+
+- `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) on the parent.
+- `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) into OPERATION ORDER tasks.
+```
 
 `execution-ready`:
 
-> Next:
->
-> - `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<operation-order-line>) (insert / drop / rewrite unfinished tasks).
-> - `/splash` — ship [TASK {N} — {title}]({operationDir}/notes/OPERATION.md#L<task-line>)
+```md
+Next:
+
+- `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<operation-order-line>) (insert / drop / rewrite unfinished tasks).
+- `/splash` — ship [TASK {N} — {title}]({operationDir}/notes/OPERATION.md#L<task-line>)
+```
 
 TASK {N} should be the first unchecked task.
 
 `all-shipped`:
 
-> Next:
->
-> - `/exfil` — every task on the parent is shipped; sync and close out the operation.
+```md
+Next:
+
+- `/exfil` — every task on the parent is shipped; sync and close out the operation.
+```
 
 For `all-shipped`, do not append `/warno`, `/opord`, `/splash`, `/sitrep`, or any other skill — just the single `/exfil` bullet. For `mission-only` and `execution-ready`, the listed bullets are the only next-step pointers; do not invent additional options.
 

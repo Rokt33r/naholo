@@ -43,13 +43,15 @@ Read the raw `/fob` argument string. Split on the first newline:
 
 ### 4. Usage gate
 
-If both `title` and `content` are empty after step 3, abort. Print as raw markdown (no surrounding fence) and stop:
+If both `title` and `content` are empty after step 3, abort. Print this template raw (per the manual's `## Chat output` rule) and stop:
 
-> `/fob` needs a prompt. Pick one shape:
->
-> - `/fob <title>` — title only
-> - `/fob <title>\n<content lines...>` — title + first log
-> - `/fob\n<content lines...>` — content only; `/fob` derives the title
+```md
+`/fob` needs a prompt. Pick one shape:
+
+- `/fob <title>` — title only
+- `/fob <title>\n<content lines...>` — title + first log
+- `/fob\n<content lines...>` — content only; `/fob` derives the title
+```
 
 Do not call the CLI.
 
@@ -70,10 +72,12 @@ Parse the stdout YAML and read `opNumber`. If the CLI errors (network failure, a
 Branch on `<op_status>` from step 1:
 
 - **`No infilled operation.`** → invoke the `infil` skill through the `Skill` tool with the new `opNumber` as its argument. `/infil` handles the server-to-local fetch, the directory layout, and the SITUATION seeding in `OPERATION.md`. `/fob` does not seed any files itself — every on-disk output of this branch comes from the chained `/infil`. Once `/infil` returns, the session is in the **infil** phase, anchored to the new op, and `/infil`'s own end-of-skill summary is the final output the user sees.
-- **`currentOp` present** → do **not** chain `/infil`; clobbering the in-flight infilled directory would lose the user's current work. Print the following raw markdown (no surrounding fence) and stop:
+- **`currentOp` present** → do **not** chain `/infil`; clobbering the in-flight infilled directory would lose the user's current work. Print this template raw (per the manual's `## Chat output` rule) and stop:
 
-  > Infilled op exists, skipped /infil.
-  > To infil, /exfil first and /infil {opNumber} again.
+  ```md
+  Infilled op exists, skipped /infil.
+  To infil, /exfil first and /infil {opNumber} again.
+  ```
 
   Substitute `{opNumber}` with the value parsed in step 5.
 
