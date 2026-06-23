@@ -153,11 +153,12 @@ Reach for it on small OPs whose architecture is obvious &mdash; bug fixes, doc u
 `/opord` is the **detail-cutting** phase. It reads the populated WARNO and writes `## OPERATION ORDER`: one `### TASK N — Title` section per task. Each task carries:
 
 - **Intent** &mdash; one or two sentences naming the success criterion `/splash` uses to know the task is done.
-- **Scheme of Maneuver** &mdash; an action list of atomic steps (`Add` / `Edit` / `Move` / `Delete` / `Run` / `Manual`) that `/splash` walks when shipping the task, optionally preceded by an ASCII artifact (control-flow diagram, wireframe, signature diff) when the change is shape-y enough to need one.
+- **Method of Engagement** &mdash; optional. Prose plus an ASCII artifact (control-flow diagram, wireframe, signature diff) when the change is shape-y enough to need one; omitted when the task has nothing to sketch.
+- **Target Description** &mdash; mandatory. An action list of atomic steps (`Add` / `Edit` / `Move` / `Delete` / `Run` / `Manual`) that `/splash` walks when shipping the task.
 
 Tasks are sized for one `/splash`: a single cohesive change a reviewer can read as one diff. If a task title needs &ldquo;and&rdquo; or a comma, split it.
 
-`/opord` also lands a phase. Mid-cycle plan revisions &mdash; insert a task, split one in two, drop an unstarted one, retitle, rewrite a SOM action list &mdash; happen by re-invoking `/opord "freeform"` (or hand-editing OPERATION ORDER + `TASKS.md`). Already-shipped tasks (those with an `#### After-Action Report` heading) are treated as **immutable by default**: the agent will not edit, renumber, or drop them on its own. The recommended path for a follow-up is a fresh TASK via `/opord` so the change gets its own review window. If you genuinely need to rewrite a shipped task &mdash; restoring a deleted file, undoing a botched ship &mdash; revert the change by hand and tell the agent to overwrite the AAR. The default keeps history honest; the override is yours when you need it.
+`/opord` also lands a phase. Mid-cycle plan revisions &mdash; insert a task, split one in two, drop an unstarted one, retitle, rewrite a Target Description action list &mdash; happen by re-invoking `/opord "freeform"` (or hand-editing OPERATION ORDER + `TASKS.md`). Already-shipped tasks (those with an `#### After-Action Report` heading) are treated as **immutable by default**: the agent will not edit, renumber, or drop them on its own. The recommended path for a follow-up is a fresh TASK via `/opord` so the change gets its own review window. If you genuinely need to rewrite a shipped task &mdash; restoring a deleted file, undoing a botched ship &mdash; revert the change by hand and tell the agent to overwrite the AAR. The default keeps history honest; the override is yours when you need it.
 
 If a revision you ask for would contradict a current Constraint, the agent pushes back with a drafted `/warno "..."` prompt &mdash; the WARNO revision it thinks the change needs. From there:
 
@@ -168,13 +169,13 @@ The chain is WARNO first, then OPORD.
 
 <h2 id='splash'>/splash &mdash; ship one task</h2>
 
-`/splash` implements exactly one task per invocation. It reads the task&rsquo;s Intent + Scheme of Maneuver, writes the code, runs the project&rsquo;s format + typecheck checks, then appends an `#### After-Action Report` to the same task section. The checkbox flips in `TASKS.md`, the skill stops, and you review the AAR before deciding to ship the next task.
+`/splash` implements exactly one task per invocation. It reads the task&rsquo;s Intent + Method of Engagement + Target Description, writes the code, runs the project&rsquo;s format + typecheck checks, then appends an `#### After-Action Report` to the same task section. The checkbox flips in `TASKS.md`, the skill stops, and you review the AAR before deciding to ship the next task.
 
 `/splash` defaults to the **first unchecked task** in `TASKS.md`. To target a specific task &mdash; including one you just inserted via `/opord` &mdash; pass the integer: `/splash 5`. Freeform args after the integer are implementation context: `/splash 5 "use the existing helper in src/utils/foo.ts"`. The canonical shape is `/splash N "prompt"`, but the agent also takes casual prompts &mdash; `/splash revise the previous task, rename that helper` &mdash; and picks the right TASK from context.
 
 ### How `Manual:` steps work
 
-While `/splash` is running the SOM action list, `Manual: {action}` items break the loop and pause the skill. These are user-owned steps the agent will not execute on its own &mdash; database migrations, secrets to paste, browser verifications, anything the agent should not run itself. On each one, `/splash` asks for a confirmation, with three paths out:
+While `/splash` is running the Target Description action list, `Manual: {action}` items break the loop and pause the skill. These are user-owned steps the agent will not execute on its own &mdash; database migrations, secrets to paste, browser verifications, anything the agent should not run itself. On each one, `/splash` asks for a confirmation, with three paths out:
 
 - **Done.** You ran the step. `/splash` continues with the next action-list item.
 - **Defer.** You are skipping for now. The step lands verbatim in the AAR Notes as a `Deferred manual step: ...` line so nothing is silently dropped.
@@ -184,7 +185,7 @@ Done and Defer both ship the splash &mdash; the difference is only whether the s
 
 ### After Action Report(AAR)
 
-The AAR is the **plan-vs-shipped** record: the SOM action list was the plan, the AAR says what diverged and why. Written at end of splash, appended to the task section under a `#### After-Action Report` heading, with two labels.
+The AAR is the **plan-vs-shipped** record: the Target Description action list was the plan, the AAR says what diverged and why. Written at end of splash, appended to the task section under a `#### After-Action Report` heading, with two labels.
 
 **Deviations** &mdash; anything different from the planned action list. Two sources:
 

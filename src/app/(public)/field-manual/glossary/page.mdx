@@ -113,11 +113,17 @@ Naholo's vocabulary is borrowed from military doctrine. Each entry below names t
 
 **Naholo.** `## OPERATION ORDER` in `OPERATION.md` — the OPORD document, the detail-level plan that follows the WARNO. Written by `/opord`.
 
-<h3 id='som'>SOM — Scheme of Maneuver</h3>
+<h3 id='method-of-engagement'>Method of Engagement</h3>
 
-**Military.** Inside EXECUTION, the visual-spatial plan: how forces move, engage, and reach the objective. The "picture" of the operation.
+**Military.** A line of the call for fire: how the target is to be attacked — type of adjustment, ammunition, and distribution.
 
-**Naholo.** The mandatory per-task `#### Scheme of Maneuver` in OPERATION ORDER — an action list (Add / Edit / Move / Delete / Run / Manual) that `/splash` walks when shipping the task, optionally preceded by an ASCII artifact (control-flow diagram, UI wireframe, schema layout, signature diff, or outline) when the task changes control flow, UI, signatures, schema, DTOs, or API shapes.
+**Naholo.** The optional per-task `#### Method of Engagement` in OPERATION ORDER — prose plus an optional ASCII artifact (control-flow diagram, UI wireframe, schema layout, signature diff, or outline) sketching the change. Omitted when the task has nothing to sketch.
+
+<h3 id='target-description'>Target Description</h3>
+
+**Military.** A line of the call for fire: what is being engaged — the nature, size, and composition of the target.
+
+**Naholo.** The mandatory per-task `#### Target Description` in OPERATION ORDER — an action list (Add / Edit / Move / Delete / Run / Manual) that `/splash` walks when shipping the task.
 
 <h3 id='aar'>AAR — After-Action Report</h3>
 
