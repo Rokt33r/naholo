@@ -106,7 +106,7 @@ Inspect the current state of `## OPERATION ORDER` and any freeform args. Branch:
 - **OPERATION ORDER present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## OPERATION ORDER` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify OPERATION ORDER, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided** → first run them through `## Wrong-intent pushback`: if the intent belongs to another skill, name the owner and stop. Otherwise classify the in-scope intent:
   - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Target Description steps). Apply the described edits in place.
-  - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, append at the next free integer after the last existing task.
+  - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, insert right before the first unfinished task so the new task becomes the next to run, bumping that task and every later **unshipped** task by 1 (when every task is already shipped, append after the last). The unfinished tail stays runnable top-to-bottom — don't pile new work at the end.
   - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present.
   - **Full restart** — args explicitly say start over (e.g., "rewrite OPERATION ORDER from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite OPERATION ORDER and renew all tasks even finished.
 
@@ -297,7 +297,7 @@ The summaries and `Next:` block below are output templates — print them raw, p
 Example (fresh write):
 
 ```md
-Plan complete for OP #42: "Implement user auth"
+OPORD complete for OP #42: "Implement user auth"
 
 - Tasks: 6 total (0 done, 6 remaining)
 - OPORD: [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<line>)
@@ -307,10 +307,11 @@ Plan complete for OP #42: "Implement user auth"
 Example (targeted edit on TASK 4):
 
 ```md
-Plan adjusted for OP #42: "Implement user auth"
+OPORD adjusted for OP #42: "Implement user auth"
 
 - Tasks: 6 total (3 done, 3 remaining)
-- Edited: [TASK 4]({operationDir}/notes/OPERATION.md#L<line>)
+- Edited
+  - [TASK 4]({operationDir}/notes/OPERATION.md#L<line>)
 - Tasks: [TASKS.md]({operationDir}/TASKS.md)
 ```
 
