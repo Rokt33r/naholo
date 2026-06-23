@@ -165,14 +165,9 @@ The chat summary opens with a **Splash stats** block that does not appear in the
 - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
 - `- Deviations: {N}` — count of action-list-level differences from plan (matches the number of top-level entries in the **Deviations** section just written to the AAR). Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/opord` may have missed action-list steps needed to hit the goal, in which case those additions land here without bumping Done.
 
-Two summary lines carry semantic links per the manual's `## Chat output` → `### Link format` rule:
+The tail is a standalone `Progress:` line plus one of two `Next:` states — remaining-tasks or all-done — selected by whether `TASKS.md` still has an unchecked task after this splash. Both carry semantic links per the manual's `## Chat output` → `### Link format` rule; the examples below show the exact bullets, ordering, and labels. Resolve each `<line>` by reading back `OPERATION.md` after the AAR is written and locating the matching heading — the `Review` link anchors the just-shipped task's `#### After-Action Report`, the next-task link the next task's `### TASK N — Title`.
 
-- **`Next:`** — wraps the next unchecked task in a link so the reader jumps straight to that task section. Label is the semantic `TASK N`; URL anchors the task's `### TASK N — Title` heading line. The task title in parentheses stays plain text. Example: `- Next: /splash to ship [TASK 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")`. Omit the line entirely when no unchecked task remains.
-- **`Review:`** — points the user at the AAR just written. Label is `TASK N - AAR`; URL anchors the just-shipped task's `#### After-Action Report` heading line. Example: `- Review: [TASK 3 - AAR]({operationDir}/notes/OPERATION.md#L84)`.
-
-Resolve `<line>` by reading back `OPERATION.md` after the AAR is written and locating the matching heading.
-
-Example:
+**Remaining-tasks state** — at least one unchecked task remains after this splash:
 
 ```md
 TASK 3 shipped: "Add /splash skill spec"
@@ -196,20 +191,31 @@ TASK 3 shipped: "Add /splash skill spec"
 
 ---
 
-- Progress: 3/8 tasks done
-- Next: `/splash` to ship [TASK 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")
-- Review: [TASK 3 - AAR]({operationDir}/notes/OPERATION.md#L84)
+Progress: 3/8 tasks done
+
+Next:
+
+- Review [TASK 3 - AAR]({operationDir}/notes/OPERATION.md#L84)
+- Ship the next task → run `/splash` to ship [TASK 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")
+- Adjust shipped changes → give a prompt directly (post-splash phase), or edit them manually and ask to update the AAR
+- Add or adjust unfinished tasks → run `/opord …`
+- Optionally → `/sitrep` to push progress to the server
 ```
 
 If the user should review before the next splash, mention it.
 
-When `TASKS.md` has no remaining unchecked tasks after this splash, replace the standard tail (drop the `Progress:` / `Next:` / `Review:` lines and any commentary) with this exact one-liner:
+**All-done state** — no unchecked task remains after this splash. Keep the Splash stats + AAR embed; the tail drops the `Ship the next task` bullet and closes on `Done → /exfil`:
 
 ```md
-All {N} tasks splashed. Ready to /exfil when you've reviewed.
-```
+Progress: All 8 tasks done
 
-Substitute `{N}` with the total task count. Nothing else — no close-vs-don't-close prompt, no link, no follow-up suggestions.
+Next:
+
+- Review [TASK 8 - AAR]({operationDir}/notes/OPERATION.md#L84)
+- Adjust shipped changes → give a prompt directly (post-splash phase), or edit them manually and ask to update the AAR
+- Add or adjust unfinished tasks → run `/opord …`
+- Done → `/exfil` to sync, post the summary log, and optionally close the op
+```
 
 ## Post-splash phase
 
