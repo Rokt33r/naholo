@@ -121,7 +121,7 @@ Inspect the current state of OPERATION.md WARNING ORDER and any freeform args. B
   - No trailing period. No backticks around the tag.
   - **No sub-bullets.** If a file matters in two ways, write two bullets or pick the dominant role.
   - **Filter aggressively** (see step 4): list a folder or glob when several siblings are relevant; skip files obvious from project conventions; skip files only opened to disprove a hypothesis.
-  - This is a map for downstream skills, not a duplicate of OPERATION ORDER's per-task Scheme of Maneuver.
+  - This is a map for downstream skills, not a duplicate of OPERATION ORDER's per-task Method of Engagement / Target Description.
 
 Examples:
 

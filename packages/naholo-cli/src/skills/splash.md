@@ -92,7 +92,8 @@ If the targeted task already has a `#### After-Action Report` heading with a non
 From OPERATION.md `### TASK N — Title`:
 
 - `#### Intent` — the success criterion.
-- `#### Scheme of Maneuver` — the per-task body: an optional ASCII artifact (flow diagram, wireframe, schema layout, signature diff, outline) on top of a mandatory **action list** (Add / Edit / Move / Delete / Run / Manual). Treat the artifact as the authoritative shape and the action list as the planned steps for the splash.
+- `#### Method of Engagement` — optional narrative: prose plus an optional ASCII artifact (flow diagram, wireframe, schema layout, signature diff, outline). Treat the artifact as the authoritative shape. Absent when the task had nothing to sketch.
+- `#### Target Description` — the mandatory **action list** (Add / Edit / Move / Delete / Run / Manual): the planned steps for the splash.
 - Anything in `#### After-Action Report` if present (revision splash only). On a fresh splash this heading does not exist yet — `/splash` adds it during step 7.
 
 If freeform args are provided, treat them as additional context to weigh during implementation. Do not let them silently expand scope beyond what the task intent specifies — if they ask for more than, or different from, what the task intent covers, **stop before implementing** and surface two options to the user:
@@ -106,7 +107,7 @@ Wait for the user to choose before continuing.
 
 Implement the code changes that satisfy the task intent:
 
-- Execute the steps listed in the SOM action list — modify or create files for `Add` / `Edit`, relocate files for `Move` (use `git mv` when the file is git-tracked, plain `mv` otherwise), remove files for `Delete`, run shell commands for `Run`.
+- Execute the steps listed in the Target Description action list — modify or create files for `Add` / `Edit`, relocate files for `Move` (use `git mv` when the file is git-tracked, plain `mv` otherwise), remove files for `Delete`, run shell commands for `Run`.
 - For `Manual:` items, **do not execute**. Pause and surface every `Manual:` step in this task via `AskUserQuestion` (one question per step, batched up to four per call; fall back to sequential calls when the task has more than four). Each question uses header `"Manual step"`, the action-list line itself as the question text, and exactly these two options:
   - **Done** — `"I completed the step. Continue the splash."` → proceed.
   - **Defer** — `"Skip for now. Record as an open follow-up as a Notes line in the AAR."` → record the step verbatim in the AAR's `Notes` section as `Deferred manual step: {action}` and continue.
@@ -117,7 +118,7 @@ Implement the code changes that satisfy the task intent:
 - Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the task scope. Do not refactor surrounding code, add features, or fix unrelated issues.
 
-After the action list finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you changed (formatter on tracked-file changes, type checker on TS source). `/opord` deliberately omits these from SOM.
+After the action list finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you changed (formatter on tracked-file changes, type checker on TS source). `/opord` deliberately omits these from the Target Description.
 
 If everything passes, record nothing in the AAR — no news is good news. Record the result only when the user explicitly asks for it.
 
@@ -127,12 +128,12 @@ If a verification fails, fix it when the fix stays within the task's scope and r
 
 Two paths:
 
-- **Fresh splash** (no `#### After-Action Report` heading on the target task yet): append the `#### After-Action Report` after the `#### Scheme of Maneuver` body.
-- **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading. Do NOT edit `#### Intent` or `#### Scheme of Maneuver` of the task — those are the planning record owned by `/opord`. Every late discovery on a revision splash lands in **Deviations**; if the plan itself needs to change shape, surface it and tell the user to run `/opord`.
+- **Fresh splash** (no `#### After-Action Report` heading on the target task yet): append the `#### After-Action Report` after the `#### Target Description` body.
+- **Revision splash** (heading already exists with non-empty body): overwrite the existing body in place under the existing heading. Do not append a second AAR section, and do not add a new `#### After-Action Report (revised)` heading. Do NOT edit `#### Intent`, `#### Method of Engagement`, or `#### Target Description` of the task — those are the planning record owned by `/opord`. Every late discovery on a revision splash lands in **Deviations**; if the plan itself needs to change shape, surface it and tell the user to run `/opord`.
 
 In both paths the body has two labels in fixed order:
 
-- **Deviations**: bullet list shaped like a SOM action list. Each top-level entry uses the same `Add` / `Edit` / `Delete` / `Run` / `Manual` verb + path/target form as an action-list bullet. Sub-bullets describe what differed:
+- **Deviations**: bullet list shaped like a Target Description action list. Each top-level entry uses the same `Add` / `Edit` / `Delete` / `Run` / `Manual` verb + path/target form as an action-list bullet. Sub-bullets describe what differed:
   - Plain sub-bullet: a top-level export / behavior / step that was added or changed at action-list granularity.
   - `(Undone) {sub-bullet text}` — a planned sub-bullet from the original action list that did not ship.
   - For a fully-skipped planned top-level item, write `- (Undone) {original action-list line}` with optional sub-bullets explaining why or what's missing.
@@ -158,9 +159,9 @@ Run `naholo agent add-timeline` with the bare `splash` stage label:
 
 Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
 
-The chat summary opens with a **SOM stats** block that does not appear in the on-disk AAR (the AAR contains only Deviations + Notes; SOM stats are chat-only). Compute the three counts from the work just performed:
+The chat summary opens with a **Splash stats** block that does not appear in the on-disk AAR (the AAR contains only Deviations + Notes; Splash stats are chat-only). Compute the three counts from the work just performed:
 
-- `- Planned: {N}` — count of top-level action-list bullets in the task's `#### Scheme of Maneuver` as written by `/opord`.
+- `- Planned: {N}` — count of top-level action-list bullets in the task's `#### Target Description` as written by `/opord`.
 - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
 - `- Deviations: {N}` — count of action-list-level differences from plan (matches the number of top-level entries in the **Deviations** section just written to the AAR). Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/opord` may have missed action-list steps needed to hit the goal, in which case those additions land here without bumping Done.
 
@@ -175,7 +176,7 @@ Example:
 
 TASK 3 shipped: "Add /splash skill spec"
 
-**SOM stats**
+**Splash stats**
 
 - Planned: 5
 - Done: 4
@@ -221,13 +222,13 @@ While in the splash phase:
 
 - **One task per invocation**: ship exactly one, then stop. The user re-runs `/splash` for the next.
 - **AAR is overwritten in place on revision** — never add a second AAR section to a task.
-- **Revision splashes never touch Intent / SOM** — those are `/opord`'s planning record. Late discoveries land in AAR Deviations; structural plan changes require `/opord`.
+- **Revision splashes never touch Intent / Method of Engagement / Target Description** — those are `/opord`'s planning record. Late discoveries land in AAR Deviations; structural plan changes require `/opord`.
 - **Stay in scope**: the task intent is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
-- **Don't touch other tasks**: do not edit other tasks' Scheme of Maneuver, AARs, or Intents. If the work reveals that another task needs revision, surface it — don't silently rewrite.
+- **Don't touch other tasks**: do not edit other tasks' Method of Engagement, Target Description, AARs, or Intents. If the work reveals that another task needs revision, surface it — don't silently rewrite.
 - **TASKS.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next task.
 - **One TIMELINE bullet per splash invocation** — `naholo agent add-timeline` guarantees the format.
 - **OPERATION.md sections stay at SITUATION / WARNING ORDER / OPERATION ORDER**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
-- **Don't re-elaborate the task**: if the Intent or Scheme of Maneuver are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the task Intent — that's `/opord`'s job (or `/warno`, if the WARNO itself needs to change).
+- **Don't re-elaborate the task**: if the Intent or Target Description are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the task Intent — that's `/opord`'s job (or `/warno`, if the WARNO itself needs to change).
 - **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
 - **`Manual:` items are user-owned**: never attempt to execute them; pause and ask the user to confirm completion before moving on.
 - Print the summary as raw markdown — no surrounding fence.

@@ -105,16 +105,16 @@ Inspect the current state of `## OPERATION ORDER` and any freeform args. Branch:
 - **OPERATION ORDER absent (no `## OPERATION ORDER` heading), no args** → fresh write. Append `## OPERATION ORDER` after the last WARNING ORDER content, then cut the WARNO into single-commit-sized tasks and populate OPERATION ORDER (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 8).
 - **OPERATION ORDER present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## OPERATION ORDER` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify OPERATION ORDER, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided** → first run them through `## Wrong-intent pushback`: if the intent belongs to another skill, name the owner and stop. Otherwise classify the in-scope intent:
-  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap SOM steps). Apply the described edits in place.
+  - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Target Description steps). Apply the described edits in place.
   - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, append at the next free integer after the last existing task.
   - **Multi-task revision** — args describe removing or rewriting multiple unfinished tasks at once. Apply the described edits; renumber subsequent unfinished tasks as needed. Never delete or rewrite a task whose `#### After-Action Report` heading is present.
   - **Full restart** — args explicitly say start over (e.g., "rewrite OPERATION ORDER from scratch"). Confirm with `AskUserQuestion` that the user really wants this. If they do, rewrite OPERATION ORDER and renew all tasks even finished.
 
 ### 7. Write OPERATION.md OPERATION ORDER
 
-One `### TASK N — Title` subsection per task, in order. Each task section has two subsections — **`#### Intent`** and **`#### Scheme of Maneuver`** — in that order.
+One `### TASK N — Title` subsection per task, in order. Each task section has up to three subsections — **`#### Intent`**, an optional **`#### Method of Engagement`**, and a mandatory **`#### Target Description`** — in that order.
 
-- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from SOM). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Intent is the skim-anchor — concrete shapes and concrete steps both live in SOM. Examples:
+- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from the Target Description). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Intent is the skim-anchor — concrete shapes live in Method of Engagement, concrete steps in Target Description. Examples:
 
   ```
   #### Intent
@@ -134,7 +134,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   Slim `stats-record` to a `sessions.yml` upsert; transport moves out of the Stop hook entirely.
   ```
 
-- `#### Scheme of Maneuver` — the per-task body. **Mandatory.** Always contains an **action list** (Add / Edit / Move / Delete / Run / Manual) that `/splash` walks when shipping the task. Optionally preceded by an **ASCII artifact** — control-flow diagram, UI wireframe, schema layout, signature diff, or outline — when the task introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, DB schema (table column lists), DTOs, API request/response shapes, or document structure. When you include an artifact, place it above the action list. Pick the artifact shape that best fits the change:
+- `#### Method of Engagement` — the per-task narrative. **Optional** — omit it entirely when the task has nothing to sketch. When present it holds a short prose lead-in and/or an **ASCII artifact** — control-flow diagram, UI wireframe, schema layout, signature diff, or outline — for when the task introduces or modifies control flow, request lifecycle, UI layout, symbol/path signatures, DB schema (table column lists), DTOs, API request/response shapes, or document structure. Method of Engagement always precedes Target Description. Pick the artifact shape that best fits the change:
   - **Control flow**: a box-and-arrow diagram (or a sequence-style listing) showing the order of operations and decision branches. Untagged fence.
   - **UI**: a wireframe-style ASCII sketch showing the screen regions, key elements, and interactions. Untagged fence.
   - **Schema layout**: a fenced block listing each column with its type, constraints, and FK relationships (one column per line). Tag with `sql` if you're writing literal DDL; otherwise leave the fence untagged.
@@ -222,7 +222,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   ## Section C
   ```
 
-  The **action list** — always present, below any optional artifact — names the atomic steps that ship this task. Each item is one of six verbs:
+- `#### Target Description` — the per-task action list. **Mandatory.** Names the atomic steps that ship this task. Each item is one of six verbs:
   - `Add {path}` — one-line purpose
   - `Edit {path}` — one-line description of what changes
   - `Move {oldPath} → {newPath}` — one-line description (e.g. "rename for clarity", "relocate into shared lib"). Use `→` (Unicode arrow). Sub-bullets only when symbols' signatures change as part of the move; pure relocations get no sub-bullets.
@@ -252,16 +252,16 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
 
   Do **not** list general post-edit verification commands (formatters, type checkers, etc.) that already live in `CLAUDE.md` or `.claude/rules/` — `/splash` reads those rules and runs the verifications itself. The action list should only carry steps that are specific to this task. Project-owned actions the agent must not run (e.g. database migrations) still belong on the action list as `Manual: {action}` so `/splash` surfaces them.
 
-`/opord`'s per-task template ends at `#### Scheme of Maneuver`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the task.
+`/opord`'s per-task template ends at `#### Target Description`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the task.
 
 Single-commit sizing rules:
 
 A single-commit-sized task is one cohesive change that a reviewer can read as a single diff — one motivation, one verb in the title, no unrelated edits riding along. If you'd struggle to write its commit message without an "and", split it.
 
 - Each task should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
-- **Intent is the approach summary only.** Concrete shapes and concrete steps both live in SOM — Intent must stay a single skim-readable headline.
+- **Intent is the approach summary only.** Concrete shapes live in Method of Engagement, concrete steps in Target Description — Intent must stay a single skim-readable headline.
 - **Compound titles are a split tell.** If a task title needs a comma, "and", or "+" to describe it ("Slim X, relocate Y, strip Z"), each clause is a split candidate. Split until every title is a single verb + object.
-- No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (SOM action-list sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
+- No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (Target Description action-list sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
 - An intent that says "do A or B" is a bug — pick one and explain the reasoning in the WARNO's Constraints (or ask `/warno` to add the decision if it's missing).
 
@@ -321,7 +321,7 @@ Once this skill returns, the session is in the **opord** phase. The phase persis
 
 While in the opord phase:
 
-- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite SOM steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
+- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite Target Description steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
 - **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
