@@ -174,6 +174,7 @@ Resolve `<line>` by reading back `OPERATION.md` after the AAR is written and loc
 
 Example:
 
+```md
 TASK 3 shipped: "Add /splash skill spec"
 
 **Splash stats**
@@ -198,12 +199,13 @@ TASK 3 shipped: "Add /splash skill spec"
 - Progress: 3/8 tasks done
 - Next: `/splash` to ship [TASK 4]({operationDir}/notes/OPERATION.md#L99) ("/sitrep skill rewrite")
 - Review: [TASK 3 - AAR]({operationDir}/notes/OPERATION.md#L84)
+```
 
 If the user should review before the next splash, mention it.
 
 When `TASKS.md` has no remaining unchecked tasks after this splash, replace the standard tail (drop the `Progress:` / `Next:` / `Review:` lines and any commentary) with this exact one-liner:
 
-```
+```md
 All {N} tasks splashed. Ready to /exfil when you've reviewed.
 ```
 
