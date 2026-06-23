@@ -80,7 +80,7 @@ CHOP discarded on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERA
 ```md
 Next:
 
-- `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) on the parent.
+- `/warno …` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) on the parent.
 - `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L<warning-order-line>) into OPERATION ORDER tasks.
 ```
 
@@ -89,7 +89,7 @@ Next:
 ```md
 Next:
 
-- `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<operation-order-line>) (insert / drop / rewrite unfinished tasks).
+- `/opord …` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L<operation-order-line>) (insert / drop / rewrite unfinished tasks).
 - `/splash` — ship [TASK {N} — {title}]({operationDir}/notes/OPERATION.md#L<task-line>)
 ```
 
@@ -117,10 +117,10 @@ Line-anchor resolution (per the manual's `### Link format`):
 
 If the user asks for follow-up work on the parent without explicitly invoking a skill, **push back once**. Surface the skill that owns the work — picking the most plausible suggestion from the prompt, or from the parent's mode determined in step 5 (`mission-only` / `execution-ready` / `all-shipped`) if the prompt is ambiguous — and wait for them to invoke it. Common mappings:
 
-- Rewriting parent `## WARNING ORDER` → suggest `/warno "..."`
-- Cutting tasks / editing parent `## OPERATION ORDER` or `TASKS.md` → suggest `/opord "..."`
+- Rewriting parent `## WARNING ORDER` → suggest `/warno …`
+- Cutting tasks / editing parent `## OPERATION ORDER` or `TASKS.md` → suggest `/opord …`
 - Implementing a parent task → suggest `/splash {N}`
-- Drafting a fresh chop → suggest `/chop "..."`
+- Drafting a fresh chop → suggest `/chop …`
 - Pushing to the server → suggest `/sitrep` (checkpoint) or `/exfil` (final)
 
 If the user pushes back, rephrases the request, or otherwise signals they want the work done without invoking the suggested skill, **treat that as an explicit override and do the work directly**. The one-time push-back is a check, not a wall — the escape hatch stays open.

@@ -17,9 +17,9 @@ First positional token (optional):
 
 Anything in quotes after is freeform context for the splash — implementation hints, reference docs, AAR tweaks. If that context actually asks for work another skill owns (a plan revision, a WARNO rewrite, a server push), check it against `## Wrong-intent pushback` and push back instead of widening the splash. Common patterns:
 
-- `/splash 3 "ref docs/style.md"` — extra reference docs to read
-- `/splash 2 "use the existing helper in src/utils/foo.ts"` — implementation hint
-- `/splash 5 "tweak: the AAR should mention the migration"` — revision instruction when re-running on a shipped task
+- `/splash 3 ref docs/style.md` — extra reference docs to read
+- `/splash 2 use the existing helper in src/utils/foo.ts` — implementation hint
+- `/splash 5 tweak: the AAR should mention the migration` — revision instruction when re-running on a shipped task
 
 ## Wrong-intent pushback
 
@@ -72,13 +72,13 @@ Branch on the answer:
 
   > `/splash` cancelled. Pick one:
   >
-  > - `/chop "freeform"` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  > - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
   > - `/chopchop` — apply CHOP
   > - `/nochop` — abort and abandon CHOP
 
 - **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 10), append this line as the final line:
 
-  > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+  > _After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
 ### 4. Pick the target task
 

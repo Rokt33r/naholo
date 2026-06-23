@@ -30,7 +30,7 @@ If `<op_status>` carries `No infilled operation.`, tell the user to run `/infil 
 
 Read these now:
 
-- `{operationDir}/notes/CHOP.md` — required. If missing, stop and tell the user to run `/chop "freeform"` first.
+- `{operationDir}/notes/CHOP.md` — required. If missing, stop and tell the user to run `/chop …` first.
 - `{operationDir}/notes/OPERATION.md` — re-read every invocation so manual mid-session edits land; needed for parity checks against the parent's WARNING ORDER/OPERATION ORDER and for the TRP allocation in step 4
 - `{operationDir}/TASKS.md` — needed for the shipped/unshipped state on parent tasks
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that
@@ -93,7 +93,7 @@ On any failure, collect every mismatch + duplicate report and print the abort re
 > - Duplicate titles in CHOP (apply mapping ambiguous):
 >   - `{title}` ({M} occurrences)
 >
-> Run `/chop "freeform — bring CHOP back into sync with the parent's current WARNING ORDER/OPERATION ORDER"` to refresh the proposal, then re-run `/chopchop`. (Alternatively, hand-edit [CHOP.md]({operationDir}/notes/CHOP.md) to match the parent.)
+> Run `/chop freeform — bring CHOP back into sync with the parent's current WARNING ORDER/OPERATION ORDER` to refresh the proposal, then re-run `/chopchop`. (Alternatively, hand-edit [CHOP.md]({operationDir}/notes/CHOP.md) to match the parent.)
 
 Common causes: `/warno` ran between `/chop` and `/chopchop` and added or dropped a Constraint; `/opord` cut new tasks or retitled existing ones; the user hand-edited `CHOP.md` and introduced a typo in a Constraint label or task title.
 
@@ -165,7 +165,7 @@ CHOP applied on [OP #{parentNumber}: {parentTitle}]({operationDir}/notes/OPERATI
 ```md
 Next:
 
-- `/warno "freeform"` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) on the parent.
+- `/warno …` — adjust [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) on the parent.
 - `/opord` — cut the parent [WARNING ORDER]({operationDir}/notes/OPERATION.md#L{missionLine}) into OPERATION ORDER tasks.
 ```
 
@@ -174,7 +174,7 @@ Next:
 ```md
 Next:
 
-- `/opord "freeform"` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L{executionLine}) (insert / drop / rewrite unfinished tasks).
+- `/opord …` — revise the parent's [OPERATION ORDER]({operationDir}/notes/OPERATION.md#L{executionLine}) (insert / drop / rewrite unfinished tasks).
 - `/splash` — ship [TASK {nextTaskNumber} — {nextTaskTitle}]({operationDir}/notes/OPERATION.md#L{nextTaskLine})
 ```
 
@@ -196,10 +196,10 @@ Substitute `{missionLine}`, `{executionLine}`, `{nextTaskLine}`, `{nextTaskNumbe
 
 If the user asks for follow-up work on the parent without explicitly invoking a skill, **push back once**. Surface the skill that owns the work — picking the most plausible suggestion from the prompt, or from the `parentOpState` value the CLI returned in step 5 if the prompt is ambiguous — and wait for them to invoke it. Common mappings:
 
-- Rewriting parent `## WARNING ORDER` → suggest `/warno "..."`
-- Cutting tasks / editing parent `## OPERATION ORDER` or `TASKS.md` → suggest `/opord "..."`
+- Rewriting parent `## WARNING ORDER` → suggest `/warno …`
+- Cutting tasks / editing parent `## OPERATION ORDER` or `TASKS.md` → suggest `/opord …`
 - Implementing a parent task → suggest `/splash {N}`
-- Drafting another split → suggest `/chop "..."` (the chop phase has ended; `CHOP.md` is gone)
+- Drafting another split → suggest `/chop …` (the chop phase has ended; `CHOP.md` is gone)
 - Pushing the parent's pruned state → suggest `/sitrep` (checkpoint) or `/exfil` (final)
 - Working on the spawned OP → suggest `/exfil` parent first, then `/infil {newNumber}` in a fresh session
 

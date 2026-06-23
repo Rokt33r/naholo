@@ -18,9 +18,9 @@ Required freeform args describing what to carve. There is no `/chop` without arg
 
 Common patterns:
 
-- `/chop "subagent transcript ingest constraints"` — carve by topic; the model picks the matching Constraints.
-- `/chop "constraints 3, 4, 5 and the unfinished tasks that depend on them"` — carve by explicit reference.
-- `/chop "everything related to the CLI upload path; new OP titled 'Subagent transcript ingest'"` — caller pre-suggests the new OP title.
+- `/chop subagent transcript ingest constraints` — carve by topic; the model picks the matching Constraints.
+- `/chop constraints 3, 4, 5 and the unfinished tasks that depend on them` — carve by explicit reference.
+- `/chop everything related to the CLI upload path; new OP titled 'Subagent transcript ingest'` — caller pre-suggests the new OP title.
 
 Args that would put a **shipped task** (one with a populated `#### After-Action Report` in parent OPERATION ORDER) onto the new OP are unusual but allowed — the skill confirms intent via `AskUserQuestion` before drafting the proposal. If the user confirms, the shipped task transfers with its AAR intact when `/chopchop` runs.
 
@@ -30,7 +30,7 @@ Args that would put a **shipped task** (one with a populated `#### After-Action 
 
 If the user invoked `/chop` with no args, abort immediately. Do not run `naholo agent boot`, do not read any files, do not call `add-timeline`. Print the message below as raw markdown (no surrounding fence) and stop:
 
-> `/chop` requires a prompt describing what to carve. Re-run as `/chop "what to carve"` — e.g. `/chop "subagent transcript ingest constraints"`.
+> `/chop` requires a prompt describing what to carve. Re-run as `/chop what to carve` — e.g. `/chop subagent transcript ingest constraints`.
 
 Args are mandatory whether or not `CHOP.md` already exists — both fresh draft and revision modes need instructions.
 
@@ -205,8 +205,8 @@ Running `/chop` enters the **chop** phase. The phase persists until `/chopchop` 
 
 While in the chop phase (i.e. `CHOP.md` exists):
 
-- **In-phase follow-up edits** — two equally valid channels for revising the proposal: hand-edit `CHOP.md` directly, or re-run `/chop "freeform"` to apply a revision through the skill. Re-runs round-trip across sessions.
-- **Other skills are not blocked** — `/warno`, `/opord`, and `/splash` may still run while `CHOP.md` exists. They each surface their own "CHOP pending" `AskUserQuestion` gate so the user can either cancel out and revise CHOP first, or proceed knowing the proposal will desync. If the user proceeds, they own re-running `/chop "freeform"` afterward to bring `CHOP.md` back into sync with the parent's updated WARNING ORDER / OPERATION ORDER.
+- **In-phase follow-up edits** — two equally valid channels for revising the proposal: hand-edit `CHOP.md` directly, or re-run `/chop …` to apply a revision through the skill. Re-runs round-trip across sessions.
+- **Other skills are not blocked** — `/warno`, `/opord`, and `/splash` may still run while `CHOP.md` exists. They each surface their own "CHOP pending" `AskUserQuestion` gate so the user can either cancel out and revise CHOP first, or proceed knowing the proposal will desync. If the user proceeds, they own re-running `/chop …` afterward to bring `CHOP.md` back into sync with the parent's updated WARNING ORDER / OPERATION ORDER.
 - **Apply the proposal** → `/chopchop` (consumes `CHOP.md`, ends the chop phase).
 - **Discard the proposal** → `/nochop` (deletes `CHOP.md`, stamps TIMELINE, ends the chop phase, points at the next action).
 - **Push the parent's current state to the server without leaving** → `/sitrep` (does not end the phase). `CHOP.md` syncs along with the other notes, so a teammate or a future fresh session can `/infil` and resume the proposal.

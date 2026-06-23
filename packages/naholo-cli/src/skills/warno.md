@@ -15,8 +15,8 @@ The WARNO-writing skill. Researches the codebase and writes `## WARNING ORDER` (
 Anything passed as an argument is treated as **freeform instructions** describing how to revise the WARNO. There is no keyword list — read the instructions like any other prompt. First check them against `## Wrong-intent pushback`: if they ask for work another skill owns, push back and stop; otherwise classify the in-scope intent in step 5 (re-run dispatch). Common patterns:
 
 - `/warno` (no args) — first run, or resume a partial WARNO draft.
-- `/warno "rework architecture decisions about plan mode"` — targeted edit.
-- `/warno "rewrite the WARNO from scratch"` — full restart.
+- `/warno rework architecture decisions about plan mode` — targeted edit.
+- `/warno rewrite the WARNO from scratch` — full restart.
 
 ## Wrong-intent pushback
 
@@ -66,13 +66,13 @@ Branch on the answer:
 
   > `/warno` cancelled. Pick one:
   >
-  > - `/chop "freeform"` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  > - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
   > - `/chopchop` — apply CHOP
   > - `/nochop` — abort and abandon CHOP
 
 - **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 7), append this line as the final line:
 
-  > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+  > _After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
 ### 4. Research the codebase
 
@@ -99,7 +99,7 @@ Otherwise do **not** ask. No alts for naming, paths, style, or anything you're a
 Inspect the current state of OPERATION.md WARNING ORDER and any freeform args. Branch:
 
 - **WARNING ORDER absent (no `## WARNING ORDER` heading at all), no args** → fresh write. Append `## WARNING ORDER` itself plus all three subsections (Concept of Operations, Constraints, Target Reference Points) after the last `## SITUATION` content. Run `naholo agent add-timeline -T warno 'Drafted WARNO.'`.
-- **WARNING ORDER present, no args** → stop. The skill cannot tell whether a present WARNO is finished or still in progress, and silently editing it risks clobbering committed direction. Tell the user to either re-run with freeform args describing the change (`/warno "…"`) or delete the `## WARNING ORDER` section from `OPERATION.md` and re-run `/warno` for a fresh write. Do not modify the WARNO, do not append a TIMELINE bullet.
+- **WARNING ORDER present, no args** → stop. The skill cannot tell whether a present WARNO is finished or still in progress, and silently editing it risks clobbering committed direction. Tell the user to either re-run with freeform args describing the change (`/warno …`) or delete the `## WARNING ORDER` section from `OPERATION.md` and re-run `/warno` for a fresh write. Do not modify the WARNO, do not append a TIMELINE bullet.
 - **Args provided** → first run them through `## Wrong-intent pushback`: if the intent belongs to another skill, name the owner and stop. Otherwise classify the in-scope intent:
   - **Targeted edit** — args describe partial changes to the WARNO (Concept of Operations, Constraints, Target Reference Points). Apply the described edits in place; refresh TRP if the edit changes which paths are relevant. Run `naholo agent add-timeline -T warno '{summary}'`.
   - **Full restart** — args explicitly say start over (e.g., "rewrite the WARNO from scratch"). Replace the WARNO wholesale (including TRP). If `## OPERATION ORDER` already has content, use `AskUserQuestion` to ask whether to **keep OPERATION ORDER** (let `/opord` reconcile it against the new WARNO later) or **flush OPERATION ORDER** (delete every task section — including shipped ones — and leave OPERATION ORDER empty for `/opord` to rewrite from scratch). Do not proceed until the user answers. TIMELINE.md is preserved either way. Run `naholo agent add-timeline -T warno '{summary, including kept/flushed OPERATION ORDER}'`.

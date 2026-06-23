@@ -10,8 +10,8 @@ Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch 
 
 Two branches based on whether an op is infilled:
 
-- **Infilled** — load `OPERATION.md` + `TIMELINE.md` up front, then answer with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno "..."` / `/opord "..."` / `/splash N "..."`).
-- **No infilled op** — skip the OP context load and answer the question from the codebase alone (reading files on demand). If the question describes work the user would want to track as an operation, point them at `/fob "<title>\n<content>"` to create + infil. `/fob` follows the same run-command handoff as every other phase-changing skill (see Post-recon phase below): a run command invokes it; a bare description draws a push-back with drafted args.
+- **Infilled** — load `OPERATION.md` + `TIMELINE.md` up front, then answer with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno …` / `/opord …` / `/splash N …`).
+- **No infilled op** — skip the OP context load and answer the question from the codebase alone (reading files on demand). If the question describes work the user would want to track as an operation, point them at `/fob <title>\n<content>` to create + infil. `/fob` follows the same run-command handoff as every other phase-changing skill (see Post-recon phase below): a run command invokes it; a bare description draws a push-back with drafted args.
 
 Reach for it when:
 
@@ -59,9 +59,9 @@ Then branch:
 
 Subsequent user turns in the recon phase are questions to answer the same way — read on demand, answer, no writes.
 
-When the conversation lands the prompt for a phase-changing skill, invoke that skill with the freeform args you and the user worked out — `/warno "..."`, `/opord "..."`, `/splash N "..."`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
+When the conversation lands the prompt for a phase-changing skill, invoke that skill with the freeform args you and the user worked out — `/warno …`, `/opord …`, `/splash N …`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
 
-On the no-op branch, if the user's question describes work they would want to track as an operation (a fix, a feature, a refactor — something that would normally become its own OP), point them at `/fob "<title>\n<content>"` to create + infil. The run-command handoff applies: a run command for `/fob` invokes it via the `Skill` tool with the drafted args; a bare description of the work draws a draft-and-wait push-back — draft the title + content, stop, and let them re-fire (or confirm).
+On the no-op branch, if the user's question describes work they would want to track as an operation (a fix, a feature, a refactor — something that would normally become its own OP), point them at `/fob <title>\n<content>` to create + infil. The run-command handoff applies: a run command for `/fob` invokes it via the `Skill` tool with the drafted args; a bare description of the work draws a draft-and-wait push-back — draft the title + content, stop, and let them re-fire (or confirm).
 
 ## Post-recon phase
 

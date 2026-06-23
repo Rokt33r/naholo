@@ -17,7 +17,7 @@ Anything passed as an argument is treated as **freeform task-cutting hints**. Op
 Common patterns:
 
 - `/raid` (no args) — fresh OP with a clear-enough title + logs to cut tasks from.
-- `/raid "two tasks: schema first, route handler second"` — explicit task-cutting hint forwarded to `/opord`.
+- `/raid two tasks: schema first, route handler second` — explicit task-cutting hint forwarded to `/opord`.
 
 ## What to do
 

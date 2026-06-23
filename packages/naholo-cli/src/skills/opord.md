@@ -17,10 +17,10 @@ Each task is sized for one reviewable `/splash`; sub-tasks are deliberately not 
 Anything passed as an argument is treated as **freeform instructions** describing how to revise OPERATION ORDER. There is no keyword list — read the instructions like any other prompt. First check them against `## Wrong-intent pushback`: if they ask for work another skill owns, push back and stop; otherwise classify the in-scope intent in step 6 (re-run dispatch). Common patterns:
 
 - `/opord` (no args) — first run after `/warno`, or resume a partial OPERATION ORDER draft.
-- `/opord "split TASK 3 into two — one for the schema, one for the migration"` — targeted edit.
-- `/opord "add a task to backfill the migration script"` — single insertion.
-- `/opord "drop TASK 7, rewrite TASK 4 to cover both routes"` — multi-task revision.
-- `/opord "rewrite OPORD from scratch"` — full restart of unfinished tasks.
+- `/opord split TASK 3 into two — one for the schema, one for the migration` — targeted edit.
+- `/opord add a task to backfill the migration script` — single insertion.
+- `/opord drop TASK 7, rewrite TASK 4 to cover both routes` — multi-task revision.
+- `/opord rewrite OPORD from scratch` — full restart of unfinished tasks.
 
 With `## OPERATION ORDER` already present, the default assumption is that the freeform args are plan-revision instructions (insert / drop / split / merge / retitle / rewrite unfinished tasks). WARNO-shaped instructions (Concept of Operations rewrite, Constraint changes) belong to `/warno`, not `/opord`.
 
@@ -74,13 +74,13 @@ Branch on the answer:
 
   > `/opord` cancelled. Pick one:
   >
-  > - `/chop "freeform"` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  > - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
   > - `/chopchop` — apply CHOP
   > - `/nochop` — abort and abandon CHOP
 
 - **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 10), append this line as the final line:
 
-  > _After `OPERATION.md` is settled, run `/chop "freeform"` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+  > _After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
 
 ### 4. Validate WARNING ORDER
 
@@ -103,7 +103,7 @@ No reasons on rejected items unless the user wrote them in. When in doubt, treat
 Inspect the current state of `## OPERATION ORDER` and any freeform args. Branch:
 
 - **OPERATION ORDER absent (no `## OPERATION ORDER` heading), no args** → fresh write. Append `## OPERATION ORDER` after the last WARNING ORDER content, then cut the WARNO into single-commit-sized tasks and populate OPERATION ORDER (one `### TASK N — Title` per task). Mirror to `TASKS.md` (step 8).
-- **OPERATION ORDER present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord "…"`) or delete the `## OPERATION ORDER` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify OPERATION ORDER, do not touch TASKS.md, do not append a TIMELINE bullet.
+- **OPERATION ORDER present, no args** → stop. The skill cannot tell whether the existing task list is finished or still in progress, and silently rewriting it risks clobbering committed scope. Tell the user to either re-run with freeform args describing the change (`/opord …`) or delete the `## OPERATION ORDER` section from `OPERATION.md` (and clear `TASKS.md` accordingly) and re-run `/opord` for a fresh write. Do not modify OPERATION ORDER, do not touch TASKS.md, do not append a TIMELINE bullet.
 - **Args provided** → first run them through `## Wrong-intent pushback`: if the intent belongs to another skill, name the owner and stop. Otherwise classify the in-scope intent:
   - **Targeted edit** — args describe partial changes to specific unfinished tasks (split, merge, retitle, swap Target Description steps). Apply the described edits in place.
   - **Insertion** — args describe adding one or more new tasks. If the user names a position **inside the unshipped tail** ("before TASK 6", "after TASK 4"), insert the new task at that integer and bump every later **unshipped** task by 1 (in both `OPERATION.md` and `TASKS.md`); reorder OPERATION.md so task sections appear in integer order on disk. **Shipped tasks** (those with a `#### After-Action Report` heading) keep their integers — never renumber them, and reject any insertion position that would require it (tell the user the slot is inside the shipped prefix). With no named position, insert right before the first unfinished task so the new task becomes the next to run, bumping that task and every later **unshipped** task by 1 (when every task is already shipped, append after the last). The unfinished tail stays runnable top-to-bottom — don't pile new work at the end.
@@ -322,7 +322,7 @@ Next:
 
 - Looks good → run `/splash` to ship [TASK 1]({operationDir}/notes/OPERATION.md#L<line>)
 - Revise unfinished tasks → give a prompt directly (post-opord phase), or hand-edit OPERATION ORDER
-- Direction change → re-run `/warno "freeform instructions"` to revise the WARNO
+- Direction change → re-run `/warno …` to revise the WARNO
 - Optionally → `/sitrep` to push current plan to the server
 ```
 
