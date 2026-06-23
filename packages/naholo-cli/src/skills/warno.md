@@ -164,7 +164,7 @@ Resolve `<line>` by reading back `OPERATION.md` after writing the WARNO and loca
 Next:
 
 - Looks good → run `/opord` to cut the WARNO into tasks
-- Direction change → re-run `/warno "freeform instructions"` or edit the WARNO directly
+- Refine the WARNO → give a prompt directly (post-warno phase), or hand-edit the WARNING ORDER
 - Optionally → `/sitrep` to push current WARNO to the server
 
 ## Post-warno phase
