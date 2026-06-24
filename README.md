@@ -8,6 +8,12 @@ Coding ops, end to end — AI coding without the spiral.
 
 Try it at [naholo.app](https://naholo.app).
 
+## Why Naholo
+
+I built Naholo for myself. I have a two-year-old and a newborn at home, so I almost never get a long stretch of uninterrupted time. I still wanted to use Claude Code at full speed, but without sliding into vibe coding. What worked for me was a loop with small, frequent review windows, so I stay in control while still moving steadily. Working in small steps like this also helps me avoid cognitive overload.
+
+Each change starts with a short brief. I pin the architecture decisions, split the plan into single-commit-sized tasks, and then ship each task as a small chunk I can actually review. The plan lives in a durable document on disk, so a fresh session can catch up from it on its own and I don't have to be bothered with /compact. Both the agent and I can edit that plan together. Naholo also records token usage per ticket, so I can see what each piece of work cost and use that to work better on the next one. I have been running this loop alone, almost every day, for about four months.
+
 ## What is Naholo
 
 Naholo is a military-style OP-cycle workspace for AI coding. Every change moves through one fixed loop — brief → plan → ship → debrief — scoped tight enough for a human to review and built to survive mid-session pivots.
