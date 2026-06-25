@@ -115,6 +115,8 @@ Inspect the current state of OPERATION.md WARNING ORDER and any freeform args. B
 
   Decisions belong here, not inside individual tasks.
 
+  Constraints give **direction**, not interface shape — keep function signatures, flag names, base-dir args, and resolution helpers out of the WARNO; that code-level detail belongs to `/opord`. Pin an interface in a Constraint only when the user asks for that detail specifically, or when it is genuinely the only viable solution. The bar: a reviewer can read the WARNO without opening a single file.
+
 - `### Target Reference Points` — a curated, scannable map of the files / folders / glob patterns a fresh `/opord` session would need to read to cut OPERATION ORDER. Flat bullet list. Each entry is `` `{path-or-glob}` — {tag} ``:
   - The path or glob is **backtick-wrapped**. Folders end with `/`. Globs use standard wildcards (e.g., `src/server/services/*.ts`, `.claude/skills/*/SKILL.md`).
   - The tag is a **noun-only label** — at most a few words naming the role. **No verbs, no clauses, no relative pronouns** (`that…`, `which…`, `containing…`). If you find yourself writing a clause, cut it down to the noun.
@@ -180,6 +182,7 @@ While in the warno phase:
 
 - **WARNO-only**: `/warno` appends `## WARNING ORDER` (heading + subsections) when absent and revises it in place when present. It does NOT write `## OPERATION ORDER` and does NOT mirror to `TASKS.md`. Those are `/opord`'s job.
 - **Decisions commit to one path**: every Constraint and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft. The narrow exception is the `- ? ... >` sub-bullet, which is reserved for the two cases in step 4.
+- **Constraints give direction, not interface shape**: keep function signatures, flag names, base-dir args, and resolution helpers out of the WARNO — `/opord` owns interface shape. Pin it in a Constraint only when the user asks for that detail specifically, or when it is genuinely the only viable solution.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **TRP is a curated map, not a research log**: noun-only tags, no verbs/clauses/relative pronouns; backtick-wrapped paths; folders end with `/`; prefer a folder or glob over enumerating siblings.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, WARNING ORDER, OPERATION ORDER. Nothing else. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
