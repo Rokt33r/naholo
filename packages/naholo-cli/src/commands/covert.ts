@@ -8,7 +8,7 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
-  addNaholoPermissions,
+  addNaholoCovertPermissions,
   getProjectClaudeSettingsPath,
   installNaholoHooks,
   uninstallNaholoHooks,
@@ -136,7 +136,7 @@ covertCommand
           console.log(`Naholo hooks installed in ${claudeSettingsPath}`)
         }
 
-        addNaholoPermissions(claudeSettingsPath, covertOpsRoot)
+        addNaholoCovertPermissions(claudeSettingsPath, covertOpsRoot)
         console.log(`Naholo permissions granted in ${claudeSettingsPath}`)
       }
 

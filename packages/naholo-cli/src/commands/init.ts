@@ -6,10 +6,12 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
+  addNaholoPermissions,
   getProjectClaudeSettingsPath,
   installNaholoHooks,
   uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
+import { writeProjectMcpJson } from '../lib/mcp-json.js'
 import { getProjectState } from '../lib/project-state.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -113,7 +115,13 @@ export const initCommand = new Command('init')
           installNaholoHooks(settingsPath)
           console.log(`Naholo hooks installed in ${settingsPath}`)
         }
+
+        addNaholoPermissions(settingsPath)
+        console.log(`Naholo permissions granted in ${settingsPath}`)
       }
+
+      writeProjectMcpJson(projectState?.root ?? process.cwd())
+      console.log('Naholo MCP server registered in .mcp.json')
 
       // 7. Prompt to install core skills
       const installCore = await confirm({

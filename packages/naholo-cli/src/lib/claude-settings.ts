@@ -121,37 +121,20 @@ export function getProjectClaudeSettingsPath(
   return path.join(projectState.root, '.claude', filename)
 }
 
-export function addNaholoPermissions(
+const NAHOLO_BASE_ALLOW = ['Bash(naholo agent *)', 'mcp__naholo__*']
+
+export function addNaholoPermissions(settingsPath: string): void {
+  mergeClaudePermissions(settingsPath, { allow: NAHOLO_BASE_ALLOW })
+}
+
+export function addNaholoCovertPermissions(
   settingsPath: string,
   covertOpsRoot: string,
 ): void {
-  const settings = readSettings(settingsPath)
-  const permissions = settings.permissions ?? {}
-  const allow = Array.isArray(permissions.allow) ? permissions.allow : []
-  const additionalDirectories = Array.isArray(permissions.additionalDirectories)
-    ? permissions.additionalDirectories
-    : []
-
-  const requiredAllow = [
-    'Bash(naholo agent *)',
-    'mcp__naholo__*',
-    `Read(${covertOpsRoot}/**)`,
-  ]
-  for (const entry of requiredAllow) {
-    if (!allow.includes(entry)) {
-      allow.push(entry)
-    }
-  }
-  if (!additionalDirectories.includes(covertOpsRoot)) {
-    additionalDirectories.push(covertOpsRoot)
-  }
-
-  permissions.allow = allow
-  permissions.additionalDirectories = additionalDirectories
-  settings.permissions = permissions
-
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+  mergeClaudePermissions(settingsPath, {
+    allow: [...NAHOLO_BASE_ALLOW, `Read(${covertOpsRoot}/**)`],
+    additionalDirectories: [covertOpsRoot],
+  })
 }
 
 export function uninstallNaholoHooks(settingsPath: string): boolean {
@@ -222,4 +205,38 @@ function removeCommandHook(
     delete hooks[event]
   }
   return true
+}
+
+function mergeClaudePermissions(
+  settingsPath: string,
+  grants: { allow: string[]; additionalDirectories?: string[] },
+): void {
+  const settings = readSettings(settingsPath)
+  const permissions = settings.permissions ?? {}
+  const allow = Array.isArray(permissions.allow) ? permissions.allow : []
+  for (const entry of grants.allow) {
+    if (!allow.includes(entry)) {
+      allow.push(entry)
+    }
+  }
+  permissions.allow = allow
+
+  if (grants.additionalDirectories != null) {
+    const additionalDirectories = Array.isArray(
+      permissions.additionalDirectories,
+    )
+      ? permissions.additionalDirectories
+      : []
+    for (const dir of grants.additionalDirectories) {
+      if (!additionalDirectories.includes(dir)) {
+        additionalDirectories.push(dir)
+      }
+    }
+    permissions.additionalDirectories = additionalDirectories
+  }
+
+  settings.permissions = permissions
+
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
 }
