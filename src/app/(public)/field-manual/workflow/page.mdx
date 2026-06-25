@@ -134,11 +134,9 @@ Reach for it when:
 - You want to think out loud about a piece of the codebase before deciding whether it deserves its own OP.
 - Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infilled).
 
-When the discussion lands the prompt, tell the agent to run the next skill &mdash; `/warno "..."`, `/opord "..."`, `/splash N "..."`, or `/fob "..."` on the no-op branch &mdash; and it picks up where the conversation left off. `/recon` itself writes **nothing**: no `OPERATION.md` edits, no `TASKS.md` edits, no TIMELINE bullets, no server syncs.
+As the conversation gathers context, the agent proposes the next action as a compact **draft preview** &mdash; a one-line summary and a bullet per change, not the full order text. If it looks good, just say so (`looks good, run warno`); override it (`run opord for tasks 1 and 3 only`); or invoke a skill directly (`/warno "..."`, `/opord "..."`). Either way `/recon` writes **nothing** until you fire &mdash; no `OPERATION.md`, `TASKS.md`, TIMELINE, or server changes.
 
 The recon phase ends when a phase-changing skill (`/infil` / `/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
-
-The handoff has two modes. **Name the skill** (`run opord`, `do a /warno to swap Constraint 2`, `fire /splash 4`) and the agent invokes it for you with whatever args the conversation has shaped &mdash; slash prefix and backticks are optional. **Describe phase-shaped work without naming the skill** (`rewrite the WARNO to X`, `swap TASK 4 to handle nulls`) and the agent pushes back once: it names the right slash command, drafts the freeform args from your description, and stops &mdash; you re-fire (with edits) or confirm. Recon&rsquo;s contract is that nothing lands on disk until the explicit invocation happens.
 
 ## /raid &mdash; fresh-OP shortcut
 

@@ -59,9 +59,56 @@ Then branch:
 
 Subsequent user turns in the recon phase are questions to answer the same way — read on demand, answer, no writes.
 
-When the conversation lands the prompt for a phase-changing skill, invoke that skill with the freeform args you and the user worked out — `/warno …`, `/opord …`, `/splash N …`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
+When the conversation lands the prompt for a phase-changing skill, **render a draft preview** (see `### 4. Render the draft preview`) before invoking anything — a compact, scannable proposal of the order, not the full order text. On the user's go-ahead, invoke that skill with the freeform args you and the user worked out — `/warno …`, `/opord …`, `/splash N …`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
 
 On the no-op branch, if the user's question describes work they would want to track as an operation (a fix, a feature, a refactor — something that would normally become its own OP), point them at `/fob <title>\n<content>` to create + infil. The run-command handoff applies: a run command for `/fob` invokes it via the `Skill` tool with the drafted args; a bare description of the work draws a draft-and-wait push-back — draft the title + content, stop, and let them re-fire (or confirm).
+
+### 4. Render the draft preview
+
+When the conversation has shaped a concrete next order — because the prompt is ready, or because the user described phase-shaped work without naming a skill — propose it as a **draft preview**, never as the full order text dumped into chat. The preview is the only thing the user reviews before firing, so keep it compact and scannable.
+
+First **route** to the skill the change belongs to — the change decides the skill and the fire line:
+
+- The plan, or an unshipped task → `/opord` → fire line ``Want me to fire `/opord`?``
+- The WARNO direction (Concept of Operations, a Constraint, Target Reference Points) → `/warno` → fire line ``Want me to fire `/warno`?``
+- An already-shipped task (its `#### After-Action Report` is present, so `/opord` treats it as immutable) → revision `/splash N` → fire line ``Want me to fire `/splash 4` (revision)?`` with a one-liner on what changes versus the shipped AAR.
+
+Then render four parts, top to bottom:
+
+1. **Fire line** — the routed `Want me to fire …?` line.
+2. **One summary sentence** — what the order accomplishes, plain prose. Not a per-file re-narration.
+3. **Bullet list** — one bullet per unit of change (a task, or a Constraint). This is the scannable core.
+4. **Sub-bullets** — the file-level Target Description actions. **Collapsed by default**; render them only when the user asks for a specific unit's detail ("show me TASK 1's changes").
+
+Tag the bullets only on a revision:
+
+- **Fresh cut** (e.g. the first `/opord` off a clean WARNO) — no tags; every line is new, so `(Add)` everywhere is noise. Just `TASK N — title`.
+- **Revision** — the tight trio `(Add)` / `(Edit)` / `(Drop)`. Split and merge decompose into the trio rather than getting their own tags: a split is an `(Edit)` on the original task plus an `(Add)` for the spun-off task; a merge is an `(Edit)` on the surviving task plus a `(Drop)` for the absorbed one.
+
+A fresh-cut preview (no tags):
+
+```
+Want me to fire `/opord`?
+Cuts the prod-email fix into 3 tasks.
+
+- TASK 1 — Plumb AWS_SES_FROM_EMAIL into the ECS task
+- TASK 2 — Harden sendViaSES with try/catch + Sentry
+- TASK 3 — (Manual) Verify SES sender + redeploy
+```
+
+A revision preview (trio tags):
+
+```
+Want me to fire `/warno` then `/opord`?
+Tightens the SES WARNO and reshuffles the task list.
+
+- (Add) Constraint — verify sender via domain, not single address
+- (Drop) Constraint — use noreply@kenmon.dev as From
+- (Edit) TASK 4 — also assert the new ECS task rolled
+- (Drop) TASK 5 — folded into TASK 4
+```
+
+On the user's go-ahead, invoke the routed skill — that go-ahead is the run command.
 
 ## Post-recon phase
 
@@ -73,7 +120,7 @@ While in the recon phase:
 - **Wrong-phase requests** — branch on the user's speech act, not on whether a skill name merely appears:
   - **Run command** — execute the skill only when the user issues an imperative ("run opord", "go ahead with opord", "fire `/splash 4`"). The name counts whether `/`-prefixed, backticked, or bare, and one command may name several skills ("run warno and opord") → invoke each via the `Skill` tool, in the order given, with whatever args the recon conversation has shaped. No push-back.
   - **Mention, not a command** — the skill name sits in a subordinate / conditional clause, a comparison, or as the topic under discussion ("let's review before opord", "how does opord cut tasks?"). This is not an invocation → answer in the recon phase and run nothing.
-  - **Phase-shaped work, no skill named** — the user describes the effect without naming a skill ("rewrite TASK 4 to handle nulls", "edit tasks"). Push back once: name the right slash command, **draft the freeform args string** for it, and stop — do not perform the work, do not invoke the skill yet. If their next message is a clear go-ahead on the drafted command ("yes", "run it"), that turn is the run command — invoke it.
+  - **Phase-shaped work, no skill named** — the user describes the effect without naming a skill ("rewrite TASK 4 to handle nulls", "edit tasks"). Push back once: **render the draft preview** (see `### 4. Render the draft preview`) — route to the right slash command, show the compact proposal, and stop — do not perform the work, do not invoke the skill yet. If their next message is a clear go-ahead on the preview ("yes", "run it"), that turn is the run command — invoke it.
 
   On the no-op branch, the only wrong-phase route is server-side OP creation (`/fob`); every other route below applies the moment an op is infilled:
   - Creating a new op (no infilled op) → `/fob`
@@ -89,6 +136,7 @@ While in the recon phase:
 - **Read-only**: no file writes, no `add-timeline`, no MCP push calls. Recon is for thinking and answering, nothing else.
 - **Context load on the infilled branch is OPERATION.md + TIMELINE.md only**: other files (`LOGS.yml`, other notes, codebase) are read on demand when a specific question warrants it. On the no-op branch the codebase is the only read surface, and even those reads wait for a question that needs them.
 - **No proactive research**: don't pre-walk the codebase or scan extra notes "just in case" — wait until a question makes the read necessary.
+- **Hand off with a draft preview, not a dump**: when proposing the next order, render the compact preview from `### 4. Render the draft preview` (routed fire line + one summary sentence + one bullet per change unit; file-level sub-bullets collapsed until the user asks). Never dump the full order text into chat.
 - **Invoke only on a run command**: a skill runs only when the user issues an imperative run command naming it ("run opord"; `/`-prefixed, backticked, or bare all count; several skills in one command run in turn). A skill name in any other role — a subordinate clause, a comparison, a topic of discussion — is a mention, not an invocation; stay in recon. Work described by its effect with no skill named draws a one-time push-back with drafted args. See Post-recon phase → Wrong-phase requests for the three cases. Never perform the target skill's work inline (no inline WARNO edits, no inline TASK edits, no inline code changes). The no-op `/fob` route follows the same rule.
 - Print the readiness line as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
