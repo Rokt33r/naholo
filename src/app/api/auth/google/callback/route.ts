@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { KenmonGoogleOAuthError } from '@kenmon/google-oauth-authenticator'
+import * as Sentry from '@sentry/nextjs'
 import { cookies } from 'next/headers'
 import { auth } from '../../../../../server/auth/auth'
 import { googleOAuthAuthenticator } from '../../../../../server/auth/authenticators/google'
@@ -24,6 +24,11 @@ export async function GET(request: NextRequest) {
     if (!result.success) {
       console.error('Google OAuth verification failed:')
       console.error(result.error)
+      Sentry.captureMessage('OAuth verification failed', {
+        level: 'error',
+        tags: { oauthError: 'oauth_verification_failed' },
+        extra: { error: result.error },
+      })
       return NextResponse.redirect(
         new URL('/sign-in?error=oauth_verification_failed', config.baseUrl),
       )
@@ -41,6 +46,11 @@ export async function GET(request: NextRequest) {
 
       if (!signInResult.success) {
         console.error('Sign-in failed:', signInResult.error)
+        Sentry.captureMessage('OAuth sign-in failed', {
+          level: 'error',
+          tags: { oauthError: 'signin_failed' },
+          extra: { error: signInResult.error },
+        })
         return NextResponse.redirect(
           new URL('/sign-in?error=signin_failed', config.baseUrl),
         )
@@ -57,6 +67,11 @@ export async function GET(request: NextRequest) {
 
       if (!signUpResult.success) {
         console.error('Sign-up failed:', signUpResult.error)
+        Sentry.captureMessage('OAuth sign-up failed', {
+          level: 'error',
+          tags: { oauthError: 'signup_failed' },
+          extra: { error: signUpResult.error },
+        })
         return NextResponse.redirect(
           new URL('/sign-up?error=signup_failed', config.baseUrl),
         )
@@ -74,6 +89,9 @@ export async function GET(request: NextRequest) {
     )
   } catch (error) {
     console.error('Google OAuth callback error:', error)
+    Sentry.captureException(error, {
+      tags: { oauthError: 'internal_error' },
+    })
     return NextResponse.redirect(
       new URL('/sign-in?error=internal_error', config.baseUrl),
     )
