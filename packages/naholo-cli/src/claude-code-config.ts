@@ -33,3 +33,20 @@ export function registerNaholoMcpForProject(projectDir: string): void {
 
   fs.writeFileSync(claudeJsonPath, JSON.stringify(config, null, 2) + '\n')
 }
+
+export function unregisterNaholoMcpForProject(projectDir: string): void {
+  const claudeJsonPath = path.join(os.homedir(), '.claude.json')
+  if (!fs.existsSync(claudeJsonPath)) {
+    return
+  }
+
+  const raw = fs.readFileSync(claudeJsonPath, 'utf-8')
+  const config = JSON.parse(raw) as ClaudeJson
+  const mcpServers = config.projects?.[projectDir]?.mcpServers
+  if (mcpServers == null || !('naholo' in mcpServers)) {
+    return
+  }
+
+  delete mcpServers.naholo
+  fs.writeFileSync(claudeJsonPath, JSON.stringify(config, null, 2) + '\n')
+}

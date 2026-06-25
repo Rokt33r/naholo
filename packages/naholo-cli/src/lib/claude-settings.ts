@@ -137,6 +137,33 @@ export function addNaholoCovertPermissions(
   })
 }
 
+export function removeNaholoCovertPermissions(
+  settingsPath: string,
+  covertOpsRoot: string,
+): void {
+  if (!fs.existsSync(settingsPath)) {
+    return
+  }
+  const settings = readSettings(settingsPath)
+  const permissions = settings.permissions
+  if (permissions == null) {
+    return
+  }
+
+  const allowToRemove = [...NAHOLO_BASE_ALLOW, `Read(${covertOpsRoot}/**)`]
+  if (Array.isArray(permissions.allow)) {
+    permissions.allow = permissions.allow.filter(
+      (entry) => !allowToRemove.includes(entry),
+    )
+  }
+  if (Array.isArray(permissions.additionalDirectories)) {
+    permissions.additionalDirectories =
+      permissions.additionalDirectories.filter((dir) => dir !== covertOpsRoot)
+  }
+
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+}
+
 export function uninstallNaholoHooks(settingsPath: string): boolean {
   if (!fs.existsSync(settingsPath)) {
     return false

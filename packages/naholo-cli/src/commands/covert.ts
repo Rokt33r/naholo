@@ -5,13 +5,17 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
-import { registerNaholoMcpForProject } from '../claude-code-config.js'
+import {
+  registerNaholoMcpForProject,
+  unregisterNaholoMcpForProject,
+} from '../claude-code-config.js'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
   addNaholoCovertPermissions,
   getProjectClaudeSettingsPath,
   installNaholoHooks,
+  removeNaholoCovertPermissions,
   uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
 import { getActiveProfile } from '../profile.js'
@@ -179,9 +183,13 @@ covertCommand
         }
 
         const resolvedPath = path.resolve(pathArg ?? process.cwd())
+        const entry = readCovertOpsConfig().projects[resolvedPath]
         const removed = removeCovertOpsProjectConfig(resolvedPath)
 
         if (removed) {
+          if (entry != null) {
+            tearDownCovertClaudeWiring(resolvedPath, entry.codeName)
+          }
           console.log(`Covert mode removed for: ${resolvedPath}`)
           return
         }
@@ -222,7 +230,23 @@ async function interactiveRemove(): Promise<void> {
   }
 
   for (const p of selected) {
+    const entry = config.projects[p]
     removeCovertOpsProjectConfig(p)
+    if (entry != null) {
+      tearDownCovertClaudeWiring(p, entry.codeName)
+    }
     console.log(`Covert mode removed for: ${p}`)
   }
+}
+
+function tearDownCovertClaudeWiring(
+  projectDir: string,
+  codeName: string,
+): void {
+  const covertOpsRoot = path.join(getCovertOpsDir(), codeName)
+  const settingsPath = path.join(projectDir, '.claude', 'settings.local.json')
+
+  unregisterNaholoMcpForProject(projectDir)
+  uninstallNaholoHooks(settingsPath)
+  removeNaholoCovertPermissions(settingsPath, covertOpsRoot)
 }
