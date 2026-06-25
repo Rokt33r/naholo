@@ -19,6 +19,11 @@ interface ClaudeSettings {
   hooks?: {
     [event: string]: HookEntry[] | unknown
   }
+  permissions?: {
+    allow?: string[]
+    additionalDirectories?: string[]
+    [key: string]: unknown
+  }
   [key: string]: unknown
 }
 
@@ -108,10 +113,45 @@ export function installNaholoHooks(
   return 'added'
 }
 
-export function getProjectSettingsPath(projectState: ProjectState): string {
+export function getProjectClaudeSettingsPath(
+  projectState: ProjectState,
+): string {
   const filename =
     projectState.kind === 'covert' ? 'settings.local.json' : 'settings.json'
   return path.join(projectState.root, '.claude', filename)
+}
+
+export function addNaholoPermissions(
+  settingsPath: string,
+  covertOpsRoot: string,
+): void {
+  const settings = readSettings(settingsPath)
+  const permissions = settings.permissions ?? {}
+  const allow = Array.isArray(permissions.allow) ? permissions.allow : []
+  const additionalDirectories = Array.isArray(permissions.additionalDirectories)
+    ? permissions.additionalDirectories
+    : []
+
+  const requiredAllow = [
+    'Bash(naholo agent *)',
+    'mcp__naholo__*',
+    `Read(${covertOpsRoot}/**)`,
+  ]
+  for (const entry of requiredAllow) {
+    if (!allow.includes(entry)) {
+      allow.push(entry)
+    }
+  }
+  if (!additionalDirectories.includes(covertOpsRoot)) {
+    additionalDirectories.push(covertOpsRoot)
+  }
+
+  permissions.allow = allow
+  permissions.additionalDirectories = additionalDirectories
+  settings.permissions = permissions
+
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
 }
 
 export function uninstallNaholoHooks(settingsPath: string): boolean {

@@ -6,7 +6,7 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
-  getProjectSettingsPath,
+  getProjectClaudeSettingsPath,
   installNaholoHooks,
   uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
@@ -103,7 +103,7 @@ export const initCommand = new Command('init')
       // 6. Install or uninstall the Claude Code Stop hook based on the chosen upload mode
       const projectState = getProjectState(process.cwd())
       if (projectState != null) {
-        const settingsPath = getProjectSettingsPath(projectState)
+        const settingsPath = getProjectClaudeSettingsPath(projectState)
         if (uploadTranscriptsOnExfil === 'none') {
           const removed = uninstallNaholoHooks(settingsPath)
           if (removed) {

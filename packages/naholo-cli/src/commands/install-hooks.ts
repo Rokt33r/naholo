@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
 import {
-  getProjectSettingsPath,
+  getProjectClaudeSettingsPath,
   installNaholoHooks,
   uninstallGlobalNaholoHooks,
 } from '../lib/claude-settings.js'
@@ -17,7 +17,7 @@ export const installHooksCommand = new Command('install-hooks')
       if (projectState == null) {
         throw new NoProjectStateCliError()
       }
-      const settingsPath = getProjectSettingsPath(projectState)
+      const settingsPath = getProjectClaudeSettingsPath(projectState)
       const result = installNaholoHooks(settingsPath)
       console.log(
         result === 'added'

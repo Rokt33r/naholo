@@ -8,7 +8,8 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
-  getProjectSettingsPath,
+  addNaholoPermissions,
+  getProjectClaudeSettingsPath,
   installNaholoHooks,
   uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
@@ -124,16 +125,19 @@ covertCommand
       // 5. Install or uninstall the Claude Code Stop hook based on the chosen upload mode
       const projectState = getProjectState(process.cwd())
       if (projectState != null) {
-        const settingsPath = getProjectSettingsPath(projectState)
+        const claudeSettingsPath = getProjectClaudeSettingsPath(projectState)
         if (uploadTranscriptsOnExfil === 'none') {
-          const removed = uninstallNaholoHooks(settingsPath)
+          const removed = uninstallNaholoHooks(claudeSettingsPath)
           if (removed) {
-            console.log(`Removed Naholo hook from ${settingsPath}`)
+            console.log(`Removed Naholo hook from ${claudeSettingsPath}`)
           }
         } else {
-          installNaholoHooks(settingsPath)
-          console.log(`Naholo hooks installed in ${settingsPath}`)
+          installNaholoHooks(claudeSettingsPath)
+          console.log(`Naholo hooks installed in ${claudeSettingsPath}`)
         }
+
+        addNaholoPermissions(claudeSettingsPath, covertOpsRoot)
+        console.log(`Naholo permissions granted in ${claudeSettingsPath}`)
       }
 
       // Prompt to install core skills

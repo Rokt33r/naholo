@@ -3,7 +3,7 @@ import { Command } from 'commander'
 import { setCovertProjectConfigUploadMode } from '../covert-config.js'
 import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
 import {
-  getProjectSettingsPath,
+  getProjectClaudeSettingsPath,
   installNaholoHooks,
   uninstallNaholoHooks,
 } from '../lib/claude-settings.js'
@@ -61,7 +61,7 @@ export const projectConfigCommand = new Command('project-config')
           setProjectConfigUploadMode(projectState.root, newMode)
         }
 
-        const settingsPath = getProjectSettingsPath(projectState)
+        const settingsPath = getProjectClaudeSettingsPath(projectState)
         if (newMode === 'none') {
           const removed = uninstallNaholoHooks(settingsPath)
           if (removed) {
