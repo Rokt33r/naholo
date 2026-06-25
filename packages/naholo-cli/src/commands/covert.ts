@@ -142,7 +142,7 @@ covertCommand
         default: true,
       })
       if (installCore) {
-        await installSkills(coreSkills)
+        await installSkills(coreSkills, { global: true })
       }
     }),
   )

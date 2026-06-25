@@ -3,39 +3,53 @@ import path from 'node:path'
 import { Command } from 'commander'
 import select from '@inquirer/select'
 import { coreSkills } from '../core-skills.js'
-import { withErrorHandling } from '../errors.js'
-import { splitSkill, writeSkillFile } from '../skills.js'
-
-const CLAUDE_SKILLS_DIR = '.claude/skills'
+import { CliError, withErrorHandling } from '../errors.js'
+import { getProjectState } from '../lib/project-state.js'
+import {
+  getGlobalSkillsDir,
+  getProjectSkillsDir,
+  splitSkill,
+  writeSkillFile,
+} from '../skills.js'
 
 export const installSkillsCommand = new Command('install-skills')
-  .description('Install bundled core skills into .claude/skills/')
+  .description(
+    'Install bundled core skills (auto-targets global in covert projects; override with --target)',
+  )
+  .option(
+    '--target <target>',
+    'install target: "global" (~/.claude/skills) or "project" (.claude/skills); defaults to the project context',
+  )
   .action(
-    withErrorHandling(async () => {
-      await installSkills(coreSkills)
+    withErrorHandling(async (options: { target?: string }) => {
+      const global = resolveGlobalTarget(options.target)
+      await installSkills(coreSkills, { global })
     }),
   )
 
 export async function installSkills(
   skills: { name: string; content: string }[],
+  opts: { global?: boolean } = {},
 ): Promise<void> {
+  const baseDir =
+    opts.global === true ? getGlobalSkillsDir() : getProjectSkillsDir()
   let overwriteAll = false
   let skipAll = false
 
   for (const skill of skills) {
-    const skillPath = path.resolve(CLAUDE_SKILLS_DIR, skill.name, 'SKILL.md')
+    const skillPath = path.join(baseDir, skill.name, 'SKILL.md')
     const exists = fs.existsSync(skillPath)
     const { frontmatter } = splitSkill(skill.content)
     const stub = `${frontmatter}\nRun \`naholo agent skills ${skill.name}\` and follow stdout.\n`
 
     if (!exists) {
-      writeSkillFile(skill.name, stub)
+      writeSkillFile(skill.name, stub, baseDir)
       console.log(`  Created: ${skill.name}`)
       continue
     }
 
     if (overwriteAll) {
-      writeSkillFile(skill.name, stub)
+      writeSkillFile(skill.name, stub, baseDir)
       console.log(`  Overwritten: ${skill.name}`)
       continue
     }
@@ -69,7 +83,23 @@ export async function installSkills(
       overwriteAll = true
     }
 
-    writeSkillFile(skill.name, stub)
+    writeSkillFile(skill.name, stub, baseDir)
     console.log(`  Overwritten: ${skill.name}`)
   }
+}
+
+function resolveGlobalTarget(target: string | undefined): boolean {
+  if (target === 'global') {
+    return true
+  }
+  if (target === 'project') {
+    return false
+  }
+  if (target != null) {
+    throw new CliError(
+      `Invalid --target "${target}". Use "global" or "project".`,
+    )
+  }
+  const projectState = getProjectState(process.cwd())
+  return projectState?.kind === 'covert'
 }
