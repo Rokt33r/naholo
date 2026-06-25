@@ -5,7 +5,6 @@ import { Command } from 'commander'
 import crypto from 'node:crypto'
 import http from 'node:http'
 import os from 'node:os'
-import { writeGlobalClaudeConfig } from '../claude-code-config.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
 import { pickLocale } from '../locale.js'
@@ -158,9 +157,6 @@ export const loginCommand = new Command('login')
           locale,
         })
         setDefaultProfile(profileName)
-
-        // Register MCP server and permissions globally
-        writeGlobalClaudeConfig()
 
         console.log()
         console.log(`Logged in successfully.`)
