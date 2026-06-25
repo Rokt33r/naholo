@@ -113,6 +113,10 @@ resource "aws_ecs_task_definition" "app" {
           value = var.base_url
         },
         {
+          name  = "AWS_SES_FROM_EMAIL"
+          value = var.aws_ses_from_email
+        },
+        {
           name  = "NAHOLO_STORAGE_DRIVER"
           value = "s3"
         },

@@ -6,6 +6,11 @@ variable "aws_region" {
   default     = "ap-northeast-1" # Tokyo
 }
 
+variable "aws_ses_from_email" {
+  description = "Verified SES sender identity for OTP/auth emails"
+  type        = string
+}
+
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
