@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { KenmonGoogleOAuthError } from '@kenmon/google-oauth-authenticator'
 import { cookies } from 'next/headers'
 import { auth } from '../../../../../server/auth/auth'
 import { googleOAuthAuthenticator } from '../../../../../server/auth/authenticators/google'
@@ -21,7 +22,17 @@ export async function GET(request: NextRequest) {
     const result = await googleOAuthAuthenticator.verifyCallback(code, state)
 
     if (!result.success) {
-      console.error('Google OAuth verification failed:', result.error)
+      console.error('Google OAuth verification failed:')
+      console.error(result.error)
+      console.error({
+        reason:
+          result.error instanceof KenmonGoogleOAuthError
+            ? result.error.reason
+            : undefined,
+        redirectUri: config.googleOAuth.redirectUri,
+        hasClientId: config.googleOAuth.clientId !== '',
+        hasClientSecret: config.googleOAuth.clientSecret !== '',
+      })
       return NextResponse.redirect(
         new URL('/sign-in?error=oauth_verification_failed', config.baseUrl),
       )

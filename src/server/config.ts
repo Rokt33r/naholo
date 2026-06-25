@@ -104,9 +104,9 @@ export const config = {
   fileStorage: fileStorageConfig,
 
   googleOAuth: {
-    clientId: getOptionalEnv('GOOGLE_OAUTH_CLIENT_ID'),
-    clientSecret: getOptionalEnv('GOOGLE_OAUTH_CLIENT_SECRET'),
-    redirectUri: getOptionalEnv('GOOGLE_OAUTH_REDIRECT_URI'),
+    clientId: getRequiredEnv('GOOGLE_OAUTH_CLIENT_ID'),
+    clientSecret: getRequiredEnv('GOOGLE_OAUTH_CLIENT_SECRET'),
+    redirectUri: getRequiredEnv('GOOGLE_OAUTH_REDIRECT_URI'),
     stateSecret: getRequiredEnv('GOOGLE_OAUTH_STATE_SECRET'),
   },
 
