@@ -5,6 +5,7 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
+import { registerNaholoMcpForProject } from '../claude-code-config.js'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
@@ -139,6 +140,11 @@ covertCommand
         addNaholoCovertPermissions(claudeSettingsPath, covertOpsRoot)
         console.log(`Naholo permissions granted in ${claudeSettingsPath}`)
       }
+
+      registerNaholoMcpForProject(cwd)
+      console.log(
+        'Naholo MCP server registered for this project in ~/.claude.json',
+      )
 
       // Prompt to install core skills
       const installCore = await confirm({
