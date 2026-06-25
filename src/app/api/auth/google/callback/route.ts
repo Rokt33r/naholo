@@ -24,15 +24,6 @@ export async function GET(request: NextRequest) {
     if (!result.success) {
       console.error('Google OAuth verification failed:')
       console.error(result.error)
-      console.error({
-        reason:
-          result.error instanceof KenmonGoogleOAuthError
-            ? result.error.reason
-            : undefined,
-        redirectUri: config.googleOAuth.redirectUri,
-        hasClientId: config.googleOAuth.clientId !== '',
-        hasClientSecret: config.googleOAuth.clientSecret !== '',
-      })
       return NextResponse.redirect(
         new URL('/sign-in?error=oauth_verification_failed', config.baseUrl),
       )
