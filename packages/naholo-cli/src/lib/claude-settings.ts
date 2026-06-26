@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { ProjectState } from './project-state.js'
 
 const STOP_HOOK_COMMAND = 'naholo agent claude-code-stop'
+const NAHOLO_BASE_ALLOW = ['Bash(naholo agent *)', 'mcp__naholo__*']
 
 interface CommandHook {
   type: 'command'
@@ -15,7 +16,7 @@ interface HookEntry {
   hooks?: CommandHook[]
 }
 
-interface ClaudeSettings {
+export interface ClaudeSettings {
   hooks?: {
     [event: string]: HookEntry[] | unknown
   }
@@ -27,7 +28,7 @@ interface ClaudeSettings {
   [key: string]: unknown
 }
 
-function readSettings(settingsPath: string): ClaudeSettings {
+export function readClaudeSettings(settingsPath: string): ClaudeSettings {
   if (!fs.existsSync(settingsPath)) {
     return {}
   }
@@ -40,6 +41,146 @@ function readSettings(settingsPath: string): ClaudeSettings {
     return {}
   }
   return parsed as ClaudeSettings
+}
+
+export function writeClaudeSettings(
+  settingsPath: string,
+  settings: ClaudeSettings,
+): void {
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+}
+
+export function getProjectClaudeSettingsPath(
+  projectState: ProjectState,
+): string {
+  const filename =
+    projectState.kind === 'covert' ? 'settings.local.json' : 'settings.json'
+  return path.join(projectState.root, '.claude', filename)
+}
+
+export function addNaholoStopHookToClaudeSettings(
+  settings: ClaudeSettings,
+): ClaudeSettings {
+  const next = structuredClone(settings)
+  addCommandHook(next, 'Stop', STOP_HOOK_COMMAND)
+  return next
+}
+
+export function removeNaholoStopHookFromClaudeSettings(
+  settings: ClaudeSettings,
+): ClaudeSettings {
+  const next = structuredClone(settings)
+  removeCommandHook(next, 'Stop', STOP_HOOK_COMMAND)
+  return next
+}
+
+export function addNaholoPermissionsToClaudeSettings(
+  settings: ClaudeSettings,
+): ClaudeSettings {
+  return mergePermissions(settings, { allow: NAHOLO_BASE_ALLOW })
+}
+
+export function addNaholoCovertPermissionsToClaudeSettings(
+  settings: ClaudeSettings,
+  covertOpsRoot: string,
+): ClaudeSettings {
+  return mergePermissions(settings, {
+    allow: [...NAHOLO_BASE_ALLOW, `Read(${covertOpsRoot}/**)`],
+    additionalDirectories: [covertOpsRoot],
+  })
+}
+
+export function removeNaholoCovertPermissionsFromClaudeSettings(
+  settings: ClaudeSettings,
+  covertOpsRoot: string,
+): ClaudeSettings {
+  const next = structuredClone(settings)
+  const permissions = next.permissions
+  if (permissions == null) {
+    return next
+  }
+
+  const allowToRemove = [...NAHOLO_BASE_ALLOW, `Read(${covertOpsRoot}/**)`]
+  if (Array.isArray(permissions.allow)) {
+    permissions.allow = permissions.allow.filter(
+      (entry) => !allowToRemove.includes(entry),
+    )
+  }
+  if (Array.isArray(permissions.additionalDirectories)) {
+    permissions.additionalDirectories =
+      permissions.additionalDirectories.filter((dir) => dir !== covertOpsRoot)
+  }
+
+  return next
+}
+
+export function installNaholoHooks(
+  settingsPath: string,
+): 'added' | 'already-present' {
+  const settings = readClaudeSettings(settingsPath)
+  if (hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)) {
+    return 'already-present'
+  }
+  writeClaudeSettings(settingsPath, addNaholoStopHookToClaudeSettings(settings))
+  return 'added'
+}
+
+export function uninstallNaholoHooks(settingsPath: string): boolean {
+  if (!fs.existsSync(settingsPath)) {
+    return false
+  }
+  const settings = readClaudeSettings(settingsPath)
+  if (!hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)) {
+    return false
+  }
+  writeClaudeSettings(
+    settingsPath,
+    removeNaholoStopHookFromClaudeSettings(settings),
+  )
+  return true
+}
+
+export function uninstallGlobalNaholoHooks(): boolean {
+  return uninstallNaholoHooks(
+    path.join(os.homedir(), '.claude', 'settings.json'),
+  )
+}
+
+export function addNaholoPermissions(settingsPath: string): void {
+  writeClaudeSettings(
+    settingsPath,
+    addNaholoPermissionsToClaudeSettings(readClaudeSettings(settingsPath)),
+  )
+}
+
+export function addNaholoCovertPermissions(
+  settingsPath: string,
+  covertOpsRoot: string,
+): void {
+  writeClaudeSettings(
+    settingsPath,
+    addNaholoCovertPermissionsToClaudeSettings(
+      readClaudeSettings(settingsPath),
+      covertOpsRoot,
+    ),
+  )
+}
+
+export function removeNaholoCovertPermissions(
+  settingsPath: string,
+  covertOpsRoot: string,
+): void {
+  if (!fs.existsSync(settingsPath)) {
+    return
+  }
+  writeClaudeSettings(
+    settingsPath,
+    removeNaholoCovertPermissionsFromClaudeSettings(
+      readClaudeSettings(settingsPath),
+      covertOpsRoot,
+    ),
+  )
 }
 
 function hasCommandHook(
@@ -95,94 +236,6 @@ function addCommandHook(
   return true
 }
 
-export function hasNaholoHooks(settingsPath: string): boolean {
-  const settings = readSettings(settingsPath)
-  return hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
-}
-
-export function installNaholoHooks(
-  settingsPath: string,
-): 'added' | 'already-present' {
-  const settings = readSettings(settingsPath)
-  const addedStop = addCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
-  if (!addedStop) {
-    return 'already-present'
-  }
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
-  return 'added'
-}
-
-export function getProjectClaudeSettingsPath(
-  projectState: ProjectState,
-): string {
-  const filename =
-    projectState.kind === 'covert' ? 'settings.local.json' : 'settings.json'
-  return path.join(projectState.root, '.claude', filename)
-}
-
-const NAHOLO_BASE_ALLOW = ['Bash(naholo agent *)', 'mcp__naholo__*']
-
-export function addNaholoPermissions(settingsPath: string): void {
-  mergeClaudePermissions(settingsPath, { allow: NAHOLO_BASE_ALLOW })
-}
-
-export function addNaholoCovertPermissions(
-  settingsPath: string,
-  covertOpsRoot: string,
-): void {
-  mergeClaudePermissions(settingsPath, {
-    allow: [...NAHOLO_BASE_ALLOW, `Read(${covertOpsRoot}/**)`],
-    additionalDirectories: [covertOpsRoot],
-  })
-}
-
-export function removeNaholoCovertPermissions(
-  settingsPath: string,
-  covertOpsRoot: string,
-): void {
-  if (!fs.existsSync(settingsPath)) {
-    return
-  }
-  const settings = readSettings(settingsPath)
-  const permissions = settings.permissions
-  if (permissions == null) {
-    return
-  }
-
-  const allowToRemove = [...NAHOLO_BASE_ALLOW, `Read(${covertOpsRoot}/**)`]
-  if (Array.isArray(permissions.allow)) {
-    permissions.allow = permissions.allow.filter(
-      (entry) => !allowToRemove.includes(entry),
-    )
-  }
-  if (Array.isArray(permissions.additionalDirectories)) {
-    permissions.additionalDirectories =
-      permissions.additionalDirectories.filter((dir) => dir !== covertOpsRoot)
-  }
-
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
-}
-
-export function uninstallNaholoHooks(settingsPath: string): boolean {
-  if (!fs.existsSync(settingsPath)) {
-    return false
-  }
-  const settings = readSettings(settingsPath)
-  const removed = removeCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
-  if (!removed) {
-    return false
-  }
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
-  return true
-}
-
-export function uninstallGlobalNaholoHooks(): boolean {
-  return uninstallNaholoHooks(
-    path.join(os.homedir(), '.claude', 'settings.json'),
-  )
-}
-
 function removeCommandHook(
   settings: ClaudeSettings,
   event: string,
@@ -234,12 +287,12 @@ function removeCommandHook(
   return true
 }
 
-function mergeClaudePermissions(
-  settingsPath: string,
+function mergePermissions(
+  settings: ClaudeSettings,
   grants: { allow: string[]; additionalDirectories?: string[] },
-): void {
-  const settings = readSettings(settingsPath)
-  const permissions = settings.permissions ?? {}
+): ClaudeSettings {
+  const next = structuredClone(settings)
+  const permissions = next.permissions ?? {}
   const allow = Array.isArray(permissions.allow) ? permissions.allow : []
   for (const entry of grants.allow) {
     if (!allow.includes(entry)) {
@@ -262,8 +315,6 @@ function mergeClaudePermissions(
     permissions.additionalDirectories = additionalDirectories
   }
 
-  settings.permissions = permissions
-
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+  next.permissions = permissions
+  return next
 }
