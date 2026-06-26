@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import type { ProjectState } from './project-state.js'
 
@@ -59,6 +58,10 @@ export function getProjectClaudeSettingsPath(
   return path.join(projectState.root, '.claude', filename)
 }
 
+export function hasNaholoStopHook(settings: ClaudeSettings): boolean {
+  return hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)
+}
+
 export function addNaholoStopHookToClaudeSettings(
   settings: ClaudeSettings,
 ): ClaudeSettings {
@@ -113,74 +116,6 @@ export function removeNaholoCovertPermissionsFromClaudeSettings(
   }
 
   return next
-}
-
-export function installNaholoHooks(
-  settingsPath: string,
-): 'added' | 'already-present' {
-  const settings = readClaudeSettings(settingsPath)
-  if (hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)) {
-    return 'already-present'
-  }
-  writeClaudeSettings(settingsPath, addNaholoStopHookToClaudeSettings(settings))
-  return 'added'
-}
-
-export function uninstallNaholoHooks(settingsPath: string): boolean {
-  if (!fs.existsSync(settingsPath)) {
-    return false
-  }
-  const settings = readClaudeSettings(settingsPath)
-  if (!hasCommandHook(settings, 'Stop', STOP_HOOK_COMMAND)) {
-    return false
-  }
-  writeClaudeSettings(
-    settingsPath,
-    removeNaholoStopHookFromClaudeSettings(settings),
-  )
-  return true
-}
-
-export function uninstallGlobalNaholoHooks(): boolean {
-  return uninstallNaholoHooks(
-    path.join(os.homedir(), '.claude', 'settings.json'),
-  )
-}
-
-export function addNaholoPermissions(settingsPath: string): void {
-  writeClaudeSettings(
-    settingsPath,
-    addNaholoPermissionsToClaudeSettings(readClaudeSettings(settingsPath)),
-  )
-}
-
-export function addNaholoCovertPermissions(
-  settingsPath: string,
-  covertOpsRoot: string,
-): void {
-  writeClaudeSettings(
-    settingsPath,
-    addNaholoCovertPermissionsToClaudeSettings(
-      readClaudeSettings(settingsPath),
-      covertOpsRoot,
-    ),
-  )
-}
-
-export function removeNaholoCovertPermissions(
-  settingsPath: string,
-  covertOpsRoot: string,
-): void {
-  if (!fs.existsSync(settingsPath)) {
-    return
-  }
-  writeClaudeSettings(
-    settingsPath,
-    removeNaholoCovertPermissionsFromClaudeSettings(
-      readClaudeSettings(settingsPath),
-      covertOpsRoot,
-    ),
-  )
 }
 
 function hasCommandHook(

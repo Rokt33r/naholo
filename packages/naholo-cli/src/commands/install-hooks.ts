@@ -1,9 +1,15 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { Command } from 'commander'
 import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
 import {
+  addNaholoStopHookToClaudeSettings,
   getProjectClaudeSettingsPath,
-  installNaholoHooks,
-  uninstallGlobalNaholoHooks,
+  hasNaholoStopHook,
+  readClaudeSettings,
+  removeNaholoStopHookFromClaudeSettings,
+  writeClaudeSettings,
 } from '../lib/claude-settings.js'
 import { getProjectState } from '../lib/project-state.js'
 
@@ -32,3 +38,35 @@ export const installHooksCommand = new Command('install-hooks')
       }
     }),
   )
+
+export function installNaholoHooks(
+  settingsPath: string,
+): 'added' | 'already-present' {
+  const settings = readClaudeSettings(settingsPath)
+  if (hasNaholoStopHook(settings)) {
+    return 'already-present'
+  }
+  writeClaudeSettings(settingsPath, addNaholoStopHookToClaudeSettings(settings))
+  return 'added'
+}
+
+export function uninstallNaholoHooks(settingsPath: string): boolean {
+  if (!fs.existsSync(settingsPath)) {
+    return false
+  }
+  const settings = readClaudeSettings(settingsPath)
+  if (!hasNaholoStopHook(settings)) {
+    return false
+  }
+  writeClaudeSettings(
+    settingsPath,
+    removeNaholoStopHookFromClaudeSettings(settings),
+  )
+  return true
+}
+
+export function uninstallGlobalNaholoHooks(): boolean {
+  return uninstallNaholoHooks(
+    path.join(os.homedir(), '.claude', 'settings.json'),
+  )
+}

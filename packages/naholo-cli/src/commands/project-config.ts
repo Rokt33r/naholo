@@ -2,11 +2,8 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { setCovertProjectConfigUploadMode } from '../covert-config.js'
 import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
-import {
-  getProjectClaudeSettingsPath,
-  installNaholoHooks,
-  uninstallNaholoHooks,
-} from '../lib/claude-settings.js'
+import { getProjectClaudeSettingsPath } from '../lib/claude-settings.js'
+import { installNaholoHooks, uninstallNaholoHooks } from './install-hooks.js'
 import { getProjectState } from '../lib/project-state.js'
 import {
   setProjectConfigUploadMode,

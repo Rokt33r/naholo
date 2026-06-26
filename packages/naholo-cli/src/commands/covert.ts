@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import checkbox from '@inquirer/checkbox'
 import confirm from '@inquirer/confirm'
@@ -12,11 +13,13 @@ import {
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
-  addNaholoCovertPermissions,
+  addNaholoCovertPermissionsToClaudeSettings,
+  addNaholoStopHookToClaudeSettings,
   getProjectClaudeSettingsPath,
-  installNaholoHooks,
-  removeNaholoCovertPermissions,
-  uninstallNaholoHooks,
+  readClaudeSettings,
+  removeNaholoCovertPermissionsFromClaudeSettings,
+  removeNaholoStopHookFromClaudeSettings,
+  writeClaudeSettings,
 } from '../lib/claude-settings.js'
 import { getActiveProfile } from '../profile.js'
 import {
@@ -127,22 +130,23 @@ covertCommand
       console.log('No files written to the project repo.')
       console.log()
 
-      // 5. Install or uninstall the Claude Code Stop hook based on the chosen upload mode
+      // 5. Configure the Claude Code settings file in a single read/write
       const projectState = getProjectState(process.cwd())
       if (projectState != null) {
         const claudeSettingsPath = getProjectClaudeSettingsPath(projectState)
-        if (uploadTranscriptsOnExfil === 'none') {
-          const removed = uninstallNaholoHooks(claudeSettingsPath)
-          if (removed) {
-            console.log(`Removed Naholo hook from ${claudeSettingsPath}`)
-          }
-        } else {
-          installNaholoHooks(claudeSettingsPath)
-          console.log(`Naholo hooks installed in ${claudeSettingsPath}`)
-        }
-
-        addNaholoCovertPermissions(claudeSettingsPath, covertOpsRoot)
-        console.log(`Naholo permissions granted in ${claudeSettingsPath}`)
+        let settings = readClaudeSettings(claudeSettingsPath)
+        settings =
+          uploadTranscriptsOnExfil === 'none'
+            ? removeNaholoStopHookFromClaudeSettings(settings)
+            : addNaholoStopHookToClaudeSettings(settings)
+        settings = addNaholoCovertPermissionsToClaudeSettings(
+          settings,
+          covertOpsRoot,
+        )
+        writeClaudeSettings(claudeSettingsPath, settings)
+        console.log(
+          `Naholo Claude settings configured in ${claudeSettingsPath}`,
+        )
       }
 
       registerNaholoMcpForProject(cwd)
@@ -247,6 +251,14 @@ function tearDownCovertClaudeWiring(
   const settingsPath = path.join(projectDir, '.claude', 'settings.local.json')
 
   unregisterNaholoMcpForProject(projectDir)
-  uninstallNaholoHooks(settingsPath)
-  removeNaholoCovertPermissions(settingsPath, covertOpsRoot)
+
+  if (fs.existsSync(settingsPath)) {
+    let settings = readClaudeSettings(settingsPath)
+    settings = removeNaholoStopHookFromClaudeSettings(settings)
+    settings = removeNaholoCovertPermissionsFromClaudeSettings(
+      settings,
+      covertOpsRoot,
+    )
+    writeClaudeSettings(settingsPath, settings)
+  }
 }

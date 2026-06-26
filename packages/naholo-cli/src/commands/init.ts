@@ -6,10 +6,12 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
-  addNaholoPermissions,
+  addNaholoPermissionsToClaudeSettings,
+  addNaholoStopHookToClaudeSettings,
   getProjectClaudeSettingsPath,
-  installNaholoHooks,
-  uninstallNaholoHooks,
+  readClaudeSettings,
+  removeNaholoStopHookFromClaudeSettings,
+  writeClaudeSettings,
 } from '../lib/claude-settings.js'
 import { writeProjectMcpJson } from '../lib/mcp-json.js'
 import { getProjectState } from '../lib/project-state.js'
@@ -102,22 +104,18 @@ export const initCommand = new Command('init')
       console.log(`Project initialized: ${selectedProject.name}`)
       console.log()
 
-      // 6. Install or uninstall the Claude Code Stop hook based on the chosen upload mode
+      // 6. Configure the Claude Code settings file in a single read/write
       const projectState = getProjectState(process.cwd())
       if (projectState != null) {
         const settingsPath = getProjectClaudeSettingsPath(projectState)
-        if (uploadTranscriptsOnExfil === 'none') {
-          const removed = uninstallNaholoHooks(settingsPath)
-          if (removed) {
-            console.log(`Removed Naholo hook from ${settingsPath}`)
-          }
-        } else {
-          installNaholoHooks(settingsPath)
-          console.log(`Naholo hooks installed in ${settingsPath}`)
-        }
-
-        addNaholoPermissions(settingsPath)
-        console.log(`Naholo permissions granted in ${settingsPath}`)
+        let settings = readClaudeSettings(settingsPath)
+        settings =
+          uploadTranscriptsOnExfil === 'none'
+            ? removeNaholoStopHookFromClaudeSettings(settings)
+            : addNaholoStopHookToClaudeSettings(settings)
+        settings = addNaholoPermissionsToClaudeSettings(settings)
+        writeClaudeSettings(settingsPath, settings)
+        console.log(`Naholo Claude settings configured in ${settingsPath}`)
       }
 
       writeProjectMcpJson(projectState?.root ?? process.cwd())
