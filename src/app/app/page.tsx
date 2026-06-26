@@ -14,7 +14,7 @@ export default async function AppPage() {
 
   if (projects.length === 0) {
     return (
-      <div className='flex h-full items-center justify-center'>
+      <div className='flex h-full items-center justify-center pt-12'>
         <div className='text-center'>
           <h1 className='text-2xl font-semibold text-zinc-900 dark:text-zinc-50'>
             Welcome to naholo
@@ -33,7 +33,7 @@ export default async function AppPage() {
   }
 
   return (
-    <div className='mx-auto flex w-full max-w-2xl flex-col gap-6 p-6'>
+    <div className='mx-auto flex w-full max-w-2xl flex-col gap-6 p-6 pt-12'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold text-zinc-900 dark:text-zinc-50'>
           Your projects
