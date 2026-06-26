@@ -15,13 +15,15 @@ import {
 } from '@/components/ui/sidebar'
 import { publicConfig } from '@/lib/publicConfig'
 
-const items = [
-  { href: '/admin/users', label: 'Users', billingOnly: false },
-  {
-    href: '/admin/agent-transcripts',
-    label: 'Agent Transcripts',
-    billingOnly: false,
-  },
+type AdminNavItem = {
+  href: string
+  label: string
+  billingOnly?: boolean
+}
+
+const items: AdminNavItem[] = [
+  { href: '/admin/users', label: 'Users' },
+  { href: '/admin/agent-transcripts', label: 'Agent Transcripts' },
   {
     href: '/admin/polar-webhook-events',
     label: 'Polar Webhook Events',
