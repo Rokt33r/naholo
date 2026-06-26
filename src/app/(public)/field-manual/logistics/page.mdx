@@ -122,6 +122,20 @@ The naholo CLI exposes a Model Context Protocol server as a parallel agent-facin
 | `naholo://operations/{operationNumber}/notes` | All notes for an operation                           |
 | `naholo://local/infilled`                     | Currently infilled operation                         |
 
+## Claude Code wiring
+
+Beyond the op files, `naholo init` and `naholo covert init` wire the project into Claude Code. Team mode writes committed files; covert mode keeps the repo clean by writing machine-local config instead. `naholo login` writes none of this &mdash; it only stores credentials.
+
+| Surface       | `naholo init` (team)                                       | `naholo covert init`                                                                           |
+| ------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Settings file | `.claude/settings.json` (committed)                        | `.claude/settings.local.json` (git-ignored)                                                    |
+| Permissions   | `Bash(naholo agent *)`, `mcp__naholo__*`                   | the same, plus `Read(<covert-dir>/**)` and an `additionalDirectories` entry for the covert dir |
+| Stop hook     | in the settings file, when transcript upload is not `none` | same, in `settings.local.json`                                                                 |
+| MCP server    | `.mcp.json` at the repo root (committed)                   | `~/.claude.json` under `projects[<repo-dir>].mcpServers` (machine-local)                       |
+| Skills        | `.claude/skills/` (project)                                | `~/.claude/skills/` (global)                                                                   |
+
+The covert dir is `~/.naholo/covert-ops/{codename}/`. `naholo covert exit` rolls back what covert init wrote &mdash; it removes the `~/.claude.json` MCP entry and strips the naholo grants and Stop hook from `settings.local.json`. The global skill stubs in `~/.claude/skills/` are left in place, since they are shared across every project.
+
 ## Where to look next
 
 That is every shape this chapter holds. For how the skills drive the cycle, see [Workflow](/field-manual/workflow). To replace these interfaces with your own &mdash; your own skill prose, your own CLI, your own MCP tools &mdash; see [Customize](/field-manual/customize).
