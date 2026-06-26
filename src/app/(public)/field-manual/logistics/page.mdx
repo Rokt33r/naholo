@@ -25,7 +25,7 @@ Only `/infil` takes the operation number, and only on a fresh infil. Every other
 | `/opord`    | `"freeform"` (optional)        | Plan-revision instructions for unfinished tasks (insert / split / retitle / drop)                                                                       |
 | `/splash`   | `N` or `"freeform"` (optional) | Task number; or extra context for the next-unchecked task                                                                                               |
 | `/chop`     | `"freeform"` (**required**)    | What to carve off (topic, Constraint references, optional new-OP title). Required in both fresh and revision modes &mdash; `/chop` with no args errors. |
-| `/chopchop` | none                           | Consumes `notes/CHOP.md`. The only customization channel is hand-editing `CHOP.md` (or re-running `/chop "freeform"`) before applying.                  |
+| `/chopchop` | none                           | Consumes `notes/CHOP.md`. The only customization channel is hand-editing `CHOP.md` (or re-running `/chop ...`) before applying.                         |
 | `/nochop`   | none                           | Discards `notes/CHOP.md`. No customization.                                                                                                             |
 | `/sitrep`   | `"freeform"` (optional)        | Extra context for the summary log                                                                                                                       |
 | `/exfil`    | `"freeform"` (optional)        | Common values: `"close"`, `"don't close"`                                                                                                               |

@@ -84,7 +84,7 @@ Compiling /field-manual ...
 
 When an op is **already infilled**, `/fob` still creates the new op + log server-side &mdash; dropping an idea should never cost you your in-flight work &mdash; but it skips the `/infil` chain so the local infilled directory stays exactly as it was. The output names the new op number; switch to it later with `/exfil` then `/infil <n>` when you are ready.
 
-`/fob` does **not** research the codebase. It is a one-shot launcher whose job is to register the idea and (when the slot is free) drop you into the infil phase. Compare with `/raid`: `/raid` runs **after** `/infil` to collapse `/warno` + `/opord` for small OPs. The max-velocity path for a fresh small idea is `/fob` then `/raid "..."`.
+`/fob` does **not** research the codebase. It is a one-shot launcher whose job is to register the idea and (when the slot is free) drop you into the infil phase. Compare with `/raid`: `/raid` runs **after** `/infil` to collapse `/warno` + `/opord` for small OPs. The max-velocity path for a fresh small idea is `/fob` then `/raid ...`.
 
 <h2 id='infil'>/infil &mdash; pull the op local</h2>
 
@@ -116,16 +116,23 @@ The bar before you leave the warno phase: every Constraint is clear to **you**, 
 
 Stay at the architecture and concept level. TASKS and shipped diffs are where details get reviewed &mdash; if you bury detail in Constraints, you kill momentum without adding signal. A few load-bearing key decisions are unavoidable, but resist piling them on.
 
-If CONOPS or the Constraint list keep growing past the size you can hold in your head, that is the signal the OP is doing the work of two. Stop adding Constraints and run `/chop "..."` to draft a split.
+If CONOPS or the Constraint list keep growing past the size you can hold in your head, that is the signal the OP is doing the work of two. Stop adding Constraints and run `/chop ...` to draft a split.
 
 <h2 id='recon'>/recon &mdash; talk it out before you fire a prompt</h2>
 
-Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno "..."` or `/opord "..."` figuring out what you want; figure it out in recon first.
+Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno ...` or `/opord ...` figuring out what you want; figure it out in recon first.
 
 `/recon` runs in one of two branches based on whether an op is infilled:
 
-- **Infilled** &mdash; the agent reads `OPERATION.md` + `TIMELINE.md` up front and answers with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno "..."`, `/opord "..."`, `/splash N "..."`).
-- **No infilled op** &mdash; the agent skips the OP context load and answers from the codebase alone, reading files on demand. If your question describes work you would want to track as an operation (a fix, a feature, a refactor), the agent points you at `/fob "<title>\n<content>"` to create + infil. `/fob` follows the same handoff rule as the other phase-changing skills (see below).
+- **Infilled** &mdash; the agent reads `OPERATION.md` + `TIMELINE.md` up front and answers with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno ...`, `/opord ...`, `/splash N "..."`).
+- **No infilled op** &mdash; the agent skips the OP context load and answers from the codebase alone, reading files on demand. If your question describes work you would want to track as an operation (a fix, a feature, a refactor), the agent points you at `/fob` to create + infil:
+
+  ```
+  /fob <title>
+  <content>
+  ```
+
+  `/fob` follows the same handoff rule as the other phase-changing skills (see below).
 
 Reach for it when:
 
@@ -134,7 +141,7 @@ Reach for it when:
 - You want to think out loud about a piece of the codebase before deciding whether it deserves its own OP.
 - Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infilled).
 
-As the conversation gathers context, the agent proposes the next action as a compact **draft preview** &mdash; a one-line summary and a bullet per change, not the full order text. If it looks good, just say so (`looks good, run warno`); override it (`run opord for tasks 1 and 3 only`); or invoke a skill directly (`/warno "..."`, `/opord "..."`). Either way `/recon` writes **nothing** until you fire &mdash; no `OPERATION.md`, `TASKS.md`, TIMELINE, or server changes.
+As the conversation gathers context, the agent proposes the next action as a compact **draft preview** &mdash; a one-line summary and a bullet per change, not the full order text. If it looks good, just say so (`looks good, run warno`); override it (`run opord for tasks 1 and 3 only`); or invoke a skill directly (`/warno ...`, `/opord ...`). Either way `/recon` writes **nothing** until you fire &mdash; no `OPERATION.md`, `TASKS.md`, TIMELINE, or server changes.
 
 The recon phase ends when a phase-changing skill (`/infil` / `/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
 
@@ -156,12 +163,12 @@ Reach for it on small OPs whose architecture is obvious &mdash; bug fixes, doc u
 
 Tasks are sized for one `/splash`: a single cohesive change a reviewer can read as one diff. If a task title needs &ldquo;and&rdquo; or a comma, split it.
 
-`/opord` also lands a phase. Mid-cycle plan revisions &mdash; insert a task, split one in two, drop an unstarted one, retitle, rewrite a Target Description action list &mdash; happen by re-invoking `/opord "freeform"` (or hand-editing OPERATION ORDER + `TASKS.md`). Already-shipped tasks (those with an `#### After-Action Report` heading) are treated as **immutable by default**: the agent will not edit, renumber, or drop them on its own. The recommended path for a follow-up is a fresh TASK via `/opord` so the change gets its own review window. If you genuinely need to rewrite a shipped task &mdash; restoring a deleted file, undoing a botched ship &mdash; revert the change by hand and tell the agent to overwrite the AAR. The default keeps history honest; the override is yours when you need it.
+`/opord` also lands a phase. Mid-cycle plan revisions &mdash; insert a task, split one in two, drop an unstarted one, retitle, rewrite a Target Description action list &mdash; happen by re-invoking `/opord ...` (or hand-editing OPERATION ORDER + `TASKS.md`). Already-shipped tasks (those with an `#### After-Action Report` heading) are treated as **immutable by default**: the agent will not edit, renumber, or drop them on its own. The recommended path for a follow-up is a fresh TASK via `/opord` so the change gets its own review window. If you genuinely need to rewrite a shipped task &mdash; restoring a deleted file, undoing a botched ship &mdash; revert the change by hand and tell the agent to overwrite the AAR. The default keeps history honest; the override is yours when you need it.
 
-If a revision you ask for would contradict a current Constraint, the agent pushes back with a drafted `/warno "..."` prompt &mdash; the WARNO revision it thinks the change needs. From there:
+If a revision you ask for would contradict a current Constraint, the agent pushes back with a drafted `/warno ...` prompt &mdash; the WARNO revision it thinks the change needs. From there:
 
 - **Draft looks right.** Tell the agent &ldquo;run `/warno` and `/opord` for me.&rdquo; It revises the WARNO, then re-cuts the affected tasks under the new Constraints. One handoff, two skills.
-- **Draft needs tweaks.** Copy the prompt, edit it, and run `/warno "..."` yourself. After the WARNO settles, follow up with `/opord "..."` so OPERATION ORDER re-aligns with the new direction.
+- **Draft needs tweaks.** Copy the prompt, edit it, and run `/warno ...` yourself. After the WARNO settles, follow up with `/opord ...` so OPERATION ORDER re-aligns with the new direction.
 
 The chain is WARNO first, then OPORD.
 
@@ -197,7 +204,7 @@ The AAR is the **plan-vs-shipped** record: the Target Description action list wa
 Every splash lands somewhere. Review the AAR + the diff. If it landed off-target, branch by size:
 
 - **Minor.** You are still in the splash phase. Either chat the change &mdash; &ldquo;rename that helper,&rdquo; &ldquo;the AAR missed a step&rdquo; &mdash; and the agent fixes the code and refreshes the AAR. Or re-run `/splash N "tweak: ..."` &mdash; re-running on a shipped task is a **revision splash** that overwrites the AAR body in place under the same heading. The original Intent / SoM stay untouched; those are `/opord`&rsquo;s planning record, immutable from a splash.
-- **Major.** Re-invoke `/opord "..."` to insert a new TASK and ship the rework as its own splash. A new TASK gets a new review window; the original AAR stays as the historical record.
+- **Major.** Re-invoke `/opord ...` to insert a new TASK and ship the rework as its own splash. A new TASK gets a new review window; the original AAR stays as the historical record.
 
 The bar: would a reviewer want this change as its own diff? Yes &rarr; new TASK. No &rarr; chat it in-phase.
 
@@ -211,13 +218,13 @@ The bar: would a reviewer want this change as its own diff? Yes &rarr; new TASK.
 
 `/exfil` ends the cycle. It runs the same sync as `/sitrep`, posts a summary log, optionally closes the operation server-side, and deletes the local infilled directory. Run when the OP is done or paused indefinitely and you want to free the single-infil slot for another OP.
 
-`/exfil` decides whether to close the OP from `TASKS.md`: every task done &rarr; close; anything still open &rarr; pause and ask. Override the default with a freeform hint &mdash; `/exfil "close"` closes even with unfinished tasks, `/exfil "don't close"` keeps the OP open server-side even when every task shipped.
+`/exfil` decides whether to close the OP from `TASKS.md`: every task done &rarr; close; anything still open &rarr; pause and ask. Override the default with a freeform hint &mdash; `/exfil close` closes even with unfinished tasks, `/exfil don't close` keeps the OP open server-side even when every task shipped.
 
 ## OP-splitting side branch &mdash; the chop family
 
 When scope has ballooned and the current OP is doing the work of two, split it. CHOP &mdash; Change of Operational Control, the military term for transferring a unit between commanders &mdash; is a proposal/apply flow.
 
-**`/chop "freeform"`** drafts the split at `notes/CHOP.md`: a side-by-side brief with a `# CURRENT OP` block (what stays) and a `# NEW OP` block (what gets carved off). The freeform argument is **required** &mdash; it is the topic, Constraints, or new-OP title you want carved. Once the draft lands, you are in the **chop phase**: chat any revision and the agent edits `CHOP.md` in place. Re-invoke `/chop "..."` when a fresh session needs to re-enter the phase.
+**`/chop ...`** drafts the split at `notes/CHOP.md`: a side-by-side brief with a `# CURRENT OP` block (what stays) and a `# NEW OP` block (what gets carved off). The freeform argument is **required** &mdash; it is the topic, Constraints, or new-OP title you want carved. Once the draft lands, you are in the **chop phase**: chat any revision and the agent edits `CHOP.md` in place. Re-invoke `/chop ...` when a fresh session needs to re-enter the phase.
 
 **`/chopchop`** applies: spawns the new OP server-side seeded with the carved SITUATION + WARNING ORDER + OPERATION ORDER (including AARs for shipped tasks that were carried over), prunes the same scope from the parent&rsquo;s `OPERATION.md` + `TASKS.md`, and deletes `CHOP.md` both locally and server-side.
 
