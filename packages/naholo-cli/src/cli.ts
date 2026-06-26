@@ -11,7 +11,7 @@ import { mcpCommand } from './commands/mcp.js'
 import { projectConfigCommand } from './commands/project-config.js'
 import { agentCommand } from './commands/agent/index.js'
 import { configCommand } from './commands/config/index.js'
-import { covertCommand } from './commands/covert.js'
+import { covertCommand } from './commands/covert/index.js'
 import { devCommand } from './commands/dev/index.js'
 import { logoutCommand } from './commands/logout.js'
 
