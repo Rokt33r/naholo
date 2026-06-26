@@ -10,6 +10,7 @@
     "format:all": "prettier --write .",
     "build": "next build",
     "start": "next start",
+    "bump-cli": "pnpm version -w @naholo/cli -m \"@naholo/cli@%s\" --tag-version-prefix=\"@naholo/cli@\"",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
