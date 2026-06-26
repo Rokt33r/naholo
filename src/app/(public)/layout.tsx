@@ -46,6 +46,12 @@ export default async function PublicLayout({
               Field Manual
             </Link>
             <Link
+              href='/patchnotes'
+              className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
+            >
+              Patchnotes
+            </Link>
+            <Link
               href='/pricing'
               className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
             >

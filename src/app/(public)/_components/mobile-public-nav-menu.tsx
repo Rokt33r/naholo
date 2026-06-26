@@ -51,6 +51,9 @@ export function MobilePublicNavMenu({
           <Link href='/field-manual'>Field Manual</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
+          <Link href='/patchnotes'>Patchnotes</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href='/pricing'>Pricing</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

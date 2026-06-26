@@ -1,8 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, User, Palette, Terminal } from 'lucide-react'
+import { Pencil, User, Palette, Terminal, Newspaper } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
 import { ProjectSettingsTab } from '@/components/settings/project-settings-tab'
 import { UserSettingsTab } from '@/components/settings/user-settings-tab'
@@ -47,6 +48,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Terminal className='size-4' />
               CLI
             </TabsTrigger>
+            <Link
+              href='/patchnotes'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-muted-foreground hover:text-foreground inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all'
+            >
+              <Newspaper className='size-4' />
+              Patchnotes
+            </Link>
           </TabsList>
 
           {isAdmin && (
