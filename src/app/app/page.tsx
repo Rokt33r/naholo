@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import icon from '../icon.png'
 import { requireAuthUser } from '@/server/auth/permissions'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
 import { Button } from '@/components/ui/button'
@@ -15,20 +17,25 @@ export default async function AppPage() {
 
   if (projects.length === 0) {
     return (
-      <div className='flex h-full items-center justify-center pt-12'>
-        <div className='text-center'>
-          <h1 className='text-2xl font-semibold text-zinc-900 dark:text-zinc-50'>
+      <div className='flex h-full items-center justify-center p-6 pt-24'>
+        <div className='flex w-full max-w-md flex-col items-center text-center'>
+          <Image
+            src={icon}
+            alt='naholo'
+            width={88}
+            height={88}
+            className='mb-6 rounded-2xl'
+          />
+          <h1 className='text-4xl font-semibold text-zinc-900 dark:text-zinc-50'>
             Welcome to naholo
           </h1>
-          <p className='mt-2 text-zinc-600 dark:text-zinc-400'>
-            Create your first project to get started
+          <p className='text-muted-foreground mt-3 text-base'>
+            Spin up your first project to start documenting your work.
           </p>
-          <div className='mt-4'>
+          <div className='mt-8 flex flex-col items-center gap-3'>
             <CreateProjectDialog>
               <Button>Create project</Button>
             </CreateProjectDialog>
-          </div>
-          <div className='mt-4'>
             <LogoutButton />
           </div>
         </div>
