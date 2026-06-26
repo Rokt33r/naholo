@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAuthUser } from '@/server/auth/permissions'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
 import { Button } from '@/components/ui/button'
+import { LogoutButton } from '@/components/auth/logout-button'
 import { listProjects } from '@/server/services/project'
 
 export default async function AppPage() {
@@ -26,6 +27,9 @@ export default async function AppPage() {
             <CreateProjectDialog>
               <Button>Create project</Button>
             </CreateProjectDialog>
+          </div>
+          <div className='mt-4'>
+            <LogoutButton />
           </div>
         </div>
       </div>
@@ -64,6 +68,9 @@ export default async function AppPage() {
           </li>
         ))}
       </ul>
+      <div className='flex border-t pt-6'>
+        <LogoutButton />
+      </div>
     </div>
   )
 }
