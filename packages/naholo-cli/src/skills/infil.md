@@ -46,7 +46,7 @@ OPERATION.md is a container holding the orders issued for one op (see manual for
 
 **If `{operationDir}/notes/OPERATION.md` does not exist**:
 
-- Write it locally via the `Write` tool. Do NOT push during infil.
+- Write it locally via the `Write` tool.
 - Template:
 
   ```markdown
@@ -72,11 +72,7 @@ OPERATION.md is a container holding the orders issued for one op (see manual for
   - One-line summary of a non-blocking constraint, related operation, stakeholder mention, or prior-art pointer. Point at `notes/*.md` or `LOGS.yml` for detail.
   ```
 
-- **Pain**: keep brief — ≤3 sentences. Details land in the WARNO during `/warno`.
-- **Suggested solution**: include only if logs/notes hint at a solution; otherwise omit the heading entirely. No `N/A` filler.
-- **Notes**: include only if logs/notes surface info worth flagging that doesn't fit Pain or Suggested solution (non-blocking constraints, related operations, stakeholder mentions, prior-art pointers); one-line bullets, no nested detail; otherwise omit the heading entirely.
 - If other notes exist, add pointers (e.g., "See `api-design.md` for endpoint specs") inside SITUATION subsections where relevant.
-- Do NOT write `## WARNING ORDER` or `## OPERATION ORDER` headings — `/warno` and `/opord` append those when they run.
 
 **If OPERATION.md already exists** (common case: a prior `/sitrep` or `/exfil` already pushed it, and this is a fresh infil after a mid-cycle exfil — e.g., the OP was paused waiting on a prerequisite OP):
 
@@ -86,7 +82,7 @@ OPERATION.md is a container holding the orders issued for one op (see manual for
 
 ### 5. Print summary
 
-Output a summary using markdown link syntax for clickable paths. Print as raw markdown — no surrounding fence. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
+Output a summary using markdown link syntax for clickable paths. List workflow notes first in the fixed order OPERATION → TASKS → TIMELINE, then other notes alphabetically.
 
 If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
