@@ -258,7 +258,6 @@ Single-commit sizing rules:
 
 A single-commit-sized task is one cohesive change that a reviewer can read as a single diff — one motivation, one verb in the title, no unrelated edits riding along. If you'd struggle to write its commit message without an "and", split it.
 
-- Each task should be a chunk a reviewer can read and understand in a few minutes after `/splash` ships it.
 - **Intent is the approach summary only.** Concrete shapes live in Method of Engagement, concrete steps in Target Description — Intent must stay a single skim-readable headline.
 - **Compound titles are a split tell.** If a task title needs a comma, "and", or "+" to describe it ("Slim X, relocate Y, strip Z"), each clause is a split candidate. Split until every title is a single verb + object.
 - No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (Target Description action-list sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
@@ -281,7 +280,7 @@ Summarize what step 6 changed in one line, then run `naholo agent add-timeline -
 
 ### 10. Print summary
 
-Show the plan state. Use markdown link syntax. Print as raw markdown — no surrounding fence.
+Show the plan state. Use markdown link syntax.
 
 The summary's primary link points at the **most-affected scope** of this run, so the user can jump straight to what changed:
 
@@ -338,15 +337,13 @@ While in the opord phase:
 ## Rules
 
 - **OPORD-only**: `/opord` writes (or revises) `## OPERATION ORDER` and mirrors to `TASKS.md`. It does NOT touch `## WARNING ORDER` — direction changes belong to `/warno`.
-- **WARNING ORDER must exist**: abort with a "run `/warno` first" message if WARNING ORDER is absent or missing required subsections.
 - **No sub-tasks**: every task is flat. If you feel the urge to sub-bullet, split into two tasks.
-- **Completed tasks are immutable**: a task with a `#### After-Action Report` heading MUST NOT be edited, renumbered, or removed.
+- **Completed tasks are immutable**: a task with a `#### After-Action Report` heading MUST NOT be edited, renumbered, re-slotted, or removed — it keeps its integer forever. Unshipped tasks may be re-slotted (e.g., inserting "before TASK 6" bumps later unshipped tasks by 1). Numbering is plain `TASK 1`, `TASK 2`, …; no letter-suffix. (Historical letter-suffix tasks — e.g. `TASK 3a` — stay as-is; they're immutable AAR records from before this doctrine.)
 - **Decisions commit to one path**: every task Intent headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/warno` to add the missing Constraint.
 - **Preserve `[ref]` links** in TASKS.md.
 - **Respect existing done states**: don't uncheck `[x]` items in TASKS.md.
 - **OPERATION.md has exactly three top-level sections**: SITUATION, WARNING ORDER, OPERATION ORDER. Nothing else. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
-- **Shipped tasks are immutable integers**: a task with a `#### After-Action Report` heading keeps its integer forever — never renumber it, never re-slot it. Unshipped tasks may be re-slotted (e.g., inserting "before TASK 6" bumps later unshipped tasks by 1). Numbering is plain `TASK 1`, `TASK 2`, …; no letter-suffix. (Historical letter-suffix tasks — e.g. `TASK 3a` — stay as-is; they're immutable AAR records from before this doctrine.)
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TASKS.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
