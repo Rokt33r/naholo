@@ -109,20 +109,17 @@ Inspect the current state of OPERATION.md WARNING ORDER and any freeform args. B
 `## WARNING ORDER` has three subsections in fixed order (add any that are missing):
 
 - `### Concept of Operations` — **two or three sentences max**. Names the chosen approach and connects it to `SITUATION.Pain`. Concept-level only — do **not** enumerate files, edit steps, or build commands here; those belong in Constraints or are derived later in OPERATION ORDER.
-- `### Constraints` — a flat bullet list of decisions. One bullet per decision. Each bullet starts with a **bold one-line label** stating the decision, then `: ` and a single sentence of reasoning. Keep the bold label short — avoid long code spans, file paths, or multi-clause titles inside the bold (put those in the reasoning half after the colon). No `####` headings, no prose paragraphs. Use a sub-bullet only when one sentence genuinely cannot carry the decision (e.g., the decision has two or three concrete items the reader needs to see); keep sub-bullets to one short clause each and avoid them whenever possible. Two optional sub-bullet forms:
+- `### Constraints` — a flat bullet list of decisions, one per bullet, written `- **<decision>**: <one-sentence reasoning>` (see example below). Keep the bold label short — no long code spans, file paths, or multi-clause titles inside the bold; push those into the reasoning half. No `####` headings, no prose paragraphs. Use a sub-bullet only when one sentence genuinely cannot carry the decision; keep each to one short clause and avoid them when possible. Two optional sub-bullet forms:
   - `- ? <prompt> (opt-a / opt-b) >` — a single open alt for the user to answer (or for `/opord` to resolve). Only when the high bar in step 4 is met.
   - `- Rejected: opt-a, opt-b` — alternatives the user dismissed or `/opord` collapsed. Comma-joined, no reasons unless the user added them.
 
   Decisions belong here, not inside individual tasks.
-
-  Constraints give **direction**, not interface shape — keep function signatures, flag names, base-dir args, and resolution helpers out of the WARNO; that code-level detail belongs to `/opord`. Pin an interface in a Constraint only when the user asks for that detail specifically, or when it is genuinely the only viable solution. The bar: a reviewer can read the WARNO without opening a single file.
 
 - `### Target Reference Points` — a curated, scannable map of the files / folders / glob patterns a fresh `/opord` session would need to read to cut OPERATION ORDER. Flat bullet list. Each entry is `` `{path-or-glob}` — {tag} ``:
   - The path or glob is **backtick-wrapped**. Folders end with `/`. Globs use standard wildcards (e.g., `src/server/services/*.ts`, `.claude/skills/*/SKILL.md`).
   - The tag is a **noun-only label** — at most a few words naming the role. **No verbs, no clauses, no relative pronouns** (`that…`, `which…`, `containing…`). If you find yourself writing a clause, cut it down to the noun.
   - No trailing period. No backticks around the tag.
   - **No sub-bullets.** If a file matters in two ways, write two bullets or pick the dominant role.
-  - **Filter aggressively** (see step 4): list a folder or glob when several siblings are relevant; skip files obvious from project conventions; skip files only opened to disprove a hypothesis.
   - This is a map for downstream skills, not a duplicate of OPERATION ORDER's per-task Method of Engagement / Target Description.
 
 Examples:
