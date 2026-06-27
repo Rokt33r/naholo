@@ -61,10 +61,10 @@ export function PatchnotesList({
           {visible.map((entry) => (
             <article key={`${entry.stream}-${entry.version}`}>
               <header className='flex items-baseline gap-3'>
-                <span className='rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'>
+                <span className='rounded bg-zinc-100 px-2.5 py-0.5 text-xl font-bold uppercase tracking-wide text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'>
                   {STREAM_LABELS[entry.stream]}
                 </span>
-                <span className='font-mono text-sm font-semibold text-zinc-900 dark:text-zinc-50'>
+                <span className='font-mono text-xl font-bold text-zinc-900 dark:text-zinc-50'>
                   {entry.version}
                 </span>
                 <span className='text-xs text-zinc-400 dark:text-zinc-500'>
