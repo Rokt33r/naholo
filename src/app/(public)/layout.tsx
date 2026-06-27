@@ -2,19 +2,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import icon from '@/app/icon.png'
 import { ThemeSwitcher } from '@/components/theme-switcher'
-import { getAuthUser } from '@/server/auth/permissions'
-import { MobilePublicNavMenu } from './_components/mobile-public-nav-menu'
+import { PublicNavActions } from './_components/public-nav-actions'
 
 const GITHUB_URL = 'https://github.com/rokt33r/naholo'
 
-export default async function PublicLayout({
+export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const user = await getAuthUser({ allowedAuthMethods: ['session'] })
-  const isAuthed = user != null
-
   return (
     <div className='flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950'>
       <header className='border-b border-zinc-200 dark:border-zinc-800'>
@@ -57,36 +53,9 @@ export default async function PublicLayout({
             >
               Pricing
             </Link>
-            <div className='hidden items-center gap-4 min-[426px]:flex md:gap-6'>
-              {isAuthed ? (
-                <Link
-                  href='/app'
-                  className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-                >
-                  Enter ops room
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href='/sign-in'
-                    className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href='/sign-up'
-                    className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
+            <PublicNavActions githubUrl={GITHUB_URL} />
             <div className='hidden md:inline-flex'>
               <ThemeSwitcher />
-            </div>
-            <div className='md:hidden'>
-              <MobilePublicNavMenu githubUrl={GITHUB_URL} isAuthed={isAuthed} />
             </div>
           </div>
         </nav>
