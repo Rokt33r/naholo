@@ -10,7 +10,7 @@
     "format:all": "prettier --write .",
     "build": "next build",
     "start": "next start",
-    "bump-cli": "pnpm version -w @naholo/cli -m \"@naholo/cli@%s\" --tag-version-prefix=\"@naholo/cli@\"",
+    "bump-cli": "pnpm tsx scripts/bump-cli.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
