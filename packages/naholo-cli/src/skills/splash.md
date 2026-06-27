@@ -115,7 +115,6 @@ Implement the code changes that satisfy the task intent:
   Manual steps are part of shipping the task; the task still ships either way (Done or Defer), but every Defer becomes a Notes line in the AAR so nothing is silently dropped.
 
 - Add files not in the list if they're genuinely required — note them in the AAR as deviations.
-- Follow `CLAUDE.md` conventions and any project style rules.
 - Stay within the task scope. Do not refactor surrounding code, add features, or fix unrelated issues.
 
 After the action list finishes, run the post-edit verifications defined in `CLAUDE.md` and `.claude/rules/*.md` for the files you changed (formatter on tracked-file changes, type checker on TS source). `/opord` deliberately omits these from the Target Description.
@@ -157,7 +156,7 @@ Run `naholo agent add-timeline` with the bare `splash` stage label:
 
 ### 10. Print summary
 
-Print as raw markdown — no surrounding fence. Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
+Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
 
 The chat summary opens with a **Splash stats** block that does not appear in the on-disk AAR (the AAR contains only Deviations + Notes; Splash stats are chat-only). Compute the three counts from the work just performed:
 
@@ -202,8 +201,6 @@ Next:
 - Optionally → `/sitrep` to push progress to the server
 ```
 
-If the user should review before the next splash, mention it.
-
 **All-done state** — no unchecked task remains after this splash. Keep the Splash stats + AAR embed; the tail drops the `Ship the next task` bullet and closes on `Done → /exfil`:
 
 ```md
@@ -229,15 +226,11 @@ While in the splash phase:
 ## Rules
 
 - **One task per invocation**: ship exactly one, then stop. The user re-runs `/splash` for the next.
-- **AAR is overwritten in place on revision** — never add a second AAR section to a task.
-- **Revision splashes never touch Intent / Method of Engagement / Target Description** — those are `/opord`'s planning record. Late discoveries land in AAR Deviations; structural plan changes require `/opord`.
 - **Stay in scope**: the task intent is the contract. If you can't ship as described (API changed, file doesn't exist, unexpected architecture), stop and explain. Do not improvise.
 - **Don't touch other tasks**: do not edit other tasks' Method of Engagement, Target Description, AARs, or Intents. If the work reveals that another task needs revision, surface it — don't silently rewrite.
 - **TASKS.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next task.
 - **One TIMELINE bullet per splash invocation** — `naholo agent add-timeline` guarantees the format.
 - **OPERATION.md sections stay at SITUATION / WARNING ORDER / OPERATION ORDER**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
 - **Don't re-elaborate the task**: if the Intent or Target Description are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the task Intent — that's `/opord`'s job (or `/warno`, if the WARNO itself needs to change).
-- **Respect CLAUDE.md**: follow project conventions, don't run `db:generate`, etc.
-- **`Manual:` items are user-owned**: never attempt to execute them; pause and ask the user to confirm completion before moving on.
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
