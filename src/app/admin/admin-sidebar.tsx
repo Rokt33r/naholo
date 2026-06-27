@@ -23,6 +23,7 @@ type AdminNavItem = {
 
 const items: AdminNavItem[] = [
   { href: '/admin/users', label: 'Users' },
+  { href: '/admin/projects', label: 'Projects' },
   { href: '/admin/agent-transcripts', label: 'Agent Transcripts' },
   {
     href: '/admin/polar-webhook-events',

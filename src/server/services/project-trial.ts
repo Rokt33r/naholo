@@ -2,7 +2,7 @@ import 'server-only'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projects, projectTrials, projectOperators } from '../db/schema'
-import { ConflictError } from '../errors'
+import { ConflictError, NotFoundError } from '../errors'
 import { isUniqueViolationError } from '../db/utils'
 import { deriveProjectStatus } from './project-status'
 
@@ -93,6 +93,63 @@ export async function claimProjectTrial(input: {
       .update(projects)
       .set({ status, trialUntil, updatedAt: now })
       .where(eq(projects.id, projectId))
+
+    return { expiresAt }
+  })
+}
+
+export async function setProjectTrialExpiration(input: {
+  userId: string
+  expiresAt: Date
+}): Promise<{ expiresAt: Date }> {
+  const { userId, expiresAt } = input
+  const now = new Date()
+
+  return db.transaction(async (tx) => {
+    const trial = await tx.query.projectTrials.findFirst({
+      columns: { id: true, projectId: true },
+      where: (t, { eq }) => eq(t.userId, userId),
+    })
+    if (trial == null) {
+      throw new NotFoundError('Project trial')
+    }
+
+    await tx
+      .update(projectTrials)
+      .set({ expiresAt })
+      .where(eq(projectTrials.id, trial.id))
+
+    const project = await tx.query.projects.findFirst({
+      columns: { id: true },
+      with: {
+        activeProjectSubscription: {
+          with: {
+            polarSubscription: { columns: { status: true, seats: true } },
+          },
+        },
+      },
+      where: (t, { eq }) => eq(t.id, trial.projectId),
+    })
+    const polarSubscription =
+      project?.activeProjectSubscription?.polarSubscription ?? null
+
+    const usedSeats = await tx.$count(
+      projectOperators,
+      eq(projectOperators.projectId, trial.projectId),
+    )
+
+    const { status, trialUntil } = deriveProjectStatus({
+      polarStatus: polarSubscription?.status ?? null,
+      seats: polarSubscription?.seats ?? null,
+      usedSeats,
+      trial: { expiresAt },
+      now,
+    })
+
+    await tx
+      .update(projects)
+      .set({ status, trialUntil, updatedAt: now })
+      .where(eq(projects.id, trial.projectId))
 
     return { expiresAt }
   })
