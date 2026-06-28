@@ -76,8 +76,6 @@ Branch on whether `CHOP.md` already existed in step 2:
 
 Then run a single re-validation pass against the parent's current `OPERATION.md` (which may have changed between sessions): if a Constraint bold label or task title referenced in the old `CHOP.md` no longer exists on the parent (a `/warno` or `/opord` ran between chops), drop the stale reference and call it out in the summary. Re-validation is the only thing that touches fields the args didn't name.
 
-**Do not** allocate Target Reference Points in `CHOP.md`. TRP allocation is `/chopchop`'s job — agents at apply time decide which TRP entries support only carved Constraints (move), only surviving Constraints (keep), or both (duplicate). The user is not expected to review TRP at proposal time.
-
 ### 4. Write `CHOP.md`
 
 Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it overwrites the existing file on revision runs):
@@ -152,7 +150,6 @@ Compose `{operationDir}/notes/CHOP.md` exactly to this format. Use `Write` (it o
 
 Format rules to honor when writing the doc:
 
-- **`/chop` does not write TRP.** `### Target Reference Points` blocks under each side's `## WARNING ORDER` are populated by `/chopchop` as a pre-flight rewrite before the CLI runs — they may be absent on a fresh `/chop` draft and are always regenerated on `/chopchop`.
 - **Both sides carry `## SITUATION`.** `### Pain` is mandatory on both sides; `### Notes` is optional and follows the `OPERATION.md` omit-when-empty convention — omit the `### Notes` heading entirely when the side has nothing to flag, do not write a placeholder body.
 - **The `# CURRENT OP #{n}: {title}` header carries the parent's proposed post-split title.** The user retitles the parent by editing this header. `# NEW OP: {title}` carries the new OP's proposed title the same way.
 - **No `#### Intent`, no `#### Method of Engagement`, no `#### Target Description`, no `#### After-Action Report`** anywhere in `CHOP.md`. The OPERATION ORDER blocks under each OP are **checkbox task items** (`- [ ] TASK n — title` or `- [x] TASK n — title`), not full task sections. Full per-task detail lives in `OPERATION.md`; `CHOP.md` is a planning brief.
@@ -213,13 +210,9 @@ While in the chop phase (i.e. `CHOP.md` exists):
 
 ## Rules
 
-- **Args are mandatory** — `/chop` with no args is an error.
-- **Shipped tasks require explicit confirmation to carve** — if a candidate carved task is shipped, pause via `AskUserQuestion` per step 3. Default to keeping the shipped task on the parent unless the user confirms the move; the AAR transfers with the task when they do.
 - **No server calls** — `/chop` writes `CHOP.md` and a TIMELINE bullet. Nothing else. No `mcp__naholo__create_operation`, no `create_note`, no parent `OPERATION.md` edits.
 - **`/chop` does not write TRP** — `/chopchop` populates the `### Target Reference Points` block under each side's `## WARNING ORDER` as a pre-flight rewrite before its CLI runs.
-- **No per-task detail in `CHOP.md`** — OPERATION ORDER blocks are one-line task summaries only. No Intent, Method of Engagement, Target Description, or AAR.
 - **SITUATION bodies and the CURRENT OP header title are user-editable surfaces** — `/chop` drafts them on a fresh run, but revision runs preserve hand-edits unless the args explicitly target them. The user reviews the proposed Pain / Notes / parent title in `CHOP.md` before `/chopchop` applies the split.
 - **One proposal at a time** — only one `CHOP.md` exists at any moment. Re-running `/chop` while `CHOP.md` is present revises the existing proposal in place; it does not stack a second one.
-- **Verbatim Constraint transfer in the draft** — carved and surviving Constraints both appear word-for-word from the parent's `OPERATION.md`.
 - **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
 - Print the summary as raw markdown — no surrounding fence.

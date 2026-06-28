@@ -127,9 +127,6 @@ If the user pushes back, rephrases the request, or otherwise signals they want t
 
 ## Rules
 
-- **No args** — `/nochop` accepts no freeform input.
 - **No parent OP modification** — only `CHOP.md` (local + server-side) and `TIMELINE.md` are touched. `OPERATION.md` and `TASKS.md` are not.
-- **`CHOP.md` is mandatory** — if it's already absent, the skill is a no-op and stops with the abort message in step 2.
-- **Use the inlined next-action template** — do not improvise the next-action lines. Pick the `mission-only` or `execution-ready` block in step 6 verbatim; do not list `/sitrep`, `/exfil`, or any other skill.
 - **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
 - Print the summary as raw markdown — no surrounding fence.
