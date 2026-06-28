@@ -207,9 +207,6 @@ If the user pushes back, rephrases the request, or otherwise signals they want t
 
 ## Rules
 
-- **`CHOP.md` is mandatory** — if it doesn't exist, stop and point the user at `/chop`. `/chopchop` cannot improvise a split from freeform args.
-- **No freeform args** — the only customization channel between `/chop` and `/chopchop` is hand-editing `CHOP.md`.
-- **TRP allocation is regenerated on every `/chopchop` run** — user hand-edits to TRP blocks in `CHOP.md` are not preserved. The user's TRP review channel is editing the parent's WARNING ORDER TRP before `/chopchop`.
 - **Trust `CHOP.md` on shipped scope** — if it lists a shipped task under `# NEW OP`, the CLI carries the task with its AAR intact. The shipped-or-not decision is `/chop`'s gate, not `/chopchop`'s.
 - **CLI owns apply semantics** — verbatim Constraint / task-section transfer, no-renumbering on the parent, new-OP renumber-from-1, server-then-local CHOP delete, and the parent rename are all CLI responsibilities. The skill validates and shells out; it does not edit `OPERATION.md`, `TASKS.md`, or call MCP tools.
 - **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
