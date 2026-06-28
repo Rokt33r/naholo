@@ -1,22 +1,16 @@
 ---
 name: exfil
 description: Sync local operation changes back to Naholo and clean up — pushes tasks/notes, drains transcripts, posts a log, optionally closes, removes the infilled dir.
-argument-hint: '["close"|"don\'t close"|"freeform"]'
+argument-hint: '["freeform"]'
 ---
 
 # Exfil — Sync Back and Clean Up
 
-Thin wrapper around `naholo agent exfil`. The CLI command owns the push, transcript drain, log post, optional close, and local-dir removal — this skill resolves the close decision with the user and prints the completion line.
+Thin wrapper around `naholo agent exfil`. The CLI command does the work; this skill resolves the close decision with the user and prints the completion line.
 
 ## Arguments
 
-Anything in quotes is optional context. Common patterns:
-
-- `"close"` — close the operation after syncing
-- `"don't close"` — sync but leave the operation open
-- Anything else → ask the user whether to close
-
-If no instructions are given, ask the user whether to close.
+Anything in quotes is optional freeform context. It overrides the close decision only when it explicitly states one — "close" / "close it" → close; "don't close" / "leave it open" → leave open. Freeform that doesn't explicitly say either does not override; the task-state default in step 4 applies.
 
 ## What to do
 
@@ -47,10 +41,12 @@ Count unchecked (`- [ ]`) tasks in `TASKS.md`. If any exist, use `AskUserQuestio
 
 ### 4. Resolve close intent
 
-- Args contain `"close"` → close.
-- Args contain `"don't close"` → leave open.
-- All tasks in TASKS.md are done → close (no need to ask).
-- Otherwise → use `AskUserQuestion`: "Close operation #{currentOp}?" Do NOT proceed until they respond.
+An explicit close/leave-open statement in the args overrides; otherwise the decision falls to task state.
+
+- Args explicitly say close → close.
+- Args explicitly say leave open → leave open.
+- No explicit statement, all tasks in TASKS.md done → close (no need to ask).
+- No explicit statement, tasks still unchecked → use `AskUserQuestion`: "Close operation #{currentOp}?" Do NOT proceed until they respond.
 
 ### 5. Run `naholo agent exfil`
 
@@ -68,6 +64,5 @@ Exfil complete — [OP #{currentOp}: "{opTitle}"]({url})
 
 - **Exfil is sync-only** — no source-file edits in this skill.
 - **`naholo agent exfil` owns push, transcript drain, log post, optional close, and local-dir removal** — the skill's only CLI calls are `naholo agent boot` and `naholo agent exfil`.
-- **The op URL is the last stdout line of `naholo agent exfil`** — capture it from there for the completion line.
 - Print the completion line as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — substitute `{operationDir}` with `opPath` from boot's `<op_status>`. The `{url}` in the completion line is a real `https://` URL and is exempt.
