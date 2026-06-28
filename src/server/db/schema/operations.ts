@@ -15,6 +15,8 @@ import { operationLogs } from './operation-logs'
 import { operationNotes } from './operation-notes'
 import { operationTasks } from './operation-tasks'
 import { operationAgentTranscripts } from './operation-agent-transcripts'
+import { operationProjectLabels } from './operation-project-labels'
+import { operationAssignees } from './operation-assignees'
 
 export const operations = pgTable(
   'operations',
@@ -56,4 +58,6 @@ export const operationsRelations = relations(operations, ({ one, many }) => ({
   notes: many(operationNotes),
   tasks: many(operationTasks),
   agentTranscripts: many(operationAgentTranscripts),
+  labels: many(operationProjectLabels),
+  assignees: many(operationAssignees),
 }))
