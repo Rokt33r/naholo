@@ -10,6 +10,7 @@ import chopContent from './skills/chop.md'
 import chopchopContent from './skills/chopchop.md'
 import nochopContent from './skills/nochop.md'
 import reconContent from './skills/recon.md'
+import fieldstripContent from './skills/fieldstrip.md'
 
 export const CORE_LOADOUT_NAME = 'core'
 
@@ -26,4 +27,5 @@ export const coreSkills: { name: string; content: string }[] = [
   { name: 'chopchop', content: chopchopContent },
   { name: 'nochop', content: nochopContent },
   { name: 'recon', content: reconContent },
+  { name: 'fieldstrip', content: fieldstripContent },
 ]
