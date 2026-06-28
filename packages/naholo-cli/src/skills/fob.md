@@ -96,6 +96,4 @@ In either case `/fob` itself has no follow-up edit surface — any further refin
 - **No codebase research** — `/fob` is intentionally light. If the user wants planning context, they run `/recon` after infil, or `/warno` to research and write the WARNO.
 - **`-T` is mandatory at the CLI**: the skill is responsible for resolving a non-empty title before the CLI call (either from the user's first line or generated from content). Never call `naholo agent fob` with an empty title.
 - **`-C` is optional**: only pass it when the user supplied content. Empty content means "create the op, no first log."
-- **Never chain `/infil` while another op is already infilled**: chaining would clobber the in-flight infilled directory. Instead print the `Infilled op exists, skipped /infil. To infil, /exfil first and /infil {opNumber} again.` hint so the user can switch deliberately.
-- **Always read `opNumber` from the CLI's YAML stdout** — do not parse other lines, do not regex against human prose. The contract is `opNumber: <n>`.
 - **Always use absolute filesystem paths in link targets** in any abort messages this skill prints — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths.
