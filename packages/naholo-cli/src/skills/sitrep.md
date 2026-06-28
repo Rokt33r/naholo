@@ -60,5 +60,4 @@ Sitrep synced for OP #{currentOp}.
 
 - **Sitrep is sync-only** — no source-file edits, no close, no local-dir cleanup.
 - **`naholo agent sitrep` owns the push and the log post** — the skill's only CLI calls are `naholo agent boot` and `naholo agent sitrep --log`.
-- **The `**sitrep** — ` prefix on the log content is mandatory** — `/infil` uses it to detect and skip sync echoes.
 - Print the confirmation as raw markdown — no surrounding fence.
