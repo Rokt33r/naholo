@@ -1,11 +1,23 @@
 import 'server-only'
 import { db } from '../db'
-import { operations, operationTasks, projects } from '../db/schema'
-import { eq, and, desc, count, sum, sql } from 'drizzle-orm'
+import { operations, projects } from '../db/schema'
+import { eq, and, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { NotFoundError } from '../errors'
 import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
+
+export type OperationLabel = {
+  id: string
+  name: string
+  color: string
+}
+
+export type OperationAssignee = {
+  id: string
+  projectOperatorId: string
+  name: string
+}
 
 export type Operation = {
   id: string
@@ -16,6 +28,8 @@ export type Operation = {
   closedAt: Date | null
   createdAt: Date
   updatedAt: Date
+  labels: OperationLabel[]
+  assignees: OperationAssignee[]
 }
 
 export type OperationWithStats = {
@@ -29,6 +43,8 @@ export type OperationWithStats = {
   updatedAt: Date
   totalTasks: number
   completedTasks: number
+  labels: OperationLabel[]
+  assignees: OperationAssignee[]
 }
 
 /**
@@ -38,27 +54,34 @@ export async function getOperation(data: {
   projectId: string
   operationNumber: number
 }): Promise<Operation | null> {
-  const [operation] = await db
-    .select({
-      id: operations.id,
-      projectId: operations.projectId,
-      number: operations.number,
-      title: operations.title,
-      closed: operations.closed,
-      closedAt: operations.closedAt,
-      createdAt: operations.createdAt,
-      updatedAt: operations.updatedAt,
-    })
-    .from(operations)
-    .where(
+  const operation = await db.query.operations.findFirst({
+    where: (op, { eq, and }) =>
       and(
-        eq(operations.number, data.operationNumber),
-        eq(operations.projectId, data.projectId),
+        eq(op.number, data.operationNumber),
+        eq(op.projectId, data.projectId),
       ),
-    )
-    .limit(1)
+    with: {
+      labels: { with: { projectLabel: true } },
+      assignees: { with: { projectOperator: true } },
+    },
+  })
 
-  return operation || null
+  if (!operation) {
+    return null
+  }
+
+  return {
+    id: operation.id,
+    projectId: operation.projectId,
+    number: operation.number,
+    title: operation.title,
+    closed: operation.closed,
+    closedAt: operation.closedAt,
+    createdAt: operation.createdAt,
+    updatedAt: operation.updatedAt,
+    labels: mapOperationLabels(operation.labels),
+    assignees: mapOperationAssignees(operation.assignees),
+  }
 }
 
 /**
@@ -70,36 +93,30 @@ export async function listOperations(data: {
 }): Promise<OperationWithStats[]> {
   const closed = data.closed ?? false
 
-  const rows = await db
-    .select({
-      id: operations.id,
-      number: operations.number,
-      title: operations.title,
-      lastOperationLogPreview: operations.lastOperationLogPreview,
-      closed: operations.closed,
-      closedAt: operations.closedAt,
-      createdAt: operations.createdAt,
-      updatedAt: operations.updatedAt,
-      totalTasks: count(operationTasks.id).as('total_tasks'),
-      completedTasks: sum(
-        sql`CASE WHEN ${operationTasks.done} THEN 1 ELSE 0 END`,
-      ).as('completed_tasks'),
-    })
-    .from(operations)
-    .leftJoin(operationTasks, eq(operationTasks.operationId, operations.id))
-    .where(
-      and(
-        eq(operations.projectId, data.projectId),
-        eq(operations.closed, closed),
-      ),
-    )
-    .groupBy(operations.id)
-    .orderBy(desc(operations.updatedAt))
+  const rows = await db.query.operations.findMany({
+    where: (op, { eq, and }) =>
+      and(eq(op.projectId, data.projectId), eq(op.closed, closed)),
+    orderBy: (op, { desc }) => desc(op.updatedAt),
+    with: {
+      tasks: { columns: { id: true, done: true } },
+      labels: { with: { projectLabel: true } },
+      assignees: { with: { projectOperator: true } },
+    },
+  })
 
-  // Convert sum result (string | null) to number
   return rows.map((row) => ({
-    ...row,
-    completedTasks: Number(row.completedTasks ?? 0),
+    id: row.id,
+    number: row.number,
+    title: row.title,
+    lastOperationLogPreview: row.lastOperationLogPreview,
+    closed: row.closed,
+    closedAt: row.closedAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    totalTasks: row.tasks.length,
+    completedTasks: row.tasks.filter((task) => task.done).length,
+    labels: mapOperationLabels(row.labels),
+    assignees: mapOperationAssignees(row.assignees),
   }))
 }
 
@@ -310,4 +327,24 @@ export async function updateOperationLastOperationLogPreview(
       lastOperationLogPreview: preview,
     })
     .where(eq(operations.id, operationId))
+}
+
+function mapOperationLabels(
+  rows: { projectLabel: { id: string; name: string; color: string } }[],
+): OperationLabel[] {
+  return rows.map((row) => ({
+    id: row.projectLabel.id,
+    name: row.projectLabel.name,
+    color: row.projectLabel.color,
+  }))
+}
+
+function mapOperationAssignees(
+  rows: { id: string; projectOperator: { id: string; name: string } }[],
+): OperationAssignee[] {
+  return rows.map((row) => ({
+    id: row.id,
+    projectOperatorId: row.projectOperator.id,
+    name: row.projectOperator.name,
+  }))
 }
