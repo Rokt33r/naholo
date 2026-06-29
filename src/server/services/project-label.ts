@@ -1,11 +1,12 @@
 import 'server-only'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
-import { projectLabels } from '../db/schema'
+import { projectLabels, operationProjectLabels } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
 import { ConflictError, NotFoundError } from '../errors'
 import { isUniqueViolationError } from '../db/utils'
+import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 
 export type ProjectLabel = {
   id: string
@@ -126,6 +127,81 @@ export async function deleteProjectLabel(data: {
   if (label == null) {
     return err(new NotFoundError('Label'))
   }
+
+  return ok()
+}
+
+/**
+ * Attach a project label to an operation. Idempotent — re-attaching an already
+ * attached label is a no-op. Fails when the label does not belong to the project.
+ */
+export async function attachOperationLabel(data: {
+  projectId: string
+  operationId: string
+  projectLabelId: string
+  sourceClientId?: string
+}): Promise<ReturnResult<undefined>> {
+  const label = await db.query.projectLabels.findFirst({
+    columns: { id: true },
+    where: (t, { eq, and }) =>
+      and(eq(t.id, data.projectLabelId), eq(t.projectId, data.projectId)),
+  })
+
+  if (label == null) {
+    return err(new NotFoundError('Label'))
+  }
+
+  await db
+    .insert(operationProjectLabels)
+    .values({
+      operationId: data.operationId,
+      projectLabelId: data.projectLabelId,
+    })
+    .onConflictDoNothing()
+
+  publishOperationEvent(
+    data.operationId,
+    'operation-updated',
+    data.sourceClientId,
+  )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
+
+  return ok()
+}
+
+/**
+ * Detach a project label from an operation. Idempotent — detaching a label that
+ * is not attached is a no-op.
+ */
+export async function detachOperationLabel(data: {
+  projectId: string
+  operationId: string
+  projectLabelId: string
+  sourceClientId?: string
+}): Promise<ReturnResult<undefined>> {
+  await db
+    .delete(operationProjectLabels)
+    .where(
+      and(
+        eq(operationProjectLabels.operationId, data.operationId),
+        eq(operationProjectLabels.projectLabelId, data.projectLabelId),
+      ),
+    )
+
+  publishOperationEvent(
+    data.operationId,
+    'operation-updated',
+    data.sourceClientId,
+  )
+  publishProjectEvent(
+    data.projectId,
+    'operations-list-changed',
+    data.sourceClientId,
+  )
 
   return ok()
 }
