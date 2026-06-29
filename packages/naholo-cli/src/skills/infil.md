@@ -6,9 +6,7 @@ argument-hint: '[{operationNumber}]'
 
 # Infil — Infil Operation
 
-Fetch an operation's full context from Naholo and set up a local working directory for the `/warno` → `/splash` → `/sitrep` (mid-session) → `/exfil` (done) workflow.
-
-Infil is a one-way bring-down from server to local. It never pushes. If `OPERATION.md` needs to be created, it is written locally only — the user runs `/sitrep` or `/exfil` later to sync upstream.
+Fetch an operation's full context from Naholo and generate `OPERATION.md` if it doesn't exist.
 
 ## Arguments
 
@@ -30,7 +28,7 @@ Either way, capture the absolute operation directory from the `Local:` line — 
 
 ### 2. Boot
 
-**If you haven't run `naholo agent boot` this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>`. **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status. `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read them inline if needed but do not store them (they drift later in this same skill once OPERATION.md / TIMELINE.md land).
+**If you haven't run `naholo agent boot` this session**, run it now via the Bash tool. Adopt `<personality>` as your voice when the block is present, adopt `<manual>` rules, and cache **only `opPath`** from `<op_status>`. **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status. `<op_status>` carries `currentOp` / `opTitle` / `opNotes` — read them inline if needed but do not store them.
 
 ### 3. Read context
 
@@ -86,7 +84,7 @@ Output a summary using markdown link syntax for clickable paths. List workflow n
 
 If the CLI reported note conflicts, append a `**Conflicts to resolve manually:**` section listing each conflicted note as a clickable bullet so the user can open it in their editor — the user resolves them outside this skill.
 
-Output template — print raw, per the manual's `## Chat output` rule. Substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line, and fold in the CLI output details (tasks updated/inserted, notes merged).
+Output template — substitute `{operationDir}` with the absolute path printed on the infil's `Local:` line, and fold in the CLI output details (tasks updated/inserted, notes merged).
 
 ```md
 Infilled operation #42: "Implement user auth"
@@ -110,7 +108,7 @@ Once this skill returns, the session is in the **infil** phase. The phase persis
 
 While in the infil phase:
 
-- **In-phase follow-up edits** — any further infil-driven edit the user asks for (refining `## SITUATION`, fixing a typo in the seeded OPERATION.md, adding a SITUATION.Notes bullet pointing at a fresh `LOGS.yml` entry) is part of this phase. Fire a single `naholo agent add-timeline -T infil '<summary>'` per discrete event so a future fresh session sees what changed.
+- **In-phase follow-up edits** — any further infil-driven edit the user asks for (refining `## SITUATION`, fixing a typo in the seeded OPERATION.md, adding a SITUATION.Notes bullet pointing at a fresh `LOGS.yml` entry) is part of this phase. Fire a single `naholo agent add-timeline -T infil '<summary>'` per discrete event.
 - **Wrong-phase requests** — if the user asks for work that belongs to a different skill, do **not** silently do it. Tell the user to run the proper skill and stop:
   - Drafting / revising `## WARNING ORDER` → `/warno`
   - Cutting tasks / editing `## OPERATION ORDER` or `TASKS.md` → `/opord`
