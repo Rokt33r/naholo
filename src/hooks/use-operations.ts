@@ -7,6 +7,18 @@ import {
 import { toast } from 'sonner'
 import { fetcher, mutationFetch, createResponseError } from '@/lib/fetcher'
 
+export type OperationLabel = {
+  id: string
+  name: string
+  color: string
+}
+
+export type OperationAssignee = {
+  id: string
+  projectOperatorId: string
+  name: string
+}
+
 export type OperationListItem = {
   id: string
   number: number
@@ -17,6 +29,8 @@ export type OperationListItem = {
   lastOperationLogPreview: string | null
   totalTasks: number
   completedTasks: number
+  labels: OperationLabel[]
+  assignees: OperationAssignee[]
 }
 
 export type OperationDetail = {
@@ -28,6 +42,8 @@ export type OperationDetail = {
   closedAt: string | null
   createdAt: string
   updatedAt: string
+  labels: OperationLabel[]
+  assignees: OperationAssignee[]
 }
 
 export function updateOperationListCache(
