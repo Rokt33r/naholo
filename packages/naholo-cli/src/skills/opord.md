@@ -58,7 +58,7 @@ If the WARNO includes a `### Target Reference Points` subsection, treat it as th
 
 ### 3. Pending CHOP gate
 
-If step 1's `opNotes` contains the entry `CHOP`, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
+If step 1's `opNotes` has no `CHOP` entry, skip this step silently — emit no chat output about it and proceed. Otherwise a CHOP proposal is in flight (the session is in the chop phase): before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
 
 Call `AskUserQuestion` with:
 
@@ -70,17 +70,21 @@ Call `AskUserQuestion` with:
 
 Branch on the answer:
 
-- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print as raw markdown (no surrounding fence) and stop:
+- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print this raw (no surrounding fence) and stop:
 
-  > `/opord` cancelled. Pick one:
-  >
-  > - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
-  > - `/chopchop` — apply CHOP
-  > - `/nochop` — abort and abandon CHOP
+  ```md
+  `/opord` cancelled. Pick one:
 
-- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 10), append this line as the final line:
+  - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  - `/chopchop` — apply CHOP
+  - `/nochop` — abort and abandon CHOP
+  ```
 
-  > _After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+- **Proceed anyway** → continue with the skill's normal flow. On the step 10 summary, append this raw as the final line:
+
+  ```md
+  After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state.
+  ```
 
 ### 4. Validate WARNING ORDER
 
