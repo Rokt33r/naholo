@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CircleCheckBig, CircleDot, CircleCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatIssueDate } from '@/lib/date-utils'
+import { LabelBadge } from '@/components/labels/label-badge'
+import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import type { OperationListItem } from '@/hooks/use-operations'
 
 type OperationItemProps = {
@@ -59,7 +61,19 @@ export function OperationItem({
         )}
       </div>
 
-      {/* Row 2: Content preview and date */}
+      {/* Row 2: Labels (only when present) */}
+      {(operation.labels.length > 0 || operation.assignees.length > 0) && (
+        <div className='mt-1.5 flex flex-wrap items-center gap-1'>
+          {operation.assignees.map((assignee) => (
+            <OperatorAvatar key={assignee.id} name={assignee.name} />
+          ))}
+          {operation.labels.map((label) => (
+            <LabelBadge key={label.id} name={label.name} color={label.color} />
+          ))}
+        </div>
+      )}
+
+      {/* Row 3: Content preview and date */}
       <div className='mt-1 flex items-center justify-between gap-1 text-xs text-muted-foreground'>
         <span className='shrink-0 font-mono font-bold text-muted-foreground'>
           #{operation.number}
