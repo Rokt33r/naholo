@@ -48,7 +48,7 @@ Read these now:
 
 ### 3. Pending CHOP gate
 
-If step 1's `opNotes` contains the entry `CHOP`, the session is in the chop phase — a CHOP proposal is in flight. Before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
+If step 1's `opNotes` has no `CHOP` entry, skip this step silently — emit no chat output about it and proceed. Otherwise a CHOP proposal is in flight (the session is in the chop phase): before doing any other work (no codebase research, no file edits, no `add-timeline`), surface this gate so the user can decide whether to desync the proposal or resolve it first.
 
 Call `AskUserQuestion` with:
 
