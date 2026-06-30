@@ -6,9 +6,7 @@ argument-hint: '["freeform WARNO instructions"]'
 
 # Warno — Write the Warning Order
 
-The WARNO-writing skill. Researches the codebase and writes `## WARNING ORDER` (Concept of Operations / Constraints / Target Reference Points) into `OPERATION.md` — appending the section when absent, revising in place when it already exists. Stops there. `/warno` does **not** write `## OPERATION ORDER` and does **not** mirror to `TASKS.md` — those are owned by `/opord`.
-
-`OPERATION.md` is a container holding the orders successively issued for one op: `## SITUATION` is shared context, `## WARNING ORDER` is the WARNO document (preliminary direction), `## OPERATION ORDER` is the OPORD document (the full task-cut plan). `/warno` owns the WARNO. Re-running `/warno` is for direction changes (Concept of Operations rewrite, Constraint revision). Once the WARNO is settled, the user runs `/opord` to cut it into single-commit-sized tasks.
+Researches the codebase and writes `## WARNING ORDER` (Concept of Operations / Constraints / Target Reference Points) into `OPERATION.md`.
 
 ## Arguments
 
@@ -62,17 +60,21 @@ Call `AskUserQuestion` with:
 
 Branch on the answer:
 
-- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print as raw markdown (no surrounding fence) and stop:
+- **Resolve CHOP first** → abort the skill immediately. Do not load codebase context, do not edit any file, do not call `add-timeline`. Print this raw (no surrounding fence) and stop:
 
-  > `/warno` cancelled. Pick one:
-  >
-  > - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
-  > - `/chopchop` — apply CHOP
-  > - `/nochop` — abort and abandon CHOP
+  ```md
+  `/warno` cancelled. Pick one:
 
-- **Proceed anyway** → continue with the skill's normal flow. On the end-of-skill summary (step 7), append this line as the final line:
+  - `/chop …` — continue editing [CHOP]({operationDir}/notes/CHOP.md)
+  - `/chopchop` — apply CHOP
+  - `/nochop` — abort and abandon CHOP
+  ```
 
-  > _After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state._
+- **Proceed anyway** → continue with the skill's normal flow. On the step 7 summary, append this raw as the final line:
+
+  ```md
+  After `OPERATION.md` is settled, run `/chop …` to make [CHOP]({operationDir}/notes/CHOP.md) reflect the new state.
+  ```
 
 ### 4. Research the codebase
 
@@ -83,7 +85,7 @@ Investigate thoroughly to understand:
 - Schema fields, type signatures, dependencies
 - Conventions used in the project (from `CLAUDE.md` and existing code)
 
-The goal is enough context to write a Concept of Operations that names the chosen path and connects to SITUATION.Pain, and Constraints that name each decision. `/opord` will use the WARNO to cut OPERATION ORDER later — warno's job is to make the preliminary brief crisp.
+The goal is enough context to write a Concept of Operations that names the chosen path and connects to SITUATION.Pain, and Constraints that name each decision. `/opord` will use the WARNO to cut OPERATION ORDER later.
 
 As you research, keep a curated shortlist of the files, folders, and glob patterns a fresh `/opord` session would actually need to read to cut OPERATION ORDER — these become `### Target Reference Points` (TRP) in step 6. Filter aggressively: skip files you only opened to disprove a hypothesis, files that are obvious from project conventions (e.g. `package.json`), and siblings already covered by a folder or glob entry. If a directory has more than a handful of relevant siblings, list the directory or a glob — never enumerate dozens of files. TRP is a scannable map, not a research log.
 
@@ -132,9 +134,7 @@ Examples:
 - **`docs/ai-workflow.md` needs a structural pass**: textual substitution alone won't fix it
   - currently lists the wrong skill chain
   - describes the wrong skill as the OPERATION ORDER cutter
-```
 
-```
 ### Target Reference Points
 
 - `packages/naholo-cli/src/lib/local-operations.ts` — path helpers
@@ -145,9 +145,9 @@ Examples:
 
 ### 7. Print summary
 
-Show the warno state. Use markdown link syntax. Resolve `<line>` by reading back `OPERATION.md` after writing the WARNO and locating the `## WARNING ORDER` heading; the link label stays semantic per the manual's `## Chat output` → `### Link format` rule (no `#L<line>` in the label).
+Show the warno state. Use markdown link syntax. Resolve `<line>` by reading back `OPERATION.md` after writing the WARNO and locating the `## WARNING ORDER` heading; the link label stays semantic — no `#L<line>` in the label.
 
-Output template — print raw, per the manual's `## Chat output` rule:
+Output template:
 
 ```md
 Warno complete for OP #42: "Implement user auth"
@@ -172,17 +172,15 @@ Once this skill returns, the session is in the **warno** phase. The phase persis
 
 While in the warno phase:
 
-- **In-phase follow-up edits** — any WARNO-related touch-up the user asks for (rewording Concept of Operations, adding / dropping / flipping a Constraint, refreshing Target Reference Points) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T warno '<summary>'` per discrete event so a future fresh session sees what changed.
+- **In-phase follow-up edits** — any WARNO-related touch-up the user asks for (rewording Concept of Operations, adding / dropping / flipping a Constraint, refreshing Target Reference Points) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T warno '<summary>'` per discrete event.
 - **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
 
-- **WARNO-only**: `/warno` appends `## WARNING ORDER` (heading + subsections) when absent and revises it in place when present. It does NOT write `## OPERATION ORDER` and does NOT mirror to `TASKS.md`. Those are `/opord`'s job.
+- **WARNO-only**: `/warno` only edits the `## WARNING ORDER` section, generating it when absent and revising it in place when present. It does NOT directly write any other section (`## SITUATION`, `## OPERATION ORDER`) in `OPERATION.md`, nor any other file.
 - **Decisions commit to one path**: every Constraint and the Concept of Operations itself names the chosen approach. "Pick A or B" phrasing is a bug — redraft. The narrow exception is the `- ? ... >` sub-bullet, which is reserved for the two cases in step 4.
 - **Constraints give direction, not interface shape**: keep function signatures, flag names, base-dir args, and resolution helpers out of the WARNO — `/opord` owns interface shape. Pin it in a Constraint only when the user asks for that detail specifically, or when it is genuinely the only viable solution.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
-- **TRP is a curated map, not a research log**: noun-only tags, no verbs/clauses/relative pronouns; backtick-wrapped paths; folders end with `/`; prefer a folder or glob over enumerating siblings.
-- **OPERATION.md has exactly three top-level sections**: SITUATION, WARNING ORDER, OPERATION ORDER. Nothing else. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
 - **Do NOT implement any code** — only edit `OPERATION.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
