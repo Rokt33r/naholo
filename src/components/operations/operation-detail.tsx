@@ -37,6 +37,7 @@ import { TasksList } from '@/components/tasks/tasks-list'
 import { NoteView } from '@/components/notes/note-view'
 import { useOperationsList } from './operations-list-context'
 import { OperationTabs } from './operation-tabs'
+import { OperationMetaRow } from './operation-meta-row'
 import { StatsView } from './stats-view'
 import {
   useOperation,
@@ -300,6 +301,14 @@ export function OperationDetail({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Assignees + labels */}
+      <OperationMetaRow
+        projectSlug={projectSlug}
+        operationNumber={operation.number}
+        labels={operation.labels}
+        assignees={operation.assignees}
+      />
 
       {/* Tabs */}
       <OperationTabs
