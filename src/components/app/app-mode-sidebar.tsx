@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LandPlot, Contact, Settings } from 'lucide-react'
+import { LandPlot, Contact, Settings, Tag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
@@ -49,6 +49,15 @@ export function AppModeSidebar({
         }
       >
         <Contact className='size-4' />
+      </ToolSidebarButton>
+      <ToolSidebarButton
+        isActive={currentMode === 'labels'}
+        tooltip='Labels'
+        onClick={() =>
+          router.push(`/app/projects/${currentProjectSlug}/labels`)
+        }
+      >
+        <Tag className='size-4' />
       </ToolSidebarButton>
       <ToolSidebarSpacing />
 
