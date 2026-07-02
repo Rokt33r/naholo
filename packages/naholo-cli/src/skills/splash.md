@@ -162,13 +162,13 @@ Run `naholo agent add-timeline` with the bare `splash` stage label:
 
 Embed the AAR body inline (raw markdown bold labels — not fenced) so the user reads it without scrolling OPERATION.md.
 
-The chat summary opens with a **Splash stats** block that does not appear in the on-disk AAR (the AAR contains only Deviations + Notes; Splash stats are chat-only). Compute the three counts from the work just performed:
+The chat summary opens with a **Splash stats** block that does not appear in the on-disk AAR. Compute the three counts from the work just performed:
 
 - `- Planned: {N}` — count of top-level action-list bullets in the task's `#### Target Description` as written by `/opord`.
 - `- Done: {N}` — count of those planned top-level items that shipped. A planned item counts as Done whether or not its internal sub-bullets deviated; only fully-skipped planned items are excluded. Identity: `Undone = Planned − Done`.
 - `- Deviations: {N}` — count of action-list-level differences from plan (matches the number of top-level entries in the **Deviations** section just written to the AAR). Includes (a) planned top-level items whose sub-bullets deviated, (b) new top-level items added during the splash that weren't in the plan, and (c) planned top-level items that were dropped entirely. Deviations is **not** a subset of Done — `/opord` may have missed action-list steps needed to hit the goal, in which case those additions land here without bumping Done.
 
-The tail is a standalone `Progress:` line plus one of two `Next:` states — remaining-tasks or all-done — selected by whether `TASKS.md` still has an unchecked task after this splash. Both carry semantic links per the manual's `## Chat output` → `### Link format` rule; the examples below show the exact bullets, ordering, and labels. Resolve each `<line>` by reading back `OPERATION.md` after the AAR is written and locating the matching heading — the `Review` link anchors the just-shipped task's `#### After-Action Report`, the next-task link the next task's `### TASK N — Title`.
+The tail is a standalone `Progress:` line plus one of two `Next:` states — remaining-tasks or all-done — selected by whether `TASKS.md` still has an unchecked task after this splash. Both carry semantic links; the examples below show the exact bullets, ordering, and labels. Resolve each `<line>` by reading back `OPERATION.md` after the AAR is written and locating the matching heading — the `Review` link anchors the just-shipped task's `#### After-Action Report`, the next-task link the next task's `### TASK N — Title`.
 
 **Remaining-tasks state** — at least one unchecked task remains after this splash:
 
@@ -224,7 +224,7 @@ Once this skill returns, the session is in the **splash** phase — anchored to 
 
 While in the splash phase:
 
-- **In-phase follow-up edits** — late-discovered deviations, AAR rewordings, small implementation tweaks on the just-shipped task, and `Notes` additions in the AAR are part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T splash '<summary>'` per discrete event so a future fresh session sees what changed.
+- **In-phase follow-up edits** — late-discovered deviations, AAR rewordings, small implementation tweaks on the just-shipped task, and `Notes` additions in the AAR are part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T splash '<summary>'` per discrete event.
 - **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
@@ -234,7 +234,6 @@ While in the splash phase:
 - **Don't touch other tasks**: do not edit other tasks' Method of Engagement, Target Description, AARs, or Intents. If the work reveals that another task needs revision, surface it — don't silently rewrite.
 - **TASKS.md flip is mandatory**: every fresh splash flips one box. Without it, `/splash` (no args) cannot find the next task.
 - **One TIMELINE bullet per splash invocation** — `naholo agent add-timeline` guarantees the format.
-- **OPERATION.md sections stay at SITUATION / WARNING ORDER / OPERATION ORDER**: do not add `## Progress`, `## Notes`, or any other top-level section. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
 - **Don't re-elaborate the task**: if the Intent or Target Description are missing details, implement your best interpretation and note it in the AAR. Do not rewrite the task Intent — that's `/opord`'s job (or `/warno`, if the WARNO itself needs to change).
 - Print the summary as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
