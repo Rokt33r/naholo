@@ -6,11 +6,7 @@ argument-hint: '["freeform plan-revision instructions"]'
 
 # Opord — Cut the Warning Order into Tasks
 
-OPORD-style detail-cutter. Reads `## WARNING ORDER` (must already be populated by `/warno`), resolves any unanswered Constraint alternatives, cuts the WARNO into single-commit-sized tasks, **appends `## OPERATION ORDER`** to `OPERATION.md` when absent (revises in place when present), and mirrors the task list into `TASKS.md` as a flat checkbox list.
-
-`OPERATION.md` is a container holding the orders successively issued for one op: `## SITUATION` is shared context, `## WARNING ORDER` is the WARNO document (preliminary direction owned by `/warno`), `## OPERATION ORDER` is the OPORD document (the full task-cut plan owned by `/opord`). Re-running `/opord` is for any plan adjustment — split / merge / retitle / insert / drop / rewrite unfinished tasks, all the way up to a full restart. Direction changes — Concept of Operations rewrites, Constraint revisions — belong to `/warno`, not `/opord`.
-
-Each task is sized for one reviewable `/splash`; sub-tasks are deliberately not used. The bar is "could a fresh `/splash` session ship one task by reading only that task's section in OPERATION.md and the project conventions?"
+Reads `## WARNING ORDER` and cuts it into single-commit-sized tasks — writes `## OPERATION ORDER` into `OPERATION.md` and mirrors the task list to `TASKS.md` as a flat checkbox list.
 
 ## Arguments
 
@@ -118,7 +114,7 @@ Inspect the current state of `## OPERATION ORDER` and any freeform args. Branch:
 
 One `### TASK N — Title` subsection per task, in order. Each task section has up to three subsections — **`#### Intent`**, an optional **`#### Method of Engagement`**, and a mandatory **`#### Target Description`** — in that order.
 
-- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from the Target Description). Backtick a symbol/path/filename only when it _is_ the subject of the headline (the thing being added, slimmed, renamed); skip backticks for incidental mentions. Intent is the skim-anchor — concrete shapes live in Method of Engagement, concrete steps in Target Description. Examples:
+- `#### Intent` — one sentence, ≤ ~25 words, naming the **approach** this task takes at the level a PR title would name it. Prose, not a spec. No code fences, no column lists, no signatures, no DDL, no verification clauses (`pnpm test-types` is green, etc. — implicit from the Target Description). Backtick a symbol/path only when it _is_ the headline's subject (the thing added/slimmed/renamed), not for incidental mentions. Examples:
 
   ```
   #### Intent
@@ -260,7 +256,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
 
 Single-commit sizing rules:
 
-A single-commit-sized task is one cohesive change that a reviewer can read as a single diff — one motivation, one verb in the title, no unrelated edits riding along. If you'd struggle to write its commit message without an "and", split it.
+A single-commit-sized task is one cohesive change that a reviewer can read as a single diff — one motivation, one verb in the title, no unrelated edits riding along.
 
 - **Intent is the approach summary only.** Concrete shapes live in Method of Engagement, concrete steps in Target Description — Intent must stay a single skim-readable headline.
 - **Compound titles are a split tell.** If a task title needs a comma, "and", or "+" to describe it ("Slim X, relocate Y, strip Z"), each clause is a split candidate. Split until every title is a single verb + object.
@@ -293,9 +289,9 @@ The summary's primary link points at the **most-affected scope** of this run, so
 - **Insertion of one new task** → link to the inserted task's heading. Label: `TASK N`.
 - **Multi-task revision / multiple insertions** → list one link per affected task on its own bullet. Labels: `TASK N`.
 
-Resolve `<line>` by reading back `OPERATION.md` after writing OPERATION ORDER and locating the matching heading. The link label stays semantic per the manual's `## Chat output` → `### Link format` rule — no `#L<line>` in the label.
+Resolve `<line>` by reading back `OPERATION.md` after writing OPERATION ORDER and locating the matching heading. The link label stays semantic — no `#L<line>` in the label.
 
-The summaries and `Next:` block below are output templates — print them raw, per the manual's `## Chat output` rule.
+The summaries and `Next:` block below are output templates — print them raw.
 
 Example (fresh write):
 
@@ -335,7 +331,7 @@ Once this skill returns, the session is in the **opord** phase. The phase persis
 
 While in the opord phase:
 
-- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite Target Description steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event so a future fresh session sees what changed. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
+- **In-phase follow-up edits** — any plan-revision the user asks for on **unfinished** tasks (insert / drop / split / merge / retitle / rewrite Target Description steps, refresh `TASKS.md` to match) is part of this phase. Apply the edit and fire a single `naholo agent add-timeline -T opord '<summary>'` per discrete event. Completed tasks (those with a `#### After-Action Report` heading) remain immutable.
 - **Wrong-phase requests** — route exactly as `## Wrong-intent pushback` at the top of this skill: if the request belongs to a different skill, name the owning skill and stop — do **not** silently do the work. Direct-call args and post-phase follow-ups push back identically.
 
 ## Rules
@@ -346,7 +342,6 @@ While in the opord phase:
 - **Decisions commit to one path**: every task Intent headline names the chosen approach. "Pick A or B" phrasing is a bug — redraft, or ask `/warno` to add the missing Constraint.
 - **Preserve `[ref]` links** in TASKS.md.
 - **Respect existing done states**: don't uncheck `[x]` items in TASKS.md.
-- **OPERATION.md has exactly three top-level sections**: SITUATION, WARNING ORDER, OPERATION ORDER. Nothing else. Per-task progress lives in OPERATION ORDER's AARs; chronological events live in TIMELINE.md.
 - **Rejected sub-bullets**: comma-join alternatives, no reasons unless the user added them.
 - **Do NOT implement any code** — only edit `OPERATION.md` and `TASKS.md`; TIMELINE.md is updated via `naholo agent add-timeline`.
 - Print the summary as raw markdown — no surrounding fence.
