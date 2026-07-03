@@ -296,7 +296,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
   }
 
   return (
-    <div className='group/item' style={{ paddingLeft: depth * 24 }}>
+    <div className='group/item' style={{ paddingLeft: depth * 22 }}>
       <div
         ref={rowRef}
         data-task-id={task.id}
@@ -309,7 +309,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
         )}
       >
         {/* Main row */}
-        <div className='flex items-start py-1 px-2'>
+        <div className='flex items-start py-1 px-1.5'>
           {/* Checkbox */}
           <Checkbox
             checked={task.done}
@@ -320,7 +320,7 @@ export function TaskItem({ task, depth = 0 }: TaskItemProps) {
           />
 
           {/* Name */}
-          <div className='min-h-6 flex-1 overflow-hidden px-2'>
+          <div className='min-h-6 flex-1 overflow-hidden px-1.5'>
             {isEditing ? (
               <input
                 ref={nameInputRef}
