@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FuzzyPicker } from '@/components/ui/fuzzy-picker'
 import { useLabels, useCreateLabel } from '@/hooks/use-labels'
@@ -77,12 +77,22 @@ export function OperationLabelPicker({
         </span>
       )}
       footer={(query) => {
-        const canCreate =
-          projectLabelNameSchema.safeParse(query).success &&
-          !projectLabels.some(
-            (label) => label.name.toLowerCase() === query.toLowerCase(),
+        if (query === '') {
+          return null
+        }
+        const parsed = projectLabelNameSchema.safeParse(query)
+        if (!parsed.success) {
+          return (
+            <div className='flex items-center gap-2 px-2 py-1.5 text-sm text-destructive'>
+              <TriangleAlert className='size-4 shrink-0' />
+              <span>{parsed.error.issues[0].message}</span>
+            </div>
           )
-        if (!canCreate) {
+        }
+        const alreadyExists = projectLabels.some(
+          (label) => label.name.toLowerCase() === query.toLowerCase(),
+        )
+        if (alreadyExists) {
           return null
         }
         return (
