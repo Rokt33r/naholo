@@ -14,11 +14,9 @@ type TasksListProps = {
 export function TasksList({ projectSlug, operationNumber }: TasksListProps) {
   return (
     <TaskProvider projectSlug={projectSlug} operationNumber={operationNumber}>
-      <div className='flex h-full flex-col'>
+      <div className='flex flex-col'>
         <TasksHeader />
-        <div className='min-h-0 flex-1 overflow-hidden'>
-          <TasksListContent />
-        </div>
+        <TasksListContent />
       </div>
     </TaskProvider>
   )
@@ -42,7 +40,7 @@ function TasksHeader() {
     <button
       type='button'
       onClick={handleClick}
-      className='flex w-full items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
+      className='flex w-full items-center gap-1.5 px-3 pt-2 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
     >
       <ListTodo className='size-4' />
       Tasks ({doneCount}/{tasks.length})
@@ -177,7 +175,7 @@ function TasksListContent() {
   if (!isLoading && flattenedTasks.length === 0 && !newTaskItemState) {
     return (
       <div
-        className='flex h-full flex-col items-center justify-center px-2 py-2 text-center cursor-text'
+        className='flex min-h-[120px] flex-col items-center justify-center px-2 py-2 text-center cursor-text'
         onClick={() => openNewTaskItem(null, null)}
       >
         <p className='text-sm text-zinc-500'>
@@ -196,7 +194,7 @@ function TasksListContent() {
   return (
     <div
       ref={containerRef}
-      className='flex h-full flex-col pb-2 px-2 overflow-auto'
+      className='flex flex-col pb-2 px-2'
       onFocus={handleContainerFocus}
       onBlur={handleContainerBlur}
     >
@@ -219,10 +217,7 @@ function TasksListContent() {
       </div>
 
       {/* Clickable bottom area */}
-      <div
-        className='min-h-[100px] flex-1 cursor-text'
-        onClick={handleBottomClick}
-      />
+      <div className='min-h-[60px] cursor-text' onClick={handleBottomClick} />
     </div>
   )
 }
