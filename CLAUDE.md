@@ -57,6 +57,7 @@ Additional project rules live in [.claude/rules/](./.claude/rules/) and are load
 
 Run these after editing. No permission prompt needed for any of them.
 
+- **Run each verification script bare** — invoke `pnpm format` / `pnpm typecheck` (etc.) on their own. Do NOT wrap them in `echo`, pipe to `tail`/`head`/`grep`, chain with `&&`, or add any redirection — just run the command and read its full output.
 - **Always** — `pnpm format`, on any edit to any tracked file.
 - **Typecheck** — pick the script for the workspace you edited. The root `typecheck` only covers the Next.js app (`src/`); editing under `packages/*` without running the matching filtered script will silently miss errors.
   - Edits under `src/` (Next.js app) → `pnpm typecheck`
