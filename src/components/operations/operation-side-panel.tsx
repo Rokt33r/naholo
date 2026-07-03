@@ -48,7 +48,7 @@ export function OperationSidePanel({
             role='button'
             tabIndex={0}
             onKeyDown={handleSectionTriggerKeyDown}
-            className='group rounded-sm px-3 pb-1 outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='group px-3 pb-1 outline-none'
           >
             <div className='flex items-center gap-1.5 py-2 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground'>
               <Users className='size-4' />
@@ -94,7 +94,7 @@ export function OperationSidePanel({
             role='button'
             tabIndex={0}
             onKeyDown={handleSectionTriggerKeyDown}
-            className='group mt-2 rounded-sm px-3 pb-1 outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='group mt-2 px-3 pb-1 outline-none'
           >
             <div className='flex items-center gap-1.5 py-2 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground'>
               <Tag className='size-4' />

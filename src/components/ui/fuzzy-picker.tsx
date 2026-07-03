@@ -25,6 +25,7 @@ export function FuzzyPicker<T extends FuzzyPickerOption>({
   renderOption,
   footer,
   align = 'start',
+  alignOffset = 0,
 }: {
   options: T[]
   selectedIds: string[]
@@ -35,6 +36,7 @@ export function FuzzyPicker<T extends FuzzyPickerOption>({
   renderOption?: (option: T, selected: boolean) => ReactNode
   footer?: (query: string) => ReactNode
   align?: 'start' | 'center' | 'end'
+  alignOffset?: number
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -85,7 +87,11 @@ export function FuzzyPicker<T extends FuzzyPickerOption>({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align={align} className='w-64 p-0'>
+      <PopoverContent
+        align={align}
+        alignOffset={alignOffset}
+        className='w-64 p-0'
+      >
         <div className='border-b p-2'>
           <Input
             autoFocus

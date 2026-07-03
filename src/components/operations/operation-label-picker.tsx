@@ -67,6 +67,7 @@ export function OperationLabelPicker({
       }}
       placeholder='Filter or create…'
       emptyText='No labels'
+      alignOffset={8}
       renderOption={(option) => (
         <span className='flex items-center gap-2'>
           <span

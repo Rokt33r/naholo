@@ -45,6 +45,7 @@ export function OperationAssigneePicker({
       }}
       placeholder='Assign operator…'
       emptyText='No operators'
+      alignOffset={8}
       trigger={
         trigger ?? (
           <Button
