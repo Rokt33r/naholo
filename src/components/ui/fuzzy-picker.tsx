@@ -51,6 +51,7 @@ export function FuzzyPicker<T extends FuzzyPickerOption>({
   }, [options, query])
 
   const selected = new Set(selectedIds)
+  const footerContent = footer?.(query.trim())
 
   function handleOpenChange(next: boolean) {
     setOpen(next)
@@ -122,8 +123,8 @@ export function FuzzyPicker<T extends FuzzyPickerOption>({
             })
           )}
         </div>
-        {footer != null ? (
-          <div className='border-t p-1'>{footer(query.trim())}</div>
+        {footerContent != null ? (
+          <div className='border-t p-1'>{footerContent}</div>
         ) : null}
       </PopoverContent>
     </Popover>

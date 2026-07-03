@@ -15,10 +15,9 @@ import { useOperationLogs } from '@/hooks/use-operation-logs'
 import { useNotes } from '@/hooks/use-notes'
 import { useTasks } from '@/hooks/use-tasks'
 import { useOperationStream } from '@/hooks/use-operation-stream'
-import { ListTodo } from 'lucide-react'
 import { ResizablePanel } from '@/components/ui/resizable-panel'
 import { OperationDetail } from '@/components/operations/operation-detail'
-import { TasksList } from '@/components/tasks/tasks-list'
+import { OperationSidePanel } from '@/components/operations/operation-side-panel'
 
 type ActiveTab =
   | { type: 'comms' }
@@ -69,9 +68,6 @@ export default function OperationPage() {
 
   const tasksDoneCount = tasks.filter((o) => o.done).length
   const tasksTotalCount = tasks.length
-  const tasksPct =
-    tasksTotalCount === 0 ? 0 : (tasksDoneCount / tasksTotalCount) * 100
-  const tasksLabel = `${tasksDoneCount}/${tasksTotalCount} · ${tasksPct.toFixed(1)}%`
 
   const activeTab = parseActiveTab(searchParams.get('tab'))
 
@@ -123,20 +119,12 @@ export default function OperationPage() {
               side='right'
               className='border-l'
             >
-              <div className='flex h-full flex-col'>
-                <div className='flex items-center gap-2 px-3 pt-2'>
-                  <h2 className='flex items-center gap-1.5 text-md font-medium h-9'>
-                    <ListTodo className='size-4' />
-                    Tasks ({tasksLabel})
-                  </h2>
-                </div>
-                <div className='flex-1 overflow-hidden'>
-                  <TasksList
-                    projectSlug={projectSlug}
-                    operationNumber={operationNumber}
-                  />
-                </div>
-              </div>
+              <OperationSidePanel
+                projectSlug={projectSlug}
+                operationNumber={operationNumber}
+                labels={operation.labels}
+                assignees={operation.assignees}
+              />
             </ResizablePanel>
           )}
         </>

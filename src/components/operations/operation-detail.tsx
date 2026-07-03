@@ -10,7 +10,7 @@ import {
   CircleDot,
   CircleCheck,
   PanelLeftOpen,
-  ListTodo,
+  TableProperties,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -33,11 +33,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { OperationLogsList } from '@/components/operation-logs/operation-logs-list'
 import type { OperationLog } from '@/hooks/use-operation-logs'
-import { TasksList } from '@/components/tasks/tasks-list'
 import { NoteView } from '@/components/notes/note-view'
 import { useOperationsList } from './operations-list-context'
 import { OperationTabs } from './operation-tabs'
-import { OperationMetaRow } from './operation-meta-row'
+import { OperationSidePanel } from './operation-side-panel'
 import { StatsView } from './stats-view'
 import {
   useOperation,
@@ -91,7 +90,7 @@ export function OperationDetail({
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showTasksDialog, setShowTasksDialog] = useState(false)
+  const [showSidePanelDialog, setShowSidePanelDialog] = useState(false)
 
   const { data: agentTranscripts } = useAgentTranscripts(
     projectSlug,
@@ -262,10 +261,10 @@ export function OperationDetail({
         <div className='flex items-center gap-1'>
           {!isWideScreen && (
             <Button
-              variant={showTasksDialog ? 'secondary' : 'ghost'}
-              onClick={() => setShowTasksDialog(!showTasksDialog)}
+              variant={showSidePanelDialog ? 'secondary' : 'ghost'}
+              onClick={() => setShowSidePanelDialog(!showSidePanelDialog)}
             >
-              <ListTodo className='mr-1 size-4' />(
+              <TableProperties className='mr-1 size-4' />(
               {formatTasksCount(tasksDoneCount, tasksTotalCount)})
             </Button>
           )}
@@ -301,14 +300,6 @@ export function OperationDetail({
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Assignees + labels */}
-      <OperationMetaRow
-        projectSlug={projectSlug}
-        operationNumber={operation.number}
-        labels={operation.labels}
-        assignees={operation.assignees}
-      />
 
       {/* Tabs */}
       <OperationTabs
@@ -363,23 +354,30 @@ export function OperationDetail({
           })()}
       </div>
 
-      {/* Mobile tasks dialog */}
+      {/* Mobile side panel dialog */}
       {!isWideScreen && (
-        <Dialog open={showTasksDialog} onOpenChange={setShowTasksDialog}>
+        <Dialog
+          open={showSidePanelDialog}
+          onOpenChange={setShowSidePanelDialog}
+        >
           <DialogContent
             className='flex h-[80vh] max-w-lg flex-col p-0'
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
             <DialogHeader className='px-4 pt-4'>
-              <DialogTitle className='flex items-center gap-1.5'>
-                <ListTodo className='size-4' />
-                Tasks ({formatTasksCount(tasksDoneCount, tasksTotalCount)})
+              <DialogTitle>
+                <span className='font-mono text-muted-foreground'>
+                  #{operation.number}
+                </span>{' '}
+                {operation.title}
               </DialogTitle>
             </DialogHeader>
             <div className='flex-1 overflow-hidden'>
-              <TasksList
+              <OperationSidePanel
                 projectSlug={projectSlug}
                 operationNumber={operation.number}
+                labels={operation.labels}
+                assignees={operation.assignees}
               />
             </div>
           </DialogContent>

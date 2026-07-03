@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FuzzyPicker } from '@/components/ui/fuzzy-picker'
@@ -14,10 +15,12 @@ export function OperationAssigneePicker({
   projectSlug,
   operationNumber,
   assignees,
+  trigger,
 }: {
   projectSlug: string
   operationNumber: number
   assignees: OperationAssignee[]
+  trigger?: ReactNode
 }) {
   const { operators } = useOperators(projectSlug)
   const attach = useAttachOperationAssignee(projectSlug, operationNumber)
@@ -43,14 +46,16 @@ export function OperationAssigneePicker({
       placeholder='Assign operator…'
       emptyText='No operators'
       trigger={
-        <Button
-          variant='ghost'
-          size='icon'
-          className='size-6 rounded-full border border-dashed text-muted-foreground'
-          title='Assign operator'
-        >
-          <Plus className='size-3' />
-        </Button>
+        trigger ?? (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-6 rounded-full border border-dashed text-muted-foreground'
+            title='Assign operator'
+          >
+            <Plus className='size-3' />
+          </Button>
+        )
       }
     />
   )

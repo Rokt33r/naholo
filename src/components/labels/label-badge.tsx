@@ -30,7 +30,7 @@ export function LabelBadge({
 
   return (
     <Badge
-      className={cn('border', className)}
+      className={cn('h-6 border', className)}
       style={{
         backgroundColor: colors.background,
         borderColor: colors.border,
@@ -43,7 +43,7 @@ export function LabelBadge({
           type='button'
           aria-label={`Remove ${name}`}
           onClick={onRemove}
-          className='-mr-0.5 ml-0.5 rounded-full opacity-70 hover:opacity-100'
+          className='-my-0.5 -mr-2 flex items-center self-stretch rounded-r-full px-1 opacity-70 hover:opacity-100'
         >
           <X className='size-3' />
         </button>

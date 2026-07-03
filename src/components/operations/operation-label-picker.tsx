@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FuzzyPicker } from '@/components/ui/fuzzy-picker'
@@ -22,10 +23,12 @@ export function OperationLabelPicker({
   projectSlug,
   operationNumber,
   labels,
+  trigger,
 }: {
   projectSlug: string
   operationNumber: number
   labels: OperationLabel[]
+  trigger?: ReactNode
 }) {
   const { labels: projectLabels } = useLabels(projectSlug)
   const createLabel = useCreateLabel(projectSlug)
@@ -96,14 +99,16 @@ export function OperationLabelPicker({
         )
       }}
       trigger={
-        <Button
-          variant='ghost'
-          size='icon'
-          className='size-6 rounded-full border border-dashed text-muted-foreground'
-          title='Add label'
-        >
-          <Plus className='size-3' />
-        </Button>
+        trigger ?? (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-6 rounded-full border border-dashed text-muted-foreground'
+            title='Add label'
+          >
+            <Plus className='size-3' />
+          </Button>
+        )
       }
     />
   )

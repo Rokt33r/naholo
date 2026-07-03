@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, type FocusEvent } from 'react'
+import { ListTodo } from 'lucide-react'
 import { TaskProvider, useTaskContext } from './task-context'
 import { TaskItem } from './task-item'
 import { NewTaskItem } from './new-task-item'
@@ -13,8 +14,39 @@ type TasksListProps = {
 export function TasksList({ projectSlug, operationNumber }: TasksListProps) {
   return (
     <TaskProvider projectSlug={projectSlug} operationNumber={operationNumber}>
-      <TasksListContent />
+      <div className='flex h-full flex-col'>
+        <TasksHeader />
+        <div className='min-h-0 flex-1 overflow-hidden'>
+          <TasksListContent />
+        </div>
+      </div>
     </TaskProvider>
+  )
+}
+
+function TasksHeader() {
+  const { tasks, getRootTasks, newTaskItemState, openNewTaskItem } =
+    useTaskContext()
+  const doneCount = tasks.filter((task) => task.done).length
+
+  const handleClick = () => {
+    if (newTaskItemState) {
+      return
+    }
+    const rootTasks = getRootTasks()
+    const lastRootTask = rootTasks[rootTasks.length - 1]
+    openNewTaskItem(null, lastRootTask?.id ?? null)
+  }
+
+  return (
+    <button
+      type='button'
+      onClick={handleClick}
+      className='flex w-full items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
+    >
+      <ListTodo className='size-4' />
+      Tasks ({doneCount}/{tasks.length})
+    </button>
   )
 }
 
@@ -157,14 +189,7 @@ function TasksListContent() {
 
   if (isLoading) {
     return (
-      <div className='p-4'>
-        <div className='mb-3'>
-          <h2 className='text-sm font-semibold uppercase tracking-wide text-zinc-500'>
-            Tasks
-          </h2>
-        </div>
-        <div className='py-8 text-center text-sm text-zinc-500'>Loading...</div>
-      </div>
+      <div className='py-8 text-center text-sm text-zinc-500'>Loading...</div>
     )
   }
 
