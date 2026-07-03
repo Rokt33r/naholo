@@ -28,7 +28,7 @@ export function useAttachOperationAssignee(
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ operatorId: projectOperatorId }),
+          body: JSON.stringify({ targets: [projectOperatorId] }),
         },
       )
       if (!res.ok) {
@@ -107,7 +107,7 @@ export function useDetachOperationAssignee(
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ operatorId: projectOperatorId }),
+          body: JSON.stringify({ targets: [projectOperatorId] }),
         },
       )
       if (!res.ok) {

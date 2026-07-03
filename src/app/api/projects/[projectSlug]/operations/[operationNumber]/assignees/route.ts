@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import {
-  attachOperationAssignee,
-  detachOperationAssignee,
+  createOperationAssignees,
+  deleteOperationAssignees,
 } from '@/server/services/assignee'
 import { getSourceClientId } from '@/server/realtime/publish'
 
@@ -15,21 +15,15 @@ type RouteContext = {
   }>
 }
 
-const operationAssigneeSchema = z.object({
-  operatorId: z.uuid(),
+const operationAssigneesBodySchema = z.object({
+  targets: z.array(z.union([z.literal('self'), z.uuid()])),
 })
 
-/**
- * POST /api/projects/[projectSlug]/operations/[operationNumber]/assignees
- * Assign an operator to the operation.
- */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber } = await context.params
-    const { project, operation } = await requireOperationAccess(
-      projectSlug,
-      operationNumber,
-    )
+    const { project, operation, projectOperator } =
+      await requireOperationAccess(projectSlug, operationNumber)
 
     let body
     try {
@@ -38,7 +32,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = operationAssigneeSchema.safeParse(body)
+    const validation = operationAssigneesBodySchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -46,10 +40,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const result = await attachOperationAssignee({
+    const result = await createOperationAssignees({
       projectId: project.id,
       operationId: operation.id,
-      projectOperatorId: validation.data.operatorId,
+      projectOperatorIds: resolveAssigneeOperatorIds(
+        validation.data.targets,
+        projectOperator.id,
+      ),
       sourceClientId: getSourceClientId(request),
     })
 
@@ -63,17 +60,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 }
 
-/**
- * DELETE /api/projects/[projectSlug]/operations/[operationNumber]/assignees
- * Unassign an operator from the operation.
- */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { projectSlug, operationNumber } = await context.params
-    const { project, operation } = await requireOperationAccess(
-      projectSlug,
-      operationNumber,
-    )
+    const { project, operation, projectOperator } =
+      await requireOperationAccess(projectSlug, operationNumber)
 
     let body
     try {
@@ -82,7 +73,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = operationAssigneeSchema.safeParse(body)
+    const validation = operationAssigneesBodySchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -90,10 +81,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const result = await detachOperationAssignee({
+    const result = await deleteOperationAssignees({
       projectId: project.id,
       operationId: operation.id,
-      projectOperatorId: validation.data.operatorId,
+      projectOperatorIds: resolveAssigneeOperatorIds(
+        validation.data.targets,
+        projectOperator.id,
+      ),
       sourceClientId: getSourceClientId(request),
     })
 
@@ -105,4 +99,15 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   } catch (error) {
     return mapApiError(error)
   }
+}
+
+function resolveAssigneeOperatorIds(
+  targets: ('self' | string)[],
+  selfOperatorId: string,
+): string[] {
+  return Array.from(
+    new Set(
+      targets.map((target) => (target === 'self' ? selfOperatorId : target)),
+    ),
+  )
 }

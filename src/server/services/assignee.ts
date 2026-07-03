@@ -1,83 +1,93 @@
 import 'server-only'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '../db'
 import { operationAssignees } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
-import { ok, err } from '@/lib/return-result'
-import { NotFoundError } from '../errors'
+import { ok } from '@/lib/return-result'
 import { publishOperationEvent, publishProjectEvent } from '../realtime/publish'
 
 /**
- * Assign a project operator to an operation. Idempotent — re-assigning an already
- * assigned operator is a no-op. Fails when the operator does not belong to the project.
+ * Assign project operators to an operation in bulk. Idempotent
+ * (`onConflictDoNothing`); operator ids not in the project are silently dropped,
+ * and it no-ops when none resolve.
  */
-export async function attachOperationAssignee(data: {
+export async function createOperationAssignees(data: {
   projectId: string
   operationId: string
-  projectOperatorId: string
+  projectOperatorIds: string[]
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  const operator = await db.query.projectOperators.findFirst({
-    columns: { id: true },
-    where: (t, { eq, and }) =>
-      and(eq(t.id, data.projectOperatorId), eq(t.projectId, data.projectId)),
-  })
-
-  if (operator == null) {
-    return err(new NotFoundError('Operator'))
+  const validIds = await resolveProjectOperatorIds(
+    data.projectId,
+    data.projectOperatorIds,
+  )
+  if (validIds.length === 0) {
+    return ok()
   }
 
   await db
     .insert(operationAssignees)
-    .values({
-      operationId: data.operationId,
-      projectOperatorId: data.projectOperatorId,
-    })
+    .values(
+      validIds.map((projectOperatorId) => ({
+        operationId: data.operationId,
+        projectOperatorId,
+      })),
+    )
     .onConflictDoNothing()
 
-  publishOperationEvent(
-    data.operationId,
-    'operation-updated',
-    data.sourceClientId,
-  )
-  publishProjectEvent(
-    data.projectId,
-    'operations-list-changed',
-    data.sourceClientId,
-  )
+  publishAssigneeChange(data.operationId, data.projectId, data.sourceClientId)
 
   return ok()
 }
 
 /**
- * Unassign a project operator from an operation. Idempotent — unassigning an
- * operator that is not assigned is a no-op.
+ * Unassign project operators from an operation in bulk. Idempotent — ids that
+ * are not assigned are simply not matched.
  */
-export async function detachOperationAssignee(data: {
+export async function deleteOperationAssignees(data: {
   projectId: string
   operationId: string
-  projectOperatorId: string
+  projectOperatorIds: string[]
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
+  if (data.projectOperatorIds.length === 0) {
+    return ok()
+  }
+
   await db
     .delete(operationAssignees)
     .where(
       and(
         eq(operationAssignees.operationId, data.operationId),
-        eq(operationAssignees.projectOperatorId, data.projectOperatorId),
+        inArray(operationAssignees.projectOperatorId, data.projectOperatorIds),
       ),
     )
 
-  publishOperationEvent(
-    data.operationId,
-    'operation-updated',
-    data.sourceClientId,
-  )
-  publishProjectEvent(
-    data.projectId,
-    'operations-list-changed',
-    data.sourceClientId,
-  )
+  publishAssigneeChange(data.operationId, data.projectId, data.sourceClientId)
 
   return ok()
+}
+
+async function resolveProjectOperatorIds(
+  projectId: string,
+  ids: string[],
+): Promise<string[]> {
+  if (ids.length === 0) {
+    return []
+  }
+  const rows = await db.query.projectOperators.findMany({
+    columns: { id: true },
+    where: (t, { and, eq, inArray }) =>
+      and(eq(t.projectId, projectId), inArray(t.id, ids)),
+  })
+  return rows.map((row) => row.id)
+}
+
+function publishAssigneeChange(
+  operationId: string,
+  projectId: string,
+  sourceClientId?: string,
+): void {
+  publishOperationEvent(operationId, 'operation-updated', sourceClientId)
+  publishProjectEvent(projectId, 'operations-list-changed', sourceClientId)
 }

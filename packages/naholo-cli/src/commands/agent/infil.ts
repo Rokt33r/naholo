@@ -82,6 +82,9 @@ export const infilCommand = new Command('infil')
 
       projectState.writeOpYml({ number: opNum, title: serverOperation.title })
 
+      // Claim the op for whoever ran infil.
+      await client.createOperationAssignees(projectSlug, opNum, ['self'])
+
       await client.createOperationLog(projectSlug, opNum, {
         content: `Infil — OP #${opNum}.`,
       })
@@ -96,6 +99,7 @@ export const infilCommand = new Command('infil')
         `  Notes: ${serverNotes.length}${serverNotes.length > 0 ? ` (${serverNotes.map((n) => n.name).join(', ')})` : ''}`,
       )
       console.log(`  Logs: ${serverLogs.length} entries`)
+      console.log(`  Assigned yourself to this operation`)
       console.log(`  Local: ${infilledDir}/`)
     }),
   )

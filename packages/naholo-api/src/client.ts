@@ -122,6 +122,30 @@ export class NaholoClient {
     return this.request('GET', this.operationPath(projectSlug, operationNumber))
   }
 
+  createOperationAssignees(
+    projectSlug: string,
+    operationNumber: number | string,
+    targets: string[],
+  ): Promise<{ success: true }> {
+    return this.request(
+      'POST',
+      this.operationPath(projectSlug, operationNumber, '/assignees'),
+      { targets },
+    )
+  }
+
+  deleteOperationAssignees(
+    projectSlug: string,
+    operationNumber: number | string,
+    targets: string[],
+  ): Promise<{ success: true }> {
+    return this.request(
+      'DELETE',
+      this.operationPath(projectSlug, operationNumber, '/assignees'),
+      { targets },
+    )
+  }
+
   createOperation(
     projectSlug: string,
     input: { title: string },
