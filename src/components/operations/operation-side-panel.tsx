@@ -38,7 +38,7 @@ export function OperationSidePanel({
   const detachLabel = useDetachOperationLabel(projectSlug, operationNumber)
 
   return (
-    <div className='flex h-full flex-col py-1'>
+    <div className='flex h-full flex-col overflow-y-auto py-1'>
       <OperationAssigneePicker
         projectSlug={projectSlug}
         operationNumber={operationNumber}
@@ -123,7 +123,7 @@ export function OperationSidePanel({
         }
       />
 
-      <div className='mt-2 min-h-0 flex-1 overflow-hidden'>
+      <div className='mt-2'>
         <TasksList
           projectSlug={projectSlug}
           operationNumber={operationNumber}
