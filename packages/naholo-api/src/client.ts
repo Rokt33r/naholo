@@ -146,6 +146,30 @@ export class NaholoClient {
     )
   }
 
+  createOperationProjectLabels(
+    projectSlug: string,
+    operationNumber: number | string,
+    targets: string[],
+  ): Promise<{ success: true }> {
+    return this.request(
+      'POST',
+      this.operationPath(projectSlug, operationNumber, '/labels'),
+      { targets },
+    )
+  }
+
+  deleteOperationProjectLabels(
+    projectSlug: string,
+    operationNumber: number | string,
+    targets: string[],
+  ): Promise<{ success: true }> {
+    return this.request(
+      'DELETE',
+      this.operationPath(projectSlug, operationNumber, '/labels'),
+      { targets },
+    )
+  }
+
   createOperation(
     projectSlug: string,
     input: { title: string },

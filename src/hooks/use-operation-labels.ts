@@ -28,7 +28,7 @@ export function useAttachOperationLabel(
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ labelId: label.id }),
+          body: JSON.stringify({ targets: [label.id] }),
         },
       )
       if (!res.ok) {
@@ -99,7 +99,7 @@ export function useDetachOperationLabel(
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ labelId }),
+          body: JSON.stringify({ targets: [labelId] }),
         },
       )
       if (!res.ok) {

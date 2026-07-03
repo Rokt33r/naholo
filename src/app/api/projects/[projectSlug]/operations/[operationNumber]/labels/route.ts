@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireOperationAccess } from '@/server/auth/permissions'
 import {
-  attachOperationLabel,
-  detachOperationLabel,
+  createOperationProjectLabels,
+  deleteOperationProjectLabels,
 } from '@/server/services/project-label'
 import { getSourceClientId } from '@/server/realtime/publish'
 
@@ -15,13 +15,13 @@ type RouteContext = {
   }>
 }
 
-const operationLabelSchema = z.object({
-  labelId: z.uuid(),
+const operationProjectLabelsBodySchema = z.object({
+  targets: z.array(z.uuid()),
 })
 
 /**
  * POST /api/projects/[projectSlug]/operations/[operationNumber]/labels
- * Attach a label to the operation.
+ * Attach labels to the operation.
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = operationLabelSchema.safeParse(body)
+    const validation = operationProjectLabelsBodySchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -46,10 +46,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const result = await attachOperationLabel({
+    const result = await createOperationProjectLabels({
       projectId: project.id,
       operationId: operation.id,
-      projectLabelId: validation.data.labelId,
+      projectLabelIds: validation.data.targets,
       sourceClientId: getSourceClientId(request),
     })
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
 /**
  * DELETE /api/projects/[projectSlug]/operations/[operationNumber]/labels
- * Detach a label from the operation.
+ * Detach labels from the operation.
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
@@ -82,7 +82,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    const validation = operationLabelSchema.safeParse(body)
+    const validation = operationProjectLabelsBodySchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.issues[0].message },
@@ -90,10 +90,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const result = await detachOperationLabel({
+    const result = await deleteOperationProjectLabels({
       projectId: project.id,
       operationId: operation.id,
-      projectLabelId: validation.data.labelId,
+      projectLabelIds: validation.data.targets,
       sourceClientId: getSourceClientId(request),
     })
 

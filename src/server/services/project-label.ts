@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '../db'
 import { projectLabels, operationProjectLabels } from '../db/schema'
 import type { ReturnResult } from '@/lib/return-result'
@@ -17,9 +17,6 @@ export type ProjectLabel = {
   updatedAt: Date
 }
 
-/**
- * List all labels in a project.
- */
 export async function listProjectLabels(
   projectId: string,
 ): Promise<ProjectLabel[]> {
@@ -29,10 +26,6 @@ export async function listProjectLabels(
   })
 }
 
-/**
- * Create a project label. Fails with a conflict when the name is already taken
- * within the project.
- */
 export async function createProjectLabel(data: {
   projectId: string
   name: string
@@ -131,77 +124,69 @@ export async function deleteProjectLabel(data: {
   return ok()
 }
 
-/**
- * Attach a project label to an operation. Idempotent — re-attaching an already
- * attached label is a no-op. Fails when the label does not belong to the project.
- */
-export async function attachOperationLabel(data: {
+export async function createOperationProjectLabels(data: {
   projectId: string
   operationId: string
-  projectLabelId: string
+  projectLabelIds: string[]
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
-  const label = await db.query.projectLabels.findFirst({
-    columns: { id: true },
-    where: (t, { eq, and }) =>
-      and(eq(t.id, data.projectLabelId), eq(t.projectId, data.projectId)),
-  })
+  if (data.projectLabelIds.length === 0) {
+    return ok()
+  }
 
-  if (label == null) {
-    return err(new NotFoundError('Label'))
+  const validLabels = await db.query.projectLabels.findMany({
+    columns: { id: true },
+    where: (t, { and, eq, inArray }) =>
+      and(eq(t.projectId, data.projectId), inArray(t.id, data.projectLabelIds)),
+  })
+  if (validLabels.length === 0) {
+    return ok()
   }
 
   await db
     .insert(operationProjectLabels)
-    .values({
-      operationId: data.operationId,
-      projectLabelId: data.projectLabelId,
-    })
+    .values(
+      validLabels.map((label) => ({
+        operationId: data.operationId,
+        projectLabelId: label.id,
+      })),
+    )
     .onConflictDoNothing()
 
-  publishOperationEvent(
-    data.operationId,
-    'operation-updated',
-    data.sourceClientId,
-  )
-  publishProjectEvent(
-    data.projectId,
-    'operations-list-changed',
-    data.sourceClientId,
-  )
+  publishLabelChange(data.operationId, data.projectId, data.sourceClientId)
 
   return ok()
 }
 
-/**
- * Detach a project label from an operation. Idempotent — detaching a label that
- * is not attached is a no-op.
- */
-export async function detachOperationLabel(data: {
+export async function deleteOperationProjectLabels(data: {
   projectId: string
   operationId: string
-  projectLabelId: string
+  projectLabelIds: string[]
   sourceClientId?: string
 }): Promise<ReturnResult<undefined>> {
+  if (data.projectLabelIds.length === 0) {
+    return ok()
+  }
+
   await db
     .delete(operationProjectLabels)
     .where(
       and(
         eq(operationProjectLabels.operationId, data.operationId),
-        eq(operationProjectLabels.projectLabelId, data.projectLabelId),
+        inArray(operationProjectLabels.projectLabelId, data.projectLabelIds),
       ),
     )
 
-  publishOperationEvent(
-    data.operationId,
-    'operation-updated',
-    data.sourceClientId,
-  )
-  publishProjectEvent(
-    data.projectId,
-    'operations-list-changed',
-    data.sourceClientId,
-  )
+  publishLabelChange(data.operationId, data.projectId, data.sourceClientId)
 
   return ok()
+}
+
+function publishLabelChange(
+  operationId: string,
+  projectId: string,
+  sourceClientId?: string,
+): void {
+  publishOperationEvent(operationId, 'operation-updated', sourceClientId)
+  publishProjectEvent(projectId, 'operations-list-changed', sourceClientId)
 }
