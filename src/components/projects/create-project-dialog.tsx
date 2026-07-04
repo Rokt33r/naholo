@@ -124,7 +124,7 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
                 id='callsign'
                 value={callsign}
                 onChange={(e) => {
-                  setCallsign(e.target.value)
+                  setCallsign(e.target.value.toLowerCase())
                   setCallsignTouched(true)
                 }}
                 placeholder='your.callsign'
@@ -132,7 +132,7 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
               />
               {callsignInvalid ? (
                 <p className='text-destructive text-xs'>
-                  Callsign may only contain letters, numbers, &quot;-&quot; and
+                  Callsign may only contain a-z, 0-9, &quot;-&quot; and
                   &quot;.&quot;
                 </p>
               ) : (

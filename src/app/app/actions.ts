@@ -49,9 +49,7 @@ export async function createProjectAction(
   }
 
   if (!isValidCallsign(callsign)) {
-    return err(
-      new Error('Callsign may only contain letters, numbers, "-" and "."'),
-    )
+    return err(new Error('Callsign may only contain a-z, 0-9, "-" and "."'))
   }
 
   const result = await createProject({ name, slug, description })

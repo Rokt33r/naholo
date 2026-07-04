@@ -56,7 +56,7 @@ export function OperatorSelfEditCard({
       return
     }
     if (!isValidCallsign(trimmedCallsign)) {
-      setFormError('Callsign may only contain letters, numbers, "-" and "."')
+      setFormError('Callsign may only contain a-z, 0-9, "-" and "."')
       return
     }
 
@@ -98,12 +98,12 @@ export function OperatorSelfEditCard({
           <Input
             id='self-operator-callsign'
             value={callsign}
-            onChange={(e) => setCallsign(e.target.value)}
+            onChange={(e) => setCallsign(e.target.value.toLowerCase())}
             disabled={updateOperator.isPending}
           />
           <p className='text-muted-foreground text-xs'>
-            Letters, numbers, &quot;-&quot; and &quot;.&quot; only. Unique
-            within this project.
+            Only a-z, 0-9, &quot;-&quot; and &quot;.&quot;. Unique within this
+            project.
           </p>
         </div>
         {errorMessage != null && (

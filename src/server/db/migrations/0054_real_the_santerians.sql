@@ -3,21 +3,23 @@ UPDATE "project_operators" po
 SET "callsign" = COALESCE(
   NULLIF(
     regexp_replace(
-      COALESCE(
-        split_part(
-          COALESCE(
-            (SELECT ui.value FROM "user_identifiers" ui
-             WHERE ui.user_id = po.user_id AND ui.type = 'email-otp'
-             ORDER BY ui.created_at LIMIT 1),
-            (SELECT ui.data->>'email' FROM "user_identifiers" ui
-             WHERE ui.user_id = po.user_id AND ui.type = 'google-oauth'
-             ORDER BY ui.created_at LIMIT 1)
+      lower(
+        COALESCE(
+          split_part(
+            COALESCE(
+              (SELECT ui.value FROM "user_identifiers" ui
+               WHERE ui.user_id = po.user_id AND ui.type = 'email-otp'
+               ORDER BY ui.created_at LIMIT 1),
+              (SELECT ui.data->>'email' FROM "user_identifiers" ui
+               WHERE ui.user_id = po.user_id AND ui.type = 'google-oauth'
+               ORDER BY ui.created_at LIMIT 1)
+            ),
+            '@', 1
           ),
-          '@', 1
-        ),
-        po.name
+          po.name
+        )
       ),
-      '[^A-Za-z0-9.-]', '.', 'g'
+      '[^a-z0-9.-]', '.', 'g'
     ),
     ''
   ),
