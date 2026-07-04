@@ -15,6 +15,8 @@ import {
   deleteProject,
 } from '@/server/services/project'
 import { createProjectOperator } from '@/server/services/project-operator'
+import { getUserPrimaryEmail } from '@/server/services/user-email'
+import { deriveCallsignFromEmail } from '@/lib/callsign'
 import { createOperationLog } from '@/server/services/operation-log'
 import {
   createTask,
@@ -48,10 +50,13 @@ export async function createProjectAction(
 
   const result = await createProject({ name, slug, description })
   if (result.success) {
+    // Interim derivation until the create-project dialog collects a callsign
+    const email = await getUserPrimaryEmail(user.id)
     await createProjectOperator({
       projectId: result.data.id,
       userId: user.id,
       name: user.name,
+      callsign: deriveCallsignFromEmail(email ?? user.name),
       role: 'admin',
     })
 

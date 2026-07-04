@@ -56,6 +56,7 @@ async function seedOperator(projectId: string, userId: string) {
       projectId,
       userId,
       name: 'Test Operator',
+      callsign: 'test.operator',
     })
     .returning({ id: schema.projectOperators.id })
   return operator.id

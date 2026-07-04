@@ -8,6 +8,7 @@ export type ProjectOperator = {
   projectId: string
   userId: string
   name: string
+  callsign: string
   role: string
   createdAt: Date
 }
@@ -16,6 +17,7 @@ export type CreateProjectOperatorInput = {
   projectId: string
   userId: string
   name: string
+  callsign: string
   role?: 'admin' | 'member'
 }
 
@@ -31,6 +33,7 @@ export async function createProjectOperator(
       projectId: data.projectId,
       userId: data.userId,
       name: data.name,
+      callsign: data.callsign,
       role: data.role ?? 'member',
     })
     .returning({ id: projectOperators.id })

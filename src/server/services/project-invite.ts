@@ -3,6 +3,8 @@ import { eq, and, isNull, inArray } from 'drizzle-orm'
 import { db } from '../db'
 import { projectInvites } from '../db/schema'
 import { createProjectOperator } from './project-operator'
+import { getUserPrimaryEmail } from './user-email'
+import { deriveCallsignFromEmail } from '@/lib/callsign'
 import { assertSeatAvailable } from './project-subscription'
 import { ok } from '@/lib/return-result'
 import type { SuccessResult } from '@/lib/return-result'
@@ -255,10 +257,13 @@ export async function acceptProjectInvite(
     })
   }
 
+  // Interim derivation until the claim flow collects a callsign
+  const email = await getUserPrimaryEmail(claimerUser.id)
   const operator = await createProjectOperator({
     projectId,
     userId: claimerUser.id,
     name: claimerUser.name,
+    callsign: deriveCallsignFromEmail(email ?? claimerUser.name),
     role: 'member',
   })
 
