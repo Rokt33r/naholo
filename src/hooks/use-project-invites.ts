@@ -11,6 +11,8 @@ export type ProjectInvite = {
   id: string
   email: string
   status: string
+  name: string | null
+  callsign: string | null
   claimerUser: {
     id: string
     name: string
@@ -136,9 +138,11 @@ export function useClaimProjectInvite(inviteId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (input: { name: string; callsign: string }) => {
       const response = await fetch(`/api/invites/${inviteId}/claim`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
       })
       if (!response.ok) {
         throw await createResponseError(response, 'Failed to claim invite')

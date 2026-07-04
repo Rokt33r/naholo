@@ -15,6 +15,8 @@ export type ProjectInvite = {
   projectId: string
   email: string
   status: string
+  name: string | null
+  callsign: string | null
   claimerUserId: string | null
   inviterProjectOperatorId: string | null
   createdAt: Date
@@ -133,6 +135,8 @@ function mapInviteResult(result: {
   projectId: string
   email: string
   status: string
+  name: string | null
+  callsign: string | null
   claimerUserId: string | null
   inviterProjectOperatorId: string | null
   createdAt: Date
@@ -151,6 +155,8 @@ function mapInviteResult(result: {
     projectId: result.projectId,
     email: result.email,
     status: result.status,
+    name: result.name,
+    callsign: result.callsign,
     claimerUserId: result.claimerUserId,
     inviterProjectOperatorId: result.inviterProjectOperatorId,
     createdAt: result.createdAt,
@@ -189,17 +195,21 @@ function toClaimerIdentifier(identifier: {
 }
 
 /**
- * Claim a project invite. Sets the claimer and updates status to 'claimed'.
+ * Claim a project invite. Sets the claimer, their requested operator
+ * name/callsign, and updates status to 'claimed'.
  */
 export async function claimProjectInvite(
   inviteId: string,
   userId: string,
+  data: { name: string | null; callsign: string | null },
 ): Promise<void> {
   await db
     .update(projectInvites)
     .set({
       status: 'claimed',
       claimerUserId: userId,
+      name: data.name,
+      callsign: data.callsign,
       updatedAt: new Date(),
     })
     .where(

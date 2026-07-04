@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireAuthUser } from '@/server/auth/permissions'
 import {
   claimProjectInvite,
@@ -7,14 +8,33 @@ import {
 import { getProjectOperatorByUserId } from '@/server/services/project-operator'
 import { sendInviteClaimedEmail } from '@/server/services/invite-email'
 import { db } from '@/server/db'
+import { CALLSIGN_PATTERN } from '@/lib/callsign'
+
+// name/callsign optional until the claim form ships; validated when present.
+// Deliberately no uniqueness check and no lookup against existing callsigns —
+// this endpoint is reachable by any invite-link holder and must not leak
+// which callsigns are in use.
+const claimInviteSchema = z.object({
+  name: z.string().min(1).optional(),
+  callsign: z.string().regex(CALLSIGN_PATTERN).optional(),
+})
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ inviteId: string }> },
 ) {
   try {
     const { inviteId } = await params
     const user = await requireAuthUser()
+
+    const body = await request.json().catch(() => ({}))
+    const parsed = claimInviteSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 },
+      )
+    }
 
     const invite = await getProjectInvite(inviteId)
     if (invite == null) {
@@ -40,7 +60,10 @@ export async function POST(
       )
     }
 
-    await claimProjectInvite(inviteId, user.id)
+    await claimProjectInvite(inviteId, user.id, {
+      name: parsed.data.name ?? null,
+      callsign: parsed.data.callsign ?? null,
+    })
 
     // Send notification to project admins (fire-and-forget)
     notifyAdmins(invite.projectId, user, invite.project.slug)

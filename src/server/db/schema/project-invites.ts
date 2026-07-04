@@ -12,6 +12,8 @@ export const projectInvites = pgTable('project_invites', {
     .references(() => projects.id, { onDelete: 'cascade' }),
   email: text('email').notNull(),
   status: text('status').notNull().default('pending'), // 'pending' | 'claimed' | 'accepted' | 'rejected'
+  name: text('name'), // requester's chosen operator name, set at claim
+  callsign: text('callsign'), // requested callsign, set at claim — never uniqueness-checked here
   claimerUserId: uuid('claimer_user_id').references(() => users.id, {
     onDelete: 'set null',
   }),
