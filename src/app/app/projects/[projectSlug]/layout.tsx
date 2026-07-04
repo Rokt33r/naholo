@@ -3,7 +3,6 @@
 import { useParams, useSelectedLayoutSegment } from 'next/navigation'
 import { AppModeSidebar } from '@/components/app/app-mode-sidebar'
 import { ProjectContext } from '@/components/app/project-context'
-import { QueryProvider } from '@/components/query-provider'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useProjects } from '@/hooks/use-projects'
 import { ProjectSubscriptionWall } from '@/components/billing/project-subscription-wall'
@@ -50,9 +49,5 @@ export default function ProjectLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <QueryProvider>
-      <ProjectLayoutInner>{children}</ProjectLayoutInner>
-    </QueryProvider>
-  )
+  return <ProjectLayoutInner>{children}</ProjectLayoutInner>
 }
