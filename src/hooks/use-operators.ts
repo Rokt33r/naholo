@@ -7,6 +7,7 @@ export type Operator = {
   projectId: string
   userId: string | null
   name: string
+  callsign: string
   role: string
   createdAt: string
 }
@@ -26,6 +27,41 @@ export function useOperators(projectSlug: string) {
     isLoading: query.isLoading,
     error: query.error,
   }
+}
+
+export type UpdateOperatorInput = {
+  operatorId: string
+  name?: string
+  callsign?: string
+}
+
+/**
+ * Hook to update a project operator's name and/or callsign.
+ * Refetches the list on success. Errors carry the server message
+ * (e.g. callsign conflicts) so callers can render them inline.
+ */
+export function useUpdateProjectOperator(projectSlug: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation<Operator, Error, UpdateOperatorInput>({
+    mutationFn: async ({ operatorId, name, callsign }) => {
+      const res = await mutationFetch(
+        `/api/projects/${projectSlug}/operators/${operatorId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, callsign }),
+        },
+      )
+      if (!res.ok) {
+        throw await createOperatorUpdateError(res)
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['operators', projectSlug] })
+    },
+  })
 }
 
 /**
@@ -53,4 +89,17 @@ export function useRemoveProjectOperator(projectSlug: string) {
       )
     },
   })
+}
+
+async function createOperatorUpdateError(response: Response): Promise<Error> {
+  try {
+    const data = await response.json()
+    return new Error(data.message || data.error || 'Failed to update operator')
+  } catch (parseError) {
+    console.error('Failed to parse error response:', {
+      status: response.status,
+      parseError,
+    })
+    return new Error('Failed to update operator')
+  }
 }

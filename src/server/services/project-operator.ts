@@ -2,6 +2,7 @@ import 'server-only'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
+import { ConflictError } from '../errors'
 
 export type ProjectOperator = {
   id: string
@@ -39,6 +40,48 @@ export async function createProjectOperator(
     .returning({ id: projectOperators.id })
 
   return { id: operator.id }
+}
+
+export type UpdateProjectOperatorInput = {
+  name?: string
+  callsign?: string
+}
+
+/**
+ * Update a project operator's name and/or callsign, scoped to its project.
+ * Throws ConflictError with code 'callsign_taken' when the callsign is
+ * already in use within the project.
+ */
+export async function updateProjectOperator(
+  operatorId: string,
+  projectId: string,
+  data: UpdateProjectOperatorInput,
+): Promise<ProjectOperator | null> {
+  try {
+    const [operator] = await db
+      .update(projectOperators)
+      .set({
+        ...(data.name != null ? { name: data.name } : {}),
+        ...(data.callsign != null ? { callsign: data.callsign } : {}),
+      })
+      .where(
+        and(
+          eq(projectOperators.id, operatorId),
+          eq(projectOperators.projectId, projectId),
+        ),
+      )
+      .returning()
+
+    return operator ?? null
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new ConflictError({
+        code: 'callsign_taken',
+        message: 'Callsign is already in use in this project',
+      })
+    }
+    throw error
+  }
 }
 
 /**
@@ -118,4 +161,13 @@ export async function resolveProjectOperatorByUserIdAndProjectId(
   })
 
   return operator ?? null
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error != null &&
+    'code' in error &&
+    (error as { code: unknown }).code === '23505'
+  )
 }
