@@ -142,6 +142,8 @@ export function useUpdateLabel(projectSlug: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['labels', projectSlug] })
+      queryClient.invalidateQueries({ queryKey: ['operations', projectSlug] })
+      queryClient.invalidateQueries({ queryKey: ['operation', projectSlug] })
     },
   })
 }
@@ -189,6 +191,8 @@ export function useDeleteLabel(projectSlug: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['labels', projectSlug] })
+      queryClient.invalidateQueries({ queryKey: ['operations', projectSlug] })
+      queryClient.invalidateQueries({ queryKey: ['operation', projectSlug] })
     },
   })
 }
