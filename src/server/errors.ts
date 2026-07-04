@@ -71,14 +71,20 @@ export class SubscriptionAlreadyActiveError extends ServiceError {
 
 /**
  * Narrow an unknown error to a Postgres unique-constraint violation (23505).
+ * Drizzle wraps the driver error (e.g. DrizzleQueryError), so the pg `code`
+ * may sit anywhere down the `cause` chain — walk it.
  */
 export function isUniqueViolationError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error != null &&
-    'code' in error &&
-    (error as { code: unknown }).code === '23505'
-  )
+  if (typeof error !== 'object' || error == null) {
+    return false
+  }
+  if ('code' in error && (error as { code: unknown }).code === '23505') {
+    return true
+  }
+  if ('cause' in error) {
+    return isUniqueViolationError((error as { cause: unknown }).cause)
+  }
+  return false
 }
 
 export function mapApiError(error: unknown): NextResponse {

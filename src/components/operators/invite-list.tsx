@@ -1,15 +1,20 @@
 'use client'
 
-import { Check, X, Copy, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { Check, X, Copy, Loader2, Pencil } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   useProjectInvites,
   useAcceptProjectInvite,
   useRejectProjectInvite,
+  useUpdateProjectInvite,
 } from '@/hooks/use-project-invites'
 import type { ProjectInvite } from '@/hooks/use-project-invites'
+import { isValidCallsign } from '@/lib/callsign'
 
 type InviteListProps = {
   projectSlug: string
@@ -50,8 +55,56 @@ function InviteCard({
   invite: ProjectInvite
   projectSlug: string
 }) {
-  const { mutate: accept, isPending: isAccepting } =
-    useAcceptProjectInvite(projectSlug)
+  const {
+    mutate: accept,
+    isPending: isAccepting,
+    error: acceptError,
+  } = useAcceptProjectInvite(projectSlug)
+  const isCallsignTaken = acceptError?.code === 'callsign_taken'
+  const updateInvite = useUpdateProjectInvite(projectSlug)
+  const [isEditingRequest, setIsEditingRequest] = useState(false)
+  const [requestName, setRequestName] = useState('')
+  const [requestCallsign, setRequestCallsign] = useState('')
+
+  const handleOpenEditRequest = () => {
+    setRequestName(invite.name ?? '')
+    setRequestCallsign(invite.callsign ?? '')
+    setIsEditingRequest(true)
+  }
+
+  const handleAccept = () => {
+    accept(invite.id, {
+      onError: (error) => {
+        // callsign_taken opens the request editor inline; everything else toasts
+        if (error.code === 'callsign_taken') {
+          handleOpenEditRequest()
+        } else {
+          toast.error(error.message)
+        }
+      },
+    })
+  }
+
+  const trimmedRequestName = requestName.trim()
+  const trimmedRequestCallsign = requestCallsign.trim()
+  const canSaveRequest =
+    trimmedRequestName !== '' && isValidCallsign(trimmedRequestCallsign)
+
+  const handleSaveRequest = (e: React.FormEvent) => {
+    e.preventDefault()
+    updateInvite.mutate(
+      {
+        inviteId: invite.id,
+        name: trimmedRequestName,
+        callsign: trimmedRequestCallsign,
+      },
+      {
+        onSuccess: () => {
+          setIsEditingRequest(false)
+        },
+      },
+    )
+  }
   const { mutate: reject, isPending: isRejecting } =
     useRejectProjectInvite(projectSlug)
   const isBusy = isAccepting || isRejecting
@@ -88,6 +141,88 @@ function InviteCard({
               ))}
             </div>
           )}
+        {invite.status === 'claimed' &&
+          invite.name != null &&
+          invite.callsign != null &&
+          !isEditingRequest && (
+            <div className='mt-0.5 flex items-center gap-1 text-xs'>
+              <span className='truncate'>
+                Requests to join as{' '}
+                <span className='font-medium'>{invite.name}</span> &middot;{' '}
+                {invite.callsign}
+              </span>
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                onClick={handleOpenEditRequest}
+                title='Edit requested name and callsign'
+              >
+                <Pencil className='size-3' />
+              </Button>
+            </div>
+          )}
+        {isEditingRequest && (
+          <form
+            onSubmit={handleSaveRequest}
+            className='mt-1.5 flex flex-col gap-1.5'
+          >
+            <div className='flex flex-col gap-1'>
+              <Label
+                htmlFor={`invite-request-name-${invite.id}`}
+                className='text-xs'
+              >
+                Name
+              </Label>
+              <Input
+                id={`invite-request-name-${invite.id}`}
+                value={requestName}
+                onChange={(e) => setRequestName(e.target.value)}
+                className='h-7 text-xs'
+                disabled={updateInvite.isPending}
+              />
+            </div>
+            <div className='flex flex-col gap-1'>
+              <Label
+                htmlFor={`invite-request-callsign-${invite.id}`}
+                className='text-xs'
+              >
+                Callsign
+              </Label>
+              <Input
+                id={`invite-request-callsign-${invite.id}`}
+                value={requestCallsign}
+                onChange={(e) =>
+                  setRequestCallsign(e.target.value.toLowerCase())
+                }
+                className='h-7 text-xs'
+                disabled={updateInvite.isPending}
+              />
+            </div>
+            <div className='flex items-center gap-1'>
+              <Button
+                type='submit'
+                size='sm'
+                disabled={!canSaveRequest || updateInvite.isPending}
+              >
+                {updateInvite.isPending ? 'Saving...' : 'Save'}
+              </Button>
+              <Button
+                type='button'
+                size='sm'
+                variant='ghost'
+                onClick={() => setIsEditingRequest(false)}
+                disabled={updateInvite.isPending}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        )}
+        {isCallsignTaken && (
+          <p className='mt-1 text-xs text-destructive'>
+            Callsign taken — edit the requested callsign, then retry.
+          </p>
+        )}
       </div>
       <div className='flex items-center gap-1 shrink-0'>
         {invite.status === 'claimed' && (
@@ -95,7 +230,7 @@ function InviteCard({
             <Button
               size='icon-sm'
               variant='ghost'
-              onClick={() => accept(invite.id)}
+              onClick={handleAccept}
               disabled={isBusy}
               title='Accept'
             >

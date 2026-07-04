@@ -219,6 +219,39 @@ export async function claimProjectInvite(
     )
 }
 
+export type UpdateProjectInviteRequestInput = {
+  name?: string
+  callsign?: string
+}
+
+/**
+ * Update a claimed invite's requested operator name/callsign, scoped to its
+ * project. Returns null when the invite is missing or not 'claimed'.
+ */
+export async function updateProjectInviteRequest(
+  inviteId: string,
+  projectId: string,
+  data: UpdateProjectInviteRequestInput,
+): Promise<ProjectInvite | null> {
+  const [invite] = await db
+    .update(projectInvites)
+    .set({
+      ...(data.name != null ? { name: data.name } : {}),
+      ...(data.callsign != null ? { callsign: data.callsign } : {}),
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(projectInvites.id, inviteId),
+        eq(projectInvites.projectId, projectId),
+        eq(projectInvites.status, 'claimed'),
+      ),
+    )
+    .returning()
+
+  return invite ?? null
+}
+
 /**
  * Reject a claimed invite.
  */

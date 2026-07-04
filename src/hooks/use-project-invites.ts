@@ -22,6 +22,11 @@ export type ProjectInvite = {
   createdAt: string
 }
 
+export type AcceptInviteErrorBody = {
+  code: string | null
+  message: string
+}
+
 export type ProjectInviteStatus = {
   id: string
   status: string
@@ -70,28 +75,70 @@ export function useCreateProjectInvite(projectSlug: string) {
   })
 }
 
+/**
+ * Errors reject with the parsed response body (`AcceptInviteErrorBody`) —
+ * no toast here; callers decide how to render each error code.
+ */
 export function useAcceptProjectInvite(projectSlug: string) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (inviteId: string) => {
+  return useMutation<
+    { projectOperatorId: string },
+    AcceptInviteErrorBody,
+    string
+  >({
+    mutationFn: async (inviteId) => {
       const response = await fetch(
         `/api/projects/${projectSlug}/invites/${inviteId}/accept`,
         { method: 'POST' },
       )
       if (!response.ok) {
-        throw await createResponseError(response, 'Failed to accept invite')
+        throw await readAcceptInviteErrorBody(response)
       }
       return response.json() as Promise<{ projectOperatorId: string }>
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to accept invite',
-      )
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['invites', projectSlug] })
       queryClient.invalidateQueries({ queryKey: ['workers', projectSlug] })
+    },
+  })
+}
+
+export type UpdateInviteInput = {
+  inviteId: string
+  name?: string
+  callsign?: string
+}
+
+/**
+ * Hook for admins to update a claimed invite's requested name/callsign.
+ * Refetches the invite list on success.
+ */
+export function useUpdateProjectInvite(projectSlug: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ inviteId, name, callsign }: UpdateInviteInput) => {
+      const response = await fetch(
+        `/api/projects/${projectSlug}/invites/${inviteId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, callsign }),
+        },
+      )
+      if (!response.ok) {
+        throw await createResponseError(response, 'Failed to update invite')
+      }
+      return response.json() as Promise<ProjectInvite>
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update invite',
+      )
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['invites', projectSlug] })
     },
   })
 }
@@ -157,4 +204,22 @@ export function useClaimProjectInvite(inviteId: string) {
       queryClient.invalidateQueries({ queryKey: ['invite', inviteId] })
     },
   })
+}
+
+async function readAcceptInviteErrorBody(
+  response: Response,
+): Promise<AcceptInviteErrorBody> {
+  try {
+    const data = await response.json()
+    return {
+      code: typeof data.code === 'string' ? data.code : null,
+      message: data.message || data.error || 'Failed to accept invite',
+    }
+  } catch (parseError) {
+    console.error('Failed to parse error response:', {
+      status: response.status,
+      parseError,
+    })
+    return { code: null, message: 'Failed to accept invite' }
+  }
 }
