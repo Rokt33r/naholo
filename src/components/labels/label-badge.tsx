@@ -12,11 +12,13 @@ export function LabelBadge({
   color,
   onRemove,
   className,
+  size = 'default',
 }: {
   name: string
   color: string
   onRemove?: () => void
   className?: string
+  size?: 'default' | 'sm'
 }) {
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -30,7 +32,7 @@ export function LabelBadge({
 
   return (
     <Badge
-      className={cn('h-6 border', className)}
+      className={cn(size === 'sm' ? 'h-5' : 'h-6', 'border', className)}
       style={{
         backgroundColor: colors.background,
         borderColor: colors.border,

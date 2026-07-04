@@ -41,7 +41,7 @@ export function OperationItem({
         isActive && 'bg-accent/50 hover:bg-accent',
       )}
     >
-      {/* Row 1: Title and progress */}
+      {/* Row 1: Title, progress, assignees */}
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-1 flex-1 min-w-0'>
           {operation.closed ? (
@@ -51,24 +51,44 @@ export function OperationItem({
           )}
           <div className='truncate font-bold'>{operation.title}</div>
         </div>
-        {totalCount > 0 && (
-          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-            <CircleCheckBig className='h-4 w-4' />
-            <span>
-              {completedCount}/{totalCount}
-            </span>
-          </div>
-        )}
+        <div className='flex shrink-0 items-center gap-2'>
+          {totalCount > 0 && (
+            <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+              <CircleCheckBig className='h-4 w-4' />
+              <span>
+                {completedCount}/{totalCount}
+              </span>
+            </div>
+          )}
+          {operation.assignees.length > 0 && (
+            <div className='flex items-center'>
+              {operation.assignees.map((assignee, index) => (
+                <div
+                  key={assignee.id}
+                  className={cn(
+                    'rounded-full ring-2 ring-background',
+                    index > 0 && '-ml-4',
+                  )}
+                  style={{ zIndex: operation.assignees.length - index }}
+                >
+                  <OperatorAvatar name={assignee.name} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Row 2: Labels (only when present) */}
-      {(operation.labels.length > 0 || operation.assignees.length > 0) && (
+      {operation.labels.length > 0 && (
         <div className='mt-1.5 flex flex-wrap items-center gap-1'>
-          {operation.assignees.map((assignee) => (
-            <OperatorAvatar key={assignee.id} name={assignee.name} />
-          ))}
           {operation.labels.map((label) => (
-            <LabelBadge key={label.id} name={label.name} color={label.color} />
+            <LabelBadge
+              key={label.id}
+              name={label.name}
+              color={label.color}
+              size='sm'
+            />
           ))}
         </div>
       )}
