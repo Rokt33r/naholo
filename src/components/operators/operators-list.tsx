@@ -50,6 +50,7 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
         <OperatorCard
           key={operator.id}
           operator={operator}
+          isSelf={operator.id === currentOperator.id}
           canRemove={isAdmin}
           onRemove={() => handleRemove(operator)}
         />
@@ -60,10 +61,12 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
 
 function OperatorCard({
   operator,
+  isSelf,
   canRemove,
   onRemove,
 }: {
   operator: Operator
+  isSelf: boolean
   canRemove: boolean
   onRemove: () => void
 }) {
@@ -71,7 +74,15 @@ function OperatorCard({
     <div className='flex w-full items-center gap-3 rounded-lg border px-4 py-3'>
       <User className='size-4 text-muted-foreground' />
       <div className='flex-1 min-w-0'>
-        <div className='truncate text-sm font-medium'>{operator.name}</div>
+        <div className='flex min-w-0 items-baseline gap-1.5'>
+          <span className='truncate text-sm font-medium'>{operator.name}</span>
+          <span className='truncate text-xs text-muted-foreground'>
+            · {operator.callsign}
+          </span>
+          {isSelf && (
+            <span className='shrink-0 text-xs text-muted-foreground'>(me)</span>
+          )}
+        </div>
         <div className='text-xs text-muted-foreground'>{operator.role}</div>
       </div>
       {canRemove && (
