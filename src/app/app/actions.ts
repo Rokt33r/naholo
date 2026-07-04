@@ -15,8 +15,7 @@ import {
   deleteProject,
 } from '@/server/services/project'
 import { createProjectOperator } from '@/server/services/project-operator'
-import { getUserPrimaryEmail } from '@/server/services/user-email'
-import { deriveCallsignFromEmail } from '@/lib/callsign'
+import { isValidCallsign } from '@/lib/callsign'
 import { createOperationLog } from '@/server/services/operation-log'
 import {
   createTask,
@@ -41,6 +40,7 @@ export async function logoutAction(): Promise<ReturnResult<undefined>> {
 export async function createProjectAction(
   name: string,
   slug: string,
+  callsign: string,
   description?: string,
 ): Promise<ReturnResult<{ id: string; slug: string }>> {
   const user = await getAuthUser()
@@ -48,15 +48,19 @@ export async function createProjectAction(
     return err(new Error('Unauthorized'))
   }
 
+  if (!isValidCallsign(callsign)) {
+    return err(
+      new Error('Callsign may only contain letters, numbers, "-" and "."'),
+    )
+  }
+
   const result = await createProject({ name, slug, description })
   if (result.success) {
-    // Interim derivation until the create-project dialog collects a callsign
-    const email = await getUserPrimaryEmail(user.id)
     await createProjectOperator({
       projectId: result.data.id,
       userId: user.id,
       name: user.name,
-      callsign: deriveCallsignFromEmail(email ?? user.name),
+      callsign,
       role: 'admin',
     })
 

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAction } from '@/lib/use-action'
 import { createProjectAction } from '@/app/app/actions'
+import { fetcher } from '@/lib/fetcher'
+import { deriveCallsignFromName, isValidCallsign } from '@/lib/callsign'
 
 type CreateProjectDialogProps = {
   children: React.ReactNode
@@ -26,20 +29,43 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
+  const [callsign, setCallsign] = useState('')
+  const [callsignTouched, setCallsignTouched] = useState(false)
   const [description, setDescription] = useState('')
 
+  const { data: authUser } = useQuery({
+    queryKey: ['auth-user'],
+    queryFn: () => fetcher<{ id: string; name: string }>('/api/auth/user'),
+  })
+
+  useEffect(() => {
+    if (!callsignTouched && authUser != null) {
+      setCallsign(deriveCallsignFromName(authUser.name))
+    }
+  }, [authUser, callsignTouched])
+
   const { execute: createProject, loading } = useAction(createProjectAction)
+
+  const trimmedCallsign = callsign.trim()
+  const callsignInvalid =
+    trimmedCallsign !== '' && !isValidCallsign(trimmedCallsign)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!name.trim() || !slug.trim()) {
+    if (
+      !name.trim() ||
+      !slug.trim() ||
+      trimmedCallsign === '' ||
+      callsignInvalid
+    ) {
       return
     }
 
     const result = await createProject(
       name.trim(),
       slug.trim(),
+      trimmedCallsign,
       description.trim() || undefined,
     )
 
@@ -52,6 +78,8 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
     setOpen(false)
     setName('')
     setSlug('')
+    setCallsign('')
+    setCallsignTouched(false)
     setDescription('')
     router.push(`/app/projects/${projectSlug}`)
   }
@@ -91,6 +119,29 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
               />
             </div>
             <div className='space-y-2'>
+              <Label htmlFor='callsign'>Callsign *</Label>
+              <Input
+                id='callsign'
+                value={callsign}
+                onChange={(e) => {
+                  setCallsign(e.target.value)
+                  setCallsignTouched(true)
+                }}
+                placeholder='your.callsign'
+                disabled={loading}
+              />
+              {callsignInvalid ? (
+                <p className='text-destructive text-xs'>
+                  Callsign may only contain letters, numbers, &quot;-&quot; and
+                  &quot;.&quot;
+                </p>
+              ) : (
+                <p className='text-muted-foreground text-xs'>
+                  How other operators call you in this project.
+                </p>
+              )}
+            </div>
+            <div className='space-y-2'>
               <Label htmlFor='description'>Description</Label>
               <Input
                 id='description'
@@ -112,7 +163,13 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
             </Button>
             <Button
               type='submit'
-              disabled={!name.trim() || !slug.trim() || loading}
+              disabled={
+                !name.trim() ||
+                !slug.trim() ||
+                trimmedCallsign === '' ||
+                callsignInvalid ||
+                loading
+              }
             >
               {loading ? 'Creating...' : 'Create Project'}
             </Button>
