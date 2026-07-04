@@ -69,6 +69,18 @@ export class SubscriptionAlreadyActiveError extends ServiceError {
   }
 }
 
+/**
+ * Narrow an unknown error to a Postgres unique-constraint violation (23505).
+ */
+export function isUniqueViolationError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error != null &&
+    'code' in error &&
+    (error as { code: unknown }).code === '23505'
+  )
+}
+
 export function mapApiError(error: unknown): NextResponse {
   if (error instanceof SubscriptionNotReadyError) {
     return NextResponse.json(

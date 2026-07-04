@@ -2,7 +2,7 @@ import 'server-only'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
-import { ConflictError } from '../errors'
+import { ConflictError, isUniqueViolationError } from '../errors'
 
 export type ProjectOperator = {
   id: string
@@ -74,7 +74,7 @@ export async function updateProjectOperator(
 
     return operator ?? null
   } catch (error) {
-    if (isUniqueViolation(error)) {
+    if (isUniqueViolationError(error)) {
       throw new ConflictError({
         code: 'callsign_taken',
         message: 'Callsign is already in use in this project',
@@ -161,13 +161,4 @@ export async function resolveProjectOperatorByUserIdAndProjectId(
   })
 
   return operator ?? null
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error != null &&
-    'code' in error &&
-    (error as { code: unknown }).code === '23505'
-  )
 }

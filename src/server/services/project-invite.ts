@@ -1,14 +1,12 @@
 import 'server-only'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
 import { db } from '../db'
-import { projectInvites } from '../db/schema'
-import { createProjectOperator } from './project-operator'
-import { getUserPrimaryEmail } from './user-email'
-import { deriveCallsignFromEmail } from '@/lib/callsign'
+import { projectInvites, projectOperators } from '../db/schema'
+import { deriveCallsignFromName } from '@/lib/callsign'
 import { assertSeatAvailable } from './project-subscription'
 import { ok } from '@/lib/return-result'
 import type { SuccessResult } from '@/lib/return-result'
-import { ConflictError } from '../errors'
+import { ConflictError, isUniqueViolationError } from '../errors'
 
 export type ProjectInvite = {
   id: string
@@ -237,7 +235,11 @@ export async function rejectProjectInvite(inviteId: string): Promise<void> {
 }
 
 /**
- * Accept a claimed invite. Creates a project worker for the claimer.
+ * Accept a claimed invite. Creates a project operator for the claimer from
+ * the invite's stored name/callsign. The status flip and the operator insert
+ * run in one transaction, so a callsign conflict rolls the invite back to
+ * 'claimed' (admin reconciles and retries) and surfaces as ConflictError
+ * with code 'callsign_taken'.
  */
 export async function acceptProjectInvite(
   inviteId: string,
@@ -249,33 +251,60 @@ export async function acceptProjectInvite(
     throw seatCheck.error
   }
 
-  const [updated] = await db
-    .update(projectInvites)
-    .set({ status: 'accepted', updatedAt: new Date() })
-    .where(
-      and(
-        eq(projectInvites.id, inviteId),
-        eq(projectInvites.status, 'claimed'),
-      ),
-    )
-    .returning({ id: projectInvites.id })
+  let attemptedCallsign: string | null = null
+  try {
+    return await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(projectInvites)
+        .set({ status: 'accepted', updatedAt: new Date() })
+        .where(
+          and(
+            eq(projectInvites.id, inviteId),
+            eq(projectInvites.status, 'claimed'),
+          ),
+        )
+        .returning({
+          id: projectInvites.id,
+          name: projectInvites.name,
+          callsign: projectInvites.callsign,
+        })
 
-  if (updated == null) {
-    throw new ConflictError({
-      code: 'invite_not_acceptable',
-      message: 'Invite could not be accepted',
+      if (updated == null) {
+        throw new ConflictError({
+          code: 'invite_not_acceptable',
+          message: 'Invite could not be accepted',
+        })
+      }
+
+      // Claims made before the join-request form have no stored
+      // name/callsign — fall back to the user's name for both.
+      const name = updated.name ?? claimerUser.name
+      const callsign =
+        updated.callsign ?? deriveCallsignFromName(claimerUser.name)
+      attemptedCallsign = callsign
+
+      const [operator] = await tx
+        .insert(projectOperators)
+        .values({
+          projectId,
+          userId: claimerUser.id,
+          name,
+          callsign,
+          role: 'member',
+        })
+        .returning({ id: projectOperators.id })
+
+      return { projectOperatorId: operator.id }
     })
+  } catch (error) {
+    if (isUniqueViolationError(error)) {
+      // The transaction rolled back — the invite is still 'claimed', so the
+      // admin can reconcile the conflicting callsign and retry.
+      throw new ConflictError({
+        code: 'callsign_taken',
+        message: `Callsign "${attemptedCallsign}" is already in use in this project`,
+      })
+    }
+    throw error
   }
-
-  // Interim derivation until the claim flow collects a callsign
-  const email = await getUserPrimaryEmail(claimerUser.id)
-  const operator = await createProjectOperator({
-    projectId,
-    userId: claimerUser.id,
-    name: claimerUser.name,
-    callsign: deriveCallsignFromEmail(email ?? claimerUser.name),
-    role: 'member',
-  })
-
-  return { projectOperatorId: operator.id }
 }
