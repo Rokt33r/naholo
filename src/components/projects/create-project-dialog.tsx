@@ -137,7 +137,8 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
                 </p>
               ) : (
                 <p className='text-muted-foreground text-xs'>
-                  How other operators call you in this project.
+                  How other operators call you in this project. Only a-z, 0-9,
+                  &quot;-&quot; and &quot;.&quot;.
                 </p>
               )}
             </div>

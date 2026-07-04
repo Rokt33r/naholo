@@ -75,15 +75,26 @@ function OperatorCard({
       <User className='size-4 text-muted-foreground' />
       <div className='flex-1 min-w-0'>
         <div className='flex min-w-0 items-baseline gap-1.5'>
-          <span className='truncate text-sm font-medium'>{operator.name}</span>
-          <span className='truncate text-xs text-muted-foreground'>
-            · {operator.callsign}
+          <span className='w-16 shrink-0 text-xs text-muted-foreground'>
+            Name
           </span>
+          <span className='truncate text-sm font-medium'>{operator.name}</span>
           {isSelf && (
             <span className='shrink-0 text-xs text-muted-foreground'>(me)</span>
           )}
         </div>
-        <div className='text-xs text-muted-foreground'>{operator.role}</div>
+        <div className='flex min-w-0 items-baseline gap-1.5'>
+          <span className='w-16 shrink-0 text-xs text-muted-foreground'>
+            Callsign
+          </span>
+          <span className='truncate text-sm'>{operator.callsign}</span>
+        </div>
+        <div className='flex min-w-0 items-baseline gap-1.5'>
+          <span className='w-16 shrink-0 text-xs text-muted-foreground'>
+            Role
+          </span>
+          <span className='truncate text-sm'>{operator.role}</span>
+        </div>
       </div>
       {canRemove && (
         <Button

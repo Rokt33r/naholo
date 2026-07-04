@@ -145,20 +145,32 @@ function InviteCard({
           invite.name != null &&
           invite.callsign != null &&
           !isEditingRequest && (
-            <div className='mt-0.5 flex items-center gap-1 text-xs'>
-              <span className='truncate'>
-                Requests to join as{' '}
-                <span className='font-medium'>{invite.name}</span> &middot;{' '}
-                {invite.callsign}
-              </span>
-              <Button
-                size='icon-sm'
-                variant='ghost'
-                onClick={handleOpenEditRequest}
-                title='Edit requested name and callsign'
-              >
-                <Pencil className='size-3' />
-              </Button>
+            <div className='mt-0.5 flex flex-col gap-1 text-xs'>
+              <div className='flex items-center gap-1'>
+                <span className='text-muted-foreground'>
+                  Requests to join as
+                </span>
+                <Button
+                  size='icon-sm'
+                  variant='ghost'
+                  onClick={handleOpenEditRequest}
+                  title='Edit requested name and callsign'
+                >
+                  <Pencil className='size-3' />
+                </Button>
+              </div>
+              <div className='flex items-baseline gap-1.5'>
+                <span className='w-16 shrink-0 text-muted-foreground'>
+                  Name
+                </span>
+                <span className='truncate font-medium'>{invite.name}</span>
+              </div>
+              <div className='flex items-baseline gap-1.5'>
+                <span className='w-16 shrink-0 text-muted-foreground'>
+                  Callsign
+                </span>
+                <span className='truncate'>{invite.callsign}</span>
+              </div>
             </div>
           )}
         {isEditingRequest && (

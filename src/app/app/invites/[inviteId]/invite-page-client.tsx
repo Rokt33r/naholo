@@ -73,8 +73,8 @@ export function InvitePageClient({
           disabled={claimInvite.isPending}
         />
         <p className='text-muted-foreground text-xs'>
-          Only a-z, 0-9, &quot;-&quot; and &quot;.&quot;. How other operators
-          will call you in this project.
+          Callsigns identify operators in text across the project, so yours must
+          be unique. Only a-z, 0-9, &quot;-&quot; and &quot;.&quot;.
         </p>
       </div>
       {formError != null && (
