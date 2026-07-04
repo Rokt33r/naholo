@@ -17,6 +17,7 @@ export type OperationAssignee = {
   id: string
   projectOperatorId: string
   name: string
+  callsign: string
 }
 
 export type OperationListItem = {

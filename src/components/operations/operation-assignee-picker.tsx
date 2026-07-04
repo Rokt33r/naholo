@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FuzzyPicker } from '@/components/ui/fuzzy-picker'
+import { useProjectContext } from '@/components/app/project-context'
 import { useOperators } from '@/hooks/use-operators'
 import {
   useAttachOperationAssignee,
@@ -22,6 +23,7 @@ export function OperationAssigneePicker({
   assignees: OperationAssignee[]
   trigger?: ReactNode
 }) {
+  const { currentOperator } = useProjectContext()
   const { operators } = useOperators(projectSlug)
   const attach = useAttachOperationAssignee(projectSlug, operationNumber)
   const detach = useDetachOperationAssignee(projectSlug, operationNumber)
@@ -29,7 +31,10 @@ export function OperationAssigneePicker({
   const selectedIds = assignees.map((assignee) => assignee.projectOperatorId)
   const options = operators.map((operator) => ({
     id: operator.id,
-    label: operator.name,
+    label:
+      operator.id === currentOperator.id
+        ? `${operator.callsign} (me)`
+        : operator.callsign,
   }))
 
   return (
@@ -39,9 +44,17 @@ export function OperationAssigneePicker({
       onToggle={(option) => {
         if (selectedIds.includes(option.id)) {
           detach.mutate(option.id)
-        } else {
-          attach.mutate({ projectOperatorId: option.id, name: option.label })
+          return
         }
+        const operator = operators.find((o) => o.id === option.id)
+        if (operator == null) {
+          return
+        }
+        attach.mutate({
+          projectOperatorId: operator.id,
+          name: operator.name,
+          callsign: operator.callsign,
+        })
       }}
       placeholder='Assign operator…'
       emptyText='No operators'

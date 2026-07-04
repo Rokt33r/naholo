@@ -19,7 +19,7 @@ export function useAttachOperationAssignee(
   return useMutation<
     void,
     Error,
-    { projectOperatorId: string; name: string },
+    { projectOperatorId: string; name: string; callsign: string },
     { previousOperation: OperationDetail | undefined }
   >({
     mutationFn: async ({ projectOperatorId }) => {
@@ -48,6 +48,7 @@ export function useAttachOperationAssignee(
         id: `temp-${input.projectOperatorId}`,
         projectOperatorId: input.projectOperatorId,
         name: input.name,
+        callsign: input.callsign,
       }
       queryClient.setQueryData<OperationDetail>(
         ['operation', projectSlug, operationNumber],

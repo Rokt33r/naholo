@@ -71,7 +71,7 @@ export function OperationItem({
                   )}
                   style={{ zIndex: operation.assignees.length - index }}
                 >
-                  <OperatorAvatar name={assignee.name} />
+                  <OperatorAvatar name={assignee.callsign} />
                 </div>
               ))}
             </div>

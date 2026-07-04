@@ -17,6 +17,7 @@ export type OperationAssignee = {
   id: string
   projectOperatorId: string
   name: string
+  callsign: string
 }
 
 export type Operation = {
@@ -340,11 +341,15 @@ function mapOperationLabels(
 }
 
 function mapOperationAssignees(
-  rows: { id: string; projectOperator: { id: string; name: string } }[],
+  rows: {
+    id: string
+    projectOperator: { id: string; name: string; callsign: string }
+  }[],
 ): OperationAssignee[] {
   return rows.map((row) => ({
     id: row.id,
     projectOperatorId: row.projectOperator.id,
     name: row.projectOperator.name,
+    callsign: row.projectOperator.callsign,
   }))
 }

@@ -7,6 +7,7 @@ import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { OperationAssigneePicker } from '@/components/operations/operation-assignee-picker'
 import { OperationLabelPicker } from '@/components/operations/operation-label-picker'
 import { TasksList } from '@/components/tasks/tasks-list'
+import { useProjectContext } from '@/components/app/project-context'
 import { useDetachOperationAssignee } from '@/hooks/use-operation-assignees'
 import { useDetachOperationLabel } from '@/hooks/use-operation-labels'
 import type { OperationAssignee, OperationLabel } from '@/hooks/use-operations'
@@ -31,6 +32,7 @@ export function OperationSidePanel({
   labels: OperationLabel[]
   assignees: OperationAssignee[]
 }) {
+  const { currentOperator } = useProjectContext()
   const detachAssignee = useDetachOperationAssignee(
     projectSlug,
     operationNumber,
@@ -64,11 +66,15 @@ export function OperationSidePanel({
                     onClick={(event) => event.stopPropagation()}
                     className='flex cursor-default items-center gap-1.5 rounded-full border py-1 pl-1 pr-1 text-sm'
                   >
-                    <OperatorAvatar name={assignee.name} />
-                    <span className='truncate'>{assignee.name}</span>
+                    <OperatorAvatar name={assignee.callsign} />
+                    <span className='truncate'>
+                      {assignee.callsign}
+                      {assignee.projectOperatorId === currentOperator.id &&
+                        ' (me)'}
+                    </span>
                     <button
                       type='button'
-                      aria-label={`Remove ${assignee.name}`}
+                      aria-label={`Remove ${assignee.callsign}`}
                       onClick={(event) => {
                         event.stopPropagation()
                         detachAssignee.mutate(assignee.projectOperatorId)
