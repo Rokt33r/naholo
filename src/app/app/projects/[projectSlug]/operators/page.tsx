@@ -5,6 +5,7 @@ import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useProjectContext } from '@/components/app/project-context'
 import { InviteList } from '@/components/operators/invite-list'
 import { InviteProjectOperatorDialog } from '@/components/operators/invite-project-operator-dialog'
+import { OperatorSelfEditCard } from '@/components/operators/operator-self-edit-card'
 import { OperatorsList } from '@/components/operators/operators-list'
 import { OperatorsSeatsSummary } from '@/components/operators/operators-seats-summary'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ export default function OperatorsIndexPage() {
       <div className='flex-1 overflow-y-auto'>
         <div className='flex w-full max-w-2xl flex-col gap-6 p-4'>
           <OperatorsSeatsSummary projectSlug={projectSlug} />
+          <OperatorSelfEditCard projectSlug={projectSlug} />
           <OperatorsList projectSlug={projectSlug} />
 
           <section className='flex flex-col gap-3'>

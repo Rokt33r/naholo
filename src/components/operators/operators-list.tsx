@@ -45,6 +45,7 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
 
   return (
     <div className='flex flex-col gap-2'>
+      <h3 className='text-sm font-medium'>Operator list</h3>
       {operators.map((operator) => (
         <OperatorCard
           key={operator.id}
