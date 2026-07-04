@@ -10,13 +10,12 @@ import { sendInviteClaimedEmail } from '@/server/services/invite-email'
 import { db } from '@/server/db'
 import { CALLSIGN_PATTERN } from '@/lib/callsign'
 
-// name/callsign optional until the claim form ships; validated when present.
 // Deliberately no uniqueness check and no lookup against existing callsigns —
 // this endpoint is reachable by any invite-link holder and must not leak
 // which callsigns are in use.
 const claimInviteSchema = z.object({
-  name: z.string().min(1).optional(),
-  callsign: z.string().regex(CALLSIGN_PATTERN).optional(),
+  name: z.string().min(1),
+  callsign: z.string().regex(CALLSIGN_PATTERN),
 })
 
 export async function POST(
@@ -61,8 +60,8 @@ export async function POST(
     }
 
     await claimProjectInvite(inviteId, user.id, {
-      name: parsed.data.name ?? null,
-      callsign: parsed.data.callsign ?? null,
+      name: parsed.data.name,
+      callsign: parsed.data.callsign,
     })
 
     // Send notification to project admins (fire-and-forget)

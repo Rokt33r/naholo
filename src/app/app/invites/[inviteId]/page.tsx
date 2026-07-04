@@ -1,6 +1,7 @@
 import { requireAuthUser } from '@/server/auth/permissions'
 import { getProjectInvite } from '@/server/services/project-invite'
 import { getProjectOperatorByUserId } from '@/server/services/project-operator'
+import { deriveCallsignFromName } from '@/lib/callsign'
 import { InvitePageClient } from './invite-page-client'
 
 export default async function InvitePage({
@@ -92,7 +93,11 @@ export default async function InvitePage({
       <p className='text text-muted-foreground'>
         Request to join this project. An admin will review your request.
       </p>
-      <InvitePageClient inviteId={inviteId} />
+      <InvitePageClient
+        inviteId={inviteId}
+        defaultName={user.name}
+        defaultCallsign={deriveCallsignFromName(user.name)}
+      />
     </CenteredCard>
   )
 }
