@@ -1,6 +1,7 @@
 'use client'
 
-import { type KeyboardEvent } from 'react'
+import { type KeyboardEvent, type MouseEvent } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Tag, Users, X } from 'lucide-react'
 import { LabelBadge } from '@/components/labels/label-badge'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
@@ -10,6 +11,7 @@ import { TasksList } from '@/components/tasks/tasks-list'
 import { useProjectContext } from '@/components/app/project-context'
 import { useDetachOperationAssignee } from '@/hooks/use-operation-assignees'
 import { useDetachOperationLabel } from '@/hooks/use-operation-labels'
+import { buildSearchToken } from '@/lib/operation-search'
 import type { OperationAssignee, OperationLabel } from '@/hooks/use-operations'
 
 /**
@@ -18,8 +20,8 @@ import type { OperationAssignee, OperationLabel } from '@/hooks/use-operations'
  * mobile side-panel dialog so the two surfaces stay identical.
  *
  * The whole assignees/labels block is the picker trigger — clicking anywhere in
- * a section opens its picker. The chips/badges stop propagation so they stay
- * inert (they become filter links to another op in later work).
+ * a section opens its picker. The chips/badges stop propagation and instead
+ * apply the assignee/label as an operation-list filter.
  */
 export function OperationSidePanel({
   projectSlug,
@@ -33,11 +35,22 @@ export function OperationSidePanel({
   assignees: OperationAssignee[]
 }) {
   const { currentOperator } = useProjectContext()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const detachAssignee = useDetachOperationAssignee(
     projectSlug,
     operationNumber,
   )
   const detachLabel = useDetachOperationLabel(projectSlug, operationNumber)
+
+  // Apply the assignee/label as a filter instead of opening the picker.
+  const handleSearchableTokenClick = (event: MouseEvent, token: string) => {
+    event.stopPropagation()
+    const params = new URLSearchParams(searchParams)
+    params.set('search', token)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }
 
   return (
     <div className='flex h-full flex-col overflow-y-auto py-1'>
@@ -63,8 +76,13 @@ export function OperationSidePanel({
                 assignees.map((assignee) => (
                   <span
                     key={assignee.id}
-                    onClick={(event) => event.stopPropagation()}
-                    className='flex cursor-default items-center gap-1.5 rounded-full border py-1 pl-1 pr-1 text-sm'
+                    onClick={(event) =>
+                      handleSearchableTokenClick(
+                        event,
+                        buildSearchToken('assignee', assignee.callsign),
+                      )
+                    }
+                    className='flex cursor-pointer items-center gap-1.5 rounded-full border py-1 pl-1 pr-1 text-sm'
                   >
                     <OperatorAvatar name={assignee.callsign} />
                     <span className='truncate'>
@@ -113,8 +131,13 @@ export function OperationSidePanel({
                 labels.map((label) => (
                   <span
                     key={label.id}
-                    onClick={(event) => event.stopPropagation()}
-                    className='inline-flex cursor-default'
+                    onClick={(event) =>
+                      handleSearchableTokenClick(
+                        event,
+                        buildSearchToken('label', label.name),
+                      )
+                    }
+                    className='inline-flex cursor-pointer'
                   >
                     <LabelBadge
                       name={label.name}

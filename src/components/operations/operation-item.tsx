@@ -34,7 +34,7 @@ export function OperationItem({
   }
 
   // Apply a filter instead of opening the operation.
-  const handleFilterClick = (event: MouseEvent, token: string) => {
+  const handleSearchableTokenClick = (event: MouseEvent, token: string) => {
     event.stopPropagation()
     const params = new URLSearchParams(searchParams)
     params.set('search', token)
@@ -85,7 +85,7 @@ export function OperationItem({
                   <OperatorAvatar
                     name={assignee.callsign}
                     onClick={(event) =>
-                      handleFilterClick(
+                      handleSearchableTokenClick(
                         event,
                         buildSearchToken('assignee', assignee.callsign),
                       )
@@ -108,7 +108,10 @@ export function OperationItem({
               color={label.color}
               size='sm'
               onClick={(event) =>
-                handleFilterClick(event, buildSearchToken('label', label.name))
+                handleSearchableTokenClick(
+                  event,
+                  buildSearchToken('label', label.name),
+                )
               }
             />
           ))}
