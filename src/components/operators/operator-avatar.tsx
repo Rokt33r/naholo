@@ -1,15 +1,24 @@
+import { type MouseEventHandler } from 'react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
 export function OperatorAvatar({
   name,
   className,
+  onClick,
 }: {
   name: string
   className?: string
+  onClick?: MouseEventHandler<HTMLSpanElement>
 }) {
   return (
-    <Avatar className={cn('size-6', className)} title={name}>
+    <Avatar
+      className={cn('size-6', onClick != null && 'cursor-pointer', className)}
+      title={name}
+      onClick={onClick}
+      role={onClick != null ? 'button' : undefined}
+      aria-label={onClick != null ? name : undefined}
+    >
       <AvatarFallback className='text-[10px]'>
         {getInitials(name)}
       </AvatarFallback>

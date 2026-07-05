@@ -1,12 +1,14 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { CircleCheckBig, CircleDot, CircleCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatIssueDate } from '@/lib/date-utils'
 import { LabelBadge } from '@/components/labels/label-badge'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
+import { buildSearchToken } from '@/lib/operation-search'
 import type { OperationListItem } from '@/hooks/use-operations'
+import { type MouseEvent } from 'react'
 
 type OperationItemProps = {
   operation: OperationListItem
@@ -20,6 +22,7 @@ export function OperationItem({
   isActive,
 }: OperationItemProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const handleClick = () => {
@@ -28,6 +31,14 @@ export function OperationItem({
     router.push(
       `/app/projects/${projectSlug}/operations/${operation.number}${query}`,
     )
+  }
+
+  // Apply a filter instead of opening the operation.
+  const handleFilterClick = (event: MouseEvent, token: string) => {
+    event.stopPropagation()
+    const params = new URLSearchParams(searchParams)
+    params.set('search', token)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   const completedCount = operation.completedTasks
@@ -71,7 +82,15 @@ export function OperationItem({
                   )}
                   style={{ zIndex: operation.assignees.length - index }}
                 >
-                  <OperatorAvatar name={assignee.callsign} />
+                  <OperatorAvatar
+                    name={assignee.callsign}
+                    onClick={(event) =>
+                      handleFilterClick(
+                        event,
+                        buildSearchToken('assignee', assignee.callsign),
+                      )
+                    }
+                  />
                 </div>
               ))}
             </div>
@@ -88,6 +107,9 @@ export function OperationItem({
               name={label.name}
               color={label.color}
               size='sm'
+              onClick={(event) =>
+                handleFilterClick(event, buildSearchToken('label', label.name))
+              }
             />
           ))}
         </div>

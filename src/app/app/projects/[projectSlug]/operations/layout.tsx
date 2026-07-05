@@ -10,17 +10,13 @@ export default function OperationsLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { projectSlug, projectName, projects } = useProjectContext()
+  const { projectSlug } = useProjectContext()
   const segment = useSelectedLayoutSegment()
   const hasSelectedOperation = segment !== null
 
   return (
     <OperationsListProvider hasSelectedOperation={hasSelectedOperation}>
-      <OperationsLayoutContent
-        projectSlug={projectSlug}
-        projectName={projectName}
-        projects={projects}
-      >
+      <OperationsLayoutContent projectSlug={projectSlug}>
         {children}
       </OperationsLayoutContent>
     </OperationsListProvider>

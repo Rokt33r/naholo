@@ -26,15 +26,9 @@ import type { Project } from 'naholo-api/types'
 
 type OperationsListProps = {
   projectSlug: string
-  projectName: string
-  projects: Project[]
 }
 
-export function OperationsList({
-  projectSlug,
-  projectName,
-  projects,
-}: OperationsListProps) {
+export function OperationsList({ projectSlug }: OperationsListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -43,36 +37,34 @@ export function OperationsList({
     params.operationNumber != null ? Number(params.operationNumber) : undefined
   const { isMobile, toggle, showCollapseButton } = useOperationsList()
 
-  // The `search` param is the shared source of truth (tag clicks elsewhere write
-  // to it), but it is kept out of the useOperations query key so filtering never
-  // triggers a server refetch. Local state drives the input for lag-free typing
-  // and mirrors to the URL debounced; external writes sync back down.
+  // `search` is kept out of the useOperations query key, so filtering never
+  // refetches from the server.
   const searchSearchParam = searchParams.get('search') ?? ''
   const [searchInput, setSearchInput] = useState(searchSearchParam)
-  const debouncedSearch = useDebounce(searchInput, 250)
-  const lastSyncedSearchRef = useRef(searchSearchParam)
+  const debouncedSearchInput = useDebounce(searchInput, 250)
 
+  // Adopt external writes to `?search=` (e.g. label/assignee clicks).
   useEffect(() => {
-    if (debouncedSearch === searchSearchParam) {
+    setSearchInput(searchSearchParam)
+  }, [searchSearchParam])
+
+  // Mirror typing to the URL, debounced. Keyed on the debounced value only —
+  // depending on `searchParams` would bounce a stale write over external changes.
+  const searchParamsRef = useRef(searchParams)
+  searchParamsRef.current = searchParams
+  useEffect(() => {
+    const currentSearchParams = searchParamsRef.current
+    if (debouncedSearchInput === (currentSearchParams.get('search') ?? '')) {
       return
     }
-    lastSyncedSearchRef.current = debouncedSearch
-    const params = new URLSearchParams(searchParams)
-    if (debouncedSearch.length > 0) {
-      params.set('search', debouncedSearch)
+    const params = new URLSearchParams(currentSearchParams)
+    if (debouncedSearchInput.length > 0) {
+      params.set('search', debouncedSearchInput)
     } else {
       params.delete('search')
     }
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [debouncedSearch, searchSearchParam, searchParams, pathname, router])
-
-  useEffect(() => {
-    if (searchSearchParam === lastSyncedSearchRef.current) {
-      return
-    }
-    lastSyncedSearchRef.current = searchSearchParam
-    setSearchInput(searchSearchParam)
-  }, [searchSearchParam])
+  }, [debouncedSearchInput, pathname, router])
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 

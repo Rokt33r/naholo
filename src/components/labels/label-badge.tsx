@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { type MouseEventHandler, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -11,12 +11,14 @@ export function LabelBadge({
   name,
   color,
   onRemove,
+  onClick,
   className,
   size = 'default',
 }: {
   name: string
   color: string
   onRemove?: () => void
+  onClick?: MouseEventHandler<HTMLSpanElement>
   className?: string
   size?: 'default' | 'sm'
 }) {
@@ -32,7 +34,13 @@ export function LabelBadge({
 
   return (
     <Badge
-      className={cn(size === 'sm' ? 'h-5' : 'h-6', 'border', className)}
+      onClick={onClick}
+      className={cn(
+        size === 'sm' ? 'h-5' : 'h-6',
+        'border',
+        onClick != null && 'cursor-pointer',
+        className,
+      )}
       style={{
         backgroundColor: colors.background,
         borderColor: colors.border,
