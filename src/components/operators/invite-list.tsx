@@ -15,6 +15,7 @@ import {
 } from '@/hooks/use-project-invites'
 import type { ProjectInvite } from '@/hooks/use-project-invites'
 import { isValidCallsign } from '@/lib/callsign'
+import { cn } from '@/lib/utils'
 
 type InviteListProps = {
   projectSlug: string
@@ -115,183 +116,212 @@ function InviteCard({
     toast.success('Invite link copied')
   }
 
+  const showRequestedIdentity =
+    invite.status === 'claimed' &&
+    invite.name != null &&
+    invite.callsign != null &&
+    !isEditingRequest
+
   return (
-    <div className='flex items-start gap-2 rounded-lg border px-4 py-3 text-sm'>
-      <div className='flex-1 min-w-0'>
-        <div className='truncate font-medium'>{invite.email}</div>
-        <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-          <StatusLabel status={invite.status} />
-          {invite.claimerUser != null && (
-            <span className='truncate'>&middot; {invite.claimerUser.name}</span>
-          )}
-          <span>
-            &middot;{' '}
-            {formatDistanceToNow(new Date(invite.createdAt), {
-              addSuffix: true,
-            })}
-          </span>
+    <div className='flex flex-col gap-3.5 rounded-xl border bg-card px-5 py-4 text-sm'>
+      <div className='flex items-start justify-between gap-4'>
+        <div className='flex min-w-0 flex-col gap-1.5'>
+          <div className='text-[15px] font-semibold leading-tight tracking-tight break-all'>
+            {invite.email}
+          </div>
+          <div className='flex flex-wrap items-center gap-2 text-xs text-muted-foreground'>
+            <StatusLabel status={invite.status} />
+            {invite.claimerUser != null && (
+              <>
+                <span className='text-muted-foreground/50'>&middot;</span>
+                <span className='truncate'>{invite.claimerUser.name}</span>
+              </>
+            )}
+            <span className='text-muted-foreground/50'>&middot;</span>
+            <span>
+              {formatDistanceToNow(new Date(invite.createdAt), {
+                addSuffix: true,
+              })}
+            </span>
+          </div>
+          {invite.claimerUser != null &&
+            invite.claimerUser.identifiers.length > 0 && (
+              <div className='flex flex-col gap-0.5 text-xs text-muted-foreground'>
+                {invite.claimerUser.identifiers.map((identifier, index) => (
+                  <span key={index} className='truncate'>
+                    {identifier.method} &middot; {identifier.label}
+                  </span>
+                ))}
+              </div>
+            )}
         </div>
-        {invite.claimerUser != null &&
-          invite.claimerUser.identifiers.length > 0 && (
-            <div className='mt-0.5 flex flex-col text-xs text-muted-foreground'>
-              {invite.claimerUser.identifiers.map((identifier, index) => (
-                <span key={index} className='truncate'>
-                  {identifier.method} &middot; {identifier.label}
-                </span>
-              ))}
-            </div>
-          )}
-        {invite.status === 'claimed' &&
-          invite.name != null &&
-          invite.callsign != null &&
-          !isEditingRequest && (
-            <div className='mt-0.5 flex flex-col gap-1 text-xs'>
-              <div className='flex items-center gap-1'>
-                <span className='text-muted-foreground'>
-                  Requests to join as
-                </span>
-                <Button
-                  size='icon-sm'
-                  variant='ghost'
-                  onClick={handleOpenEditRequest}
-                  title='Edit requested name and callsign'
-                >
-                  <Pencil className='size-3' />
-                </Button>
-              </div>
-              <div className='flex items-baseline gap-1.5'>
-                <span className='w-16 shrink-0 text-muted-foreground'>
-                  Name
-                </span>
-                <span className='truncate font-medium'>{invite.name}</span>
-              </div>
-              <div className='flex items-baseline gap-1.5'>
-                <span className='w-16 shrink-0 text-muted-foreground'>
-                  Callsign
-                </span>
-                <span className='truncate'>{invite.callsign}</span>
-              </div>
-            </div>
-          )}
-        {isEditingRequest && (
-          <form
-            onSubmit={handleSaveRequest}
-            className='mt-1.5 flex flex-col gap-1.5'
-          >
-            <div className='flex flex-col gap-1'>
-              <Label
-                htmlFor={`invite-request-name-${invite.id}`}
-                className='text-xs'
+
+        <div className='flex shrink-0 items-center gap-2'>
+          {invite.status === 'claimed' && (
+            <>
+              <Button
+                size='icon'
+                variant='outline'
+                className='text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700'
+                onClick={handleAccept}
+                disabled={isBusy}
+                title='Accept'
               >
+                <Check className='size-4' />
+              </Button>
+              <Button
+                size='icon'
+                variant='outline'
+                className='text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+                onClick={() => reject(invite.id)}
+                disabled={isBusy}
+                title='Reject'
+              >
+                <X className='size-4' />
+              </Button>
+            </>
+          )}
+          {invite.status === 'pending' && (
+            <>
+              <Button
+                size='icon'
+                variant='outline'
+                className='text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+                onClick={() => reject(invite.id)}
+                disabled={isBusy}
+                title='Reject'
+              >
+                <X className='size-4' />
+              </Button>
+              <Button
+                size='icon'
+                variant='outline'
+                className='text-muted-foreground'
+                onClick={handleCopyLink}
+                title='Copy invite link'
+              >
+                <Copy className='size-4' />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {showRequestedIdentity && (
+        <div className='flex flex-col gap-2.5 border-t pt-3.5'>
+          <div className='flex items-center gap-2'>
+            <span className='text-[11px] font-medium uppercase tracking-wide text-muted-foreground'>
+              Requests to join as
+            </span>
+            <Button
+              size='icon-sm'
+              variant='ghost'
+              className='size-6'
+              onClick={handleOpenEditRequest}
+              title='Edit requested name and callsign'
+            >
+              <Pencil className='size-3' />
+            </Button>
+          </div>
+          <div className='flex flex-wrap gap-x-9 gap-y-2'>
+            <div className='flex flex-col gap-0.5'>
+              <span className='text-[11px] uppercase tracking-wide text-muted-foreground'>
                 Name
-              </Label>
-              <Input
-                id={`invite-request-name-${invite.id}`}
-                value={requestName}
-                onChange={(e) => setRequestName(e.target.value)}
-                className='h-7 text-xs'
-                disabled={updateInvite.isPending}
-              />
+              </span>
+              <span className='text-sm font-medium'>{invite.name}</span>
             </div>
-            <div className='flex flex-col gap-1'>
-              <Label
-                htmlFor={`invite-request-callsign-${invite.id}`}
-                className='text-xs'
-              >
+            <div className='flex flex-col gap-0.5'>
+              <span className='text-[11px] uppercase tracking-wide text-muted-foreground'>
                 Callsign
-              </Label>
-              <Input
-                id={`invite-request-callsign-${invite.id}`}
-                value={requestCallsign}
-                onChange={(e) =>
-                  setRequestCallsign(e.target.value.toLowerCase())
-                }
-                className='h-7 text-xs'
-                disabled={updateInvite.isPending}
-              />
+              </span>
+              <span className='font-mono text-sm'>{invite.callsign}</span>
             </div>
-            <div className='flex items-center gap-1'>
-              <Button
-                type='submit'
-                size='sm'
-                disabled={!canSaveRequest || updateInvite.isPending}
-              >
-                {updateInvite.isPending ? 'Saving...' : 'Save'}
-              </Button>
-              <Button
-                type='button'
-                size='sm'
-                variant='ghost'
-                onClick={() => setIsEditingRequest(false)}
-                disabled={updateInvite.isPending}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        )}
-        {isCallsignTaken && (
-          <p className='mt-1 text-xs text-destructive'>
-            Callsign taken — edit the requested callsign, then retry.
-          </p>
-        )}
-      </div>
-      <div className='flex items-center gap-1 shrink-0'>
-        {invite.status === 'claimed' && (
-          <>
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              onClick={handleAccept}
-              disabled={isBusy}
-              title='Accept'
+          </div>
+        </div>
+      )}
+
+      {isEditingRequest && (
+        <form
+          onSubmit={handleSaveRequest}
+          className='flex flex-col gap-2.5 border-t pt-3.5'
+        >
+          <div className='flex flex-col gap-1'>
+            <Label
+              htmlFor={`invite-request-name-${invite.id}`}
+              className='text-xs'
             >
-              <Check className='size-4' />
+              Name
+            </Label>
+            <Input
+              id={`invite-request-name-${invite.id}`}
+              value={requestName}
+              onChange={(e) => setRequestName(e.target.value)}
+              className='h-8 text-xs'
+              disabled={updateInvite.isPending}
+            />
+          </div>
+          <div className='flex flex-col gap-1'>
+            <Label
+              htmlFor={`invite-request-callsign-${invite.id}`}
+              className='text-xs'
+            >
+              Callsign
+            </Label>
+            <Input
+              id={`invite-request-callsign-${invite.id}`}
+              value={requestCallsign}
+              onChange={(e) => setRequestCallsign(e.target.value.toLowerCase())}
+              className='h-8 font-mono text-xs'
+              disabled={updateInvite.isPending}
+            />
+          </div>
+          <div className='flex items-center gap-1'>
+            <Button
+              type='submit'
+              size='sm'
+              disabled={!canSaveRequest || updateInvite.isPending}
+            >
+              {updateInvite.isPending ? 'Saving...' : 'Save'}
             </Button>
             <Button
-              size='icon-sm'
+              type='button'
+              size='sm'
               variant='ghost'
-              onClick={() => reject(invite.id)}
-              disabled={isBusy}
-              title='Reject'
+              onClick={() => setIsEditingRequest(false)}
+              disabled={updateInvite.isPending}
             >
-              <X className='size-4' />
+              Cancel
             </Button>
-          </>
-        )}
-        {invite.status === 'pending' && (
-          <>
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              onClick={() => reject(invite.id)}
-              disabled={isBusy}
-              title='Reject'
-            >
-              <X className='size-4' />
-            </Button>
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              onClick={handleCopyLink}
-              title='Copy invite link'
-            >
-              <Copy className='size-4' />
-            </Button>
-          </>
-        )}
-      </div>
+          </div>
+        </form>
+      )}
+
+      {isCallsignTaken && (
+        <p className='text-xs text-destructive'>
+          Callsign taken — edit the requested callsign, then retry.
+        </p>
+      )}
     </div>
   )
 }
 
 function StatusLabel({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: 'text-yellow-600',
+  const colorMap: Record<string, string> = {
+    pending: 'text-amber-600',
     claimed: 'text-blue-600',
-    accepted: 'text-green-600',
+    accepted: 'text-emerald-600',
     rejected: 'text-red-600',
   }
 
-  return <span className={colors[status] ?? ''}>{status}</span>
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 font-medium capitalize',
+        colorMap[status] ?? 'text-muted-foreground',
+      )}
+    >
+      <span className='size-1.5 rounded-full bg-current' />
+      {status}
+    </span>
+  )
 }

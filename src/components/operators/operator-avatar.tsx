@@ -1,8 +1,15 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
 
-export function OperatorAvatar({ name }: { name: string }) {
+export function OperatorAvatar({
+  name,
+  className,
+}: {
+  name: string
+  className?: string
+}) {
   return (
-    <Avatar className='size-6' title={name}>
+    <Avatar className={cn('size-6', className)} title={name}>
       <AvatarFallback className='text-[10px]'>
         {getInitials(name)}
       </AvatarFallback>

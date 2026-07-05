@@ -10,10 +10,13 @@ import { OperatorsList } from '@/components/operators/operators-list'
 import { OperatorsSeatsSummary } from '@/components/operators/operators-seats-summary'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-is-mobile'
+import { useProjectInvites } from '@/hooks/use-project-invites'
 
 export default function OperatorsIndexPage() {
   const { projectSlug } = useProjectContext()
   const isMobile = useIsMobile()
+  const { invites, isLoading: isInvitesLoading } =
+    useProjectInvites(projectSlug)
 
   return (
     <div className='flex h-full flex-col'>
@@ -31,11 +34,20 @@ export default function OperatorsIndexPage() {
           <OperatorSelfEditCard projectSlug={projectSlug} />
           <OperatorsList projectSlug={projectSlug} />
 
-          <section className='flex flex-col gap-3'>
+          <section className='flex flex-col gap-4'>
             <div className='flex items-center justify-between gap-2'>
-              <h3 className='text-sm font-medium'>Invites</h3>
+              <div className='flex items-baseline gap-2.5'>
+                <h2 className='text-lg font-semibold tracking-tight'>
+                  Invites
+                </h2>
+                {!isInvitesLoading && (
+                  <span className='text-sm text-muted-foreground'>
+                    {invites.length}
+                  </span>
+                )}
+              </div>
               <InviteProjectOperatorDialog projectSlug={projectSlug}>
-                <Button size='sm' variant='ghost' title='Invite user'>
+                <Button size='sm' variant='outline' title='Invite user'>
                   <UserPlus className='size-4' /> Invite
                 </Button>
               </InviteProjectOperatorDialog>
