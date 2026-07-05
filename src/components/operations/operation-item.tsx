@@ -77,7 +77,7 @@ export function OperationItem({
                 <div
                   key={assignee.id}
                   className={cn(
-                    'rounded-full ring-2 ring-background',
+                    'rounded-full ring-1 ring-background',
                     index > 0 && '-ml-4',
                   )}
                   style={{ zIndex: operation.assignees.length - index }}
