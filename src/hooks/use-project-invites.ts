@@ -99,7 +99,7 @@ export function useAcceptProjectInvite(projectSlug: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['invites', projectSlug] })
-      queryClient.invalidateQueries({ queryKey: ['workers', projectSlug] })
+      queryClient.invalidateQueries({ queryKey: ['operators', projectSlug] })
     },
   })
 }
