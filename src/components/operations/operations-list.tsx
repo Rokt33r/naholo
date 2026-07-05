@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   useParams,
   usePathname,
@@ -17,6 +17,11 @@ import { OperationItem } from './operation-item'
 import { CreateOperationDialog } from './create-operation-dialog'
 import { useOperations } from '@/hooks/use-operations'
 import { useOperationsListStream } from '@/hooks/use-operations-list-stream'
+import { useDebounce } from '@/hooks/use-debounce'
+import {
+  matchesOperationSearch,
+  parseOperationSearch,
+} from '@/lib/operation-search'
 import type { Project } from 'naholo-api/types'
 
 type OperationsListProps = {
@@ -37,21 +42,47 @@ export function OperationsList({
   const currentOperationNumber =
     params.operationNumber != null ? Number(params.operationNumber) : undefined
   const { isMobile, toggle, showCollapseButton } = useOperationsList()
-  const [searchQuery, setSearchQuery] = useState('')
+
+  // The `search` param is the shared source of truth (tag clicks elsewhere write
+  // to it), but it is kept out of the useOperations query key so filtering never
+  // triggers a server refetch. Local state drives the input for lag-free typing
+  // and mirrors to the URL debounced; external writes sync back down.
+  const searchSearchParam = searchParams.get('search') ?? ''
+  const [searchInput, setSearchInput] = useState(searchSearchParam)
+  const debouncedSearch = useDebounce(searchInput, 250)
+  const lastSyncedSearchRef = useRef(searchSearchParam)
+
+  useEffect(() => {
+    if (debouncedSearch === searchSearchParam) {
+      return
+    }
+    lastSyncedSearchRef.current = debouncedSearch
+    const params = new URLSearchParams(searchParams)
+    if (debouncedSearch.length > 0) {
+      params.set('search', debouncedSearch)
+    } else {
+      params.delete('search')
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [debouncedSearch, searchSearchParam, searchParams, pathname, router])
+
+  useEffect(() => {
+    if (searchSearchParam === lastSyncedSearchRef.current) {
+      return
+    }
+    lastSyncedSearchRef.current = searchSearchParam
+    setSearchInput(searchSearchParam)
+  }, [searchSearchParam])
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
   const { operations, isLoading, refetch } = useOperations(projectSlug, filter)
   useOperationsListStream(projectSlug)
 
-  const filteredOperations = operations.filter((operation) => {
-    const query = searchQuery.toLowerCase()
-    const matchesTitle = operation.title.toLowerCase().includes(query)
-    const matchesNumber = query.startsWith('#')
-      ? operation.number.toString().startsWith(query.slice(1))
-      : false
-    return matchesTitle || matchesNumber
-  })
+  const searchConditions = parseOperationSearch(searchInput)
+  const filteredOperations = operations.filter((operation) =>
+    matchesOperationSearch(operation, searchConditions),
+  )
 
   const handleFilterChange = (newFilter: 'open' | 'closed') => {
     const params = new URLSearchParams(searchParams)
@@ -79,8 +110,8 @@ export function OperationsList({
           <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
           <Input
             placeholder='Search operations...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className='pl-9'
           />
         </div>
@@ -119,7 +150,7 @@ export function OperationsList({
           </div>
         ) : filteredOperations.length === 0 ? (
           <div className='p-4 text-center text-sm text-muted-foreground'>
-            {searchQuery
+            {searchInput
               ? 'No operations found'
               : filter === 'open'
                 ? 'No open operations'
