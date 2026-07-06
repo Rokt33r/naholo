@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
 import { mapApiError } from '@/server/errors'
 import { requireAdminProjectOperator } from '@/server/auth/permissions'
 import {
@@ -7,9 +6,7 @@ import {
   acceptProjectInvite,
 } from '@/server/services/project-invite'
 import { sendInviteAcceptedEmail } from '@/server/services/invite-email'
-import { db } from '@/server/db'
-import { projectOperators, projects } from '@/server/db/schema'
-import { deriveProjectStatus } from '@/server/services/project-status'
+import { recomputeProjectStatus } from '@/server/services/project-status'
 
 export async function POST(
   _request: NextRequest,
@@ -43,32 +40,7 @@ export async function POST(
       name: invite.claimerUser.name,
     })
 
-    const activeSubscription = await db.query.projectSubscriptions.findFirst({
-      where: (t, { eq }) => eq(t.projectId, project.id),
-      with: {
-        polarSubscription: { columns: { status: true, seats: true } },
-      },
-    })
-    const polarSubscription = activeSubscription?.polarSubscription ?? null
-    const usedSeats = await db.$count(
-      projectOperators,
-      eq(projectOperators.projectId, project.id),
-    )
-    const projectTrial = await db.query.projectTrials.findFirst({
-      columns: { expiresAt: true },
-      where: (t, { eq }) => eq(t.projectId, project.id),
-      orderBy: (t, { desc }) => desc(t.createdAt),
-    })
-    const { status, trialUntil } = deriveProjectStatus({
-      polarStatus: polarSubscription?.status ?? null,
-      seats: polarSubscription?.seats ?? null,
-      usedSeats,
-      trial: projectTrial ?? null,
-    })
-    await db
-      .update(projects)
-      .set({ status, trialUntil, updatedAt: new Date() })
-      .where(eq(projects.id, project.id))
+    await recomputeProjectStatus(project.id)
 
     // Notify invitee (fire-and-forget)
     const inviteeEmail = invite.claimerUser.notificationEmail?.email

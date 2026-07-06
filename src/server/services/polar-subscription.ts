@@ -6,10 +6,9 @@ import { db } from '../db'
 import {
   polarSubscriptions,
   projects,
-  projectOperators,
   projectSubscriptions,
 } from '../db/schema'
-import { deriveProjectStatus } from './project-status'
+import { recomputeProjectStatus } from './project-status'
 import { publishProjectEvent } from '../realtime/publish'
 import { z } from 'zod'
 
@@ -94,32 +93,15 @@ export async function upsertPolarSubscription(
     projectSubscriptionId = projectSubscription.id
   }
 
-  const usedSeats = await db.$count(
-    projectOperators,
-    eq(projectOperators.projectId, projectId),
-  )
-  const projectTrial = await db.query.projectTrials.findFirst({
-    columns: { expiresAt: true },
-    where: (t, { eq }) => eq(t.projectId, projectId),
-    orderBy: (t, { desc }) => desc(t.createdAt),
-  })
-
-  const { status, trialUntil } = deriveProjectStatus({
-    polarStatus: polarSubscription.status,
-    seats: polarSubscription.seats,
-    usedSeats,
-    trial: projectTrial ?? null,
-  })
-
   await db
     .update(projects)
     .set({
       activeProjectSubscriptionId: projectSubscriptionId,
-      status,
-      trialUntil,
       updatedAt: new Date(),
     })
     .where(eq(projects.id, projectId))
+
+  await recomputeProjectStatus(projectId)
 
   publishProjectEvent(projectId, 'project-subscription-changed')
 
