@@ -1,6 +1,5 @@
 import 'server-only'
 import { db } from '../db'
-import { getProjectTrialForUser } from '../services/project-trial'
 
 export type User = {
   id: string
@@ -39,19 +38,11 @@ export type ProjectOperator = {
   role: string
 }
 
-export type UserTrial = {
-  projectId: string
-  projectName: string
-  projectSlug: string
-  expiresAt: Date
-}
-
 export type UserDetail = {
   id: string
   name: string
   identifiers: { type: string; value: string }[]
   projectOperators: ProjectOperator[]
-  trial: UserTrial | null
   createdAt: Date
 }
 
@@ -75,21 +66,6 @@ export async function getUserDetail(
     return null
   }
 
-  const trial = await getProjectTrialForUser(userId)
-  let trialDetail: UserTrial | null = null
-  if (trial != null) {
-    const trialProject = await db.query.projects.findFirst({
-      columns: { name: true, slug: true },
-      where: (t, { eq }) => eq(t.id, trial.projectId),
-    })
-    trialDetail = {
-      projectId: trial.projectId,
-      projectName: trialProject?.name ?? trial.projectId,
-      projectSlug: trialProject?.slug ?? '',
-      expiresAt: trial.expiresAt,
-    }
-  }
-
   return {
     id: user.id,
     name: user.name,
@@ -100,7 +76,6 @@ export async function getUserDetail(
       projectSlug: operator.project.slug,
       role: operator.role,
     })),
-    trial: trialDetail,
     createdAt: user.createdAt,
   }
 }

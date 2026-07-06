@@ -4,7 +4,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
 import { SeatQuotaControl } from '@/components/billing/seat-quota-control'
 import { StartCheckout } from '@/components/billing/start-checkout'
-import { StartTrial } from '@/components/billing/start-trial'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
@@ -21,7 +20,6 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
   const polarSubscription = data?.subscription?.polarSubscription ?? null
   const usedSeats = data?.usedSeats ?? 0
   const isSeatExhausted = data?.isSeatExhausted ?? false
-  const trialCredit = data?.currentUserTrialCredit ?? 'spent'
   const projectStatus = data?.projectStatus ?? 'inactive'
   const trialUntil = data?.trialUntil ?? null
 
@@ -40,12 +38,7 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           projectStatus={projectStatus}
           trialUntil={trialUntil}
         >
-          <div className='grid gap-3 sm:grid-cols-2'>
-            {trialCredit === 'unused' && (
-              <StartTrial projectSlug={projectSlug} />
-            )}
-            <StartCheckout projectSlug={projectSlug} />
-          </div>
+          <StartCheckout projectSlug={projectSlug} />
         </SubscriptionReadout>
       ) : (
         <div className='flex flex-col gap-3'>

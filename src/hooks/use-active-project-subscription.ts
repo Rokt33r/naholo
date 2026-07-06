@@ -45,28 +45,6 @@ export function useUpdateSubscriptionSeats(projectSlug: string) {
   })
 }
 
-export type ClaimProjectTrialResponse = {
-  ok: true
-  expiresAt: string
-}
-
-export function useClaimProjectTrial(projectSlug: string) {
-  const invalidate = useInvalidateActiveProjectSubscription(projectSlug)
-  return useMutation<ClaimProjectTrialResponse, Error, void>({
-    mutationFn: async () => {
-      const res = await mutationFetch(
-        `/api/projects/${projectSlug}/billing/trial`,
-        { method: 'POST' },
-      )
-      if (!res.ok) {
-        throw await createResponseError(res)
-      }
-      return (await res.json()) as ClaimProjectTrialResponse
-    },
-    onSuccess: invalidate,
-  })
-}
-
 export type SubscriptionCancellationAction = 'cancel' | 'resume'
 
 export function useUpdateSubscriptionCancellation(projectSlug: string) {
