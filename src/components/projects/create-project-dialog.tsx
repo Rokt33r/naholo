@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ type CreateProjectDialogProps = {
 
 export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -81,6 +82,9 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
     setCallsign('')
     setCallsignTouched(false)
     setDescription('')
+    await queryClient.invalidateQueries({
+      queryKey: ['projects', 'withWorker'],
+    })
     router.push(`/app/projects/${projectSlug}`)
   }
 

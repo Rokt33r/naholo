@@ -12,10 +12,13 @@ function ProjectLayoutInner({ children }: { children: React.ReactNode }) {
   const segment = useSelectedLayoutSegment()
   const currentMode = segment ?? 'operations'
   const isMobile = useIsMobile()
-  const { data: projects = [] } = useProjects()
+  const { data: projects = [], isPending, isFetching } = useProjects()
   const project = projects.find((p) => p.slug === projectSlug)
 
   if (project == null) {
+    if (isPending || isFetching) {
+      return <div className='h-full w-full' aria-busy='true' />
+    }
     return null
   }
 
