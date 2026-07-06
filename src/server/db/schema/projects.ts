@@ -34,7 +34,6 @@ export const projects = pgTable(
       onDelete: 'set null',
     }),
     status: projectStatus('status').notNull().default('free'),
-    trialUntil: timestamp('trial_until'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

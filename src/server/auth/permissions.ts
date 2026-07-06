@@ -31,7 +31,6 @@ export type ProjectOperatorContext = {
     id: string
     slug: string
     status: ProjectStatus
-    trialUntil: Date | null
   }
 }
 
@@ -186,7 +185,7 @@ export async function requireProjectOperator(
 ): Promise<ProjectOperatorContext> {
   // TODO: Handle api token or session first before resolving projectId. It probably better to make require*ByToken and require*BySession accept projectSlug and resolve it internally.
   const project = await db.query.projects.findFirst({
-    columns: { id: true, slug: true, status: true, trialUntil: true },
+    columns: { id: true, slug: true, status: true },
     where: (t, { eq }) => eq(t.slug, projectSlug),
   })
   if (project == null) {

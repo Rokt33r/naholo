@@ -35,7 +35,6 @@ export type ActiveProjectSubscriptionResponse = {
   usedSeats: number
   isSeatExhausted: boolean
   projectStatus: ProjectStatus
-  trialUntil: string | null
 }
 
 function serializeDates(
@@ -100,7 +99,6 @@ export async function GET(
       usedSeats,
       isSeatExhausted,
       projectStatus: project.status,
-      trialUntil: project.trialUntil?.toISOString() ?? null,
     }
     return NextResponse.json(body)
   } catch (error) {
