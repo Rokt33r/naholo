@@ -22,7 +22,9 @@ export function ProjectSubscriptionWall({
   const router = useRouter()
   const pathname = usePathname()
   const subscriptionPath = `/app/projects/${projectSlug}/subscription`
-  const isOnSubscriptionPage = pathname === subscriptionPath
+  const operatorsPath = `/app/projects/${projectSlug}/operators`
+  const isOnRecoveryPage =
+    pathname === subscriptionPath || pathname === operatorsPath
 
   useProjectSubscriptionStream(projectSlug)
   const { data, isLoading, error, refetch, isFetching } =
@@ -35,10 +37,10 @@ export function ProjectSubscriptionWall({
   const shouldGate = data != null && isGated
 
   useEffect(() => {
-    if (shouldGate && isAdmin && !isOnSubscriptionPage) {
+    if (shouldGate && isAdmin && !isOnRecoveryPage) {
       router.replace(subscriptionPath)
     }
-  }, [shouldGate, isAdmin, isOnSubscriptionPage, router, subscriptionPath])
+  }, [shouldGate, isAdmin, isOnRecoveryPage, router, subscriptionPath])
 
   if (error != null) {
     return (
@@ -62,7 +64,7 @@ export function ProjectSubscriptionWall({
     return <>{children}</>
   }
 
-  if (isOnSubscriptionPage) {
+  if (isOnRecoveryPage) {
     return <>{children}</>
   }
 

@@ -15,7 +15,9 @@ export async function GET(
 ) {
   try {
     const { projectSlug } = await params
-    const { project } = await requireAdminProjectOperator(projectSlug)
+    const { project } = await requireAdminProjectOperator(projectSlug, {
+      skipSubscriptionCheck: true,
+    })
 
     const invites = await listProjectInvites(project.id)
 

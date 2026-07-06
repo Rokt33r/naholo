@@ -9,7 +9,9 @@ export async function GET(
 ) {
   try {
     const { projectSlug } = await params
-    const { project } = await requireProjectOperator(projectSlug)
+    const { project } = await requireProjectOperator(projectSlug, {
+      skipSubscriptionCheck: true,
+    })
 
     const operators = await listProjectOperators(project.id)
 

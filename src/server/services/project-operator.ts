@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { projectOperators } from '../db/schema'
 import { ConflictError, isUniqueViolationError } from '../errors'
+import { recomputeProjectStatus } from './project-status'
 
 export type ProjectOperator = {
   id: string
@@ -144,7 +145,12 @@ export async function deleteProjectOperator(
     )
     .returning({ id: projectOperators.id })
 
-  return { deleted: rows.length > 0 }
+  const deleted = rows.length > 0
+  if (deleted) {
+    await recomputeProjectStatus(projectId)
+  }
+
+  return { deleted }
 }
 
 /**

@@ -65,7 +65,9 @@ export async function DELETE(
 ) {
   try {
     const { projectSlug, operatorId } = await params
-    const { project } = await requireAdminProjectOperator(projectSlug)
+    const { project } = await requireAdminProjectOperator(projectSlug, {
+      skipSubscriptionCheck: true,
+    })
 
     const { deleted } = await deleteProjectOperator(operatorId, project.id)
     if (!deleted) {
