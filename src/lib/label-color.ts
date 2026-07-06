@@ -35,11 +35,18 @@ export function randomLabelColor(): string {
   return hslToHex(hue, 70, 55)
 }
 
-// [lightness, max chroma] per role, per theme.
+// [lightness, max chroma] per role, per theme. The `highlight` variants deepen
+// the background and raise chroma for a richer, more-saturated hover state.
 const LIGHT_THEME = {
   background: [0.95, 0.04],
   border: [0.8, 0.1],
   text: [0.4, 0.12],
+} as const
+
+const LIGHT_THEME_HIGHLIGHT = {
+  background: [0.91, 0.08],
+  border: [0.72, 0.13],
+  text: [0.38, 0.14],
 } as const
 
 const DARK_THEME = {
@@ -48,16 +55,31 @@ const DARK_THEME = {
   text: [0.82, 0.14],
 } as const
 
+const DARK_THEME_HIGHLIGHT = {
+  background: [0.34, 0.1],
+  border: [0.5, 0.13],
+  text: [0.86, 0.16],
+} as const
+
 /**
  * Derive the readable border/background/text triplet for a base color in the
- * given theme. Returns CSS `oklch(...)` strings.
+ * given theme. Returns CSS `oklch(...)` strings. Pass `highlight` for a richer
+ * variant used on hover.
  */
 export function deriveLabelColors(
   base: string,
   theme: 'light' | 'dark',
+  options?: { highlight?: boolean },
 ): LabelColors {
   const { c, h } = hexToOklch(base)
-  const roles = theme === 'dark' ? DARK_THEME : LIGHT_THEME
+  const roles =
+    options?.highlight === true
+      ? theme === 'dark'
+        ? DARK_THEME_HIGHLIGHT
+        : LIGHT_THEME_HIGHLIGHT
+      : theme === 'dark'
+        ? DARK_THEME
+        : LIGHT_THEME
 
   return {
     background: oklch(roles.background[0], Math.min(c, roles.background[1]), h),

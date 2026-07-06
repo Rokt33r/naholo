@@ -82,9 +82,9 @@ export function OperationSidePanel({
                         buildSearchToken('assignee', assignee.callsign),
                       )
                     }
-                    className='flex cursor-pointer items-center gap-1.5 rounded-full border py-1 pl-1 pr-1 text-sm'
+                    className='group/avatar-hl flex cursor-pointer items-center gap-1.5 rounded-full border py-1 pl-1 pr-1 text-sm transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
                   >
-                    <OperatorAvatar name={assignee.callsign} />
+                    <OperatorAvatar name={assignee.callsign} interactive />
                     <span className='truncate'>
                       {assignee.callsign}
                       {assignee.projectOperatorId === currentOperator.id &&
@@ -129,22 +129,18 @@ export function OperationSidePanel({
                 <p className='text-sm text-muted-foreground'>No labels</p>
               ) : (
                 labels.map((label) => (
-                  <span
+                  <LabelBadge
                     key={label.id}
+                    name={label.name}
+                    color={label.color}
                     onClick={(event) =>
                       handleSearchableTokenClick(
                         event,
                         buildSearchToken('label', label.name),
                       )
                     }
-                    className='inline-flex cursor-pointer'
-                  >
-                    <LabelBadge
-                      name={label.name}
-                      color={label.color}
-                      onRemove={() => detachLabel.mutate(label.id)}
-                    />
-                  </span>
+                    onRemove={() => detachLabel.mutate(label.id)}
+                  />
                 ))
               )}
             </div>

@@ -1,6 +1,11 @@
 'use client'
 
-import { type MouseEventHandler, useEffect, useState } from 'react'
+import {
+  type CSSProperties,
+  type MouseEventHandler,
+  useEffect,
+  useState,
+} from 'react'
 import { useTheme } from 'next-themes'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +36,7 @@ export function LabelBadge({
 
   const theme = mounted && resolvedTheme === 'dark' ? 'dark' : 'light'
   const colors = deriveLabelColors(color, theme)
+  const highlightColors = deriveLabelColors(color, theme, { highlight: true })
 
   return (
     <Badge
@@ -38,14 +44,20 @@ export function LabelBadge({
       className={cn(
         size === 'sm' ? 'h-5' : 'h-6',
         'border',
-        onClick != null && 'cursor-pointer',
+        onClick != null &&
+          'cursor-pointer transition-colors hover:border-(color:--label-border-hover)! hover:bg-(--label-bg-hover)! hover:text-(--label-text-hover)!',
         className,
       )}
-      style={{
-        backgroundColor: colors.background,
-        borderColor: colors.border,
-        color: colors.text,
-      }}
+      style={
+        {
+          backgroundColor: colors.background,
+          borderColor: colors.border,
+          color: colors.text,
+          '--label-bg-hover': highlightColors.background,
+          '--label-border-hover': highlightColors.border,
+          '--label-text-hover': highlightColors.text,
+        } as CSSProperties
+      }
     >
       {name}
       {onRemove != null ? (
