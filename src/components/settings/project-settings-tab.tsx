@@ -191,7 +191,6 @@ function SubscriptionSection({
         polarSubscription={data.subscription?.polarSubscription ?? null}
         usedSeats={data.usedSeats}
         projectStatus={data.projectStatus}
-        trialUntil={data.trialUntil ?? null}
         hidePortalLink
       />
       <div className='flex justify-end'>

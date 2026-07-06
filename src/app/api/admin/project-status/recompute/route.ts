@@ -11,20 +11,20 @@ export async function POST() {
   })
 
   const start = Date.now()
+  let free = 0
   let active = 0
-  let trial = 0
-  let inactive = 0
+  let suspended = 0
   let seatsExceeded = 0
 
   for (const project of projects) {
     const status = await recomputeProjectStatus(project.id)
 
-    if (status === 'active') {
+    if (status === 'free') {
+      free++
+    } else if (status === 'active') {
       active++
-    } else if (status === 'trial') {
-      trial++
-    } else if (status === 'inactive') {
-      inactive++
+    } else if (status === 'suspended') {
+      suspended++
     } else if (status === 'seats-exceeded') {
       seatsExceeded++
     }
@@ -34,9 +34,9 @@ export async function POST() {
 
   return NextResponse.json({
     scanned: projects.length,
+    free,
     active,
-    trial,
-    inactive,
+    suspended,
     seatsExceeded,
     durationMs,
   })

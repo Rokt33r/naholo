@@ -2,9 +2,7 @@ import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
 import { auth } from './auth'
-import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { projects } from '../db/schema/projects'
 import type { ProjectStatus } from '../services/project-status'
 import {
   resolveProjectOperatorByUserIdAndProjectId,
@@ -197,21 +195,8 @@ export async function requireProjectOperator(
 
   const { projectOperator } = await resolveProjectOperator(project.id)
 
-  if (
-    project.status === 'trial' &&
-    project.trialUntil != null &&
-    project.trialUntil.getTime() <= Date.now()
-  ) {
-    await db
-      .update(projects)
-      .set({ status: 'inactive', trialUntil: null })
-      .where(eq(projects.id, project.id))
-    project.status = 'inactive'
-    project.trialUntil = null
-  }
-
   if (config.billing && options?.skipSubscriptionCheck !== true) {
-    if (project.status === 'inactive') {
+    if (project.status === 'suspended') {
       throw new SubscriptionNotReadyError()
     }
     if (project.status === 'seats-exceeded') {

@@ -14,14 +14,12 @@ export function SubscriptionReadout({
   polarSubscription,
   usedSeats,
   projectStatus,
-  trialUntil,
   hidePortalLink = false,
   children,
 }: {
   polarSubscription: PolarSubscription | null
   usedSeats: number
   projectStatus: ProjectStatus
-  trialUntil: string | null
   hidePortalLink?: boolean
   children?: React.ReactNode
 }) {
@@ -41,12 +39,6 @@ export function SubscriptionReadout({
           {usedSeats} / {seats ?? '—'} used
         </span>
       </div>
-      {projectStatus === 'trial' && (
-        <div className='flex items-center justify-between text-sm'>
-          <span className='text-muted-foreground'>Trial ends</span>
-          <span className='font-medium'>{formatDate(trialUntil)}</span>
-        </div>
-      )}
       <div className='flex items-center justify-between text-sm'>
         <span className='text-muted-foreground'>Next billing</span>
         <span className='font-medium'>

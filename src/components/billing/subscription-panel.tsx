@@ -20,8 +20,7 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
   const polarSubscription = data?.subscription?.polarSubscription ?? null
   const usedSeats = data?.usedSeats ?? 0
   const isSeatExhausted = data?.isSeatExhausted ?? false
-  const projectStatus = data?.projectStatus ?? 'inactive'
-  const trialUntil = data?.trialUntil ?? null
+  const projectStatus = data?.projectStatus ?? 'free'
 
   return (
     <section className='flex flex-col gap-3'>
@@ -36,7 +35,6 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           polarSubscription={null}
           usedSeats={usedSeats}
           projectStatus={projectStatus}
-          trialUntil={trialUntil}
         >
           <StartCheckout projectSlug={projectSlug} />
         </SubscriptionReadout>
@@ -46,7 +44,6 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
             polarSubscription={polarSubscription}
             usedSeats={usedSeats}
             projectStatus={projectStatus}
-            trialUntil={trialUntil}
           />
           {isSeatExhausted && (
             <Alert>

@@ -29,10 +29,10 @@ export function ProjectSubscriptionWall({
     useActiveProjectSubscription(projectSlug)
 
   const isAdmin = currentOperator.role === 'admin'
-  const projectStatus = data?.projectStatus ?? 'inactive'
-  const isActive = projectStatus === 'active' || projectStatus === 'trial'
+  const projectStatus = data?.projectStatus ?? 'free'
   const seatsExhausted = projectStatus === 'seats-exceeded'
-  const shouldGate = data != null && (!isActive || seatsExhausted)
+  const isGated = projectStatus === 'suspended' || seatsExhausted
+  const shouldGate = data != null && isGated
 
   useEffect(() => {
     if (shouldGate && isAdmin && !isOnSubscriptionPage) {
@@ -58,7 +58,7 @@ export function ProjectSubscriptionWall({
     return <div className='h-full w-full' aria-busy='true' />
   }
 
-  if (isActive && !seatsExhausted) {
+  if (!isGated) {
     return <>{children}</>
   }
 
@@ -73,7 +73,7 @@ export function ProjectSubscriptionWall({
           <p className='text-muted-foreground text-sm'>
             {seatsExhausted
               ? 'This project has reached its seat limit. Ask a project admin to raise the seat count.'
-              : 'Ask a project admin to set up the subscription before this project becomes available.'}
+              : 'This project is suspended. Ask a project admin to fix the subscription or remove extra operators.'}
           </p>
           <Button
             variant='outline'

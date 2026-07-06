@@ -5,36 +5,28 @@ import { projects, projectOperators } from '../db/schema'
 import { NotFoundError } from '../errors'
 import { isActiveSubscriptionStatus } from './project-subscription'
 
-export type ProjectStatus = 'active' | 'trial' | 'inactive' | 'seats-exceeded'
-
-export type DeriveProjectStatusResult = {
-  status: ProjectStatus
-  trialUntil: Date | null
-}
+export type ProjectStatus = 'free' | 'active' | 'suspended' | 'seats-exceeded'
 
 export function deriveProjectStatus(input: {
   polarStatus: string | null
   seats: number | null
   usedSeats: number
-  trial: { expiresAt: Date } | null
-  now?: Date
-}): DeriveProjectStatusResult {
-  const { polarStatus, seats, usedSeats, trial } = input
-  const now = input.now ?? new Date()
+}): ProjectStatus {
+  const { polarStatus, seats, usedSeats } = input
 
   if (polarStatus != null && isActiveSubscriptionStatus(polarStatus)) {
     const cap = seats ?? 1
     if (usedSeats > cap) {
-      return { status: 'seats-exceeded', trialUntil: null }
+      return 'seats-exceeded'
     }
-    return { status: 'active', trialUntil: null }
+    return 'active'
   }
 
-  if (trial != null && trial.expiresAt > now) {
-    return { status: 'trial', trialUntil: trial.expiresAt }
+  if (usedSeats > 1) {
+    return 'suspended'
   }
 
-  return { status: 'inactive', trialUntil: null }
+  return 'free'
 }
 
 export async function recomputeProjectStatus(
@@ -61,22 +53,16 @@ export async function recomputeProjectStatus(
     projectOperators,
     eq(projectOperators.projectId, projectId),
   )
-  const projectTrial = await db.query.projectTrials.findFirst({
-    columns: { expiresAt: true },
-    where: (t, { eq }) => eq(t.projectId, projectId),
-    orderBy: (t, { desc }) => desc(t.createdAt),
-  })
 
-  const { status, trialUntil } = deriveProjectStatus({
+  const status = deriveProjectStatus({
     polarStatus: polarSubscription?.status ?? null,
     seats: polarSubscription?.seats ?? null,
     usedSeats,
-    trial: projectTrial ?? null,
   })
 
   await db
     .update(projects)
-    .set({ status, trialUntil, updatedAt: new Date() })
+    .set({ status, updatedAt: new Date() })
     .where(eq(projects.id, projectId))
 
   return status

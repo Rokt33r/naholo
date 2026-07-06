@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 
 type RecomputeResult = {
   scanned: number
+  free: number
   active: number
-  inactive: number
+  suspended: number
   seatsExceeded: number
   durationMs: number
 }
@@ -62,8 +63,9 @@ export function ProjectStatusClient() {
           <div className='font-medium'>Last run</div>
           <ul className='mt-2 space-y-1 text-zinc-700 dark:text-zinc-300'>
             <li>Scanned: {result.scanned}</li>
+            <li>Free: {result.free}</li>
             <li>Active: {result.active}</li>
-            <li>Inactive: {result.inactive}</li>
+            <li>Suspended: {result.suspended}</li>
             <li>Seats-exceeded: {result.seatsExceeded}</li>
             <li>Duration: {result.durationMs} ms</li>
           </ul>
