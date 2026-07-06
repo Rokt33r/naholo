@@ -36,6 +36,10 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           usedSeats={usedSeats}
           projectStatus={projectStatus}
         >
+          <p className='text-muted-foreground text-sm'>
+            This project is on the Free plan — a single operator with no
+            additional seats. Upgrade to Pro to invite teammates.
+          </p>
           <StartCheckout projectSlug={projectSlug} />
         </SubscriptionReadout>
       ) : (
