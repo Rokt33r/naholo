@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LandPlot, FolderCog, Settings, Menu, Check, Plus } from 'lucide-react'
+import { LandPlot, FolderCog, UserCog, Menu, Check, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SettingsDialog } from '@/components/settings/settings-dialog'
+import { PreferencesDialog } from '@/components/preferences/preferences-dialog'
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog'
 import { useProjectContext } from '@/components/app/project-context'
 
@@ -22,7 +22,7 @@ type AppModeMenuProps = {
 
 export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
   const router = useRouter()
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
   const { projects } = useProjectContext()
 
   return (
@@ -69,13 +69,16 @@ export function AppModeMenu({ currentProjectSlug }: AppModeMenuProps) {
           Project settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-          <Settings className='mr-2 h-4 w-4' />
-          Settings
+        <DropdownMenuItem onClick={() => setPreferencesOpen(true)}>
+          <UserCog className='mr-2 h-4 w-4' />
+          Preferences
         </DropdownMenuItem>
       </DropdownMenuContent>
 
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <PreferencesDialog
+        open={preferencesOpen}
+        onOpenChange={setPreferencesOpen}
+      />
     </DropdownMenu>
   )
 }

@@ -3,39 +3,30 @@
 import Link from 'next/link'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, User, Palette, Terminal, Newspaper } from 'lucide-react'
-import { useProjectContext } from '@/components/app/project-context'
-import { ProjectSettingsTab } from '@/components/settings/project-settings-tab'
-import { UserSettingsTab } from '@/components/settings/user-settings-tab'
-import { AppearanceSettingsTab } from '@/components/settings/appearance-settings-tab'
-import { CliInstallTab } from '@/components/settings/cli-install-tab'
+import { User, Palette, Terminal, Newspaper } from 'lucide-react'
+import { UserSettingsTab } from '@/components/preferences/user-settings-tab'
+import { AppearanceSettingsTab } from '@/components/preferences/appearance-settings-tab'
+import { CliInstallTab } from '@/components/preferences/cli-install-tab'
 
-type SettingsDialogProps = {
+type PreferencesDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const { currentOperator } = useProjectContext()
-  const isAdmin = currentOperator.role === 'admin'
-  const defaultTab = isAdmin ? 'project' : 'user'
-
+export function PreferencesDialog({
+  open,
+  onOpenChange,
+}: PreferencesDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='h-[min(480px,80vh)] sm:max-w-2xl'>
-        <DialogTitle className='sr-only'>Settings</DialogTitle>
+        <DialogTitle className='sr-only'>Preferences</DialogTitle>
         <Tabs
-          defaultValue={defaultTab}
+          defaultValue='user'
           orientation='vertical'
           className='h-full overflow-hidden'
         >
           <TabsList className='w-[160px] shrink-0'>
-            {isAdmin && (
-              <TabsTrigger value='project'>
-                <Pencil className='size-4' />
-                Project
-              </TabsTrigger>
-            )}
             <TabsTrigger value='user'>
               <User className='size-4' />
               User
@@ -59,11 +50,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </Link>
           </TabsList>
 
-          {isAdmin && (
-            <TabsContent value='project' className='overflow-y-auto'>
-              <ProjectSettingsTab onClose={() => onOpenChange(false)} />
-            </TabsContent>
-          )}
           <TabsContent value='user' className='overflow-y-auto'>
             <UserSettingsTab />
           </TabsContent>

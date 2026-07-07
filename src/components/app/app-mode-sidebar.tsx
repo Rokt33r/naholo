@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { LandPlot, FolderCog, Settings } from 'lucide-react'
+import { LandPlot, FolderCog, UserCog } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   ToolSidebar,
   ToolSidebarButton,
   ToolSidebarSpacing,
 } from '@/components/ui/tool-sidebar'
-import { SettingsDialog } from '@/components/settings/settings-dialog'
+import { PreferencesDialog } from '@/components/preferences/preferences-dialog'
 import { ProjectSwitcher } from '@/components/projects/project-switcher'
 import { useProjectContext } from '@/components/app/project-context'
 
@@ -22,7 +22,7 @@ export function AppModeSidebar({
   currentMode,
 }: AppModeSidebarProps) {
   const router = useRouter()
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
   const { projectName, projects } = useProjectContext()
 
   return (
@@ -53,13 +53,16 @@ export function AppModeSidebar({
       <ToolSidebarSpacing />
 
       <ToolSidebarButton
-        tooltip='Settings'
-        onClick={() => setSettingsOpen(true)}
+        tooltip='Preferences'
+        onClick={() => setPreferencesOpen(true)}
       >
-        <Settings className='size-4' />
+        <UserCog className='size-4' />
       </ToolSidebarButton>
 
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <PreferencesDialog
+        open={preferencesOpen}
+        onOpenChange={setPreferencesOpen}
+      />
     </ToolSidebar>
   )
 }
