@@ -21,10 +21,9 @@ export function ProjectSubscriptionWall({
   const { projectSlug, currentOperator } = useProjectContext()
   const router = useRouter()
   const pathname = usePathname()
-  const subscriptionPath = `/app/projects/${projectSlug}/subscription`
-  const operatorsPath = `/app/projects/${projectSlug}/operators`
-  const isOnRecoveryPage =
-    pathname === subscriptionPath || pathname === operatorsPath
+  const settingsPath = `/app/projects/${projectSlug}/settings`
+  const subscriptionPath = `${settingsPath}/subscription`
+  const isOnRecoveryPage = pathname.startsWith(settingsPath)
 
   useProjectSubscriptionStream(projectSlug)
   const { data, isLoading, error, refetch, isFetching } =

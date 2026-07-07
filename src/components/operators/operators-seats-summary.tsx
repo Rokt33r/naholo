@@ -38,7 +38,7 @@ export function OperatorsSeatsSummary({
       </span>
       {isAdmin && (
         <Link
-          href={`/app/projects/${projectSlug}/subscription`}
+          href={`/app/projects/${projectSlug}/settings/subscription`}
           className='text-muted-foreground hover:text-foreground inline-flex items-center gap-1'
         >
           Manage subscription
