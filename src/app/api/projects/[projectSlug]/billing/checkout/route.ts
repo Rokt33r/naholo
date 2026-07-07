@@ -31,7 +31,7 @@ export async function POST(
 
     const usedSeats = await countActiveOperators(project.id)
     const minSeats = Math.max(1, usedSeats)
-    const successUrl = `${config.baseUrl}/app/projects/${projectSlug}/operators`
+    const successUrl = `${config.baseUrl}/app/projects/${projectSlug}/settings/operators`
     const metadata: ProjectSubscriptionMetadata = {
       projectId: project.id,
       projectOperatorId: projectOperator.id,
