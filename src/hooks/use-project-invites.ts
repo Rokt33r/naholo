@@ -18,7 +18,7 @@ export type ProjectInvite = {
     name: string
     identifiers: ClaimerIdentifier[]
   } | null
-  inviterWorkerName: string | null
+  inviterOperatorName: string | null
   createdAt: string
 }
 

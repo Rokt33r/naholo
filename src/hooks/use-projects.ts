@@ -11,7 +11,7 @@ import type { ProjectWithOperator } from 'naholo-api/types'
 
 export function useProjects() {
   return useQuery({
-    queryKey: ['projects', 'withWorker'],
+    queryKey: ['projects', 'withOperator'],
     queryFn: () =>
       fetcher<ProjectWithOperator[]>(
         '/api/projects?with=projectOperatorOfCurrentUser',

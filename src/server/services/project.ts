@@ -52,7 +52,7 @@ export async function listProjects(
   userId: string,
   options?: { with?: 'projectOperatorOfCurrentUser' },
 ): Promise<Project[] | ProjectWithCurrentOperator[]> {
-  const workers = await db.query.projectOperators.findMany({
+  const operators = await db.query.projectOperators.findMany({
     columns: {
       id: true,
       name: true,
@@ -74,17 +74,17 @@ export async function listProjects(
   })
 
   if (options?.with === 'projectOperatorOfCurrentUser') {
-    return workers.map((worker) => ({
-      ...worker.project,
+    return operators.map((operator) => ({
+      ...operator.project,
       projectOperatorOfCurrentUser: {
-        id: worker.id,
-        name: worker.name,
-        role: worker.role,
+        id: operator.id,
+        name: operator.name,
+        role: operator.role,
       },
     }))
   }
 
-  return workers.map((worker) => worker.project)
+  return operators.map((operator) => operator.project)
 }
 
 /**

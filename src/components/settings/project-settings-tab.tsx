@@ -61,7 +61,7 @@ export function ProjectSettingsTab({ onClose }: ProjectSettingsTabProps) {
 
     if (result.success) {
       await queryClient.invalidateQueries({
-        queryKey: ['projects', 'withWorker'],
+        queryKey: ['projects', 'withOperator'],
       })
     } else {
       alert('Failed to update project: ' + result.error.message)
@@ -80,7 +80,7 @@ export function ProjectSettingsTab({ onClose }: ProjectSettingsTabProps) {
 
     if (result.success) {
       await queryClient.invalidateQueries({
-        queryKey: ['projects', 'withWorker'],
+        queryKey: ['projects', 'withOperator'],
       })
       onClose()
       router.replace(`/app/projects/${result.data.slug}/issues`)

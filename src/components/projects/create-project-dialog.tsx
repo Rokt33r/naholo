@@ -83,7 +83,7 @@ export function CreateProjectDialog({ children }: CreateProjectDialogProps) {
     setCallsignTouched(false)
     setDescription('')
     await queryClient.invalidateQueries({
-      queryKey: ['projects', 'withWorker'],
+      queryKey: ['projects', 'withOperator'],
     })
     router.push(`/app/projects/${projectSlug}`)
   }

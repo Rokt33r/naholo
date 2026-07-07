@@ -83,7 +83,7 @@ async function notifyAdmins(
   projectName: string,
 ) {
   try {
-    // Find admin workers with notification emails
+    // Find admin operators with notification emails
     const admins = await db.query.projectOperators.findMany({
       where: (t, { eq, and, isNotNull }) =>
         and(
