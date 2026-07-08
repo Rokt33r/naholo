@@ -1,12 +1,12 @@
 ---
 name: fieldstrip
-description: Compact a skill markdown — strip no-ops, dedup step-vs-rules, show formats as examples. Pass a skill name or a path to the markdown file.
+description: Compact a skill markdown — strip no-ops, dedup step-vs-rules, show formats as examples, tighten prose; flag riskier cuts for review. Pass a skill name or a path to the markdown file.
 argument-hint: '<skill-name | path-to-markdown>'
 ---
 
 # Fieldstrip — Compact a Skill
 
-Disassemble a skill's markdown, clean out the gunk, reassemble it lean. Three cuts, in order: strip no-ops, dedup step-vs-rules, replace format prose with examples. Compaction only — never change what the skill tells the agent to do.
+Disassemble a skill's markdown, clean out the gunk, reassemble it lean. Apply four safe cuts in order — strip no-ops, dedup step-vs-rules, replace format prose with examples, tighten prose — then surface the riskier compactions as suggestions for the user to decide. Compaction only — never change what the skill tells the agent to do.
 
 ## Arguments
 
@@ -61,12 +61,43 @@ After:
 - **<decision>**: <one-sentence reasoning>
 ```
 
-### 5. Edit in place
+### 5. Tighten prose (safe — apply)
 
-Apply the cuts to the file. Keep the frontmatter, the section order, and every behavioral instruction intact.
+Compress the lines that survive cuts 2–4 without changing what they trigger. Keep the action verb; cut the decoration around it.
+
+- Drop rationale that doesn't gate a decision — keep the instruction, cut the "so…/because…" tail ("re-read every run so edits land" → "re-read every run").
+- Lead with the verb, one instruction per sentence; cut hedges ("note that", "generally", "as needed", "it's worth").
+- Cut meta-scaffolding that restates an always-loaded authority ("print raw, per the manual" — the manual already mandates it). Same test as step 2's no-ops.
+
+The tightened line must trigger the same agent actions, no more, no fewer. If a clause might change what the agent does, it's not safe — leave it, or raise it in step 7.
+
+### 6. Edit in place
+
+Apply cuts 2–5 to the file. Keep the frontmatter, the section order, and every behavioral instruction intact.
+
+### 7. Suggest the riskier cuts (do not apply)
+
+Some compactions trade tokens for risk and need a human call — never apply them. After editing, list the **top 5 by impact** (most tokens saved or most clarity gained) for the user to decide; fewer if there aren't five worth raising. One line each: where + what change + the trade.
+
+Candidates:
+
+- Telegraphing explanatory prose into bare instructions — may drop nuance the agent leans on for judgment calls.
+- Collapsing a multi-example set to one — fine for variants of one pattern, lossy when each example teaches a distinct case.
+- Cutting emphasis or repetition on a destructive / order-sensitive step — the redundancy may be load-bearing.
+
+Format:
+
+```
+Suggestions (review — not applied):
+1. {section} — {what to change} → {trade}
+2. …
+```
+
+The user picks which to apply; they re-run or hand-edit to land them.
 
 ## Rules
 
 - **Compaction only** — never change what the skill does; if a cut would alter behavior, keep the line.
 - **Remove and reshape, never add** — no new sections, no new guidance.
+- **Safe cuts apply, risky cuts only suggest** — cuts 2–5 land in the file; step 7's judgment/risky candidates are surfaced for the user, never applied. Cap suggestions at the top 5 by impact.
 - When unsure whether a line is a no-op, keep it.
