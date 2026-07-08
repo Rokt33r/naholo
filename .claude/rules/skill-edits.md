@@ -33,3 +33,7 @@ Anti-patterns — avoid phrasings that assume the reader knows prior state:
 - "drops the X call", "stops doing Y" when describing the skill's own behavior
 
 State what the skill **does**, the commands it **does call**, and the contracts it **does honor**. Migration context (what changed, why) belongs in `TIMELINE.md` and commit messages, not in skill prose.
+
+### The intro
+
+The intro — the line(s) between the `#` title and the first `##` section — says only what the skill conceptually does, in a sentence or two. Operational rules, constraints, and mechanics (e.g. "never pushes", "write locally only") belong under `## Rules`, not the intro. Don't restate a rule up top to frame it; state it once where it lives.
