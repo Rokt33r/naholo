@@ -6,7 +6,7 @@ argument-hint: '["first question"]'
 
 # Recon — Talk it out before you fire a prompt
 
-Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch — the agent answers questions, pulls extra files on demand, and the conversation shapes the freeform args for the next skill. The agent never touches disk during recon; work the prompt out here, then fire the next skill once it's ready.
+`/recon` is the talk-it-out side branch — the agent answers questions, pulls extra files on demand, and the conversation shapes the freeform args for the next skill. Work the prompt out here, then fire the next skill once it's ready.
 
 Two branches based on whether an op is infilled:
 
@@ -43,7 +43,7 @@ If an op is infilled, read these now:
 - `{operationDir}/notes/OPERATION.md` — the live OP document; re-read every invocation so manual mid-session edits land
 - `{operationDir}/notes/TIMELINE.md` — **first session-boot only**; never re-read after that (it's a fresh-session catch-up doc, not in-session state)
 
-If no op is infilled, skip this step — there is no `OPERATION.md` to load. The codebase is the only read surface on the no-op branch, and even those reads wait until step 3's question makes them necessary.
+If no op is infilled, skip this step — there is no `OPERATION.md` to load.
 
 ### 3. Acknowledge readiness and answer
 
@@ -61,7 +61,7 @@ Subsequent user turns in the recon phase are questions to answer the same way �
 
 When the conversation lands the prompt for a phase-changing skill, **render a draft preview** (see `### 4. Render the draft preview`) before invoking anything — a compact, scannable proposal of the order, not the full order text. On the user's go-ahead, invoke that skill with the freeform args you and the user worked out — `/warno …`, `/opord …`, `/splash N …`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
 
-On the no-op branch, if the user's question describes work they would want to track as an operation (a fix, a feature, a refactor — something that would normally become its own OP), point them at `/fob <title>\n<content>` to create + infil. The run-command handoff applies: a run command for `/fob` invokes it via the `Skill` tool with the drafted args; a bare description of the work draws a draft-and-wait push-back — draft the title + content, stop, and let them re-fire (or confirm).
+On the no-op branch, if the user's question describes work they would want to track as an operation (a fix, a feature, a refactor — something that would normally become its own OP), point them at `/fob <title>\n<content>` to create + infil — the run-command handoff applies (see Post-recon phase).
 
 ### 4. Render the draft preview
 
@@ -108,8 +108,6 @@ Tightens the SES WARNO and reshuffles the task list.
 - (Drop) TASK 5 — folded into TASK 4
 ```
 
-On the user's go-ahead, invoke the routed skill — that go-ahead is the run command.
-
 ## Post-recon phase
 
 Once this skill returns, the session is in the **recon** phase. The phase persists until a different phase-changing skill runs (`/infil`, `/warno`, `/opord`, `/splash`, `/chop`), `/chopchop` / `/nochop` consume a CHOP proposal, `/exfil` cleans up the workflow, or the session ends. `/sitrep` is sync-only and does **not** end the phase.
@@ -135,5 +133,4 @@ While in the recon phase:
 
 - **Read-only**: no file writes, no `add-timeline`, no MCP push calls. Recon is for thinking and answering, nothing else.
 - **Context load on the infilled branch is OPERATION.md + TIMELINE.md only**: other files (`LOGS.yml`, other notes, codebase) are read on demand when a specific question warrants it. On the no-op branch the codebase is the only read surface, and even those reads wait for a question that needs them.
-- Print the readiness line as raw markdown — no surrounding fence.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
