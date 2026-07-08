@@ -45,7 +45,7 @@ export function AppModeSidebar({
         isActive={currentMode === 'settings'}
         tooltip='Project settings'
         onClick={() =>
-          router.push(`/app/projects/${currentProjectSlug}/settings`)
+          router.push(`/app/projects/${currentProjectSlug}/settings/general`)
         }
       >
         <FolderCog className='size-4' />

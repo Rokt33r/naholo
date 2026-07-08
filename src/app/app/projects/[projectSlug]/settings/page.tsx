@@ -1,9 +1,16 @@
-import { ProjectGeneralSettings } from '@/components/settings/project-general-settings'
+'use client'
 
-export default function SettingsGeneralPage() {
+import { useIsMobile } from '@/hooks/use-is-mobile'
+
+export default function SettingsIndexPage() {
+  const isMobile = useIsMobile()
+  if (isMobile) {
+    return null
+  }
+
   return (
-    <div className='flex w-full max-w-2xl flex-col p-4'>
-      <ProjectGeneralSettings />
+    <div className='flex h-full items-center justify-center text-muted-foreground'>
+      Select a setting to get started
     </div>
   )
 }

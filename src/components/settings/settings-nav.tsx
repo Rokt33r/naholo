@@ -12,7 +12,7 @@ export function SettingsNav() {
   const segment = useSelectedLayoutSegment()
 
   const sections = [
-    { segment: null, label: 'General', icon: Pencil },
+    { segment: 'general', label: 'General', icon: Pencil },
     { segment: 'operators', label: 'Operators', icon: Contact },
     { segment: 'labels', label: 'Labels', icon: Tag },
     ...(publicConfig.billing
@@ -23,10 +23,7 @@ export function SettingsNav() {
   return (
     <nav className='text-muted-foreground flex w-full flex-col gap-1 p-2'>
       {sections.map((section) => {
-        const href =
-          section.segment == null
-            ? `/app/projects/${projectSlug}/settings`
-            : `/app/projects/${projectSlug}/settings/${section.segment}`
+        const href = `/app/projects/${projectSlug}/settings/${section.segment}`
         const isActive = segment === section.segment
         const Icon = section.icon
 
