@@ -10,17 +10,15 @@ export default function LabelsIndexPage() {
   const { projectSlug } = useProjectContext()
 
   return (
-    <div className='flex w-full max-w-2xl flex-col gap-4 p-4'>
-      <div className='flex items-center justify-between gap-2'>
-        <h2 className='text-lg font-semibold tracking-tight'>Labels</h2>
+    <>
+      <div className='flex'>
         <LabelFormDialog projectSlug={projectSlug}>
-          <Button size='sm' variant='ghost' title='New label'>
+          <Button size='sm' variant='secondary' title='New label'>
             <Plus className='size-4' /> New label
           </Button>
         </LabelFormDialog>
       </div>
-
       <LabelsManager projectSlug={projectSlug} />
-    </div>
+    </>
   )
 }

@@ -16,7 +16,7 @@ export default function OperatorsIndexPage() {
     useProjectInvites(projectSlug)
 
   return (
-    <div className='flex w-full max-w-2xl flex-col gap-6 p-4'>
+    <>
       <OperatorsSeatsSummary projectSlug={projectSlug} />
       <OperatorSelfEditCard projectSlug={projectSlug} />
       <OperatorsList projectSlug={projectSlug} />
@@ -39,6 +39,6 @@ export default function OperatorsIndexPage() {
         </div>
         <InviteList projectSlug={projectSlug} />
       </section>
-    </div>
+    </>
   )
 }
