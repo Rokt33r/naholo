@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { useAction } from '@/lib/use-action'
 import { updateProjectAction } from '@/app/app/actions'
 import { useProjectContext } from '@/components/app/project-context'
+import { OperatorSelfEditCard } from '@/components/operators/operator-self-edit-card'
 import { useProjects } from '@/hooks/use-projects'
 
 export default function SettingsGeneralPage() {
@@ -82,6 +83,8 @@ export default function SettingsGeneralPage() {
 
   return (
     <div className='space-y-6'>
+      <OperatorSelfEditCard projectSlug={projectSlug} />
+
       {!isAdmin && (
         <p className='text-muted-foreground text-sm'>
           Only project admins can edit these settings.

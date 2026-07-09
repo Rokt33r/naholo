@@ -4,7 +4,6 @@ import { UserPlus } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
 import { InviteList } from '@/components/operators/invite-list'
 import { InviteProjectOperatorDialog } from '@/components/operators/invite-project-operator-dialog'
-import { OperatorSelfEditCard } from '@/components/operators/operator-self-edit-card'
 import { OperatorsList } from '@/components/operators/operators-list'
 import { OperatorsSeatsSummary } from '@/components/operators/operators-seats-summary'
 import { Button } from '@/components/ui/button'
@@ -18,7 +17,6 @@ export default function OperatorsIndexPage() {
   return (
     <>
       <OperatorsSeatsSummary projectSlug={projectSlug} />
-      <OperatorSelfEditCard projectSlug={projectSlug} />
       <OperatorsList projectSlug={projectSlug} />
 
       <section className='flex flex-col gap-4'>

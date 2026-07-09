@@ -79,7 +79,7 @@ export function OperatorSelfEditCard({
 
   return (
     <section className='flex flex-col gap-3'>
-      <h3 className='text-sm font-medium'>Your operator profile</h3>
+      <h3 className='text-sm font-medium'>My profile</h3>
       <form
         onSubmit={handleSave}
         className='flex flex-col gap-3 rounded-lg border px-4 py-3'
