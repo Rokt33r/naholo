@@ -5,16 +5,10 @@ import { useRouter, useSelectedLayoutSegment } from 'next/navigation'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { useProjectContext } from '@/components/app/project-context'
 import { SettingsNav } from '@/components/settings/settings-nav'
+import { SETTINGS_SECTIONS } from '@/components/settings/settings-sections'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { cn } from '@/lib/utils'
-
-const SETTINGS_TITLES: Record<string, string> = {
-  general: 'General',
-  operators: 'Operators',
-  labels: 'Labels',
-  subscription: 'Subscription',
-}
 
 export default function SettingsLayout({
   children,
@@ -29,7 +23,11 @@ export default function SettingsLayout({
   const showNav = !isMobile || segment == null
   const showContent = !isMobile || segment != null
 
-  const title = segment != null ? SETTINGS_TITLES[segment] : undefined
+  const section =
+    segment != null
+      ? SETTINGS_SECTIONS.find((entry) => entry.segment === segment)
+      : undefined
+  const SectionIcon = section?.icon
 
   return (
     <div className='flex h-full'>
@@ -50,10 +48,10 @@ export default function SettingsLayout({
 
       {showContent && (
         <div className='flex-1 overflow-y-auto'>
-          {title != null ? (
-            <div className='flex w-full max-w-2xl flex-col gap-6 p-4'>
-              <div className='flex items-center gap-2'>
-                {isMobile && (
+          {section != null ? (
+            <>
+              {isMobile && (
+                <div className='flex h-10 items-center gap-2 px-2 pt-2'>
                   <Button
                     size='icon'
                     variant='ghost'
@@ -63,13 +61,17 @@ export default function SettingsLayout({
                   >
                     <ArrowLeft className='size-4' />
                   </Button>
-                )}
-                <h1 className='flex-1 text-lg font-semibold tracking-tight'>
-                  {title}
-                </h1>
+                  <h1 className='flex flex-1 items-center justify-center gap-2 font-semibold tracking-tight'>
+                    {SectionIcon != null && <SectionIcon className='size-4' />}
+                    {section.label}
+                  </h1>
+                  <div className='size-8' />
+                </div>
+              )}
+              <div className='flex w-full max-w-2xl flex-col gap-3 p-4'>
+                {children}
               </div>
-              {children}
-            </div>
+            </>
           ) : (
             children
           )}

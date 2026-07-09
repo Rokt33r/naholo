@@ -2,27 +2,17 @@
 
 import Link from 'next/link'
 import { useSelectedLayoutSegment } from 'next/navigation'
-import { Contact, CreditCard, Settings, Tag } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
-import { publicConfig } from '@/lib/publicConfig'
+import { SETTINGS_SECTIONS } from '@/components/settings/settings-sections'
 import { cn } from '@/lib/utils'
 
 export function SettingsNav() {
   const { projectSlug } = useProjectContext()
   const segment = useSelectedLayoutSegment()
 
-  const sections = [
-    { segment: 'general', label: 'General', icon: Settings },
-    { segment: 'operators', label: 'Operators', icon: Contact },
-    { segment: 'labels', label: 'Labels', icon: Tag },
-    ...(publicConfig.billing
-      ? [{ segment: 'subscription', label: 'Subscription', icon: CreditCard }]
-      : []),
-  ]
-
   return (
     <nav className='text-muted-foreground flex w-full flex-col gap-1 p-2'>
-      {sections.map((section) => {
+      {SETTINGS_SECTIONS.map((section) => {
         const href = `/app/projects/${projectSlug}/settings/${section.segment}`
         const isActive = segment === section.segment
         const Icon = section.icon
