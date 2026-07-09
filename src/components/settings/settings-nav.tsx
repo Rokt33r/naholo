@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSelectedLayoutSegment } from 'next/navigation'
-import { Contact, CreditCard, Pencil, Tag } from 'lucide-react'
+import { Contact, CreditCard, Settings, Tag } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
 import { publicConfig } from '@/lib/publicConfig'
 import { cn } from '@/lib/utils'
@@ -12,7 +12,7 @@ export function SettingsNav() {
   const segment = useSelectedLayoutSegment()
 
   const sections = [
-    { segment: 'general', label: 'General', icon: Pencil },
+    { segment: 'general', label: 'General', icon: Settings },
     { segment: 'operators', label: 'Operators', icon: Contact },
     { segment: 'labels', label: 'Labels', icon: Tag },
     ...(publicConfig.billing
