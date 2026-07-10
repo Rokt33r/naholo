@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LandPlot } from 'lucide-react'
+import { LandPlot, Tags, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProjectContext } from '@/components/app/project-context'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
@@ -62,7 +62,12 @@ export function OperationsNav() {
           <span className='flex-1 truncate text-left'>All operations</span>
         </NavRow>
 
-        <NavSectionHeading>Assignees</NavSectionHeading>
+        <NavSectionHeading>
+          <div className='flex gap-2'>
+            <Users className='size-4' />
+            Operators
+          </div>
+        </NavSectionHeading>
         {sortedOperators.map((operator) => (
           <NavRow
             key={operator.id}
@@ -81,7 +86,12 @@ export function OperationsNav() {
           </NavRow>
         ))}
 
-        <NavSectionHeading>Labels</NavSectionHeading>
+        <NavSectionHeading>
+          <div className='flex gap-2'>
+            <Tags className='size-4' />
+            Labels
+          </div>
+        </NavSectionHeading>
         {labels.map((label) => (
           <NavRow
             key={label.id}
