@@ -47,6 +47,10 @@ Additional project rules live in [.claude/rules/](./.claude/rules/) and are load
 - [env-vars.md](./.claude/rules/env-vars.md) — env var add/remove checklist (Dockerfile / deploy.yml / Terraform / `.env.example`)
 - [skill-edits.md](./.claude/rules/skill-edits.md) — routing rule for editing core skills (`/infil`, `/warno`, `/opord`, `/splash`, `/sitrep`, `/exfil`)
 
+## Design references
+
+When the user provides a Claude design link (`claude.ai/design/p/<projectId>...`), read the design with the `DesignSync` tool — `list_files` then `get_file` against the `projectId` from the URL — never `WebFetch`/`curl` (both 403 on these). The `?file=` query names the specific `.dc.html` to read.
+
 ## Build & Test
 
 - `pnpm run dev` — dev server

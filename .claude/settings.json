@@ -11,7 +11,8 @@
       "Bash(naholo agent *)",
       "Bash(pnpm vitest *)",
       "Bash(pnpm --filter @naholo/cli typecheck)",
-      "Bash(pnpm typecheck *)"
+      "Bash(pnpm typecheck *)",
+      "Bash(git rm *)"
     ]
   },
   "hooks": {
