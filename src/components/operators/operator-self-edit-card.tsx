@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useProjectContext } from '@/components/app/project-context'
@@ -78,47 +79,48 @@ export function OperatorSelfEditCard({
   const errorMessage = formError ?? updateOperator.error?.message ?? null
 
   return (
-    <section className='flex flex-col gap-3'>
-      <h3 className='text-sm font-medium'>My profile</h3>
-      <form
-        onSubmit={handleSave}
-        className='flex flex-col gap-3 rounded-lg border px-4 py-3'
-      >
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='self-operator-name'>Name</Label>
-          <Input
-            id='self-operator-name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={updateOperator.isPending}
-          />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='self-operator-callsign'>Callsign</Label>
-          <Input
-            id='self-operator-callsign'
-            value={callsign}
-            onChange={(e) => setCallsign(e.target.value.toLowerCase())}
-            disabled={updateOperator.isPending}
-          />
-          <p className='text-muted-foreground text-xs'>
-            Callsigns identify operators in text across the project, so yours
-            must be unique. Only a-z, 0-9, &quot;-&quot; and &quot;.&quot;.
-          </p>
-        </div>
-        {errorMessage != null && (
-          <p className='text-destructive text-xs'>{errorMessage}</p>
-        )}
-        <div>
-          <Button
-            type='submit'
-            size='sm'
-            disabled={!hasChanges || updateOperator.isPending}
-          >
-            {updateOperator.isPending ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </form>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>My profile</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSave} className='flex flex-col gap-3'>
+          <div className='flex flex-col gap-1.5'>
+            <Label htmlFor='self-operator-name'>Name</Label>
+            <Input
+              id='self-operator-name'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={updateOperator.isPending}
+            />
+          </div>
+          <div className='flex flex-col gap-1.5'>
+            <Label htmlFor='self-operator-callsign'>Callsign</Label>
+            <Input
+              id='self-operator-callsign'
+              value={callsign}
+              onChange={(e) => setCallsign(e.target.value.toLowerCase())}
+              disabled={updateOperator.isPending}
+            />
+            <p className='text-muted-foreground text-xs'>
+              Callsigns identify operators in text across the project, so yours
+              must be unique. Only a-z, 0-9, &quot;-&quot; and &quot;.&quot;.
+            </p>
+          </div>
+          {errorMessage != null && (
+            <p className='text-destructive text-xs'>{errorMessage}</p>
+          )}
+          <div>
+            <Button
+              type='submit'
+              size='sm'
+              disabled={!hasChanges || updateOperator.isPending}
+            >
+              {updateOperator.isPending ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

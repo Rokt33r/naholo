@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAction } from '@/lib/use-action'
@@ -91,77 +98,89 @@ export default function SettingsGeneralPage() {
         </p>
       )}
 
-      <form onSubmit={handleGeneralSubmit}>
-        <div className='space-y-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='project-name'>Name *</Label>
-            <Input
-              id='project-name'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder='My Project'
-              disabled={!isAdmin || generalLoading}
-            />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='project-description'>Description</Label>
-            <Input
-              id='project-description'
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder='Optional description'
-              disabled={!isAdmin || generalLoading}
-            />
-          </div>
-        </div>
-        <div className='mt-4 flex justify-end'>
-          <Button
-            type='submit'
-            disabled={!isAdmin || !name.trim() || generalLoading}
-          >
-            {generalLoading ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>General</CardTitle>
+          <CardDescription>Basic details for this project.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleGeneralSubmit}>
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='project-name'>Name *</Label>
+                <Input
+                  id='project-name'
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder='My Project'
+                  disabled={!isAdmin || generalLoading}
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='project-description'>Description</Label>
+                <Input
+                  id='project-description'
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder='Optional description'
+                  disabled={!isAdmin || generalLoading}
+                />
+              </div>
+            </div>
+            <div className='mt-4 flex justify-end'>
+              <Button
+                type='submit'
+                disabled={!isAdmin || !name.trim() || generalLoading}
+              >
+                {generalLoading ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className='border-t pt-4'>
-        <h3 className='text-sm font-medium'>URL Settings</h3>
-        <p className='text-muted-foreground mt-1 text-xs'>
-          Changing the slug will break existing links to this project.
-        </p>
-        <form onSubmit={handleSlugSubmit}>
-          <div className='space-y-2 py-4'>
-            <Label htmlFor='project-slug'>Slug *</Label>
-            <Input
-              id='project-slug'
-              value={slug}
-              onChange={(e) => {
-                setSlug(e.target.value)
-                setSlugError(null)
-              }}
-              placeholder='my-project'
-              pattern='[a-z0-9-]+'
-              disabled={!isAdmin || slugLoading}
-            />
-            {slugError != null && (
-              <p className='text-destructive text-xs'>{slugError}</p>
-            )}
-          </div>
-          <div className='flex justify-end'>
-            <Button
-              type='submit'
-              disabled={
-                !isAdmin ||
-                !slug.trim() ||
-                slug.trim() === projectSlug ||
-                slugLoading
-              }
-            >
-              {slugLoading ? 'Changing...' : 'Change slug'}
-            </Button>
-          </div>
-        </form>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>URL Settings</CardTitle>
+          <CardDescription>
+            Changing the slug will break existing links to this project.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSlugSubmit}>
+            <div className='space-y-2'>
+              <Label htmlFor='project-slug'>Slug *</Label>
+              <Input
+                id='project-slug'
+                value={slug}
+                onChange={(e) => {
+                  setSlug(e.target.value)
+                  setSlugError(null)
+                }}
+                placeholder='my-project'
+                pattern='[a-z0-9-]+'
+                disabled={!isAdmin || slugLoading}
+              />
+              {slugError != null && (
+                <p className='text-destructive text-xs'>{slugError}</p>
+              )}
+            </div>
+            <div className='mt-4 flex justify-end'>
+              <Button
+                type='submit'
+                disabled={
+                  !isAdmin ||
+                  !slug.trim() ||
+                  slug.trim() === projectSlug ||
+                  slugLoading
+                }
+              >
+                {slugLoading ? 'Changing...' : 'Change slug'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
