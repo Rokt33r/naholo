@@ -2,6 +2,7 @@
 
 import { useProjectContext } from '@/components/app/project-context'
 import { SubscriptionPanel } from '@/components/billing/subscription-panel'
+import { Card, CardContent } from '@/components/ui/card'
 import { publicConfig } from '@/lib/publicConfig'
 
 export default function SubscriptionIndexPage() {
@@ -15,8 +16,12 @@ export default function SubscriptionIndexPage() {
   return isAdmin ? (
     <SubscriptionPanel projectSlug={projectSlug} />
   ) : (
-    <p className='text-sm text-muted-foreground'>
-      Ask a project admin to manage this project&rsquo;s subscription.
-    </p>
+    <Card>
+      <CardContent>
+        <p className='text-muted-foreground text-sm'>
+          Ask a project admin to manage this project&rsquo;s subscription.
+        </p>
+      </CardContent>
+    </Card>
   )
 }

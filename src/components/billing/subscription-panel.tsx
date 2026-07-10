@@ -1,13 +1,11 @@
 'use client'
 
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CancellationControls } from '@/components/billing/cancellation-controls'
 import { SeatQuotaControl } from '@/components/billing/seat-quota-control'
 import { StartCheckout } from '@/components/billing/start-checkout'
 import { SubscriptionReadout } from '@/components/billing/subscription-readout'
 import { useActiveProjectSubscription } from '@/hooks/use-active-project-subscription'
 import { useProjectSubscriptionStream } from '@/hooks/use-project-subscription-stream'
-import { formatSeatPriceCopy } from '@/lib/billing-pricing'
 
 type SubscriptionPanelProps = {
   projectSlug: string
@@ -23,9 +21,7 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
   const projectStatus = data?.projectStatus ?? 'free'
 
   return (
-    <section className='flex flex-col gap-3'>
-      <p className='text-muted-foreground text-sm'>{formatSeatPriceCopy()}</p>
-
+    <div className='flex flex-col gap-6'>
       {isLoading || data == null ? (
         <div className='text-muted-foreground py-8 text-center text-sm'>
           {error != null ? 'Failed to load subscription.' : 'Loading…'}
@@ -43,23 +39,17 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
           <StartCheckout projectSlug={projectSlug} />
         </SubscriptionReadout>
       ) : (
-        <div className='flex flex-col gap-3'>
+        <>
           <SubscriptionReadout
             polarSubscription={polarSubscription}
             usedSeats={usedSeats}
             projectStatus={projectStatus}
           />
-          {isSeatExhausted && (
-            <Alert>
-              <AlertDescription>
-                Seat quota reached. Raise the seat count to add more operators.
-              </AlertDescription>
-            </Alert>
-          )}
           <SeatQuotaControl
             projectSlug={projectSlug}
             seats={polarSubscription.seats ?? 1}
             usedSeats={usedSeats}
+            isSeatExhausted={isSeatExhausted}
             currentPeriodStart={polarSubscription.currentPeriodStart}
             currentPeriodEnd={polarSubscription.currentPeriodEnd}
           />
@@ -67,8 +57,8 @@ export function SubscriptionPanel({ projectSlug }: SubscriptionPanelProps) {
             projectSlug={projectSlug}
             polarSubscription={polarSubscription}
           />
-        </div>
+        </>
       )}
-    </section>
+    </div>
   )
 }
