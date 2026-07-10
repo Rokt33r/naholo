@@ -1,0 +1,129 @@
+'use client'
+
+import { type ReactNode } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { LandPlot } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useProjectContext } from '@/components/app/project-context'
+import { OperatorAvatar } from '@/components/operators/operator-avatar'
+import { LabelBadge } from '@/components/labels/label-badge'
+import { useOperators } from '@/hooks/use-operators'
+import { useLabels } from '@/hooks/use-labels'
+import { buildSearchToken, parseOperationSearch } from '@/lib/operation-search'
+
+export function OperationsNav() {
+  const { projectSlug, currentOperator } = useProjectContext()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { operators } = useOperators(projectSlug)
+  const { labels } = useLabels(projectSlug)
+
+  // Derive the active entry from the current `?search=` token (lowercased by
+  // the parser, so compare against lowercased callsigns / label names).
+  const conditions = parseOperationSearch(searchParams.get('search') ?? '')
+  const activeAssignee = conditions.assignees[0] ?? null
+  const activeLabel = conditions.labels[0] ?? null
+  const isAllActive = activeAssignee == null && activeLabel == null
+
+  const navigateWithSearch = (token: string | null) => {
+    const params = new URLSearchParams()
+    const filter = searchParams.get('filter')
+    if (filter != null) {
+      params.set('filter', filter)
+    }
+    if (token != null) {
+      params.set('search', token)
+    }
+    const query = params.toString()
+    router.push(
+      `/app/projects/${projectSlug}/operations${query ? `?${query}` : ''}`,
+    )
+  }
+
+  const sortedOperators = [...operators].sort((a, b) => {
+    if (a.id === currentOperator.id) {
+      return -1
+    }
+    if (b.id === currentOperator.id) {
+      return 1
+    }
+    return 0
+  })
+
+  return (
+    <div className='hidden h-full w-60 shrink-0 flex-col border-r md:flex'>
+      <div className='flex h-10 items-center gap-2 px-4 pt-2 font-semibold'>
+        <LandPlot className='size-4' />
+        Operations
+      </div>
+
+      <div className='flex-1 overflow-y-auto px-2 pb-4'>
+        <NavRow active={isAllActive} onClick={() => navigateWithSearch(null)}>
+          <span className='flex-1 truncate text-left'>All operations</span>
+        </NavRow>
+
+        <NavSectionHeading>Assignees</NavSectionHeading>
+        {sortedOperators.map((operator) => (
+          <NavRow
+            key={operator.id}
+            active={activeAssignee === operator.callsign.toLowerCase()}
+            onClick={() =>
+              navigateWithSearch(
+                buildSearchToken('assignee', operator.callsign),
+              )
+            }
+          >
+            <OperatorAvatar name={operator.callsign} className='size-5' />
+            <span className='flex-1 truncate text-left'>
+              {operator.callsign}
+              {operator.id === currentOperator.id && ' (me)'}
+            </span>
+          </NavRow>
+        ))}
+
+        <NavSectionHeading>Labels</NavSectionHeading>
+        {labels.map((label) => (
+          <NavRow
+            key={label.id}
+            active={activeLabel === label.name.toLowerCase()}
+            onClick={() =>
+              navigateWithSearch(buildSearchToken('label', label.name))
+            }
+          >
+            <LabelBadge name={label.name} color={label.color} size='sm' />
+          </NavRow>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function NavRow({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent',
+        active && 'bg-accent/50 font-medium',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function NavSectionHeading({ children }: { children: ReactNode }) {
+  return (
+    <div className='px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+      {children}
+    </div>
+  )
+}
