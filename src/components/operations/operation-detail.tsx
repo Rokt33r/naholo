@@ -3,13 +3,13 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft,
   ArrowDownFromLine,
   MoreVertical,
   Loader2,
   CircleDot,
   CircleCheck,
-  PanelLeftOpen,
+  LandPlot,
+  ChevronRight,
   TableProperties,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -34,7 +34,6 @@ import {
 import { OperationLogsList } from '@/components/operation-logs/operation-logs-list'
 import type { OperationLog } from '@/hooks/use-operation-logs'
 import { NoteView } from '@/components/notes/note-view'
-import { useOperationsList } from './operations-list-context'
 import { OperationTabs } from './operation-tabs'
 import { OperationSidePanel } from './operation-side-panel'
 import { StatsView } from './stats-view'
@@ -85,7 +84,6 @@ export function OperationDetail({
 }: OperationDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { collapsed, toggle: toggleOperationsList } = useOperationsList()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -197,27 +195,20 @@ export function OperationDetail({
   return (
     <div className='flex h-full flex-col'>
       {/* Header */}
-      <div className='flex items-center justify-between pt-2 px-2'>
-        {isMobile ? (
-          <Button
-            size='icon'
-            variant='ghost'
-            onClick={() => {
-              const query = searchParams.toString()
-              router.push(
-                `/app/projects/${projectSlug}${query ? `?${query}` : ''}`,
-              )
-            }}
-          >
-            <ArrowLeft className='size-4' />
-          </Button>
-        ) : (
-          collapsed && (
-            <Button size='icon' variant='ghost' onClick={toggleOperationsList}>
-              <PanelLeftOpen className='size-4' />
-            </Button>
-          )
-        )}
+      <div className='flex items-center justify-between gap-1 pt-2 px-2'>
+        <button
+          onClick={() => {
+            const query = searchParams.toString()
+            router.push(
+              `/app/projects/${projectSlug}/operations${query ? `?${query}` : ''}`,
+            )
+          }}
+          className='flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+        >
+          <LandPlot className='size-4' />
+          Operations
+        </button>
+        <ChevronRight className='size-4 shrink-0 text-muted-foreground' />
         <div className='flex-1 px-1'>
           {isEditingTitle ? (
             <input
