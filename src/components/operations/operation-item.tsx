@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { CircleCheckBig, CircleDot, CircleCheck } from 'lucide-react'
+import { CircleDot, CircleCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatIssueDate } from '@/lib/date-utils'
 import { LabelBadge } from '@/components/labels/label-badge'
@@ -41,66 +41,30 @@ export function OperationItem({
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const completedCount = operation.completedTasks
-  const totalCount = operation.totalTasks || 0
-
   return (
     <button
       onClick={handleClick}
       className={cn(
-        'w-full px-3 py-3 text-left transition-colors hover:bg-accent rounded-md',
+        'flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent/50 hover:bg-accent',
       )}
     >
-      {/* Row 1: Title, progress, assignees */}
-      <div className='flex items-center justify-between gap-2'>
-        <div className='flex items-center gap-1 flex-1 min-w-0'>
-          {operation.closed ? (
-            <CircleCheck className='h-4 w-4 shrink-0 text-purple-600' />
-          ) : (
-            <CircleDot className='h-4 w-4 shrink-0 text-green-600' />
-          )}
-          <div className='truncate font-bold'>{operation.title}</div>
-        </div>
-        <div className='flex shrink-0 items-center gap-2'>
-          {totalCount > 0 && (
-            <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-              <CircleCheckBig className='h-4 w-4' />
-              <span>
-                {completedCount}/{totalCount}
-              </span>
-            </div>
-          )}
-          {operation.assignees.length > 0 && (
-            <div className='flex items-center'>
-              {operation.assignees.map((assignee, index) => (
-                <div
-                  key={assignee.id}
-                  className={cn(
-                    'rounded-full ring-1 ring-background',
-                    index > 0 && '-ml-4',
-                  )}
-                  style={{ zIndex: operation.assignees.length - index }}
-                >
-                  <OperatorAvatar
-                    name={assignee.callsign}
-                    onClick={(event) =>
-                      handleSearchableTokenClick(
-                        event,
-                        buildSearchToken('assignee', assignee.callsign),
-                      )
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {operation.closed ? (
+        <CircleCheck className='size-4 shrink-0 text-purple-600' />
+      ) : (
+        <CircleDot className='size-4 shrink-0 text-green-600' />
+      )}
 
-      {/* Row 2: Labels (only when present) */}
+      <span className='w-9 shrink-0 font-mono text-xs font-bold text-muted-foreground'>
+        #{operation.number}
+      </span>
+
+      <span className='min-w-0 truncate text-sm font-medium'>
+        {operation.title}
+      </span>
+
       {operation.labels.length > 0 && (
-        <div className='mt-1.5 flex flex-wrap items-center gap-1'>
+        <span className='flex shrink-0 items-center gap-1'>
           {operation.labels.map((label) => (
             <LabelBadge
               key={label.id}
@@ -115,19 +79,40 @@ export function OperationItem({
               }
             />
           ))}
-        </div>
+        </span>
       )}
 
-      {/* Row 3: Content preview and date */}
-      <div className='mt-1 flex items-center justify-between gap-1 text-xs text-muted-foreground'>
-        <span className='shrink-0 font-mono font-bold text-muted-foreground'>
-          #{operation.number}
+      <span className='flex-1' />
+
+      {operation.assignees.length > 0 && (
+        <span className='flex shrink-0 items-center'>
+          {operation.assignees.map((assignee, index) => (
+            <span
+              key={assignee.id}
+              className={cn(
+                'rounded-full ring-1 ring-background',
+                index > 0 && '-ml-2',
+              )}
+              style={{ zIndex: operation.assignees.length - index }}
+            >
+              <OperatorAvatar
+                name={assignee.callsign}
+                className='size-5'
+                onClick={(event) =>
+                  handleSearchableTokenClick(
+                    event,
+                    buildSearchToken('assignee', assignee.callsign),
+                  )
+                }
+              />
+            </span>
+          ))}
         </span>
-        <div className='flex-1 truncate'>
-          {operation.lastOperationLogPreview || '(No log)'}
-        </div>
-        <div className='shrink-0'>{formatIssueDate(operation.updatedAt)}</div>
-      </div>
+      )}
+
+      <span className='w-11 shrink-0 text-right text-xs text-muted-foreground'>
+        {formatIssueDate(operation.updatedAt)}
+      </span>
     </button>
   )
 }
