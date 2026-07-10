@@ -1,6 +1,7 @@
 'use client'
 
-import { ChevronDown, Search, Tag, Users } from 'lucide-react'
+import { ChevronDown, Search, Tag, Users, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useProjectContext } from '@/components/app/project-context'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -48,8 +49,18 @@ export function OperationsSearchbar({
             placeholder='Search operations…  try assignee:rokt33r or #273'
             value={searchInput}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='pl-9'
+            className={cn('pl-9', searchInput.length > 0 && 'pr-9')}
           />
+          {searchInput.length > 0 && (
+            <button
+              type='button'
+              aria-label='Clear search'
+              onClick={() => onSearchChange('')}
+              className='absolute right-2 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-0.5 text-muted-foreground hover:text-foreground'
+            >
+              <X className='size-4' />
+            </button>
+          )}
         </div>
       </div>
 
