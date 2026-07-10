@@ -7,15 +7,15 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { LabelBadge } from '@/components/labels/label-badge'
 import { useOperators } from '@/hooks/use-operators'
 import { useLabels } from '@/hooks/use-labels'
-import { buildSearchToken } from '@/lib/operation-search'
+import { parseOperationSearch, toggleSearchToken } from '@/lib/operation-search'
 
 type OperationsSearchbarProps = {
   projectSlug: string
@@ -35,6 +35,9 @@ export function OperationsSearchbar({
   const { currentOperator } = useProjectContext()
   const { operators } = useOperators(projectSlug)
   const { labels } = useLabels(projectSlug)
+
+  // The active assignee / label tokens (lowercased) drive the dropdown checks.
+  const conditions = parseOperationSearch(searchInput)
 
   return (
     <>
@@ -76,18 +79,26 @@ export function OperationsSearchbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align='start'>
             {operators.map((operator) => (
-              <DropdownMenuItem
+              <DropdownMenuCheckboxItem
                 key={operator.id}
-                onClick={() =>
+                checked={conditions.assignees.includes(
+                  operator.callsign.toLowerCase(),
+                )}
+                onCheckedChange={() =>
                   onSearchChange(
-                    buildSearchToken('assignee', operator.callsign),
+                    toggleSearchToken(
+                      searchInput,
+                      'assignee',
+                      operator.callsign,
+                    ),
                   )
                 }
+                onSelect={(event) => event.preventDefault()}
               >
                 <OperatorAvatar name={operator.callsign} className='size-5' />
                 {operator.callsign}
                 {operator.id === currentOperator.id && ' (me)'}
-              </DropdownMenuItem>
+              </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -102,14 +113,18 @@ export function OperationsSearchbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align='start'>
             {labels.map((label) => (
-              <DropdownMenuItem
+              <DropdownMenuCheckboxItem
                 key={label.id}
-                onClick={() =>
-                  onSearchChange(buildSearchToken('label', label.name))
+                checked={conditions.labels.includes(label.name.toLowerCase())}
+                onCheckedChange={() =>
+                  onSearchChange(
+                    toggleSearchToken(searchInput, 'label', label.name),
+                  )
                 }
+                onSelect={(event) => event.preventDefault()}
               >
                 <LabelBadge name={label.name} color={label.color} size='sm' />
-              </DropdownMenuItem>
+              </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>

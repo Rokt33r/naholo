@@ -4,20 +4,31 @@ export type OperationSearchConditions = {
   terms: string[]
   labels: string[]
   assignees: string[]
-  operationNumber: string | null
+  exactOperationNumber: number | null
 }
 
 /**
  * Parse a raw search query into structured conditions. Free-text chunks become
- * title `terms`; `label:`, `assignee:`, and `#<number>` chunks become their
- * respective qualifiers. Quoted values (`label:"needs review"`) keep their
- * spaces. All values are lowercased for case-insensitive matching.
+ * title `terms`; `label:` and `assignee:` chunks become their qualifiers.
+ * Quoted values (`label:"needs review"`) keep their spaces. Values are
+ * lowercased for case-insensitive matching. A `#<num>` is only special when it
+ * is the entire trimmed query (an exact operation lookup) — anywhere alongside
+ * other terms it is treated as plain title text.
  */
 export function parseOperationSearch(query: string): OperationSearchConditions {
+  const exactMatch = /^#(\d+)$/.exec(query.trim())
+  if (exactMatch != null) {
+    return {
+      terms: [],
+      labels: [],
+      assignees: [],
+      exactOperationNumber: Number(exactMatch[1]),
+    }
+  }
+
   const terms: string[] = []
   const labels: string[] = []
   const assignees: string[] = []
-  let operationNumber: string | null = null
 
   for (const token of tokenize(query)) {
     const lower = token.toLowerCase()
@@ -31,29 +42,29 @@ export function parseOperationSearch(query: string): OperationSearchConditions {
       if (value.length > 0) {
         assignees.push(value)
       }
-    } else if (token.startsWith('#')) {
-      const value = token.slice(1)
-      if (value.length > 0) {
-        operationNumber = value
-      }
     } else {
       terms.push(lower)
     }
   }
 
-  return { terms, labels, assignees, operationNumber }
+  return { terms, labels, assignees, exactOperationNumber: null }
 }
 
 /**
- * AND-match an operation against parsed conditions: every title term must be a
- * substring of the title, every label/assignee qualifier must match a tag on
- * the operation, and the number qualifier (when present) must prefix the
- * operation number.
+ * Match an operation against parsed conditions. A bare `#<num>` query is an
+ * exact operation-number lookup. Otherwise: every title term must be a
+ * substring of the title (AND), the operation must carry at least one of the
+ * selected labels (OR within the group), at least one of the selected assignees
+ * (OR within the group), and the three groups are combined with AND.
  */
 export function matchesOperationSearch(
   operation: OperationListItem,
   conditions: OperationSearchConditions,
 ): boolean {
+  if (conditions.exactOperationNumber != null) {
+    return operation.number === conditions.exactOperationNumber
+  }
+
   const title = operation.title.toLowerCase()
   for (const term of conditions.terms) {
     if (!title.includes(term)) {
@@ -62,24 +73,19 @@ export function matchesOperationSearch(
   }
 
   const labelNames = operation.labels.map((label) => label.name.toLowerCase())
-  for (const label of conditions.labels) {
-    if (!labelNames.includes(label)) {
-      return false
-    }
+  if (
+    conditions.labels.length > 0 &&
+    !conditions.labels.some((label) => labelNames.includes(label))
+  ) {
+    return false
   }
 
   const callsigns = operation.assignees.map((assignee) =>
     assignee.callsign.toLowerCase(),
   )
-  for (const assignee of conditions.assignees) {
-    if (!callsigns.includes(assignee)) {
-      return false
-    }
-  }
-
   if (
-    conditions.operationNumber != null &&
-    !operation.number.toString().startsWith(conditions.operationNumber)
+    conditions.assignees.length > 0 &&
+    !conditions.assignees.some((assignee) => callsigns.includes(assignee))
   ) {
     return false
   }
@@ -97,6 +103,56 @@ export function buildSearchToken(
 ): string {
   const formatted = /\s/.test(value) ? `"${value}"` : value
   return `${kind}:${formatted}`
+}
+
+/**
+ * Toggle a `label:` / `assignee:` qualifier in a raw search string: append the
+ * token when absent, strip it when already present (case-insensitive). All
+ * other tokens and free-text terms are preserved (and re-quoted when they carry
+ * spaces so they survive a later re-parse).
+ */
+export function toggleSearchToken(
+  search: string,
+  kind: 'label' | 'assignee',
+  value: string,
+): string {
+  const prefix = `${kind}:`
+  const targetValue = value.toLowerCase()
+  const kept: string[] = []
+  let found = false
+  for (const token of tokenize(search)) {
+    const lower = token.toLowerCase()
+    if (
+      lower.startsWith(prefix) &&
+      lower.slice(prefix.length) === targetValue
+    ) {
+      found = true
+      continue
+    }
+    kept.push(serializeToken(token))
+  }
+  if (!found) {
+    kept.push(buildSearchToken(kind, value))
+  }
+  return kept.join(' ')
+}
+
+/**
+ * Re-serialize a token that came out of `tokenize` (quotes already stripped) so
+ * it survives a later re-parse: qualifier values and free-text terms that carry
+ * whitespace get re-quoted.
+ */
+function serializeToken(token: string): string {
+  const lower = token.toLowerCase()
+  for (const prefix of ['label:', 'assignee:']) {
+    if (lower.startsWith(prefix)) {
+      const value = token.slice(prefix.length)
+      return /\s/.test(value)
+        ? `${token.slice(0, prefix.length)}"${value}"`
+        : token
+    }
+  }
+  return /\s/.test(token) ? `"${token}"` : token
 }
 
 /**
