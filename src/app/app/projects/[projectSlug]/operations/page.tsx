@@ -7,12 +7,11 @@ import {
   useRouter,
   useSearchParams,
 } from 'next/navigation'
-import { LandPlot, Search, SquarePen } from 'lucide-react'
+import { LandPlot, SquarePen } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { OperationItem } from '@/components/operations/operation-item'
+import { OperationsSearchbar } from '@/components/operations/operations-searchbar'
 import { CreateOperationDialog } from '@/components/operations/create-operation-dialog'
 import { useOperations } from '@/hooks/use-operations'
 import { useOperationsListStream } from '@/hooks/use-operations-list-stream'
@@ -37,7 +36,7 @@ export default function OperationsIndexPage() {
   const [searchInput, setSearchInput] = useState(searchSearchParam)
   const debouncedSearchInput = useDebounce(searchInput, 250)
 
-  // Adopt external writes to `?search=` (e.g. label/assignee clicks).
+  // Adopt external writes to `?search=` (e.g. nav / label / assignee clicks).
   useEffect(() => {
     setSearchInput(searchSearchParam)
   }, [searchSearchParam])
@@ -78,49 +77,32 @@ export default function OperationsIndexPage() {
 
   return (
     <div className='flex h-full flex-1 flex-col overflow-hidden'>
-      <div className='flex items-center justify-between gap-2 px-2 pt-2 h-10'>
-        <h2 className='flex flex-1 items-center gap-2 px-2 font-semibold'>
-          <LandPlot className='size-4' />
-          Operations
+      <div className='flex h-10 items-center justify-between gap-2 px-2 pt-2'>
+        <h2 className='flex min-w-0 flex-1 items-center gap-2 px-2 font-semibold'>
+          <LandPlot className='size-4 shrink-0' />
+          <span className='truncate'>Operation list</span>
+          <span className='shrink-0 font-mono text-xs font-normal text-muted-foreground'>
+            {filteredOperations.length}
+          </span>
         </h2>
-      </div>
-
-      <div className='flex items-center gap-2 px-2 py-2'>
-        <div className='relative flex-1'>
-          <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
-          <Input
-            placeholder='Search operations...'
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className='pl-9'
-          />
-        </div>
-      </div>
-
-      <div className='flex items-center justify-between px-2 pb-2'>
-        <ButtonGroup>
-          <Button
-            variant={filter === 'open' ? 'secondary' : 'ghost'}
-            onClick={() => handleFilterChange('open')}
-          >
-            Open
-          </Button>
-          <Button
-            variant={filter === 'closed' ? 'secondary' : 'ghost'}
-            onClick={() => handleFilterChange('closed')}
-          >
-            Closed
-          </Button>
-        </ButtonGroup>
         <CreateOperationDialog
           projectSlug={projectSlug}
           onOperationCreated={refetch}
         >
-          <Button size='icon' variant='ghost'>
+          <Button variant='ghost'>
             <SquarePen className='size-4' />
+            New
           </Button>
         </CreateOperationDialog>
       </div>
+
+      <OperationsSearchbar
+        projectSlug={projectSlug}
+        searchInput={searchInput}
+        onSearchChange={setSearchInput}
+        filter={filter}
+        onFilterChange={handleFilterChange}
+      />
 
       {/* Operations list */}
       <div className='flex-1 overflow-y-auto px-2'>
