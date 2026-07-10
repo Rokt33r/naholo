@@ -117,9 +117,9 @@ function OperatorRow({
 
       {canRemove && (
         <Button
-          variant='ghost'
+          variant='ghost-destructive'
           size='icon'
-          className='shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+          className='shrink-0'
           title='Remove operator'
           onClick={onRemove}
         >
