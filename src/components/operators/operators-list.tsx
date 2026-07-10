@@ -3,10 +3,13 @@
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
+import { OperatorsSeatsSummary } from '@/components/operators/operators-seats-summary'
 import { useProjectContext } from '@/components/app/project-context'
 import { useOperators, useRemoveProjectOperator } from '@/hooks/use-operators'
 import type { Operator } from '@/hooks/use-operators'
+import { publicConfig } from '@/lib/publicConfig'
 import { cn } from '@/lib/utils'
 
 type OperatorsListProps = {
@@ -31,42 +34,40 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
   }
 
   return (
-    <section className='flex flex-col gap-4'>
-      <div className='flex items-baseline gap-2.5'>
-        <h2 className='text-lg font-semibold tracking-tight'>Operators</h2>
-        {!isLoading && (
-          <span className='text-sm text-muted-foreground'>
-            {operators.length}
-          </span>
-        )}
-      </div>
-
-      {isLoading ? (
-        <div className='px-4 py-3 text-center text-sm text-muted-foreground'>
-          Loading...
-        </div>
-      ) : operators.length === 0 ? (
-        <div className='px-4 py-3 text-center text-sm text-muted-foreground'>
-          No operators in this project
-        </div>
-      ) : (
-        <div className='flex flex-col gap-2'>
-          {operators.map((operator) => (
-            <OperatorCard
-              key={operator.id}
-              operator={operator}
-              isSelf={operator.id === currentOperator.id}
-              canRemove={isAdmin}
-              onRemove={() => handleRemove(operator)}
-            />
-          ))}
-        </div>
+    <Card>
+      {publicConfig.billing && (
+        <CardHeader className='border-b'>
+          <OperatorsSeatsSummary projectSlug={projectSlug} />
+        </CardHeader>
       )}
-    </section>
+      <CardContent>
+        {isLoading ? (
+          <div className='text-muted-foreground py-3 text-center text-sm'>
+            Loading...
+          </div>
+        ) : operators.length === 0 ? (
+          <div className='text-muted-foreground py-3 text-center text-sm'>
+            No operators in this project
+          </div>
+        ) : (
+          <div className='flex flex-col divide-y'>
+            {operators.map((operator) => (
+              <OperatorRow
+                key={operator.id}
+                operator={operator}
+                isSelf={operator.id === currentOperator.id}
+                canRemove={isAdmin}
+                onRemove={() => handleRemove(operator)}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
-function OperatorCard({
+function OperatorRow({
   operator,
   isSelf,
   canRemove,
@@ -80,11 +81,7 @@ function OperatorCard({
   const isRoleAdmin = operator.role === 'admin'
 
   return (
-    <div
-      className={cn(
-        'flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 transition-shadow hover:shadow-sm',
-      )}
-    >
+    <div className='flex w-full items-center gap-3.5 py-3.5 first:pt-0 last:pb-0'>
       <OperatorAvatar name={operator.callsign} className='size-9' />
 
       <div className='flex min-w-0 flex-1 flex-col gap-0.5'>

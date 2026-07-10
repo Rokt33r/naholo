@@ -5,8 +5,14 @@ import { useProjectContext } from '@/components/app/project-context'
 import { InviteList } from '@/components/operators/invite-list'
 import { InviteProjectOperatorDialog } from '@/components/operators/invite-project-operator-dialog'
 import { OperatorsList } from '@/components/operators/operators-list'
-import { OperatorsSeatsSummary } from '@/components/operators/operators-seats-summary'
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { useProjectInvites } from '@/hooks/use-project-invites'
 
 export default function OperatorsIndexPage() {
@@ -15,28 +21,31 @@ export default function OperatorsIndexPage() {
     useProjectInvites(projectSlug)
 
   return (
-    <>
-      <OperatorsSeatsSummary projectSlug={projectSlug} />
+    <div className='flex flex-col gap-6'>
       <OperatorsList projectSlug={projectSlug} />
 
-      <section className='flex flex-col gap-4'>
-        <div className='flex items-center justify-between gap-2'>
-          <div className='flex items-baseline gap-2.5'>
-            <h2 className='text-lg font-semibold tracking-tight'>Invites</h2>
+      <Card>
+        <CardHeader className='border-b'>
+          <CardTitle className='flex items-baseline gap-2.5'>
+            Pending invites
             {!isInvitesLoading && (
-              <span className='text-sm text-muted-foreground'>
+              <span className='text-muted-foreground text-sm font-normal'>
                 {invites.length}
               </span>
             )}
-          </div>
-          <InviteProjectOperatorDialog projectSlug={projectSlug}>
-            <Button size='sm' variant='outline' title='Invite user'>
-              <UserPlus className='size-4' /> Invite
-            </Button>
-          </InviteProjectOperatorDialog>
-        </div>
-        <InviteList projectSlug={projectSlug} />
-      </section>
-    </>
+          </CardTitle>
+          <CardAction>
+            <InviteProjectOperatorDialog projectSlug={projectSlug}>
+              <Button size='sm' variant='outline' title='Invite user'>
+                <UserPlus className='size-4' /> Invite
+              </Button>
+            </InviteProjectOperatorDialog>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <InviteList projectSlug={projectSlug} />
+        </CardContent>
+      </Card>
+    </div>
   )
 }
