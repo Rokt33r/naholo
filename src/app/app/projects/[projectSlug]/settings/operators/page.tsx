@@ -25,7 +25,7 @@ export default function OperatorsIndexPage() {
       <OperatorsList projectSlug={projectSlug} />
 
       <Card>
-        <CardHeader className='border-b'>
+        <CardHeader>
           <CardTitle className='flex items-baseline gap-2.5'>
             Pending invites
             {!isInvitesLoading && (

@@ -36,7 +36,7 @@ export function OperatorsList({ projectSlug }: OperatorsListProps) {
   return (
     <Card>
       {publicConfig.billing && (
-        <CardHeader className='border-b'>
+        <CardHeader>
           <OperatorsSeatsSummary projectSlug={projectSlug} />
         </CardHeader>
       )}

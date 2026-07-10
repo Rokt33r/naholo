@@ -86,7 +86,7 @@ export function OperatorSelfEditCard({
 
   return (
     <Card>
-      <CardHeader className='border-b'>
+      <CardHeader>
         <CardTitle>My profile</CardTitle>
       </CardHeader>
       <CardContent>

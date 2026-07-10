@@ -101,7 +101,7 @@ export default function SettingsGeneralPage() {
       )}
 
       <Card>
-        <CardHeader className='border-b'>
+        <CardHeader>
           <CardTitle>Project info</CardTitle>
         </CardHeader>
         <CardContent>
@@ -146,7 +146,7 @@ export default function SettingsGeneralPage() {
       </Card>
 
       <Card>
-        <CardHeader className='border-b'>
+        <CardHeader>
           <CardTitle>Project URL</CardTitle>
           <CardDescription>
             Changing the slug will break existing links to this project.
