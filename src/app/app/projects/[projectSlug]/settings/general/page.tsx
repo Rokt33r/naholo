@@ -8,9 +8,11 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { AutoResizeTextarea } from '@/components/ui/auto-resize-textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAction } from '@/lib/use-action'
@@ -99,57 +101,71 @@ export default function SettingsGeneralPage() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>General</CardTitle>
-          <CardDescription>Basic details for this project.</CardDescription>
+        <CardHeader className='border-b'>
+          <CardTitle>Project info</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleGeneralSubmit}>
-            <div className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='project-name'>Name *</Label>
-                <Input
-                  id='project-name'
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder='My Project'
-                  disabled={!isAdmin || generalLoading}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='project-description'>Description</Label>
-                <Input
-                  id='project-description'
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder='Optional description'
-                  disabled={!isAdmin || generalLoading}
-                />
-              </div>
+          <form
+            id='project-info-form'
+            onSubmit={handleGeneralSubmit}
+            className='space-y-4'
+          >
+            <div className='space-y-2'>
+              <Label htmlFor='project-name'>Name *</Label>
+              <Input
+                id='project-name'
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder='My Project'
+                disabled={!isAdmin || generalLoading}
+              />
             </div>
-            <div className='mt-4 flex justify-end'>
-              <Button
-                type='submit'
-                disabled={!isAdmin || !name.trim() || generalLoading}
-              >
-                {generalLoading ? 'Saving...' : 'Save'}
-              </Button>
+            <div className='space-y-2'>
+              <Label htmlFor='project-description'>Description</Label>
+              <AutoResizeTextarea
+                id='project-description'
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder='Optional description'
+                disabled={!isAdmin || generalLoading}
+                rows={2}
+                className='border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 w-full resize-none overflow-hidden rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50'
+              />
             </div>
           </form>
         </CardContent>
+        <CardFooter className='justify-end'>
+          <Button
+            form='project-info-form'
+            type='submit'
+            disabled={!isAdmin || !name.trim() || generalLoading}
+          >
+            {generalLoading ? 'Saving...' : 'Save'}
+          </Button>
+        </CardFooter>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>URL Settings</CardTitle>
+        <CardHeader className='border-b'>
+          <CardTitle>Project URL</CardTitle>
           <CardDescription>
             Changing the slug will break existing links to this project.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSlugSubmit}>
-            <div className='space-y-2'>
-              <Label htmlFor='project-slug'>Slug *</Label>
+          <form
+            id='project-url-form'
+            onSubmit={handleSlugSubmit}
+            className='space-y-2'
+          >
+            <Label htmlFor='project-slug'>Slug *</Label>
+            <div className='border-input dark:bg-input/30 focus-within:border-ring focus-within:ring-ring/50 flex items-stretch overflow-hidden rounded-md border shadow-xs transition-[color,box-shadow] focus-within:ring-[3px]'>
+              <label
+                htmlFor='project-slug'
+                className='text-muted-foreground flex cursor-text items-center py-1 pl-3 font-mono text-sm whitespace-nowrap select-none'
+              >
+                naholo.app/projects/
+              </label>
               <Input
                 id='project-slug'
                 value={slug}
@@ -160,26 +176,35 @@ export default function SettingsGeneralPage() {
                 placeholder='my-project'
                 pattern='[a-z0-9-]+'
                 disabled={!isAdmin || slugLoading}
+                className='border-0 pl-0 font-mono shadow-none focus-visible:ring-0 dark:bg-transparent'
               />
-              {slugError != null && (
-                <p className='text-destructive text-xs'>{slugError}</p>
-              )}
             </div>
-            <div className='mt-4 flex justify-end'>
-              <Button
-                type='submit'
-                disabled={
-                  !isAdmin ||
-                  !slug.trim() ||
-                  slug.trim() === projectSlug ||
-                  slugLoading
-                }
-              >
-                {slugLoading ? 'Changing...' : 'Change slug'}
-              </Button>
-            </div>
+            <p className='text-muted-foreground text-xs'>
+              After changing the slug, operators must re-run{' '}
+              <code className='font-mono'>naholo init</code> (or{' '}
+              <code className='font-mono'>naholo covert init</code>) in every
+              local codebase to reconnect it to this project.
+            </p>
+            {slugError != null && (
+              <p className='text-destructive text-xs'>{slugError}</p>
+            )}
           </form>
         </CardContent>
+        <CardFooter className='justify-end'>
+          <Button
+            form='project-url-form'
+            type='submit'
+            variant='destructive'
+            disabled={
+              !isAdmin ||
+              !slug.trim() ||
+              slug.trim() === projectSlug ||
+              slugLoading
+            }
+          >
+            {slugLoading ? 'Changing...' : 'Change slug'}
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   )

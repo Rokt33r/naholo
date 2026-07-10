@@ -68,7 +68,15 @@ export default function SettingsLayout({
                   <div className='size-8' />
                 </div>
               )}
-              <div className='flex w-full max-w-2xl flex-col gap-3 p-4'>
+              <div className='flex w-full max-w-2xl flex-col p-4'>
+                {!isMobile && (
+                  <h1 className='flex items-center gap-2 text-xl font-semibold tracking-tight mb-6'>
+                    {SectionIcon != null && (
+                      <SectionIcon className='text-muted-foreground size-4' />
+                    )}
+                    {section.label}
+                  </h1>
+                )}
                 {children}
               </div>
             </>

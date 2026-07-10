@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useProjectContext } from '@/components/app/project-context'
@@ -80,11 +86,15 @@ export function OperatorSelfEditCard({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className='border-b'>
         <CardTitle>My profile</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSave} className='flex flex-col gap-3'>
+        <form
+          id='self-profile-form'
+          onSubmit={handleSave}
+          className='flex flex-col gap-3'
+        >
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='self-operator-name'>Name</Label>
             <Input
@@ -110,17 +120,18 @@ export function OperatorSelfEditCard({
           {errorMessage != null && (
             <p className='text-destructive text-xs'>{errorMessage}</p>
           )}
-          <div>
-            <Button
-              type='submit'
-              size='sm'
-              disabled={!hasChanges || updateOperator.isPending}
-            >
-              {updateOperator.isPending ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
         </form>
       </CardContent>
+      <CardFooter className='justify-end'>
+        <Button
+          form='self-profile-form'
+          type='submit'
+          size='sm'
+          disabled={!hasChanges || updateOperator.isPending}
+        >
+          {updateOperator.isPending ? 'Saving...' : 'Save'}
+        </Button>
+      </CardFooter>
     </Card>
   )
 }
