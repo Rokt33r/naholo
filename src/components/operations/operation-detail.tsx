@@ -213,7 +213,7 @@ export function OperationDetail({
           <LandPlot className='size-4' />
         </Button>
         <ChevronRight className='size-4 shrink-0 text-muted-foreground' />
-        <div className='flex-1 px-1'>
+        <div className='min-w-0 flex-1 px-1'>
           {isEditingTitle ? (
             <input
               type='text'
@@ -232,21 +232,28 @@ export function OperationDetail({
               autoFocus
             />
           ) : (
-            <div className='flex items-center gap-2'>
+            <div className='flex min-w-0 items-center gap-2'>
               {operation.closed ? (
                 <CircleCheck className='size-4 shrink-0 text-purple-600' />
               ) : (
                 <CircleDot className='size-4 shrink-0 text-green-600' />
               )}
-              <h1
-                className='cursor-text text-xl font-semibold'
-                onClick={() => setIsEditingTitle(true)}
-              >
-                <span className='font-mono text-muted-foreground'>
-                  #{operation.number}
-                </span>{' '}
-                {operation.title}
-              </h1>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h1
+                    className='min-w-0 flex-1 cursor-text truncate text-xl font-semibold'
+                    onClick={() => setIsEditingTitle(true)}
+                  >
+                    <span className='font-mono text-muted-foreground'>
+                      #{operation.number}
+                    </span>{' '}
+                    {operation.title}
+                  </h1>
+                </TooltipTrigger>
+                <TooltipContent className='max-w-xs break-words'>
+                  #{operation.number} {operation.title}
+                </TooltipContent>
+              </Tooltip>
               {isSaving && (
                 <Loader2 className='size-4 animate-spin text-muted-foreground' />
               )}
