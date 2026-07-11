@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode } from 'react'
+import { type ReactNode, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { LandPlot, Tags, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -9,6 +9,7 @@ import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { LabelBadge } from '@/components/labels/label-badge'
 import { useOperators } from '@/hooks/use-operators'
 import { useLabels } from '@/hooks/use-labels'
+import { useOperations } from '@/hooks/use-operations'
 import { buildSearchToken, parseOperationSearch } from '@/lib/operation-search'
 
 export function OperationsNav() {
@@ -17,6 +18,24 @@ export function OperationsNav() {
   const searchParams = useSearchParams()
   const { operators } = useOperators(projectSlug)
   const { labels } = useLabels(projectSlug)
+  const { operations } = useOperations(projectSlug, 'open')
+
+  const { allCount, assigneeCounts, labelCounts } = useMemo(() => {
+    const assigneeCounts = new Map<string, number>()
+    const labelCounts = new Map<string, number>()
+    for (const operation of operations) {
+      for (const assignee of operation.assignees) {
+        assigneeCounts.set(
+          assignee.callsign,
+          (assigneeCounts.get(assignee.callsign) ?? 0) + 1,
+        )
+      }
+      for (const label of operation.labels) {
+        labelCounts.set(label.name, (labelCounts.get(label.name) ?? 0) + 1)
+      }
+    }
+    return { allCount: operations.length, assigneeCounts, labelCounts }
+  }, [operations])
 
   // Derive the active entry from the current `?search=` token (lowercased by
   // the parser, so compare against lowercased callsigns / label names).
@@ -58,7 +77,11 @@ export function OperationsNav() {
       </div>
 
       <div className='flex-1 overflow-y-auto px-2 pb-4'>
-        <NavRow active={isAllActive} onClick={() => navigateWithSearch(null)}>
+        <NavRow
+          active={isAllActive}
+          count={allCount}
+          onClick={() => navigateWithSearch(null)}
+        >
           <span className='flex-1 truncate text-left'>All operations</span>
         </NavRow>
 
@@ -72,6 +95,7 @@ export function OperationsNav() {
           <NavRow
             key={operator.id}
             active={activeAssignee === operator.callsign.toLowerCase()}
+            count={assigneeCounts.get(operator.callsign) ?? 0}
             onClick={() =>
               navigateWithSearch(
                 buildSearchToken('assignee', operator.callsign),
@@ -96,6 +120,7 @@ export function OperationsNav() {
           <NavRow
             key={label.id}
             active={activeLabel === label.name.toLowerCase()}
+            count={labelCounts.get(label.name) ?? 0}
             onClick={() =>
               navigateWithSearch(buildSearchToken('label', label.name))
             }
@@ -110,10 +135,12 @@ export function OperationsNav() {
 
 function NavRow({
   active,
+  count,
   onClick,
   children,
 }: {
   active: boolean
+  count: number
   onClick: () => void
   children: ReactNode
 }) {
@@ -126,6 +153,9 @@ function NavRow({
       )}
     >
       {children}
+      <span className='ml-auto shrink-0 font-mono text-xs text-muted-foreground'>
+        {count}
+      </span>
     </button>
   )
 }
