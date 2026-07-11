@@ -55,7 +55,7 @@ export function OperationItem({
         <CircleDot className='size-4 shrink-0 text-green-600' />
       )}
 
-      <span className='w-9 shrink-0 font-mono text-xs font-bold text-muted-foreground'>
+      <span className='shrink-0 font-mono text-xs font-bold text-muted-foreground'>
         #{operation.number}
       </span>
 
