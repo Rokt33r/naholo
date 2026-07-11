@@ -1,42 +1,38 @@
-// Theme-aware label color rendering.
-//
-// A label stores a single base color (`#RRGGBB`). At render time we derive a
-// readable { border, background, text } triplet for the active theme by pinning
-// the *lightness* per role/theme and carrying only the base hue + (clamped)
-// chroma. Because lightness is normalized for contrast, a near-white or
-// near-black base — which has ~zero chroma — collapses to a readable gray
-// automatically, satisfying "white labels in light / black labels in dark
-// render as gray".
-
 export type LabelColors = {
   border: string
   background: string
   text: string
 }
 
-// Eight curated presets, stored as `#RRGGBB`.
+export type LabelColorScheme = {
+  light: LabelColors
+  lightHighlight: LabelColors
+  dark: LabelColors
+  darkHighlight: LabelColors
+}
+
 export const LABEL_COLOR_PRESETS = [
-  '#e11d48', // rose
-  '#f97316', // orange
-  '#eab308', // amber
-  '#22c55e', // green
-  '#06b6d4', // cyan
-  '#3b82f6', // blue
-  '#8b5cf6', // violet
-  '#ec4899', // pink
+  '#e11d48',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#06b6d4',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
 ] as const
 
-/**
- * A random, always-pleasant label color: a random hue at fixed saturation and
- * lightness, returned as `#RRGGBB`.
- */
 export function randomLabelColor(): string {
   const hue = Math.floor(Math.random() * 360)
   return hslToHex(hue, 70, 55)
 }
 
-// [lightness, max chroma] per role, per theme. The `highlight` variants deepen
-// the background and raise chroma for a richer, more-saturated hover state.
+type RoleLightness = {
+  background: readonly [number, number]
+  border: readonly [number, number]
+  text: readonly [number, number]
+}
+
 const LIGHT_THEME = {
   background: [0.95, 0.04],
   border: [0.8, 0.1],
@@ -61,30 +57,19 @@ const DARK_THEME_HIGHLIGHT = {
   text: [0.86, 0.16],
 } as const
 
-/**
- * Derive the readable border/background/text triplet for a base color in the
- * given theme. Returns CSS `oklch(...)` strings. Pass `highlight` for a richer
- * variant used on hover.
- */
-export function deriveLabelColors(
-  base: string,
-  theme: 'light' | 'dark',
-  options?: { highlight?: boolean },
-): LabelColors {
+export function deriveLabelColorScheme(base: string): LabelColorScheme {
   const { c, h } = hexToOklch(base)
-  const roles =
-    options?.highlight === true
-      ? theme === 'dark'
-        ? DARK_THEME_HIGHLIGHT
-        : LIGHT_THEME_HIGHLIGHT
-      : theme === 'dark'
-        ? DARK_THEME
-        : LIGHT_THEME
-
-  return {
+  const triplet = (roles: RoleLightness): LabelColors => ({
     background: oklch(roles.background[0], Math.min(c, roles.background[1]), h),
     border: oklch(roles.border[0], Math.min(c, roles.border[1]), h),
     text: oklch(roles.text[0], Math.min(c, roles.text[1]), h),
+  })
+
+  return {
+    light: triplet(LIGHT_THEME),
+    lightHighlight: triplet(LIGHT_THEME_HIGHLIGHT),
+    dark: triplet(DARK_THEME),
+    darkHighlight: triplet(DARK_THEME_HIGHLIGHT),
   }
 }
 

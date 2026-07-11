@@ -1,16 +1,10 @@
 'use client'
 
-import {
-  type CSSProperties,
-  type MouseEventHandler,
-  useEffect,
-  useState,
-} from 'react'
-import { useTheme } from 'next-themes'
+import { type CSSProperties, type MouseEventHandler, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { deriveLabelColors } from '@/lib/label-color'
+import { deriveLabelColorScheme } from '@/lib/label-color'
 
 export function LabelBadge({
   name,
@@ -27,35 +21,33 @@ export function LabelBadge({
   className?: string
   size?: 'default' | 'sm'
 }) {
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const theme = mounted && resolvedTheme === 'dark' ? 'dark' : 'light'
-  const colors = deriveLabelColors(color, theme)
-  const highlightColors = deriveLabelColors(color, theme, { highlight: true })
+  const scheme = useMemo(() => deriveLabelColorScheme(color), [color])
 
   return (
     <Badge
       onClick={onClick}
       className={cn(
         size === 'sm' ? 'h-5' : 'h-6',
-        'border',
+        'border bg-(--label-bg) text-(--label-text) border-(color:--label-border)',
+        'dark:bg-(--label-bg-dark) dark:text-(--label-text-dark) dark:border-(color:--label-border-dark)',
         onClick != null &&
-          'cursor-pointer transition-colors hover:border-(color:--label-border-hover)! hover:bg-(--label-bg-hover)! hover:text-(--label-text-hover)!',
+          'cursor-pointer transition-colors hover:border-(color:--label-border-hover)! hover:bg-(--label-bg-hover)! hover:text-(--label-text-hover)! dark:hover:border-(color:--label-border-hover-dark)! dark:hover:bg-(--label-bg-hover-dark)! dark:hover:text-(--label-text-hover-dark)!',
         className,
       )}
       style={
         {
-          backgroundColor: colors.background,
-          borderColor: colors.border,
-          color: colors.text,
-          '--label-bg-hover': highlightColors.background,
-          '--label-border-hover': highlightColors.border,
-          '--label-text-hover': highlightColors.text,
+          '--label-bg': scheme.light.background,
+          '--label-border': scheme.light.border,
+          '--label-text': scheme.light.text,
+          '--label-bg-dark': scheme.dark.background,
+          '--label-border-dark': scheme.dark.border,
+          '--label-text-dark': scheme.dark.text,
+          '--label-bg-hover': scheme.lightHighlight.background,
+          '--label-border-hover': scheme.lightHighlight.border,
+          '--label-text-hover': scheme.lightHighlight.text,
+          '--label-bg-hover-dark': scheme.darkHighlight.background,
+          '--label-border-hover-dark': scheme.darkHighlight.border,
+          '--label-text-hover-dark': scheme.darkHighlight.text,
         } as CSSProperties
       }
     >
