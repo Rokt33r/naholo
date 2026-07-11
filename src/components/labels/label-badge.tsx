@@ -56,7 +56,10 @@ export function LabelBadge({
         <button
           type='button'
           aria-label={`Remove ${name}`}
-          onClick={onRemove}
+          onClick={(event) => {
+            event.stopPropagation()
+            onRemove()
+          }}
           className='-my-0.5 -mr-2 flex items-center self-stretch rounded-r-full px-1 opacity-70 hover:opacity-100'
         >
           <X className='size-3' />
