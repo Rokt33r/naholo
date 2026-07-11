@@ -10,6 +10,7 @@ import {
 import { LandPlot, SquarePen } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
 import { Button } from '@/components/ui/button'
+import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { OperationItem } from '@/components/operations/operation-item'
 import { OperationsSearchbar } from '@/components/operations/operations-searchbar'
 import { CreateOperationDialog } from '@/components/operations/create-operation-dialog'
@@ -78,6 +79,9 @@ export default function OperationsIndexPage() {
   return (
     <div className='flex h-full flex-1 flex-col overflow-hidden'>
       <div className='flex h-10 items-center justify-between gap-2 px-2 pt-2'>
+        <div className='md:hidden'>
+          <AppModeMenu currentProjectSlug={projectSlug} />
+        </div>
         <h2 className='flex min-w-0 flex-1 items-center gap-2 px-2 font-semibold'>
           <LandPlot className='size-4 shrink-0' />
           <span className='truncate'>Operation list</span>

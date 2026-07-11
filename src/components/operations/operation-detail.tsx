@@ -31,6 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { OperationLogsList } from '@/components/operation-logs/operation-logs-list'
 import type { OperationLog } from '@/hooks/use-operation-logs'
 import { NoteView } from '@/components/notes/note-view'
@@ -196,18 +197,21 @@ export function OperationDetail({
     <div className='flex h-full flex-col'>
       {/* Header */}
       <div className='flex items-center justify-between gap-1 pt-2 px-2'>
-        <button
+        <div className='md:hidden'>
+          <AppModeMenu currentProjectSlug={projectSlug} />
+        </div>
+        <Button
+          size='icon'
           onClick={() => {
             const query = searchParams.toString()
             router.push(
               `/app/projects/${projectSlug}/operations${query ? `?${query}` : ''}`,
             )
           }}
-          className='flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+          variant='ghost'
         >
           <LandPlot className='size-4' />
-          Operations
-        </button>
+        </Button>
         <ChevronRight className='size-4 shrink-0 text-muted-foreground' />
         <div className='flex-1 px-1'>
           {isEditingTitle ? (
