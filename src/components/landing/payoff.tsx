@@ -28,6 +28,9 @@ export function Payoff() {
   return (
     <Section>
       <BriefingLabel>{'// 01 · Estimated yield'}</BriefingLabel>
+      <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
+        The receipts back it up.
+      </h2>
 
       <div className='mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-800'>
         {STATS.map((stat) => (
