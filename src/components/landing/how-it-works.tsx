@@ -8,7 +8,6 @@ type Step = {
   commands: string[]
   review?: string
   body: React.ReactNode
-  accent?: boolean
 }
 
 const STEPS: Step[] = [
@@ -48,7 +47,6 @@ const STEPS: Step[] = [
   {
     title: 'Debrief the spend',
     commands: ['/exfil'],
-    accent: true,
     body: 'It records the operation and its token usage to the server so you can look back. Weak plans cost more tokens, and now you can see exactly that.',
   },
 ]
@@ -56,7 +54,7 @@ const STEPS: Step[] = [
 export function HowItWorks() {
   return (
     <Section>
-      <BriefingLabel>{'// 02 · How it works'}</BriefingLabel>
+      <BriefingLabel>{'// 02 · Workflow'}</BriefingLabel>
       <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         One cycle. Every op.
       </h2>
@@ -70,16 +68,13 @@ export function HowItWorks() {
           <li
             key={step.title}
             className={cn(
-              'relative border-l-2 border-zinc-200 pl-8 dark:border-zinc-800',
+              'relative pl-8',
               index === STEPS.length - 1 ? 'pb-0' : 'pb-8',
             )}
           >
             <span
               className={cn(
-                'absolute -left-[17px] top-0 flex size-8 items-center justify-center rounded-full font-mono text-[13px]',
-                step.accent === true
-                  ? 'bg-amber-600 text-white dark:bg-amber-500'
-                  : 'bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900',
+                'absolute -left-[17px] top-0 flex size-8 items-center justify-center rounded-full font-mono text-[13px] bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900',
               )}
             >
               {index + 1}

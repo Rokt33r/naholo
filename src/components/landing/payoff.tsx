@@ -27,7 +27,7 @@ const STATS: Stat[] = [
 export function Payoff() {
   return (
     <Section>
-      <BriefingLabel>{"// 01 · Why it's worth it"}</BriefingLabel>
+      <BriefingLabel>{'// 01 · Estimated yield'}</BriefingLabel>
 
       <div className='mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-800'>
         {STATS.map((stat) => (
