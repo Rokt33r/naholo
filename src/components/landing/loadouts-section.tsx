@@ -76,7 +76,7 @@ const FEATURES: Feature[] = [
   },
 ]
 
-export function TheKit() {
+export function LoadoutsSection() {
   return (
     <Section>
       <BriefingLabel>{'// 04 · Loadouts'}</BriefingLabel>

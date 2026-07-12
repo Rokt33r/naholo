@@ -51,7 +51,7 @@ const STEPS: Step[] = [
   },
 ]
 
-export function HowItWorks() {
+export function WorkflowSection() {
   return (
     <Section>
       <BriefingLabel>{'// 02 · Workflow'}</BriefingLabel>

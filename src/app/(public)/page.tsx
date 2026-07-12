@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { ClosingCTA } from '@/components/landing/closing-cta'
-import { Payoff } from '@/components/landing/payoff'
+import { DeploymentSection } from '@/components/landing/deployment-section'
+import { YieldSection } from '@/components/landing/yield-section'
 import { Hero } from '@/components/landing/hero'
-import { TheKit } from '@/components/landing/the-kit'
-import { WhyItWorks } from '@/components/landing/why-it-works'
-import { HowItWorks } from '@/components/landing/how-it-works'
+import { LoadoutsSection } from '@/components/landing/loadouts-section'
+import { ContractsSection } from '@/components/landing/contracts-section'
+import { WorkflowSection } from '@/components/landing/workflow-section'
 import { getAuthUser } from '@/server/auth/permissions'
 
 // Landing copy is intentionally English — the extraction-shooter framing
@@ -25,11 +25,11 @@ export default async function LandingPage() {
   return (
     <div className='not-prose'>
       <Hero isAuthed={isAuthed} />
-      <Payoff />
-      <HowItWorks />
-      <WhyItWorks />
-      <TheKit />
-      <ClosingCTA isAuthed={isAuthed} />
+      <YieldSection />
+      <WorkflowSection />
+      <ContractsSection />
+      <LoadoutsSection />
+      <DeploymentSection isAuthed={isAuthed} />
     </div>
   )
 }

@@ -29,7 +29,7 @@ const GATES: Gate[] = [
   },
 ]
 
-export function WhyItWorks() {
+export function ContractsSection() {
   return (
     <Section>
       <BriefingLabel>{'// 03 · contracts'}</BriefingLabel>

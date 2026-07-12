@@ -24,7 +24,7 @@ const STATS: Stat[] = [
   },
 ]
 
-export function Payoff() {
+export function YieldSection() {
   return (
     <Section>
       <BriefingLabel>{'// 01 · Estimated yield'}</BriefingLabel>

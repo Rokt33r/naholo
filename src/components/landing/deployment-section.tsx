@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
 
-export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
+export function DeploymentSection({ isAuthed }: { isAuthed: boolean }) {
   return (
     <Section className='border-b-0'>
       <div className='mx-auto max-w-2xl text-center'>
