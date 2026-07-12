@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { ClosingCTA } from '@/components/landing/closing-cta'
-import { Doctrine } from '@/components/landing/doctrine'
+import { Payoff } from '@/components/landing/payoff'
 import { Hero } from '@/components/landing/hero'
 import { Requirements } from '@/components/landing/requirements'
 import { ClearanceClassification } from '@/components/landing/clearance-classification'
-import { TacticalOverview } from '@/components/landing/tactical-overview'
+import { HowItWorks } from '@/components/landing/how-it-works'
 import { getAuthUser } from '@/server/auth/permissions'
 
 // Landing copy is intentionally English — the extraction-shooter framing
@@ -25,8 +25,8 @@ export default async function LandingPage() {
   return (
     <div className='not-prose'>
       <Hero isAuthed={isAuthed} />
-      <Doctrine />
-      <TacticalOverview />
+      <Payoff />
+      <HowItWorks />
       <ClearanceClassification />
       <Requirements />
       <ClosingCTA isAuthed={isAuthed} />
