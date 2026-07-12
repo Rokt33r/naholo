@@ -8,14 +8,14 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
     <Section className='border-b-0'>
       <div className='mx-auto max-w-2xl text-center'>
         <BriefingLabel className='justify-center'>
-          {'// 06 · Deployment'}
+          {'// 05 · Deployment'}
         </BriefingLabel>
         <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
-          Ready to deploy?
+          This is how you&apos;re supposed to do AI coding.
         </h2>
         <p className='mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-          Start your first operation, or fork it and spin up your own instance.
-          Available under MIT as open source.
+          Turn vibe coding back into real engineering. Start your first
+          operation, or fork it and self-host. It&apos;s MIT open source.
         </p>
 
         <div className='mt-10 flex flex-wrap items-center justify-center gap-4'>
@@ -24,14 +24,9 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
               <Link href='/app'>Enter ops room</Link>
             </Button>
           ) : (
-            <>
-              <Button asChild size='lg'>
-                <Link href='/sign-up'>Begin operation</Link>
-              </Button>
-              <Button asChild variant='outline' size='lg'>
-                <Link href='/sign-in'>Sign in</Link>
-              </Button>
-            </>
+            <Button asChild size='lg'>
+              <Link href='/sign-up'>Begin operation</Link>
+            </Button>
           )}
           <Button asChild variant='outline' size='lg'>
             <a
@@ -50,15 +45,6 @@ export function ClosingCTA({ isAuthed }: { isAuthed: boolean }) {
               View on GitHub
             </a>
           </Button>
-        </div>
-
-        <div className='mt-6 flex justify-center'>
-          <Link
-            href='/field-manual/quick-start'
-            className='inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400'
-          >
-            Read more: Quick start <span aria-hidden>→</span>
-          </Link>
         </div>
 
         <div className='mt-12 flex flex-wrap items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
