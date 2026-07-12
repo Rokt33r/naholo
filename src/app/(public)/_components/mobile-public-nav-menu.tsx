@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeMenuItems } from '@/components/theme-switcher'
+import { LanguageMenuItems } from './language-switcher'
 
 export function MobilePublicNavMenu({
   githubUrl,
@@ -58,6 +59,8 @@ export function MobilePublicNavMenu({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <ThemeMenuItems />
+        <DropdownMenuSeparator />
+        <LanguageMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import icon from '@/app/icon.png'
 import { ThemeSwitcher } from '@/components/theme-switcher'
+import { LanguageSwitcher } from './_components/language-switcher'
 import { PublicNavActions } from './_components/public-nav-actions'
 
 const GITHUB_URL = 'https://github.com/rokt33r/naholo'
@@ -54,7 +55,8 @@ export default function PublicLayout({
               Pricing
             </Link>
             <PublicNavActions githubUrl={GITHUB_URL} />
-            <div className='hidden md:inline-flex'>
+            <div className='hidden items-center gap-1 md:inline-flex'>
+              <LanguageSwitcher />
               <ThemeSwitcher />
             </div>
           </div>
