@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
 import { DeploymentSection } from '@/components/landing/deployment-section'
 import { YieldSection } from '@/components/landing/yield-section'
 import { Hero } from '@/components/landing/hero'
@@ -16,7 +17,14 @@ export const metadata: Metadata = {
     'AI coding without the spiral. naholo runs your coding ops end to end — infil into the codebase, brief the task, ship in splashes, exfil with the diff.',
 }
 
-export default async function LandingPage() {
+export default async function LandingPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   const user = await getAuthUser({
     allowedAuthMethods: ['session'],
   })
