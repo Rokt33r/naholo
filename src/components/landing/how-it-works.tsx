@@ -74,7 +74,7 @@ export function HowItWorks() {
           >
             <span
               className={cn(
-                'absolute -left-[17px] top-0 flex size-8 items-center justify-center rounded-full font-mono text-[13px] bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900',
+                'absolute -left-[17px] top-0 flex size-8 items-center justify-center rounded-full font-mono text-[13px] bg-zinc-900 text-zinc-50 dark:bg-zinc-800 dark:text-zinc-50',
               )}
             >
               {index + 1}
