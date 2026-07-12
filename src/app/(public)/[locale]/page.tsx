@@ -8,9 +8,6 @@ import { ContractsSection } from '@/components/landing/contracts-section'
 import { WorkflowSection } from '@/components/landing/workflow-section'
 import { getAuthUser } from '@/server/auth/permissions'
 
-// Landing copy is intentionally English — the extraction-shooter framing
-// reads as briefing/mission language. Legal and pricing pages stay Korean.
-
 export const metadata: Metadata = {
   title: 'naholo — coding ops, end to end',
   description:

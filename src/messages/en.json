@@ -1,4 +1,126 @@
 {
-  "landing": {},
+  "landing": {
+    "hero": {
+      "briefing": "// naholo · coding ops, end to end",
+      "clearance": "[ CLEARANCE: OPERATOR ]",
+      "titleLine1": "Stop babysitting your AI.",
+      "titleLine2": "Start commanding it",
+      "lead": "naholo runs your AI coding through one disciplined loop of <b>brief → plan → ship → debrief</b>. Every phase is chopped into review windows small enough to actually read so you stay in command while the agent does the chores.",
+      "ctaEnter": "Enter ops room",
+      "ctaBegin": "Begin operation",
+      "ctaManual": "Read the Field Manual",
+      "openSource": "open source · MIT"
+    },
+    "yield": {
+      "briefing": "// 01 · Estimated yield",
+      "heading": "The receipts back it up.",
+      "stats": {
+        "review": {
+          "value": "< 5 min",
+          "body": "to review each checkpoint. Every window is sized to hold in one sitting, so you never drown in diffs."
+        },
+        "tokens": {
+          "value": "30–60%",
+          "body": "fewer tokens burned. Throttled planning per phase means less wasted context."
+        },
+        "throughput": {
+          "value": "~3×",
+          "body": "throughput. One operator shipped a 5-day task in 1.5 days."
+        }
+      },
+      "footnote": "* Early results are anecdotal. The < 5 min review window is a design guarantee."
+    },
+    "workflow": {
+      "briefing": "// 02 · Workflow",
+      "heading": "One cycle. Every op.",
+      "lead": "Six small moves from a rough idea to a shipped, reviewed change. The agent moves fast between them; you review at every gate.",
+      "steps": {
+        "infil": {
+          "title": "Drop the intel",
+          "body": "Leave a rough idea or a pain point in the web app, or start straight from your codebase."
+        },
+        "warno": {
+          "title": "Brief the direction",
+          "review": "review < 5 min",
+          "body": "The agent pins the conceptual solution and the architecture decisions. It writes no tasks and no code yet, just a compact bullet list."
+        },
+        "opord": {
+          "title": "Cut the plan",
+          "review": "review < 5 min each",
+          "body": "The direction is chopped into single-commit-sized tasks. There is still no code, only a description of how the interfaces and module flows change."
+        },
+        "splash": {
+          "title": "Ship one task",
+          "review": "review < 5 min each",
+          "body": "The agent ships exactly one task. Anything it improvised is flagged as a deviation for you to accept or roll back."
+        },
+        "continue": {
+          "title": "Continue the cycle",
+          "body": "Review the next task and <code>/splash</code>, or re-run <code>/opord</code> to adjust the plan mid-flight."
+        },
+        "exfil": {
+          "title": "Debrief the spend",
+          "body": "It records the operation and its token usage to the server so you can look back. Weak plans cost more tokens, and now you can see exactly that."
+        }
+      }
+    },
+    "contracts": {
+      "briefing": "// 03 · contracts",
+      "heading": "Three reviews carry every change.",
+      "lead": "Agents write more than any human can keep up with, so you either vibe-code and ship slop or burn out trying to read it all. naholo throttles that output into a single document, built in small, swift steps that you review section by section.",
+      "gates": {
+        "warno": {
+          "label": "Warning Order",
+          "title": "Review the architecture",
+          "body": "You review a handful of decisions before any plan is written. It takes a couple of minutes, and because there is no giant document, no tokens go to waste."
+        },
+        "opord": {
+          "label": "Operation Order",
+          "title": "Review the plan",
+          "body": "Work is cut into single-commit tasks, each speccing how a module's interfaces and internal flow change. Staying at the contract level, not code, means fewer tokens to iterate and less time to review."
+        },
+        "splash": {
+          "label": "After-Action",
+          "title": "Review the changes",
+          "body": "Each task ships in isolation, and any improvisation is flagged as a deviation. You confirm it before you trust it in front of anyone else."
+        }
+      }
+    },
+    "loadouts": {
+      "briefing": "// 04 · Loadouts",
+      "heading": "Plan in the browser. Ship from the terminal.",
+      "lead": "Two tools, one loop: a web app that holds the context around every operation, and a CLI your agents drive to do the work.",
+      "features": {
+        "tracker": {
+          "kicker": "Web app · Operation tracker",
+          "title": "Keep every op's context in one place",
+          "body": "<p>Think GitHub Issues, but for AI coding. Drop intel as a note or a quick message, and your agents pull the full context on <code>/infil</code> and report back on <code>/exfil</code>.</p><p>Messages aren't an AI-chat wrapper. Use them for short memos and team communication.</p>"
+        },
+        "cli": {
+          "kicker": "CLI · Skills",
+          "title": "Run the whole loop from your terminal",
+          "body": "<p>Setup takes one step. <code>naholo init</code> connects the web app and installs the skills. The CLI ships optimized commands and an MCP server for your agents, keeping slop out and token usage low.</p><p>The skills walk agents through the workflow, so there's nothing to learn up front.</p>"
+        },
+        "stats": {
+          "kicker": "Web app · Agent stats",
+          "title": "See exactly where tokens go",
+          "body": "<p>The CLI collects every transcript during an op and uploads it on <code>/exfil</code>. Transcripts are <b>redacted by default</b>, so everything but the usage data is purged, and you can opt out or send the full transcript at any time.</p><p>Usage is broken down by skill and mode, and cost is figured at Claude API rates rather than subsidized plan rates.</p>"
+        }
+      },
+      "gearCheck": {
+        "label": "GEAR CHECK:",
+        "note": "Codex and Linux / Windows supported later."
+      }
+    },
+    "deployment": {
+      "briefing": "// 05 · Deployment",
+      "heading": "This is how you're supposed to do AI coding.",
+      "body": "Turn vibe coding back into real engineering. Start your first operation, or fork it and self-host. It's MIT open source.",
+      "ctaEnter": "Enter ops room",
+      "ctaBegin": "Begin operation",
+      "ctaManual": "Read the Field Manual",
+      "ctaGithub": "View on GitHub"
+    }
+  },
   "fieldManual": {}
 }

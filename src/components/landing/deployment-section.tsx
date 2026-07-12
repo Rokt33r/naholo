@@ -1,35 +1,37 @@
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { BriefingLabel } from './briefing-label'
 import { Section } from './section'
 
 export function DeploymentSection({ isAuthed }: { isAuthed: boolean }) {
+  const t = useTranslations('landing')
+
   return (
     <Section className='border-b-0'>
       <div className='mx-auto max-w-4xl text-center'>
         <BriefingLabel className='justify-center'>
-          {'// 05 · Deployment'}
+          {t('deployment.briefing')}
         </BriefingLabel>
         <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
-          This is how you&apos;re supposed to do AI coding.
+          {t('deployment.heading')}
         </h2>
         <p className='mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
-          Turn vibe coding back into real engineering. Start your first
-          operation, or fork it and self-host. It&apos;s MIT open source.
+          {t('deployment.body')}
         </p>
 
         <div className='mt-10 flex flex-wrap items-center justify-center gap-4'>
           {isAuthed ? (
             <Button asChild size='lg'>
-              <Link href='/app'>Enter ops room</Link>
+              <Link href='/app'>{t('deployment.ctaEnter')}</Link>
             </Button>
           ) : (
             <Button asChild size='lg'>
-              <Link href='/sign-up'>Begin operation</Link>
+              <Link href='/sign-up'>{t('deployment.ctaBegin')}</Link>
             </Button>
           )}
           <Button asChild variant='outline' size='lg'>
-            <Link href='/field-manual'>Read the Field Manual</Link>
+            <Link href='/field-manual'>{t('deployment.ctaManual')}</Link>
           </Button>
         </div>
 
@@ -48,7 +50,7 @@ export function DeploymentSection({ isAuthed }: { isAuthed: boolean }) {
                 alt='GitHub'
                 className='dark:invert'
               />
-              View on GitHub
+              {t('deployment.ctaGithub')}
             </a>
           </Button>
         </div>

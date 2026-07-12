@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { BriefingLabel } from './briefing-label'
@@ -5,54 +6,56 @@ import { GridBackdrop } from './grid-backdrop'
 import { Section } from './section'
 
 export function Hero({ isAuthed }: { isAuthed: boolean }) {
+  const t = useTranslations('landing')
+
   return (
     <Section className='relative overflow-hidden'>
       <GridBackdrop />
 
       <div className='relative z-10'>
         <div className='flex flex-wrap items-center gap-x-6 gap-y-2'>
-          <BriefingLabel>{'// naholo · coding ops, end to end'}</BriefingLabel>
+          <BriefingLabel>{t('hero.briefing')}</BriefingLabel>
           <span className='font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
-            [ CLEARANCE: OPERATOR ]
+            {t('hero.clearance')}
           </span>
         </div>
 
         <div className='relative mt-10 max-w-3xl'>
           <CornerBrackets />
           <h1 className='text-4xl font-bold leading-[1.05] tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl lg:text-7xl'>
-            Stop babysitting your AI.
+            {t('hero.titleLine1')}
             <br />
-            Start commanding it
+            {t('hero.titleLine2')}
             <span className='font-mono text-amber-600 dark:text-amber-500'>
               .
             </span>
           </h1>
 
           <p className='mt-8 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300 sm:text-lg'>
-            naholo runs your AI coding through one disciplined loop of{' '}
-            <strong className='font-semibold text-zinc-900 dark:text-zinc-50'>
-              brief → plan → ship → debrief
-            </strong>
-            . Every phase is chopped into review windows small enough to
-            actually read so you stay in command while the agent does the
-            chores.
+            {t.rich('hero.lead', {
+              b: (chunks) => (
+                <strong className='font-semibold text-zinc-900 dark:text-zinc-50'>
+                  {chunks}
+                </strong>
+              ),
+            })}
           </p>
 
           <div className='mt-10 flex flex-wrap items-center gap-4'>
             {isAuthed ? (
               <Button asChild size='lg'>
-                <Link href='/app'>Enter ops room</Link>
+                <Link href='/app'>{t('hero.ctaEnter')}</Link>
               </Button>
             ) : (
               <Button asChild size='lg'>
-                <Link href='/sign-up'>Begin operation</Link>
+                <Link href='/sign-up'>{t('hero.ctaBegin')}</Link>
               </Button>
             )}
             <Button asChild variant='outline' size='lg'>
-              <Link href='/field-manual'>Read the Field Manual</Link>
+              <Link href='/field-manual'>{t('hero.ctaManual')}</Link>
             </Button>
             <span className='ml-1 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500'>
-              <span aria-hidden>●</span> open source · MIT
+              <span aria-hidden>●</span> {t('hero.openSource')}
             </span>
           </div>
         </div>
