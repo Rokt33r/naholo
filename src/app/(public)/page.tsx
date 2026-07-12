@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ClosingCTA } from '@/components/landing/closing-cta'
 import { Payoff } from '@/components/landing/payoff'
 import { Hero } from '@/components/landing/hero'
-import { Requirements } from '@/components/landing/requirements'
+import { TheKit } from '@/components/landing/the-kit'
 import { WhyItWorks } from '@/components/landing/why-it-works'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { getAuthUser } from '@/server/auth/permissions'
@@ -28,7 +28,7 @@ export default async function LandingPage() {
       <Payoff />
       <HowItWorks />
       <WhyItWorks />
-      <Requirements />
+      <TheKit />
       <ClosingCTA isAuthed={isAuthed} />
     </div>
   )
