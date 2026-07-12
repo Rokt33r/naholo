@@ -6,7 +6,7 @@ import { Section } from './section'
 export function DeploymentSection({ isAuthed }: { isAuthed: boolean }) {
   return (
     <Section className='border-b-0'>
-      <div className='mx-auto max-w-2xl text-center'>
+      <div className='mx-auto max-w-4xl text-center'>
         <BriefingLabel className='justify-center'>
           {'// 05 · Deployment'}
         </BriefingLabel>
@@ -29,6 +29,12 @@ export function DeploymentSection({ isAuthed }: { isAuthed: boolean }) {
             </Button>
           )}
           <Button asChild variant='outline' size='lg'>
+            <Link href='/field-manual'>Read the Field Manual</Link>
+          </Button>
+        </div>
+
+        <div className='mt-4 flex flex-wrap items-center justify-center gap-4'>
+          <Button asChild variant='outline' size='lg'>
             <a
               href='https://github.com/Rokt33r/naholo'
               target='_blank'
@@ -45,15 +51,6 @@ export function DeploymentSection({ isAuthed }: { isAuthed: boolean }) {
               View on GitHub
             </a>
           </Button>
-        </div>
-
-        <div className='mt-12 flex flex-wrap items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
-          <span className='inline-flex items-center gap-2'>
-            <span className='h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400' />
-            [ STATUS: ONLINE ]
-          </span>
-          <span>·</span>
-          <span>[ OPERATORS STANDING BY ]</span>
         </div>
       </div>
     </Section>
