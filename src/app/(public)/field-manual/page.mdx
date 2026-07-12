@@ -1,0 +1,32 @@
+import { ChapterPager } from './chapter-pager'
+
+export const metadata = {
+  title: 'Field Manual — naholo',
+}
+
+{/* prettier-ignore */}
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>// 00 · Primer</p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>This We Will Code!</h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>Let the agent move fast. Keep the judgment yours.</p>
+</div>
+
+The agent is always confident. However you run it, whether you vibe code, token-max, or ship and see, the output behaves like a slot machine, and the confident tone never changes whether it hits or misses. The real trouble is not the misses. It is that the agent produces more output than any person can review, and three things break at once.
+
+**The human breaks.** You end up in one of two corners. The optimist stops reading the output and trusts a confident voice until it bites, which is **delusion**. The conscientious one tries to keep up with every diff, every transcript, and every tool call until they drown, which is **overload**. Both are the same failure, because no checkpoint is small enough to actually digest.
+
+**The project breaks.** As uncontrolled output stacks up, the next session learns from it, so complexity climbs and the agent has to improvise more. That is where the vicious cycle starts. The further you go, the more tokens your agents burn, the more monkeypatched code they introduce, and the more iterations they waste cleaning up the slop. Eventually the project struggles to meet either its budget or its schedule.
+
+**The world breaks.** Every retry runs on real hardware. The "more context, more retries" reflex quietly pours compute, electricity, and water into the void, and because nobody counts it, that cost never lands on a dashboard you actually check. The spend feels free precisely because it stays invisible.
+
+## How naholo helps
+
+naholo introduces small review windows so that you and the agent can move quickly and without stress. Each window is one document you review before the next step begins.
+
+- **WARNING ORDER (`/warno`)** focuses on the conceptual and architectural decisions.
+- **OPERATION ORDER (`/opord`)** chops the WARNING ORDER into single-commit-sized tasks, focusing on module-level contracts rather than code-level changes.
+- **After-Action Report and code changes (`/splash`)** focus on the details, so you can be fully confident to ship. Because the contracts were already written and reviewed, the code review itself becomes much easier.
+
+When you close an operation with `/exfil`, the agent usage stats are uploaded for that operation, so you can improve how you plan and ship with real numbers.
+
+<ChapterPager slug='' />
