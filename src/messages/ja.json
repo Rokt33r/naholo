@@ -158,5 +158,11 @@
         "body": "Military terms, naholo usage."
       }
     }
+  },
+  "meta": {
+    "landingTitle": "naholo — AIコーディング作戦、最初から最後まで",
+    "landingDescription": "AIコーディングを暴走させない。naholoは、ブリーフィングから実装、報告まで、コーディング作戦を最初から最後まで導きます。",
+    "primerTitle": "フィールドマニュアル — naholo",
+    "quickStartTitle": "クイックスタート — フィールドマニュアル — naholo"
   }
 }

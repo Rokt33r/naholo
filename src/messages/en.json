@@ -3,8 +3,8 @@
     "hero": {
       "briefing": "// naholo · coding ops, end to end",
       "clearance": "[ CLEARANCE: OPERATOR ]",
-      "titleLine1": "Stop babysitting your AI.",
-      "titleLine2": "Start commanding it",
+      "titleLine1": "Stop offloading to AI,",
+      "titleLine2": "Take command",
       "lead": "naholo runs your AI coding through one disciplined loop of <b>brief → plan → ship → debrief</b>. Every phase is chopped into review windows small enough to actually read so you stay in command while the agent does the chores.",
       "ctaEnter": "Enter ops room",
       "ctaBegin": "Begin operation",
@@ -158,5 +158,11 @@
         "body": "Military terms, naholo usage."
       }
     }
+  },
+  "meta": {
+    "landingTitle": "naholo — coding ops, end to end",
+    "landingDescription": "AI coding without the spiral. naholo runs your coding ops end to end: infil into the codebase, brief the task, ship in splashes, exfil with the diff.",
+    "primerTitle": "Field Manual — naholo",
+    "quickStartTitle": "Quick Start — Field Manual — naholo"
   }
 }

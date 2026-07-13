@@ -1,17 +1,26 @@
 import type { Metadata } from 'next'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DeploymentSection } from '@/components/landing/deployment-section'
 import { YieldSection } from '@/components/landing/yield-section'
 import { Hero } from '@/components/landing/hero'
 import { LoadoutsSection } from '@/components/landing/loadouts-section'
 import { ContractsSection } from '@/components/landing/contracts-section'
 import { WorkflowSection } from '@/components/landing/workflow-section'
+import { localeAlternates } from '@/i18n/metadata'
 import { getAuthUser } from '@/server/auth/permissions'
 
-export const metadata: Metadata = {
-  title: 'naholo — coding ops, end to end',
-  description:
-    'AI coding without the spiral. naholo runs your coding ops end to end — infil into the codebase, brief the task, ship in splashes, exfil with the diff.',
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'meta' })
+  return {
+    title: t('landingTitle'),
+    description: t('landingDescription'),
+    alternates: localeAlternates('/', locale),
+  }
 }
 
 export default async function LandingPage({

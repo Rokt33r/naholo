@@ -1,11 +1,21 @@
 import type { Metadata } from 'next'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { localeAlternates } from '@/i18n/metadata'
 import QuickStartEn from './quick-start.en.mdx'
 import QuickStartJa from './quick-start.ja.mdx'
 import QuickStartKo from './quick-start.ko.mdx'
 
-export const metadata: Metadata = {
-  title: 'Quick Start — Field Manual — naholo',
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'meta' })
+  return {
+    title: t('quickStartTitle'),
+    alternates: localeAlternates('/field-manual/quick-start', locale),
+  }
 }
 
 const QUICK_START_BY_LOCALE: Record<string, typeof QuickStartEn> = {

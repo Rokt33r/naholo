@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://naholo.app'),
   title: 'naholo - Note App',
   description: 'Messenger-style note taking app',
 }

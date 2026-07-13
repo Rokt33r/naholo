@@ -158,5 +158,11 @@
         "body": "Military terms, naholo usage."
       }
     }
+  },
+  "meta": {
+    "landingTitle": "naholo — AI 코딩 작전, 처음부터 끝까지",
+    "landingDescription": "AI 코딩을 통제 불능에 빠뜨리지 않게. naholo는 브리핑부터 구현, 사후보고까지 코딩 작전을 처음부터 끝까지 이끕니다.",
+    "primerTitle": "야전 교범 — naholo",
+    "quickStartTitle": "빠른 시작 — 야전 교범 — naholo"
   }
 }
