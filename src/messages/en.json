@@ -94,11 +94,11 @@
         "tracker": {
           "kicker": "Web app · Operation tracker",
           "title": "Keep every op's context in one place",
-          "body": "<p>Think GitHub Issues, but for AI coding. Drop intel as a note or a quick message, and your agents pull the full context on <code>/infil</code> and report back on <code>/exfil</code>.</p><p>Messages aren't an AI-chat wrapper. Use them for short memos and team communication.</p>"
+          "body": "<p>Think GitHub Issues, but for AI coding. Drop intel as a note or a quick message, and your agents pull the full context on <code>/infil</code> and report back on <code>/exfil</code>.</p><p>*Messages aren't an AI-chat wrapper. Use them for short memos and team communication.</p>"
         },
         "cli": {
           "kicker": "CLI · Skills",
-          "title": "Run the whole loop from your terminal",
+          "title": "Run the whole loop from your terminal/IDE",
           "body": "<p>Setup takes one step. <code>naholo init</code> connects the web app and installs the skills. The CLI ships optimized commands and an MCP server for your agents, keeping slop out and token usage low.</p><p>The skills walk agents through the workflow, so there's nothing to learn up front.</p>"
         },
         "stats": {
