@@ -26,10 +26,10 @@ export function WorkflowSection() {
   return (
     <Section>
       <BriefingLabel>{t('workflow.briefing')}</BriefingLabel>
-      <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
+      <h2 className='mt-4 font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         {t('workflow.heading')}
       </h2>
-      <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+      <p className='mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
         {t('workflow.lead')}
       </p>
 

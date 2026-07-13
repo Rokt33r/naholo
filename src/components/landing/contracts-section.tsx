@@ -19,10 +19,10 @@ export function ContractsSection() {
   return (
     <Section>
       <BriefingLabel>{t('contracts.briefing')}</BriefingLabel>
-      <h2 className='mt-4 max-w-3xl text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
+      <h2 className='mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl'>
         {t('contracts.heading')}
       </h2>
-      <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300'>
+      <p className='mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300'>
         {t('contracts.lead')}
       </p>
 
@@ -30,7 +30,7 @@ export function ContractsSection() {
         {GATES.map((gate) => (
           <div
             key={gate.id}
-            className='grid grid-cols-1 gap-2 border-t border-zinc-200 py-6 md:grid-cols-[210px_1fr] md:gap-8 dark:border-zinc-800'
+            className='grid grid-cols-1 gap-2 border-t border-zinc-200 py-6 md:grid-cols-[230px_1fr] md:gap-8 dark:border-zinc-800'
           >
             <div className='font-mono text-sm uppercase tracking-[0.1em] text-amber-600 dark:text-amber-500'>
               {t(`contracts.gates.${gate.id}.label`)}
