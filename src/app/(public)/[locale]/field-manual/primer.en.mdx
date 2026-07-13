@@ -20,7 +20,7 @@ The agent is always confident. However you run it, whether you vibe code, token-
 naholo introduces small review windows so that you and the agent can move quickly and without stress. Each window is one document you review before the next step begins.
 
 - **WARNING ORDER (`/warno`)** focuses on the conceptual and architectural decisions.
-- **OPERATION ORDER (`/opord`)** chops the WARNING ORDER into single-commit-sized tasks, focusing on module-level contracts rather than code-level changes.
+- **OPERATION ORDER (`/opord`)** chops the WARNING ORDER into single-commit-sized (usually < 5 files) tasks, focusing on module-level contracts rather than code-level changes.
 - **After-Action Report and code changes (`/splash`)** focus on the details, so you can be fully confident to ship. Because the contracts were already written and reviewed, the code review itself becomes much easier.
 
 When you close an operation with `/exfil`, the agent usage stats are uploaded for that operation, so you can improve how you plan and ship with real numbers.
