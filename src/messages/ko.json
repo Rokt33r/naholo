@@ -122,5 +122,41 @@
       "ctaGithub": "GitHub에서 보기"
     }
   },
-  "fieldManual": {}
+  "fieldManual": {
+    "chaptersHeading": "// Chapters",
+    "pager": {
+      "prev": "← 이전",
+      "next": "다음 →"
+    },
+    "chapters": {
+      "primer": {
+        "label": "도입",
+        "body": "판단은 사람에게, 에이전트는 효율적으로."
+      },
+      "quickStart": {
+        "label": "빠른 시작",
+        "body": "우선 사이클을 체험해봅시다."
+      },
+      "workflow": {
+        "label": "Workflow",
+        "body": "Each skill, in depth."
+      },
+      "logistics": {
+        "label": "Logistics",
+        "body": "The precise contracts for every skill, file, and tool."
+      },
+      "sere": {
+        "label": "S.E.R.E.",
+        "body": "The recovery matrix when the cycle stalls."
+      },
+      "customize": {
+        "label": "Customize",
+        "body": "From bundled cycle to a team-owned binary."
+      },
+      "glossary": {
+        "label": "Glossary",
+        "body": "Military terms, naholo usage."
+      }
+    }
+  }
 }

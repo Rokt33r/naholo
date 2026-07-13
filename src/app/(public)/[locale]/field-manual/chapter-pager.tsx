@@ -1,4 +1,7 @@
-import Link from 'next/link'
+'use client'
+
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import { chapterHref, chapters, type Chapter } from './chapters'
 
 export function ChapterPager({ slug }: { slug: string }) {
@@ -24,6 +27,7 @@ function PagerCard({
   chapter: Chapter
   direction: 'prev' | 'next'
 }) {
+  const t = useTranslations('fieldManual')
   const isNext = direction === 'next'
   return (
     <Link
@@ -34,13 +38,13 @@ function PagerCard({
       }
     >
       <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
-        {isNext ? 'Next →' : '← Prev'}
+        {isNext ? t('pager.next') : t('pager.prev')}
       </p>
       <p className='mt-0.5 font-mono text-sm font-semibold uppercase tracking-[0.15em] text-amber-600 dark:text-amber-500'>
-        {`${chapter.number}·${chapter.label}`}
+        {`${chapter.number}·${t(`chapters.${chapter.id}.label`)}`}
       </p>
       <p className='mt-1 text-sm leading-snug text-zinc-600 dark:text-zinc-400'>
-        {chapter.body}
+        {t(`chapters.${chapter.id}.body`)}
       </p>
     </Link>
   )
