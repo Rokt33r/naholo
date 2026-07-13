@@ -1,0 +1,109 @@
+import { ChapterPager } from '../chapter-pager'
+
+{/* prettier-ignore */}
+<div className='not-prose'>
+  <p className='font-mono text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-500'>// 01 · 빠른 시작</p>
+  <h1 className='mt-3 font-mono text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl'>천 리 길도 한 걸음부터.</h1>
+  <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>우선 사이클을 체험해봅시다.</p>
+</div>
+
+작업은 두 개의 무대에서 이뤄집니다. 웹 앱은 정보를 수집하고 에이전트가 한 일을 검토하는 곳이며, 코딩 에이전트가 돌아가는 터미널이나 IDE는 실제 작업이 일어나는 곳입니다. `naholo` CLI는 사람과 에이전트를 위해 웹앱과 로컬 개발환경 사이의 가교 역할을 합니다.
+
+## 사전 준비와 설정
+
+장비는 머신마다 한 번만 갖추면 됩니다.
+
+- naholo 계정과 프로젝트. (작전은 프로젝트 밑으로 생성됩니다.)
+- macOS. (Linux와 Windows 지원은 추후 제공됩니다.)
+- 코드를 수정할 로컬 리포지터리.
+- Node.js v22 이상, npm 또는 pnpm.
+- 코딩 에이전트로 [Claude Code](https://claude.com/claude-code). Codex 지원은 추후 제공됩니다.
+  - [VS Code](https://code.visualstudio.com/)를 쓴다면, 공식 Claude Code 확장을 강력히 권장합니다.
+  - Claude 데스크톱 앱은 권장하지 않습니다. (로컬 파일 `OPERATION.md`을 열람할 필요가 있습니다.)
+
+CLI를 설치하고, 로그인한 뒤, 저장소를 프로젝트에 연결하세요.
+
+```bash
+npm install -g @naholo/cli
+naholo login
+
+# 팀 설정: 프로젝트 연결 정보를 저장소에 기록해 팀원이 그대로 물려받게 합니다
+naholo init
+# 개인 설정: 같은 연결 정보를 ~/.naholo/ 아래에 두고 아무것도 커밋하지 않습니다
+naholo covert init
+```
+
+## 1. 작전 생성과 `/infil`
+
+웹 앱에서 새로운 작전을 생성하세요. 해결하고 싶은 문제나, 만들고픈 아이디어로 제목을 정하고, 떠오르는 아이디어를 가볍게 로그나 노트로 남겨보세요. 그리고 다음 스킬을 실행합니다:
+
+```
+/infil <작전번호>
+```
+
+또는 웹 앱을 건너뛰고 에이전트에서 이렇게 실행하세요:
+
+```
+/fob <제목>
+<첫 로그 (선택)>
+```
+
+`/fob`는 작전을 서버에 생성하고 `/infil`을 한 번에 이어 실행하여, 같은 지점에 도달하게 합니다.
+
+## 2. `/warno`
+
+컨텍스트 투입이 확인되면 다음 스킬을 실행합니다:
+
+```
+/warno
+```
+
+주어진 컨텍스트를 중심으로, 솔루션의 컨샙과 아키텍처 결정을 WARNING ORDER(준비명령)에 기술합니다. Concept of Operations(작전개요)와 Constraints(제한사항)를 검토하세요. 불확실한 부분이나 마음에 안드는 부분이 있으면, 추가 스킬 사용없이, 이어서 에이전트에게 물어보거나 수정을 부탁하세요. 직접 WARNING ORDER를 수정해도 됩니다.
+
+단, 너무 자세한 요구는 절대적인 내용이 아니라면 삼가세요. 수정이 불가능한 건 아니지만, 작전명령과 코드 변경에 방해가 될 수 있습니다.
+
+## 3. `/opord`
+
+준비명령이 완료되면 다음 스킬을 실행합니다:
+
+```
+/opord
+```
+
+앞서 준비된 WARNING ORDER를 커밋 하나 크기의 태스크로 쪼개 OPERATION ORDER(작전명령)에 기술합니다. 태스크는 모듈 단위의 계약을 중심으로 기술되어 모듈 레벨의 역학 변경을 쉽게 검토할 수 있게 해줍니다. 모듈 이름, 인터페이스 설계, 실행 흐름을 검토하세요. 태스크 수정이 필요하다면, 역시 추가 스킬 사용없이, 이어서 에이전트에게 부탁하거나, 직접 파일을 수정할 수 있습니다.
+
+너무 무리해서 검토할 필요는 없습니다. 제한사항과는 다르게, 코드 변경 후에도 조정할 수 있습니다.
+
+## 4. `/splash`
+
+검토가 끝나면 다음 스킬을 실행합니다:
+
+```
+/splash
+```
+
+아직 완료되지않은 태스크를 실행하고, After-Action Report(사후보고)를 작성합니다. 작전명령에 기술되지 않은 변경이 일어난 경우, Deviations에 등록됩니다. 코드 변경과 After-Action Report를 검토하세요.
+
+코드 변경에 사소한 문제가 있는 경우, 추가 스킬 사용없이 그대로 에이전트에게 수정을 부탁하거나, 직접 수정한 다음에 에이전트에게 사후보고를 갱신해달라 할 수 있습니다.
+중대한 변경이 필요한 경우엔, 다시 `/opord 태스크를 추가해줘...`를 사용해 태스크를 추가하길 권장합니다.
+
+코드 변경에 문제가 없으면 다음 태스크를 이어서 확인합니다.
+이후 문제 없으면 이어서 `/splash`를, 수정이 필요하다면 `/opord 다음 태스크를 수정해줘...`를 사용하여 태스크를 조정한 다음에 `/splash`를 실행하면 됩니다.
+
+> Post-skill phase: `/warno`, `/opord`, `/splash`는 스킬 실행 후, 다른 스킬이 사용되기 전까지 해당 스킬 페이즈를 유지합니다. `/warno` 실행 후에 WARNING ORDER를 수정, `/opord` 실행 후에 OPERATION ORDER를 수정, `/splash` 후에 코드를 수정할 경우엔 다시 스킬을 사용할 필요없이 직접 프롬프트로 요구하는 것으로 충분합니다.
+
+## 5. `/exfil`
+
+모든 태스크가 완료되면 다음 스킬을 실행합니다:
+
+```
+/exfil
+```
+
+모든 노트와 에이전트 사용 정보를 웹 앱에 등록합니다. 모든 태스크가 끝난 경우, 웹 앱에 등록된 작전도 닫아줍니다.
+
+> **팁:** 새 작전을 `/infil`하기 전에 `/clear`를 실행해, 컨텍스트를 초기화하세요.
+
+스킬에 대한 자세한 설명과 `/recon`, `/chop` 등의 추가 스킬에 대한 정보는 [Workflow](/ko/field-manual/workflow) 야전 교범에서 확인할 수 있습니다.
+
+<ChapterPager slug='quick-start' />

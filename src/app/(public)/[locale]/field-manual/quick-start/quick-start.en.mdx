@@ -7,19 +7,19 @@ import { ChapterPager } from '../chapter-pager'
   <p className='mt-4 font-mono text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>Learn the cycle by running it once.</p>
 </div>
 
-Run the cycle once, end to end, and you will drive a blank operation all the way to a closed one. You work across two surfaces. The web app is where you capture intel and review what your agent did, and your coding agent is where the work happens. The `naholo` CLI sits underneath both, and you install it once.
+You will work across two surfaces. The web app is where you capture intel and review what your agent did, and your terminal or IDE is where the work happens. The `naholo` CLI works as a bridge between the web app and the local dev environment, for both humans and agents.
 
 ## Prerequisites and setup
 
 Lay the gear once per machine.
 
-- A naholo account and a project, because operations belong to projects.
-- macOS. Linux and Windows support is coming later.
-- A local repository for the agent to ship code into.
-- Node.js v22 or newer, with either npm or pnpm.
+- A naholo account and a project. (Operations are created under a project.)
+- macOS. (Linux and Windows support is coming later.)
+- A local repository to make code changes in.
+- Node.js v22 or newer, with npm or pnpm.
 - [Claude Code](https://claude.com/claude-code) as your coding agent. Codex support is coming later.
   - If you use [VS Code](https://code.visualstudio.com/), the official Claude Code extension is highly recommended.
-  - The Claude desktop app is not recommended, because the cycle requires reviewing a local file, `OPERATION.md`.
+  - The Claude desktop app is not recommended. (The cycle requires reviewing a local file, `OPERATION.md`.)
 
 Install the CLI, sign in, and wire the repository to a project.
 
@@ -35,7 +35,7 @@ naholo covert init
 
 ## 1. Create an operation and `/infil`
 
-In the web app, open a new operation, title it after the problem, and drop logs for every pain and constraint. Then run:
+In the web app, create a new operation. Title it after the problem you want to solve or the idea you want to build, and jot down whatever comes to mind as logs or notes. Then run the skill below:
 
 ```
 /infil <operationNumber>
@@ -52,38 +52,56 @@ Or skip the web app and run this in your agent:
 
 ## 2. `/warno`
 
+Once the context is infilled, run the skill below:
+
 ```
 /warno
 ```
 
-It writes the WARNING ORDER with the architecture decisions. Read the Constraints and fix the direction before you move on.
+Working from that context, it writes the solution's concept and architecture decisions into the WARNING ORDER. Review the Concept of Operations and the Constraints. If anything is unclear or you are not happy with it, you do not need another skill: just ask the agent or request changes in the same conversation. You can also edit the WARNING ORDER yourself.
+
+That said, hold back on overly specific demands unless they are truly essential. They are not impossible to change, but they can get in the way of the OPERATION ORDER and the code changes.
 
 ## 3. `/opord`
+
+Once the WARNING ORDER is complete, run the skill below:
 
 ```
 /opord
 ```
 
-It cuts the WARNING ORDER into single-commit-sized tasks in the OPERATION ORDER and mirrors them into `TASKS.md`. Skim the task list.
+It chops the WARNING ORDER prepared earlier into single-commit-sized tasks and writes them into the OPERATION ORDER. Tasks are described around module-level contracts, so module-level behavior changes are easy to review. Check the module names, the interface design, and the execution flow. If a task needs changes, again without another skill, ask the agent in the same conversation, or edit the file yourself.
+
+There is no need to over-review here. Unlike the Constraints, these can still be adjusted after the code changes.
 
 ## 4. `/splash`
+
+Once your review is done, run the skill below:
 
 ```
 /splash
 ```
 
-It ships the next task, writes the task's After-Action Report, and stops. Review the report and the diff, then run `/splash` again, and repeat until every box in `TASKS.md` is checked. (Run `/opord` if you need to change the upcoming tasks.)
+It runs the next unfinished task and writes its After-Action Report. If any change happens that was not described in the OPERATION ORDER, it is recorded under Deviations. Review the code changes and the After-Action Report.
+
+If there is a minor issue with the code changes, without another skill you can ask the agent to fix it, or fix it yourself and then ask the agent to update the After-Action Report. If a larger change is needed, we recommend adding a task with `/opord add a task...`.
+
+If the code changes look good, move on to the next task. When it is fine, run `/splash` again; if it needs changes, adjust the task with `/opord revise the next task...` and then run `/splash`.
+
+> **Post-skill phase:** after `/warno`, `/opord`, or `/splash` runs, that skill's phase stays active until another skill is used. To edit the WARNING ORDER after `/warno`, the OPERATION ORDER after `/opord`, or the code after `/splash`, you do not need to re-run the skill: just ask directly in a prompt.
 
 ## 5. `/exfil`
+
+Once every task is done, run the skill below:
 
 ```
 /exfil
 ```
 
-It pushes all notes and agent stats to the web app. If every task is finished, it also closes the operation.
+It registers all notes and agent usage data to the web app. When every task is finished, it also closes the operation on the web app.
 
-> **Tip:** Run `/clear` before `/infil`ing a new operation to start the next one with a clean context window.
+> **Tip:** Run `/clear` before `/infil`ing a new operation to reset the context.
 
-[Workflow](/field-manual/workflow) covers every branch and side flow, including the `/recon` route that talks the idea out against the codebase before it becomes an operation.
+For detailed explanations of each skill and the extra skills like `/recon` and `/chop`, see the [Workflow](/field-manual/workflow) field manual.
 
 <ChapterPager slug='quick-start' />

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import QuickStartEn from './quick-start.en.mdx'
+import QuickStartJa from './quick-start.ja.mdx'
+import QuickStartKo from './quick-start.ko.mdx'
 
 export const metadata: Metadata = {
   title: 'Quick Start — Field Manual — naholo',
@@ -8,6 +10,8 @@ export const metadata: Metadata = {
 
 const QUICK_START_BY_LOCALE: Record<string, typeof QuickStartEn> = {
   en: QuickStartEn,
+  ko: QuickStartKo,
+  ja: QuickStartJa,
 }
 
 export default async function QuickStartPage({
