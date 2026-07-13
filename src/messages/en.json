@@ -88,7 +88,7 @@
     },
     "loadouts": {
       "briefing": "// 04 · Loadouts",
-      "heading": "Plan in the browser. Ship from the terminal.",
+      "heading": "Plan in the browser. Ship from the terminal/IDE.",
       "lead": "Two tools, one loop: a web app that holds the context around every operation, and a CLI your agents drive to do the work.",
       "features": {
         "tracker": {
@@ -98,7 +98,7 @@
         },
         "cli": {
           "kicker": "CLI · Skills",
-          "title": "Run the whole loop from your terminal/IDE",
+          "title": "Provide skills/tools/commands for human and agents",
           "body": "<p>Setup takes one step. <code>naholo init</code> connects the web app and installs the skills. The CLI ships optimized commands and an MCP server for your agents, keeping slop out and token usage low.</p><p>The skills walk agents through the workflow, so there's nothing to learn up front.</p>"
         },
         "stats": {
