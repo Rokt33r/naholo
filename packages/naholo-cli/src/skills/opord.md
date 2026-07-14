@@ -228,7 +228,7 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
   - `Move {oldPath} → {newPath}` — one-line description (e.g. "rename for clarity", "relocate into shared lib"). Use `→` (Unicode arrow). Sub-bullets only when symbols' signatures change as part of the move; pure relocations get no sub-bullets.
   - `Delete {path}` — one-line reason
   - `` Run `{command}` `` — one-line purpose (migrations, rebuilds, etc.)
-  - `Manual: {action}` — one-line description of what the user must do (verify in browser, run a command the agent must not run, paste a secret, etc.). `/splash` pauses on these and asks the user to confirm completion before continuing.
+  - `Manual: {action}` — one-line description of what the user must do (run a command the agent must not run, paste a secret, etc.). `/splash` pauses on these and asks the user to confirm completion before continuing.
 
   Sub-bullets (only under `Add` / `Edit` / `Move`) name **top-level exported symbols**, one-liner per sub-bullet. List every changed export, even when the file exports a single thing (e.g. a Commander subcommand module). Do NOT list internal helpers, private functions, or per-line code descriptions. Omit sub-bullets entirely on `Delete` / `Run` / `Manual`, on `Edit` items where no exported symbol is meaningfully changed (e.g. a registration-only edit), and on `Move` items that are pure relocations.
 
@@ -250,7 +250,9 @@ One `### TASK N — Title` subsection per task, in order. Each task section has 
 
   Include all steps you can predict; `/splash` may add files in its AAR if it discovers more.
 
-  Do **not** list general post-edit verification commands (formatters, type checkers, etc.) that already live in `CLAUDE.md` or `.claude/rules/` — `/splash` reads those rules and runs the verifications itself. The action list should only carry steps that are specific to this task. Project-owned actions the agent must not run (e.g. database migrations) still belong on the action list as `Manual: {action}` so `/splash` surfaces them.
+  **Never** list general post-edit verification commands (formatters, type checkers, etc.) that already live in `CLAUDE.md` or `.claude/rules/` — `/splash` reads those rules and runs the verifications itself. The action list should only carry steps that are specific to this task. Project-owned actions the agent must not run (e.g. database migrations) still belong on the action list as `Manual: {action}` so `/splash` surfaces them.
+
+  **Never** create a `Manual:` step for a UI check. When a task changes UI, add where to check to the AAR's `Notes` so the user can verify it optionally.
 
 `/opord`'s per-task template ends at `#### Target Description`. Do **not** write a `#### After-Action Report` heading or body — `/splash` adds the heading + body when it ships the task.
 
@@ -262,6 +264,7 @@ A single-commit-sized task is one cohesive change that a reviewer can read as a 
 - **Compound titles are a split tell.** If a task title needs a comma, "and", or "+" to describe it ("Slim X, relocate Y, strip Z"), each clause is a split candidate. Split until every title is a single verb + object.
 - No sub-tasks. If a chunk feels like it needs sub-bullets, split it into two top-level tasks. (Target Description action-list sub-bullets are not sub-tasks — they're per-symbol annotations on a single step.)
 - Tasks are ordered for shipping — top-to-bottom is the default `/splash` order.
+- **Cut root-first, not leaf-first.** Sequence composing work as contract → root → leaves: settle the contract first (interfaces, schema, types), then build the root (the page or endpoint) as a running skeleton that stands in for its unbuilt pieces with UI placeholders or commented stubs describing how each leaf will behave, then build each leaf in its own task and wire it into the root in place of its placeholder. The reviewer catches deviations early, before later tasks build on top of them. Leaf-first ordering (build each component, wire the page last) is the anti-pattern.
 - An intent that says "do A or B" is a bug — pick one and explain the reasoning in the WARNO's Constraints (or ask `/warno` to add the decision if it's missing).
 
 ### 8. Mirror to TASKS.md
