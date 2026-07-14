@@ -148,6 +148,10 @@ Reach for it on small OPs whose architecture is obvious &mdash; bug fixes, doc u
 
 `/raid` aborts if `## WARNING ORDER` or `## OPERATION ORDER` already exists &mdash; the paths for revisions stay with `/warno` and `/opord`. Freeform args after `/raid` are forwarded to the chained `/opord`. The session lands in the **opord phase** when done; ship tasks with `/splash`.
 
+<h2 id='frago'>/frago &mdash; revise both orders at once</h2>
+
+`/frago` runs `/warno` then `/opord` with the same prompt, so a revision touching both the WARNO and the task list lands in one call. It needs both `## WARNING ORDER` and `## OPERATION ORDER` to already exist; when only one is affected, run `/warno` or `/opord` alone.
+
 <h2 id='opord'>/opord &mdash; cut the WARNO into tasks</h2>
 
 `/opord` is the **detail-cutting** phase. It reads the populated WARNO and writes `## OPERATION ORDER`: one `### TASK N — Title` section per task. Each task carries:
