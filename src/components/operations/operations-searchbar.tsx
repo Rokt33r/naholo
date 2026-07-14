@@ -46,7 +46,7 @@ export function OperationsSearchbar({
         <div className='relative'>
           <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
           <Input
-            placeholder='Search operations…  try assignee:rokt33r or #273'
+            placeholder='Search operations… try assignee:<callsign>, label:<label-name> #<op-num>'
             value={searchInput}
             onChange={(e) => onSearchChange(e.target.value)}
             className={cn('pl-9', searchInput.length > 0 && 'pr-9')}
