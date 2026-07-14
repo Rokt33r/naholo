@@ -123,28 +123,20 @@ If CONOPS or the Constraint list keep growing past the size you can hold in your
 
 <h2 id='recon'>/recon &mdash; talk it out before you fire a prompt</h2>
 
-Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch &mdash; the agent answers questions, pulls files on demand, and the conversation shapes the freeform args you&rsquo;ll fire next. Don&rsquo;t burn a `/warno ...` or `/opord ...` figuring out what you want; figure it out in recon first.
+Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch: the agent answers questions, pulls files on demand, and records what you decide to change as a pinned RECON note. Don&rsquo;t burn a `/warno ...` or `/opord ...` figuring out what you want; work it out in recon first.
 
-`/recon` runs in one of two branches based on whether an op is infilled:
+`/recon` needs an arg (a question or a change request) and aborts without one. Each turn is one of two things:
 
-- **Infilled** &mdash; the agent reads `OPERATION.md` + `TIMELINE.md` up front and answers with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno ...`, `/opord ...`, `/splash N "..."`).
-- **No infilled op** &mdash; the agent skips the OP context load and answers from the codebase alone, reading files on demand. If your question describes work you would want to track as an operation (a fix, a feature, a refactor), the agent points you at `/fob` to create + infil:
+- **A question** &mdash; answered concisely (about 200 words), reading files on demand. It elaborates only when you ask, and writes nothing.
+- **A change request** &mdash; when you ask to change the plan or the code, the agent writes a `notes/RECONn.md` note drafting the change, then hands off. With no op infilled, a change request instead points you at `/fob` to create + infil.
 
-  ```
-  /fob <title>
-  <content>
-  ```
+A RECON note is a task section for `OPERATION.md` instead of the codebase, numbered per OP (`RECON1`, `RECON2`, ...). Three sections:
 
-  `/fob` follows the same handoff rule as the other phase-changing skills (see below).
+- `## Intent` &mdash; the pain and what you want.
+- `## Scheme` &mdash; optional; the detailed how, skipped when the FRAGMENTARY ORDER already says everything.
+- `## FRAGMENTARY ORDER` &mdash; an `(Add)` / `(Edit)` / `(Drop)` list of the change, routed against the op&rsquo;s current state: it folds into the last finished task (a revision `/splash N`), lands as an `/opord` change to the task list, or needs both a `/warno` and an `/opord` change when it cuts against the WARNO.
 
-Reach for it when:
-
-- A Constraint in the WARNO sounds fishy or unsure after `/warno` &mdash; talk through the decision before keeping it, dropping it, or revising it.
-- You want to revise a TASK or a shipped change but the prompt is not obvious &mdash; work out what to ask before you ask.
-- You want to think out loud about a piece of the codebase before deciding whether it deserves its own OP.
-- Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infilled).
-
-As the conversation gathers context, the agent proposes the next action as a compact **draft preview** &mdash; a one-line summary and a bullet per change, not the full order text. If it looks good, just say so (`looks good, run warno`); override it (`run opord for tasks 1 and 3 only`); or invoke a skill directly (`/warno ...`, `/opord ...`). Either way `/recon` writes **nothing** until you fire &mdash; no `OPERATION.md`, `TASKS.md`, TIMELINE, or server changes.
+The note is the review surface: you read it, then fire the routed skill (`/splash N`, `/opord`, or `/warno` + `/opord`). `/recon` stamps a `recon` line in TIMELINE when it writes, and makes no other change and no server sync.
 
 The recon phase ends when a phase-changing skill (`/infil` / `/warno` / `/opord` / `/splash` / `/chop` / `/chopchop` / `/nochop`) or `/exfil` runs; `/sitrep` is sync-only and leaves recon intact.
 

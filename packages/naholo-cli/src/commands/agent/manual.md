@@ -39,7 +39,7 @@ The agent-facing lifecycle for an operation is a one-way pipeline from server to
 10. **`/sitrep ["freeform"]`** — Input: local dir with progress. Output: server synced (tasks + all notes including `TIMELINE.md` and any in-flight `CHOP.md`), summary log posted. Does not close. Optional freeform args become extra context for the summary log.
 11. **`/exfil ["freeform"]`** — Input: finished local dir. Output: server synced, summary log posted, optionally closes operation (closes when args explicitly say so or all tasks are done, asks otherwise), deletes local dir.
 
-**Read-only side branch — `/recon ["first question"]`**: Input: infilled operation. Loads `OPERATION.md` + `TIMELINE.md` and drops the session into a passive Q&A phase — answers questions about the OP and pulls extra files (`LOGS.yml`, other notes, codebase) on demand. Writes nothing — no `OPERATION.md` edits, no `TASKS.md` edits, no `add-timeline` bullets, no server syncs. Runnable from any post-`/infil` state without disturbing WARNING ORDER / OPERATION ORDER / AAR content. Phase-changing skills (`/warno`, `/opord`, `/splash`, `/chop`, `/chopchop`, `/nochop`) and `/exfil` end the recon phase.
+**Talk-it-out side branch — `/recon "<question | change request>"`**: Input: infilled operation (or none). Requires an arg; aborts with no arg. Answers a question concisely. On a change request while infilled, writes a `notes/RECONn.md` note (e.g. `RECON2.md`); the user reviews it and fires the routed skill to apply the FRAGMENTARY ORDER. With no op infilled, a change request routes to `/fob`.
 
 The canonical happy-path cycle: `/infil → /warno → /opord → /splash → (user reviews AAR) → /splash → … → /exfil`. When the op doesn't exist on the server yet, `/fob "<title>\n<content>"` opens the cycle by creating the op and chaining `/infil` in one gesture. Small fresh OPs may collapse `/warno → /opord` into a single `/raid` invocation. Mid-cycle revisions: `/opord "freeform"` between splashes adjusts the unfinished plan (insert, drop, split, rewrite); re-run `/warno` for direction (WARNO) changes.
 
@@ -90,7 +90,17 @@ The chronological catch-up log. Its only purpose is to let a fresh agent session
 
 - **Heading**: `# TIMELINE — OP #{n}`
 - Body is a single chronological bullet list. Format: `- {YYYY-MM-DD HH:MM} — {stage}: {summary}` (no bold markers).
-- Stage labels: `infil`, `warno`, `raid`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop` — bare label, no parenthetical variants.
+- Stage labels: `infil`, `warno`, `raid`, `opord`, `splash`, `sitrep`, `exfil`, `chop`, `chopchop`, `nochop`, `recon` — bare label, no parenthetical variants.
+
+### `notes/RECONn.md`
+
+Talk-it-out records written by `/recon` when the user asks to change the orders. One file per change-shaping session, numbered monotonically per OP (`n` = next integer after the highest existing `notes/RECON*.md`, pinned, never re-slotted). A task section for `OPERATION.md` instead of the codebase, three sections in order (each led by an HTML comment explaining it):
+
+- `## Intent` — the pain and what the user wants.
+- `## Scheme` — optional; the detailed how. Omitted when `## FRAGMENTARY ORDER` already says everything.
+- `## FRAGMENTARY ORDER` — an `(Add)` / `(Edit)` / `(Drop)` list of the change, routed against op status (a shipped task's revision `/splash N`, an OPORD `TASK N`, or a Constraint + `TASK N`).
+
+`/recon` stamps `add-timeline -T recon` on write. RECON notes ride the ordinary `notes/*.md` sync (`/sitrep`, `/exfil`); the user applies one by firing the routed skill.
 
 ### `notes/*.md` — other notes
 
