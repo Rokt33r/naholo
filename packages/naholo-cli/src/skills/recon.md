@@ -1,30 +1,21 @@
 ---
 name: recon
-description: Talk-it-out side branch — read OPERATION.md + TIMELINE.md, answer questions, shape the freeform args for the next /warno / /opord / /splash. Writes nothing.
+description: Talk-it-out side branch: answer questions, or record a change request as a pinned RECON note (Intent / Scheme / FRAGMENTARY ORDER) that drafts the next /warno / /opord edit.
 argument-hint: '["first question"]'
 ---
 
 # Recon — Talk it out before you fire a prompt
 
-`/recon` is the talk-it-out side branch — the agent answers questions, pulls extra files on demand, and the conversation shapes the freeform args for the next skill. Work the prompt out here, then fire the next skill once it's ready.
+`/recon` is the talk-it-out side branch. The agent answers questions, pulls extra files on demand, and the conversation shapes the freeform args for the next skill. When a session lands a committed change, it records the reasoning as a pinned RECON note.
 
 Two branches based on whether an op is infilled:
 
 - **Infilled** — load `OPERATION.md` + `TIMELINE.md` up front, then answer with the loaded OP as context. The conversation shapes the freeform args for the next phase-changing skill (`/warno …` / `/opord …` / `/splash N …`).
-- **No infilled op** — skip the OP context load and answer the question from the codebase alone (reading files on demand). If the question describes work the user would want to track as an operation, point them at `/fob <title>\n<content>` to create + infil. `/fob` follows the same run-command handoff as every other phase-changing skill (see Post-recon phase below): a run command invokes it; a bare description draws a push-back with drafted args.
-
-Reach for it when:
-
-- A Constraint in the WARNO sounds fishy or unsure after `/warno` — talk through the decision before keeping it, dropping it, or revising it.
-- You want to revise a TASK or a shipped change but the right prompt isn't obvious yet — work out what to ask before you ask.
-- You want to think out loud about a piece of the codebase before deciding whether it deserves its own OP.
-- Any other moment your intent is unclear and you want to think out loud against the loaded OP context (or against the codebase, with no op infilled).
-
-Re-running `/recon` re-loads context but is otherwise idempotent.
+- **No infilled op** — skip the OP context load and answer from the codebase alone (reading on demand). If the request describes trackable work, point the user at `/fob <title>\n<content>` to create + infil; the run-command handoff applies (see Post-recon phase).
 
 ## Arguments
 
-Anything in quotes is an optional **first question**. When given, answer it after loading context. When omitted, load context and wait for the user's first question.
+A **first question or change request**, in quotes — required. `/recon` with no arg aborts (tell the user to pass one). After loading context, answer it or write the note.
 
 ## What to do
 
@@ -34,7 +25,7 @@ Anything in quotes is an optional **first question**. When given, answer it afte
 
 **If boot already ran this session**, run `naholo agent op` instead — treat its `<op_status>` payload as the current op status.
 
-`<op_status>` either carries `currentOp` / `opTitle` / `opNotes` (infilled branch) or the literal `No infilled operation.` body (no-op branch). Both are valid `/recon` states — branch on which one shows up.
+`<op_status>` either carries `currentOp` / `opTitle` / `opNotes` (infilled branch) or the literal `No infilled operation.` body (no-op branch). Both are valid `/recon` states.
 
 ### 2. Load context (infilled branch only)
 
@@ -45,68 +36,64 @@ If an op is infilled, read these now:
 
 If no op is infilled, skip this step — there is no `OPERATION.md` to load.
 
-### 3. Acknowledge readiness and answer
+### 3. Answer, or write the note
 
-Print a one-line readiness signal as raw markdown (no surrounding fence). Pick the line for the current branch:
+Branch:
 
-- **Infilled** → `recon - OP #{currentOp}: {opTitle}\n`
-- **No infilled op** → `recon - no OP infilled\n`
+- **No arg** → abort; tell the user to pass a first question or change request.
+- **Arg provided** → handle it immediately. On the infilled branch, use the loaded OP context. On the no-op branch, answer from the codebase alone (read files on demand when the question needs them).
 
-Then branch:
+Each turn (the first arg and every turn after) is one of three things:
 
-- **First-question arg provided** → answer it immediately. On the infilled branch, use the loaded OP context. On the no-op branch, answer from the codebase alone (read files on demand when the question needs them).
-- **No arg** → stop after the readiness line and wait for the user's next message.
+- **A question** → answer it concisely, ~200 words max, reading on demand. No writes. Elaborate only when the user asks.
+  - A question is only a question: "why did you do that?" wants an explanation, nothing more. Explain it; do not infer a change request or act on assumed intent.
+- **A change request, infilled**: anything that alters the plan or its output (amend `OPERATION.md`, change code, add a feature) → write the RECON note (step 4), the surface the user reviews before firing the applying skill.
+- **A change request, no op infilled**: trackable work (a fix, a feature, a refactor) → point the user at `/fob <title>\n<content>` to create + infil (see Post-recon phase).
 
-Subsequent user turns in the recon phase are questions to answer the same way — read on demand, answer, no writes.
+### 4. Write the RECON note
 
-When the conversation lands the prompt for a phase-changing skill, **render a draft preview** (see `### 4. Render the draft preview`) before invoking anything — a compact, scannable proposal of the order, not the full order text. On the user's go-ahead, invoke that skill with the freeform args you and the user worked out — `/warno …`, `/opord …`, `/splash N …`. The next skill picks up where the conversation left off; `/recon` itself never writes the prompt or the resulting edit.
+This step is only for a change request on the infilled branch. For other branches, skip this.
 
-On the no-op branch, if the user's question describes work they would want to track as an operation (a fix, a feature, a refactor — something that would normally become its own OP), point them at `/fob <title>\n<content>` to create + infil — the run-command handoff applies (see Post-recon phase).
+Write `{operationDir}/notes/RECONn.md` for that change request. When the target change is ambiguous, ask whether to open a note and wait for an explicit yes before writing.
 
-### 4. Render the draft preview
+`n` is the next integer after the highest existing `notes/RECON*.md`, pinned per OP.
 
-When the conversation has shaped a concrete next order — because the prompt is ready, or because the user described phase-shaped work without naming a skill — propose it as a **draft preview**, never as the full order text dumped into chat. The preview is the only thing the user reviews before firing, so keep it compact and scannable.
+The note is a task section for `OPERATION.md` instead of the codebase: `Intent`, an optional `Scheme`, and `FRAGMENTARY ORDER`. Lead each section with an HTML comment explaining it, like:
 
-First **route** to the skill the change belongs to — the change decides the skill and the fire line:
+```md
+# RECON 2
 
-- The plan, or an unshipped task → `/opord` → fire line ``Want me to fire `/opord`?``
-- The WARNO direction (Concept of Operations, a Constraint, Target Reference Points) → `/warno` → fire line ``Want me to fire `/warno`?``
-- An already-shipped task (its `#### After-Action Report` is present, so `/opord` treats it as immutable) → revision `/splash N` → fire line ``Want me to fire `/splash 4` (revision)?`` with a one-liner on what changes versus the shipped AAR.
+## Intent
 
-Then render four parts, top to bottom:
+<!-- the pain and what the user wants ("this exists, so I want X"). -->
 
-1. **Fire line** — the routed `Want me to fire …?` line.
-2. **One summary sentence** — what the order accomplishes, plain prose. Not a per-file re-narration.
-3. **Bullet list** — one bullet per unit of change (a task, or a Constraint). This is the scannable core.
-4. **Sub-bullets** — the file-level Target Description actions. **Collapsed by default**; render them only when the user asks for a specific unit's detail ("show me TASK 1's changes").
+Prod emails fail silently. Surface SES send failures in Sentry.
 
-Tag the bullets only on a revision:
+## Scheme
 
-- **Fresh cut** (e.g. the first `/opord` off a clean WARNO) — no tags; every line is new, so `(Add)` everywhere is noise. Just `TASK N — title`.
-- **Revision** — the tight trio `(Add)` / `(Edit)` / `(Drop)`. Split and merge decompose into the trio rather than getting their own tags: a split is an `(Edit)` on the original task plus an `(Add)` for the spun-off task; a merge is an `(Edit)` on the surviving task plus a `(Drop)` for the absorbed one.
+<!--
+Optional; the detailed how. Skip it when FRAGMENTARY ORDER already says everything.
+Keep it under 200 words at first, growing only as the user elaborates or asks.
+-->
 
-A fresh-cut preview (no tags):
+Wrap `sendViaSES` in try/catch; on failure, capture to Sentry and rethrow so the caller still sees it.
 
+## FRAGMENTARY ORDER
+
+<!--
+What and where, routed against the current op status:
+
+- Folds into the last finished task → a revision /splash N.
+- Out of scope of it → an OPORD change (edit a task, or insert one if none fits).
+- Against the WARNO direction → a WARNO + OPORD change ("not covered" is not "against").
+
+Write it as an (Add)/(Edit)/(Drop) list against the routed target: a shipped task's revision, a TASK N, or a Constraint + TASK N.
+-->
+
+- (Edit) TASK 4 — wrap sendViaSES with try/catch + Sentry
 ```
-Want me to fire `/opord`?
-Cuts the prod-email fix into 3 tasks.
 
-- TASK 1 — Plumb AWS_SES_FROM_EMAIL into the ECS task
-- TASK 2 — Harden sendViaSES with try/catch + Sentry
-- TASK 3 — (Manual) Verify SES sender + redeploy
-```
-
-A revision preview (trio tags):
-
-```
-Want me to fire `/warno` then `/opord`?
-Tightens the SES WARNO and reshuffles the task list.
-
-- (Add) Constraint — verify sender via domain, not single address
-- (Drop) Constraint — use noreply@kenmon.dev as From
-- (Edit) TASK 4 — also assert the new ECS task rolled
-- (Drop) TASK 5 — folded into TASK 4
-```
+Then stamp `naholo agent add-timeline -T recon '<summary>'`. The user reviews the note, then fires the routed skill: `/splash N` (revision), `/opord`, or `/warno` then `/opord`.
 
 ## Post-recon phase
 
@@ -114,11 +101,11 @@ Once this skill returns, the session is in the **recon** phase. The phase persis
 
 While in the recon phase:
 
-- **In-phase follow-ups** — answer further questions about the OP (infilled branch), the codebase, or prior decisions. Read additional files on demand. No file writes, no `add-timeline`, no MCP push calls.
+- **In-phase follow-ups** — each further user turn repeats step 3 (answer, or write / update a RECON note with its `add-timeline -T recon` stamp).
 - **Wrong-phase requests** — branch on the user's speech act, not on whether a skill name merely appears:
-  - **Run command** — execute the skill only when the user issues an imperative ("run opord", "go ahead with opord", "fire `/splash 4`"). The name counts whether `/`-prefixed, backticked, or bare, and one command may name several skills ("run warno and opord") → invoke each via the `Skill` tool, in the order given, with whatever args the recon conversation has shaped. No push-back.
+  - **Run command** — execute the skill only when the user issues an imperative ("run opord", "go ahead with opord", "run splash"). The name counts whether `/`-prefixed, backticked, or bare, and one command may name several skills ("run warno and opord") → invoke each via the `Skill` tool, in the order given, with whatever args the recon conversation has shaped. No push-back.
   - **Mention, not a command** — the skill name sits in a subordinate / conditional clause, a comparison, or as the topic under discussion ("let's review before opord", "how does opord cut tasks?"). This is not an invocation → answer in the recon phase and run nothing.
-  - **Phase-shaped work, no skill named** — the user describes the effect without naming a skill ("rewrite TASK 4 to handle nulls", "edit tasks"). Push back once: **render the draft preview** (see `### 4. Render the draft preview`) — route to the right slash command, show the compact proposal, and stop — do not perform the work, do not invoke the skill yet. If their next message is a clear go-ahead on the preview ("yes", "run it"), that turn is the run command — invoke it.
+  - **Phase-shaped work, no skill named** — the user describes the effect without naming a skill ("rewrite TASK 4 to handle nulls", "edit tasks"). This is a change request: **write the RECON note** (see `### 4. Write the RECON note`) and let the user review it, then fire the routed skill (`/splash N`, `/opord`, or `/warno` + `/opord`) themselves. Do not perform the edit or invoke the skill yourself.
 
   On the no-op branch, the only wrong-phase route is server-side OP creation (`/fob`); every other route below applies the moment an op is infilled:
   - Creating a new op (no infilled op) → `/fob`
@@ -131,6 +118,6 @@ While in the recon phase:
 
 ## Rules
 
-- **Read-only**: no file writes, no `add-timeline`, no MCP push calls. Recon is for thinking and answering, nothing else.
-- **Context load on the infilled branch is OPERATION.md + TIMELINE.md only**: other files (`LOGS.yml`, other notes, codebase) are read on demand when a specific question warrants it. On the no-op branch the codebase is the only read surface, and even those reads wait for a question that needs them.
+- **Writes only the RECON note**: the sole write is `notes/RECONn.md` (plus its `add-timeline -T recon` stamp), and only on an `OPERATION.md`-change request. `/sitrep` / `/exfil` sync it; the next `/warno` / `/opord` applies it.
+- **Read on demand**: beyond the step 2 load, other files (`LOGS.yml`, other notes, codebase) are read only when a question warrants it. On the no-op branch the codebase is the only read surface, also on demand.
 - **Always use absolute filesystem paths in link targets** — e.g., `[OPERATION.md](/Users/.../notes/OPERATION.md)`. Never relative paths (`.naholo/...`) or root-prefixed relative paths (`/.naholo/...`). Substitute `{operationDir}` literally with `opPath` from boot's `<op_status>`.
