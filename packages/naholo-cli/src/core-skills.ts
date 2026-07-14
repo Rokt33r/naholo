@@ -3,6 +3,7 @@ import exfilContent from './skills/exfil.md'
 import fobContent from './skills/fob.md'
 import warnoContent from './skills/warno.md'
 import raidContent from './skills/raid.md'
+import fragoContent from './skills/frago.md'
 import opordContent from './skills/opord.md'
 import splashContent from './skills/splash.md'
 import sitrepContent from './skills/sitrep.md'
@@ -20,6 +21,7 @@ export const coreSkills: { name: string; content: string }[] = [
   { name: 'exfil', content: exfilContent },
   { name: 'warno', content: warnoContent },
   { name: 'raid', content: raidContent },
+  { name: 'frago', content: fragoContent },
   { name: 'opord', content: opordContent },
   { name: 'splash', content: splashContent },
   { name: 'sitrep', content: sitrepContent },
