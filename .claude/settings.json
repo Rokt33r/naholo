@@ -12,7 +12,9 @@
       "Bash(pnpm vitest *)",
       "Bash(pnpm --filter @naholo/cli typecheck)",
       "Bash(pnpm typecheck *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(git log *)",
+      "Bash(node -p \"require\\('./package.json'\\).version\")"
     ]
   },
   "hooks": {
