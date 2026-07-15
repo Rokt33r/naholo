@@ -2,9 +2,11 @@
 
 import { type ReactNode, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LandPlot, Tags, Users } from 'lucide-react'
+import { LandPlot, SquarePen, Tags, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProjectContext } from '@/components/app/project-context'
+import { Button } from '@/components/ui/button'
+import { CreateOperationDialog } from '@/components/operations/create-operation-dialog'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { LabelBadge } from '@/components/labels/label-badge'
 import { useOperators } from '@/hooks/use-operators'
@@ -71,9 +73,16 @@ export function OperationsNav() {
 
   return (
     <div className='hidden h-full w-60 shrink-0 flex-col border-r md:flex'>
-      <div className='flex h-10 items-center gap-2 px-4 pt-2 font-semibold'>
-        <LandPlot className='size-4' />
-        Operations
+      <div className='flex h-10 items-center justify-between gap-2 px-4 pt-2 font-semibold'>
+        <div className='flex items-center gap-2'>
+          <LandPlot className='size-4' />
+          Operations
+        </div>
+        <CreateOperationDialog projectSlug={projectSlug}>
+          <Button variant='ghost' size='icon' aria-label='New operation'>
+            <SquarePen className='size-4' />
+          </Button>
+        </CreateOperationDialog>
       </div>
 
       <div className='flex-1 overflow-y-auto px-2 pb-4'>
