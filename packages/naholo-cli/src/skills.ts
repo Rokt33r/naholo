@@ -41,7 +41,7 @@ export function splitSkill(content: string): {
 
 export function buildSkillStub(name: string, content: string): string {
   const { frontmatter } = splitSkill(content)
-  return `${frontmatter}\nRun \`naholo agent skills ${name}\` and follow stdout.\n`
+  return `${frontmatter}\nRun \`naholo agent skills ${name}\` and follow stdout.\n\nIf \`naholo\` is not found or the command errors, tell the user to run \`/naholo-doctor\` to diagnose and fix the CLI setup, then stop.\n`
 }
 
 export interface LegacyStub {
