@@ -5,7 +5,6 @@ import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
 import { registerNaholoMcpForProject } from '../../claude-code-config.js'
-import { coreSkills } from '../../core-skills.js'
 import { CliError, withErrorHandling } from '../../errors.js'
 import {
   addNaholoCovertPermissionsToClaudeSettings,
@@ -26,7 +25,6 @@ import {
 import type { UploadTranscriptsOnExfil } from '../../project-config.js'
 import { generateCodeName } from '../../lib/codename.js'
 import { getProjectState } from '../../lib/project-state.js'
-import { installSkills } from '../install-skills.js'
 
 export const covertInitCommand = new Command('init')
   .description('Register the current directory for covert mode')
@@ -141,13 +139,9 @@ export const covertInitCommand = new Command('init')
         'Naholo MCP server registered for this project in ~/.claude.json',
       )
 
-      // Prompt to install core skills
-      const installCore = await confirm({
-        message: 'Install core skills?',
-        default: true,
-      })
-      if (installCore) {
-        await installSkills(coreSkills, { global: true })
-      }
+      // Point the user at the plugin for the core skills
+      console.log()
+      console.log('Install the core skills via the Claude Code plugin:')
+      console.log('  /plugin marketplace add rokt33r/naholo-claude-plugin')
     }),
   )

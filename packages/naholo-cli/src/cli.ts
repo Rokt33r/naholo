@@ -5,7 +5,6 @@ import updateNotifier from 'update-notifier'
 import pkg from '../package.json'
 import { initCommand } from './commands/init.js'
 import { installHooksCommand } from './commands/install-hooks.js'
-import { installSkillsCommand } from './commands/install-skills.js'
 import { loginCommand } from './commands/login.js'
 import { mcpCommand } from './commands/mcp.js'
 import { projectConfigCommand } from './commands/project-config.js'
@@ -29,7 +28,6 @@ program
 
 program.addCommand(initCommand)
 program.addCommand(installHooksCommand)
-program.addCommand(installSkillsCommand)
 program.addCommand(loginCommand)
 program.addCommand(logoutCommand)
 program.addCommand(mcpCommand)

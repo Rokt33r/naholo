@@ -3,7 +3,6 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
-import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import {
   addNaholoPermissionsToClaudeSettings,
@@ -22,7 +21,6 @@ import {
   type ProjectConfig,
   type UploadTranscriptsOnExfil,
 } from '../project-config.js'
-import { installSkills } from './install-skills.js'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
@@ -121,13 +119,9 @@ export const initCommand = new Command('init')
       writeProjectMcpJson(projectState?.root ?? process.cwd())
       console.log('Naholo MCP server registered in .mcp.json')
 
-      // 7. Prompt to install core skills
-      const installCore = await confirm({
-        message: 'Install core skills?',
-        default: true,
-      })
-      if (installCore) {
-        await installSkills(coreSkills)
-      }
+      // 7. Point the user at the plugin for the core skills
+      console.log()
+      console.log('Install the core skills via the Claude Code plugin:')
+      console.log('  /plugin marketplace add rokt33r/naholo-claude-plugin')
     }),
   )
