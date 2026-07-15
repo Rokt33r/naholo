@@ -1,11 +1,25 @@
 'use client'
 
 import { type ReactNode, useMemo } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LandPlot, SquarePen, Tags, Users } from 'lucide-react'
+import {
+  ExternalLink,
+  LandPlot,
+  MoreHorizontal,
+  SquarePen,
+  Tags,
+  Users,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProjectContext } from '@/components/app/project-context'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { CreateOperationDialog } from '@/components/operations/create-operation-dialog'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { LabelBadge } from '@/components/labels/label-badge'
@@ -94,7 +108,9 @@ export function OperationsNav() {
           <span className='flex-1 truncate text-left'>All operations</span>
         </NavRow>
 
-        <NavSectionHeading>
+        <NavSectionHeading
+          action={<OperatorsHeaderMenu projectSlug={projectSlug} />}
+        >
           <div className='flex gap-2'>
             <Users className='size-4' />
             Operators
@@ -112,14 +128,16 @@ export function OperationsNav() {
             }
           >
             <OperatorAvatar name={operator.callsign} className='size-5' />
-            <span className='flex-1 truncate text-left'>
+            <span className='truncate text-left'>
               {operator.callsign}
               {operator.id === currentOperator.id && ' (me)'}
             </span>
           </NavRow>
         ))}
 
-        <NavSectionHeading>
+        <NavSectionHeading
+          action={<LabelsHeaderMenu projectSlug={projectSlug} />}
+        >
           <div className='flex gap-2'>
             <Tags className='size-4' />
             Labels
@@ -162,17 +180,72 @@ function NavRow({
       )}
     >
       {children}
-      <span className='ml-auto shrink-0 font-mono text-xs text-muted-foreground'>
+      <span className='shrink-0 font-mono text-xs text-muted-foreground'>
         {count}
       </span>
     </button>
   )
 }
 
-function NavSectionHeading({ children }: { children: ReactNode }) {
+function NavSectionHeading({
+  children,
+  action,
+}: {
+  children: ReactNode
+  action?: ReactNode
+}) {
   return (
-    <div className='px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+    <div className='flex items-center justify-between pl-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
       {children}
+      {action}
     </div>
+  )
+}
+
+function OperatorsHeaderMenu({ projectSlug }: { projectSlug: string }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='ghost' size='icon-sm' aria-label='Operators menu'>
+          <MoreHorizontal className='size-4' />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='start'>
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/app/projects/${projectSlug}/settings/operators`}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <ExternalLink className='size-4' />
+            Open operators page
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function LabelsHeaderMenu({ projectSlug }: { projectSlug: string }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='ghost' size='icon-sm' aria-label='Labels menu'>
+          <MoreHorizontal className='size-4' />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='start'>
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/app/projects/${projectSlug}/settings/labels`}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <ExternalLink className='size-4' />
+            Open labels page
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
