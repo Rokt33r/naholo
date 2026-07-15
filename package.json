@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "bump-cli": "pnpm tsx scripts/bump-cli.ts",
-    "build:plugin": "pnpm tsx scripts/build-plugin.ts",
+    "build-claude-plugin": "pnpm tsx scripts/build-claude-plugin.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

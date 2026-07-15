@@ -18,7 +18,7 @@ const skillsSrcDir = path.join(repoRoot, 'packages/naholo-cli/src/skills')
 main()
 
 function main(): void {
-  const outDir = path.resolve(getArg('--out') ?? 'plugin-dist')
+  const outDir = path.resolve(getArg('--out') ?? 'claude-plugin-dist')
   const version = getArg('--version') ?? PLUGIN_VERSION
 
   fs.rmSync(outDir, { recursive: true, force: true })

@@ -1,4 +1,4 @@
-name: Release plugin
+name: Release Claude plugin
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    name: Build and push plugin
+    name: Build and push Claude plugin
     runs-on: ubuntu-latest
 
     steps:
@@ -29,10 +29,10 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#naholo-claude-plugin@}" >> "$GITHUB_OUTPUT"
 
-      - name: Build plugin
-        run: pnpm build:plugin --out ./out --version ${{ steps.version.outputs.version }}
+      - name: Build Claude plugin
+        run: pnpm build-claude-plugin --out ./out --version ${{ steps.version.outputs.version }}
 
-      - name: Push to plugin repo
+      - name: Push to Claude plugin repo
         env:
           NAHOLO_CLAUDE_PLUGIN_REPO_TOKEN: ${{ secrets.NAHOLO_CLAUDE_PLUGIN_REPO_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
