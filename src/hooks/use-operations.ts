@@ -26,6 +26,7 @@ export type OperationListItem = {
   title: string
   closed: boolean
   closedAt: string | null
+  createdAt: string
   updatedAt: string
   lastOperationLogPreview: string | null
   totalTasks: number

@@ -1,6 +1,15 @@
 'use client'
 
-import { ChevronDown, Search, Tag, Users, X } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  Search,
+  Tag,
+  Users,
+  X,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProjectContext } from '@/components/app/project-context'
 import { Input } from '@/components/ui/input'
@@ -10,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
@@ -18,12 +28,18 @@ import { useOperators } from '@/hooks/use-operators'
 import { useLabels } from '@/hooks/use-labels'
 import { parseOperationSearch, toggleSearchToken } from '@/lib/operation-search'
 
+export type OperationSortKey = 'number' | 'created' | 'updated'
+export type OperationSortDirection = 'asc' | 'desc'
+
 type OperationsSearchbarProps = {
   projectSlug: string
   searchInput: string
   onSearchChange: (value: string) => void
   filter: 'open' | 'closed'
   onFilterChange: (filter: 'open' | 'closed') => void
+  sort: OperationSortKey
+  direction: OperationSortDirection
+  onSortChange: (key: OperationSortKey) => void
 }
 
 export function OperationsSearchbar({
@@ -32,6 +48,9 @@ export function OperationsSearchbar({
   onSearchChange,
   filter,
   onFilterChange,
+  sort,
+  direction,
+  onSortChange,
 }: OperationsSearchbarProps) {
   const { currentOperator } = useProjectContext()
   const { operators } = useOperators(projectSlug)
@@ -65,7 +84,7 @@ export function OperationsSearchbar({
       </div>
 
       <div className='flex flex-wrap items-center gap-2 px-2 pb-2'>
-        <ButtonGroup>
+        <ButtonGroup className='rounded-md border'>
           <Button
             variant={filter === 'open' ? 'secondary' : 'ghost'}
             onClick={() => onFilterChange('open')}
@@ -139,7 +158,39 @@ export function OperationsSearchbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' size='sm' className='ml-auto'>
+              <ArrowUpDown className='size-4' />
+              Sort
+              <ChevronDown className='size-4 text-muted-foreground' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            {SORT_OPTIONS.map((option) => (
+              <DropdownMenuItem
+                key={option.key}
+                onClick={() => onSortChange(option.key)}
+              >
+                {option.label}
+                {sort === option.key &&
+                  (direction === 'asc' ? (
+                    <ArrowUp className='ml-auto size-4' />
+                  ) : (
+                    <ArrowDown className='ml-auto size-4' />
+                  ))}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </>
   )
 }
+
+const SORT_OPTIONS: { key: OperationSortKey; label: string }[] = [
+  { key: 'updated', label: 'Update date' },
+  { key: 'created', label: 'Creation date' },
+  { key: 'number', label: 'Op number' },
+]

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useParams,
   usePathname,
@@ -12,9 +12,13 @@ import { useProjectContext } from '@/components/app/project-context'
 import { Button } from '@/components/ui/button'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { OperationItem } from '@/components/operations/operation-item'
-import { OperationsSearchbar } from '@/components/operations/operations-searchbar'
+import {
+  OperationsSearchbar,
+  type OperationSortDirection,
+  type OperationSortKey,
+} from '@/components/operations/operations-searchbar'
 import { CreateOperationDialog } from '@/components/operations/create-operation-dialog'
-import { useOperations } from '@/hooks/use-operations'
+import { useOperations, type OperationListItem } from '@/hooks/use-operations'
 import { useOperationsListStream } from '@/hooks/use-operations-list-stream'
 import { useDebounce } from '@/hooks/use-debounce'
 import {
@@ -62,17 +66,38 @@ export default function OperationsIndexPage() {
 
   const filter = searchParams.get('filter') === 'closed' ? 'closed' : 'open'
 
+  const sortParam = searchParams.get('sort')
+  const sort: OperationSortKey =
+    sortParam === 'created' || sortParam === 'number' ? sortParam : 'updated'
+  const direction: OperationSortDirection =
+    searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
+
   const { operations, isLoading, refetch } = useOperations(projectSlug, filter)
   useOperationsListStream(projectSlug)
 
-  const searchConditions = parseOperationSearch(searchInput)
-  const filteredOperations = operations.filter((operation) =>
-    matchesOperationSearch(operation, searchConditions),
-  )
+  const sortedOperations = useMemo(() => {
+    const searchConditions = parseOperationSearch(searchInput)
+    const filtered = operations.filter((operation) =>
+      matchesOperationSearch(operation, searchConditions),
+    )
+    return filtered.sort((a, b) => {
+      const order = compareOperations(a, b, sort)
+      return direction === 'asc' ? order : -order
+    })
+  }, [operations, searchInput, sort, direction])
 
   const handleFilterChange = (newFilter: 'open' | 'closed') => {
     const params = new URLSearchParams(searchParams)
     params.set('filter', newFilter)
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
+  const handleSortChange = (key: OperationSortKey) => {
+    const params = new URLSearchParams(searchParams)
+    const nextDirection =
+      key === sort ? (direction === 'asc' ? 'desc' : 'asc') : 'desc'
+    params.set('sort', key)
+    params.set('dir', nextDirection)
     router.push(`${pathname}?${params.toString()}`)
   }
 
@@ -86,7 +111,7 @@ export default function OperationsIndexPage() {
           <LandPlot className='size-4 shrink-0' />
           <span className='truncate'>Operation list</span>
           <span className='shrink-0 font-mono text-xs font-normal text-muted-foreground'>
-            {filteredOperations.length}
+            {sortedOperations.length}
           </span>
         </h2>
         <CreateOperationDialog
@@ -106,6 +131,9 @@ export default function OperationsIndexPage() {
         onSearchChange={setSearchInput}
         filter={filter}
         onFilterChange={handleFilterChange}
+        sort={sort}
+        direction={direction}
+        onSortChange={handleSortChange}
       />
 
       {/* Operations list */}
@@ -114,7 +142,7 @@ export default function OperationsIndexPage() {
           <div className='p-4 text-center text-sm text-muted-foreground'>
             Loading...
           </div>
-        ) : filteredOperations.length === 0 ? (
+        ) : sortedOperations.length === 0 ? (
           <div className='p-4 text-center text-sm text-muted-foreground'>
             {searchInput
               ? 'No operations found'
@@ -124,7 +152,7 @@ export default function OperationsIndexPage() {
           </div>
         ) : (
           <div>
-            {filteredOperations.map((operation) => (
+            {sortedOperations.map((operation) => (
               <OperationItem
                 key={operation.id}
                 operation={operation}
@@ -137,4 +165,19 @@ export default function OperationsIndexPage() {
       </div>
     </div>
   )
+}
+
+function compareOperations(
+  a: OperationListItem,
+  b: OperationListItem,
+  key: OperationSortKey,
+): number {
+  switch (key) {
+    case 'number':
+      return a.number - b.number
+    case 'created':
+      return a.createdAt.localeCompare(b.createdAt)
+    case 'updated':
+      return a.updatedAt.localeCompare(b.updatedAt)
+  }
 }
