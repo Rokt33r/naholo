@@ -10,6 +10,7 @@
     "format:all": "prettier --write .",
     "build": "next build",
     "start": "next start",
+    "bump-claude-plugin": "pnpm tsx scripts/bump-claude-plugin.ts",
     "bump-cli": "pnpm tsx scripts/bump-cli.ts",
     "build-claude-plugin": "pnpm tsx scripts/build-claude-plugin.ts",
     "db:generate": "drizzle-kit generate",
