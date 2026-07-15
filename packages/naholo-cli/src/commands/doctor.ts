@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
 import { coreSkills } from '../core-skills.js'
@@ -11,8 +13,9 @@ export const doctorCommand = new Command('doctor')
   .description(
     'Diagnose CLI version, login, project init, and legacy skill stubs',
   )
+  .option('--fix', 'delete the detected naholo legacy skill stubs')
   .action(
-    withErrorHandling(async () => {
+    withErrorHandling(async (options: { fix?: boolean }) => {
       const active = getActiveProfile()
       const projectState = getProjectState()
 
@@ -30,10 +33,17 @@ export const doctorCommand = new Command('doctor')
       }
 
       const legacyStubs = findLegacyStubs(coreSkills)
-      if (legacyStubs.length > 0) {
-        payload.legacySkillStubs = legacyStubs.map(
-          (stub) => `${stub.scope}:${stub.name}`,
-        )
+      const labels = legacyStubs.map((stub) => `${stub.scope}:${stub.name}`)
+
+      if (options.fix === true) {
+        for (const stub of legacyStubs) {
+          fs.rmSync(path.dirname(stub.path), { recursive: true, force: true })
+        }
+        if (labels.length > 0) {
+          payload.removedSkillStubs = labels
+        }
+      } else if (labels.length > 0) {
+        payload.legacySkillStubs = labels
       }
 
       process.stdout.write(yamlStringify(payload))
