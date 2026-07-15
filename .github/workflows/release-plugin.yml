@@ -1,0 +1,47 @@
+name: Release plugin
+
+on:
+  push:
+    tags:
+      - 'naholo-claude-plugin@*' # e.g. naholo-claude-plugin@1.2.3
+
+jobs:
+  release:
+    name: Build and push plugin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve plugin version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#naholo-claude-plugin@}" >> "$GITHUB_OUTPUT"
+
+      - name: Build plugin
+        run: pnpm build:plugin --out ./out --version ${{ steps.version.outputs.version }}
+
+      - name: Push to plugin repo
+        env:
+          NAHOLO_CLAUDE_PLUGIN_REPO_TOKEN: ${{ secrets.NAHOLO_CLAUDE_PLUGIN_REPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cd out
+          git init -q -b main
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m "naholo-claude-plugin@$VERSION"
+          git tag "$VERSION"
+          git push --force "https://x-access-token:${NAHOLO_CLAUDE_PLUGIN_REPO_TOKEN}@github.com/rokt33r/naholo-claude-plugin.git" main --tags
