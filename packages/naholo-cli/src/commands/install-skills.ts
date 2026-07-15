@@ -6,9 +6,9 @@ import { coreSkills } from '../core-skills.js'
 import { CliError, withErrorHandling } from '../errors.js'
 import { getProjectState } from '../lib/project-state.js'
 import {
+  buildSkillStub,
   getGlobalSkillsDir,
   getProjectSkillsDir,
-  splitSkill,
   writeSkillFile,
 } from '../skills.js'
 
@@ -39,8 +39,7 @@ export async function installSkills(
   for (const skill of skills) {
     const skillPath = path.join(baseDir, skill.name, 'SKILL.md')
     const exists = fs.existsSync(skillPath)
-    const { frontmatter } = splitSkill(skill.content)
-    const stub = `${frontmatter}\nRun \`naholo agent skills ${skill.name}\` and follow stdout.\n`
+    const stub = buildSkillStub(skill.name, skill.content)
 
     if (!exists) {
       writeSkillFile(skill.name, stub, baseDir)
