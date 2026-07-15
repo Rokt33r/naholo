@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import { listOperations, createOperation } from '@/server/services/operation'
+import { resolveProjectOperatorIds } from '@/server/services/assignee'
+import { resolveProjectLabelIds } from '@/server/services/project-label'
 import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 const createOperationSchema = z.object({
   title: z.string().min(1, 'Title is required').trim(),
+  assigneeIds: z.array(z.string()).optional(),
+  labelIds: z.array(z.string()).optional(),
 })
 
 /**
@@ -58,10 +62,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const { title } = validation.data
+    const { title, assigneeIds, labelIds } = validation.data
 
     const { projectOperator, project } =
       await requireProjectOperator(projectSlug)
+
+    const validAssigneeIds =
+      assigneeIds != null
+        ? await resolveProjectOperatorIds(project.id, assigneeIds)
+        : []
+    const validLabelIds =
+      labelIds != null ? await resolveProjectLabelIds(project.id, labelIds) : []
 
     const sourceClientId = getSourceClientId(request)
 
@@ -69,6 +80,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       projectOperatorId: projectOperator.id,
       projectId: project.id,
       title,
+      assigneeIds: validAssigneeIds,
+      labelIds: validLabelIds,
       sourceClientId,
     })
 

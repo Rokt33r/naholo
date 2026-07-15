@@ -68,7 +68,11 @@ export async function deleteOperationAssignees(data: {
   return ok()
 }
 
-async function resolveProjectOperatorIds(
+/**
+ * Return the subset of `ids` that belong to the project — invalid ids are
+ * silently dropped.
+ */
+export async function resolveProjectOperatorIds(
   projectId: string,
   ids: string[],
 ): Promise<string[]> {
