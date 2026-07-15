@@ -45,7 +45,7 @@ Branch:
 
 Each turn (the first arg and every turn after) is one of three things:
 
-- **A question** → answer it concisely, ~200 words max, reading on demand. No writes. Elaborate only when the user asks.
+- **A question** → answer it concisely, **≤200 words**, reading on demand. No writes. The cap is hard: "elaborate", "go deeper", "explain more" ask for a better-spent 200 words, not more of them — they do **not** lift it. Only an explicit request to raise the answer limit lifts it, and the raised limit holds for the rest of this recon phase, resetting to 200 when the phase ends. If a question genuinely cannot be answered well in 200 words, say so and ask the user to raise the limit before writing the long answer.
   - A question is only a question: "why did you do that?" wants an explanation, nothing more. Explain it; do not infer a change request or act on assumed intent.
 - **A change request, infilled**: anything that alters the plan or its output (amend `OPERATION.md`, change code, add a feature) → write the RECON note (step 4), the surface the user reviews before firing the applying skill.
 - **A change request, no op infilled**: trackable work (a fix, a feature, a refactor) → point the user at `/fob <title>\n<content>` to create + infil (see Post-recon phase).
@@ -58,39 +58,34 @@ Write `{operationDir}/notes/RECONn.md` for that change request. When the target 
 
 `n` is the next integer after the highest existing `notes/RECON*.md`, pinned per OP.
 
-The note is a task section for `OPERATION.md` instead of the codebase: `Intent`, an optional `Scheme`, and `FRAGMENTARY ORDER`. Lead each section with an HTML comment explaining it, like:
+The note is a task section for `OPERATION.md` instead of the codebase. The top heading is `# RECONn` — no space between `RECON` and the number (e.g. `# RECON2`). Below it, three sections:
+
+- **`## Intent`** — the pain and what the user wants ("this exists, so I want X"), stated conceptually in ≤ ~25 words. Keep the how and the specifics out — those live in Scheme and FRAGMENTARY ORDER.
+- **`## Scheme`** — optional; the detailed how. Skip it when FRAGMENTARY ORDER already says everything. Keep it under 200 words at first, growing only as the user elaborates or asks.
+- **`## FRAGMENTARY ORDER`** — what and where, routed against the current op status:
+  - Folds into the last finished task → a revision `/splash N`.
+  - Out of scope of it → an OPORD change (edit a task, or insert one if none fits).
+  - Against the WARNO direction → a WARNO + OPORD change ("not covered" is not "against").
+
+  Write it as an `(Add)` / `(Delete)` list against the routed target: a shipped task's revision, a `TASK N`, or a Constraint + `TASK N`. There is no edit verb — express a change as a `(Delete)` of the old plus an `(Add)` of the new. Strike through the target name on every `(Delete)`, e.g. `(Delete) ~~Constraint — …~~`.
+
+The guidance above is for you, the writing agent — do **not** copy it into the note as HTML comments or prose. Write only the headings and their real content, like:
 
 ```md
-# RECON 2
+# RECON2
 
 ## Intent
-
-<!-- the pain and what the user wants ("this exists, so I want X"). -->
 
 Prod emails fail silently. Surface SES send failures in Sentry.
 
 ## Scheme
 
-<!--
-Optional; the detailed how. Skip it when FRAGMENTARY ORDER already says everything.
-Keep it under 200 words at first, growing only as the user elaborates or asks.
--->
-
 Wrap `sendViaSES` in try/catch; on failure, capture to Sentry and rethrow so the caller still sees it.
 
 ## FRAGMENTARY ORDER
 
-<!--
-What and where, routed against the current op status:
-
-- Folds into the last finished task → a revision /splash N.
-- Out of scope of it → an OPORD change (edit a task, or insert one if none fits).
-- Against the WARNO direction → a WARNO + OPORD change ("not covered" is not "against").
-
-Write it as an (Add)/(Edit)/(Drop) list against the routed target: a shipped task's revision, a TASK N, or a Constraint + TASK N.
--->
-
-- (Edit) TASK 4 — wrap sendViaSES with try/catch + Sentry
+- (Delete) ~~TASK 4 — send the SES email~~
+- (Add) TASK 4 — send the SES email, capturing send failures to Sentry
 ```
 
 Then stamp `naholo agent add-timeline -T recon '<summary>'`. The user reviews the note, then fires the routed skill: `/splash N` (revision), `/opord`, or `/warno` then `/opord`.

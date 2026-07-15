@@ -127,14 +127,14 @@ Half-cooked prompts make bad revisions. `/recon` is the talk-it-out side branch:
 
 `/recon` needs an arg (a question or a change request) and aborts without one. Each turn is one of two things:
 
-- **A question** &mdash; answered concisely (about 200 words), reading files on demand. It elaborates only when you ask, and writes nothing.
+- **A question** &mdash; answered concisely (200 words max), reading files on demand, and writes nothing. Asking it to elaborate or go deeper spends those 200 words better rather than lifting the cap; for a longer answer, explicitly raise the answer limit, which resets when the recon phase ends.
 - **A change request** &mdash; when you ask to change the plan or the code, the agent writes a `notes/RECONn.md` note drafting the change, then hands off. With no op infilled, a change request instead points you at `/fob` to create + infil.
 
 A RECON note is a task section for `OPERATION.md` instead of the codebase, numbered per OP (`RECON1`, `RECON2`, ...). Three sections:
 
 - `## Intent` &mdash; the pain and what you want.
 - `## Scheme` &mdash; optional; the detailed how, skipped when the FRAGMENTARY ORDER already says everything.
-- `## FRAGMENTARY ORDER` &mdash; an `(Add)` / `(Edit)` / `(Drop)` list of the change, routed against the op&rsquo;s current state: it folds into the last finished task (a revision `/splash N`), lands as an `/opord` change to the task list, or needs both a `/warno` and an `/opord` change when it cuts against the WARNO.
+- `## FRAGMENTARY ORDER` &mdash; an `(Add)` / `(Delete)` list of the change (no edit verb: a change is a `(Delete)` of the old, struck through as `~~...~~`, plus an `(Add)` of the new), routed against the op&rsquo;s current state: it folds into the last finished task (a revision `/splash N`), lands as an `/opord` change to the task list, or needs both a `/warno` and an `/opord` change when it cuts against the WARNO.
 
 The note is the review surface: you read it, then fire the routed skill (`/splash N`, `/opord`, or `/warno` + `/opord`). `/recon` stamps a `recon` line in TIMELINE when it writes, and makes no other change and no server sync.
 

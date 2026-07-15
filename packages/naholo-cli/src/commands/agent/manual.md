@@ -95,11 +95,11 @@ The chronological catch-up log. Its only purpose is to let a fresh agent session
 
 ### `notes/RECONn.md`
 
-Talk-it-out records written by `/recon` when the user asks to change the orders. One file per change-shaping session, numbered monotonically per OP (`n` = next integer after the highest existing `notes/RECON*.md`, pinned, never re-slotted). A task section for `OPERATION.md` instead of the codebase, three sections in order (each led by an HTML comment explaining it):
+Talk-it-out records written by `/recon` when the user asks to change the orders. One file per change-shaping session, numbered monotonically per OP (`n` = next integer after the highest existing `notes/RECON*.md`, pinned, never re-slotted). Top heading is `# RECONn` (no space, e.g. `# RECON2`). A task section for `OPERATION.md` instead of the codebase, three sections in order — headings and real content only, no explanatory HTML comments in the note:
 
-- `## Intent` — the pain and what the user wants.
+- `## Intent` — the pain and what the user wants, conceptual.
 - `## Scheme` — optional; the detailed how. Omitted when `## FRAGMENTARY ORDER` already says everything.
-- `## FRAGMENTARY ORDER` — an `(Add)` / `(Edit)` / `(Drop)` list of the change, routed against op status (a shipped task's revision `/splash N`, an OPORD `TASK N`, or a Constraint + `TASK N`).
+- `## FRAGMENTARY ORDER` — an `(Add)` / `(Delete)` list of the change (no edit verb — a change is a `(Delete)` of the old, struck through as `~~…~~`, plus an `(Add)` of the new), routed against op status (a shipped task's revision `/splash N`, an OPORD `TASK N`, or a Constraint + `TASK N`).
 
 `/recon` stamps `add-timeline -T recon` on write. RECON notes ride the ordinary `notes/*.md` sync (`/sitrep`, `/exfil`); the user applies one by firing the routed skill.
 
