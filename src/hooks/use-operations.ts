@@ -111,13 +111,21 @@ export function useCreateOperation(projectSlug: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ title }: { title: string }) => {
+    mutationFn: async ({
+      title,
+      assigneeIds,
+      labelIds,
+    }: {
+      title: string
+      assigneeIds?: string[]
+      labelIds?: string[]
+    }) => {
       const response = await mutationFetch(
         `/api/projects/${projectSlug}/operations`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title }),
+          body: JSON.stringify({ title, assigneeIds, labelIds }),
         },
       )
       if (!response.ok) {
