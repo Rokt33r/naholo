@@ -22,6 +22,7 @@ Run `naholo doctor` and parse its YAML payload:
 
 ```yml
 version: 0.11.0
+minPluginVersion: 0.1.0 # min plugin version this CLI requires
 loggedIn: true
 profile: profile-1a2b # null when logged out
 project:
@@ -32,7 +33,16 @@ legacySkillStubs: # ["scope:name", …]; absent when none found
   - global:warno
 ```
 
-### 3. Instruct on each gap
+### 3. Check plugin ↔ CLI version compatibility
+
+Read `naholoClaudePluginVersion` and `minNaholoCliVersion` from the code fence at the top of this skill (just below the frontmatter), and compare against the payload:
+
+- `naholoClaudePluginVersion` < payload `minPluginVersion` → the plugin is older than this CLI requires → tell the user to update the plugin (`/plugin marketplace update naholo`), then re-run `/naholo-doctor`.
+- payload `version` < `minNaholoCliVersion` → the CLI is older than this plugin requires → tell the user `npm install -g @naholo/cli@latest`, then re-run `/naholo-doctor`.
+
+If both floors hold, the plugin and CLI are compatible.
+
+### 4. Instruct on each gap
 
 Walk the payload and, for each gap, give the user the exact command to run. Login and init are interactive, so the user runs those themselves:
 
@@ -42,7 +52,7 @@ Walk the payload and, for each gap, give the user the exact command to run. Logi
 
 If none of these apply, tell the user the CLI is healthy.
 
-### 4. Clean up legacy skill stubs
+### 5. Clean up legacy skill stubs
 
 If `legacySkillStubs` is present, those are old `naholo install-skills` stubs that the plugin now supersedes. List them, then offer to run `naholo doctor --fix`. On the user's go-ahead, run `naholo doctor --fix` and confirm the `removedSkillStubs` it reports back.
 

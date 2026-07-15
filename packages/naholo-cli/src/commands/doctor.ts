@@ -9,6 +9,8 @@ import { getActiveProfile } from '../profile.js'
 import { findLegacyStubs } from '../skills.js'
 import { version } from '../version.js'
 
+const MIN_PLUGIN_VERSION = '0.1.0'
+
 export const doctorCommand = new Command('doctor')
   .description(
     'Diagnose CLI version, login, project init, and legacy skill stubs',
@@ -21,6 +23,7 @@ export const doctorCommand = new Command('doctor')
 
       const payload: Record<string, unknown> = {
         version,
+        minPluginVersion: MIN_PLUGIN_VERSION,
         loggedIn: active != null,
         profile: active?.name ?? null,
         project:
