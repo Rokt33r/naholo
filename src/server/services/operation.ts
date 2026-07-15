@@ -1,6 +1,11 @@
 import 'server-only'
 import { db } from '../db'
-import { operations, projects } from '../db/schema'
+import {
+  operationAssignees,
+  operationProjectLabels,
+  operations,
+  projects,
+} from '../db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import type { ReturnResult } from '@/lib/return-result'
 import { ok, err } from '@/lib/return-result'
@@ -128,8 +133,13 @@ export async function createOperation(data: {
   projectOperatorId: string
   projectId: string
   title: string
+  assigneeIds?: string[]
+  labelIds?: string[]
   sourceClientId?: string
 }): Promise<ReturnResult<{ id: string; number: number }>> {
+  const assigneeIds = Array.from(new Set(data.assigneeIds ?? []))
+  const labelIds = Array.from(new Set(data.labelIds ?? []))
+
   const result = await db.transaction(async (tx) => {
     const [{ operationCounter }] = await tx
       .update(projects)
@@ -148,6 +158,23 @@ export async function createOperation(data: {
         number: operationCounter,
       })
       .returning({ id: operations.id })
+
+    if (assigneeIds.length > 0) {
+      await tx.insert(operationAssignees).values(
+        assigneeIds.map((projectOperatorId) => ({
+          operationId: operation.id,
+          projectOperatorId,
+        })),
+      )
+    }
+    if (labelIds.length > 0) {
+      await tx.insert(operationProjectLabels).values(
+        labelIds.map((projectLabelId) => ({
+          operationId: operation.id,
+          projectLabelId,
+        })),
+      )
+    }
 
     return ok({ id: operation.id, number: operationCounter })
   })

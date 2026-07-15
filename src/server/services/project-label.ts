@@ -26,6 +26,25 @@ export async function listProjectLabels(
   })
 }
 
+/**
+ * Return the subset of `ids` that belong to the project — invalid ids are
+ * silently dropped.
+ */
+export async function resolveProjectLabelIds(
+  projectId: string,
+  labelIds: string[],
+): Promise<string[]> {
+  if (labelIds.length === 0) {
+    return []
+  }
+  const rows = await db.query.projectLabels.findMany({
+    columns: { id: true },
+    where: (t, { and, eq, inArray }) =>
+      and(eq(t.projectId, projectId), inArray(t.id, labelIds)),
+  })
+  return rows.map((row) => row.id)
+}
+
 export async function createProjectLabel(data: {
   projectId: string
   name: string
