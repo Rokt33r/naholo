@@ -28,10 +28,12 @@ export function PatchnotesList({
 }) {
   const [filter, setFilter] = useState<Filter>('all')
 
-  const visible =
+  const filtered =
     filter === 'all'
       ? entries
       : entries.filter((entry) => entry.stream === filter)
+
+  const visible = [...filtered].sort(comparePatchnotes)
 
   return (
     <div>
@@ -78,4 +80,32 @@ export function PatchnotesList({
       )}
     </div>
   )
+}
+
+function comparePatchnotes(
+  a: PatchnoteEntryWithStream,
+  b: PatchnoteEntryWithStream,
+): number {
+  const byDate = b.date.localeCompare(a.date)
+  if (byDate !== 0) {
+    return byDate
+  }
+  if (a.stream !== b.stream) {
+    return a.stream === 'cli' ? -1 : 1
+  }
+  return compareVersionsDesc(a.version, b.version)
+}
+
+function compareVersionsDesc(a: string, b: string): number {
+  const aParts = a.split('.')
+  const bParts = b.split('.')
+  const length = Math.max(aParts.length, bParts.length)
+  for (let i = 0; i < length; i++) {
+    const aPart = parseInt(aParts[i] ?? '0', 10) || 0
+    const bPart = parseInt(bParts[i] ?? '0', 10) || 0
+    if (aPart !== bPart) {
+      return bPart - aPart
+    }
+  }
+  return 0
 }
