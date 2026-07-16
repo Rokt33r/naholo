@@ -33,19 +33,21 @@ naholo init
 naholo covert init
 ```
 
-Then, install the plugin in Claude Code.
+Then, in Claude Code, add the marketplace, install the plugin, and reload.
 
 ```
 /plugin marketplace add rokt33r/naholo-claude-plugin
+/plugin install naholo-claude-plugin@naholo
+/reload-plugins
 ```
 
-Once it is installed, verify your setup with the following skill.
+Once it is installed, verify your setup with the doctor skill.
 
 ```
-/naholo-doctor
+/naholo-claude-plugin:naholo-doctor
 ```
 
-`/naholo-doctor` checks your CLI version, login, and project setup, and tells you how to fix anything that is off.
+The doctor skill checks your CLI version, login, and project setup, and tells you how to fix anything that is off.
 
 ## 1. Create an operation and `/infil`
 

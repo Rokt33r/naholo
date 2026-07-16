@@ -58,7 +58,6 @@ function writeManifests(outDir: string, version: string): void {
     name: PLUGIN_NAME,
     version,
     description: PLUGIN_DESCRIPTION,
-    skills: './skills/',
   })
   writeJson(path.join(pluginDir, 'marketplace.json'), {
     name: 'naholo',

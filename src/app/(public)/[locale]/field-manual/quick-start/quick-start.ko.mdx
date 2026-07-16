@@ -33,19 +33,21 @@ naholo init
 naholo covert init
 ```
 
-이어서, Claude Code에 플러그인을 설치합니다.
+이어서, Claude Code에서 마켓플레이스를 추가하고, 플러그인을 설치한 뒤, 리로드합니다.
 
 ```
 /plugin marketplace add rokt33r/naholo-claude-plugin
+/plugin install naholo-claude-plugin@naholo
+/reload-plugins
 ```
 
-설치가 끝나면 다음 스킬을 사용해 설치 상태를 확인합시다.
+설치가 끝나면, 닥터 스킬로 설정을 확인합니다.
 
 ```
-/naholo-doctor
+/naholo-claude-plugin:naholo-doctor
 ```
 
-`/naholo-doctor`는 CLI 버전, 로그인, 프로젝트 설정을 확인하고, 문제가 있으면 해결책을 알려줍니다.
+닥터 스킬은 CLI 버전, 로그인, 프로젝트 설정을 확인하고, 문제가 있으면 해결책을 알려줍니다.
 
 ## 1. 작전 생성과 `/infil`
 
