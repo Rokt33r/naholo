@@ -142,12 +142,12 @@ export const covertInitCommand = new Command('init')
       // Point the user at the plugin for the core skills
       console.log()
       console.log(
-        "Submit the commands below to Claude Code to install naholo's core skills:",
+        "Run the commands below in your terminal to install naholo's core skills:",
       )
       console.log()
-      console.log('Add the marketplace:')
-      console.log('  /plugin marketplace add rokt33r/naholo-claude-plugin')
-      console.log('Install the plugin:')
-      console.log('  /plugin install naholo-claude-plugin@naholo')
+      console.log(
+        '  claude plugin marketplace add rokt33r/naholo-claude-plugin',
+      )
+      console.log('  claude plugin install naholo-claude-plugin@naholo')
     }),
   )
