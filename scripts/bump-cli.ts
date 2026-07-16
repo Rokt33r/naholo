@@ -23,6 +23,7 @@ if (level == null || !BUMP_LEVELS.includes(level)) {
 const repoRoot = process.cwd()
 const pkgDir = path.join(repoRoot, 'packages/naholo-cli')
 const pkgJsonPath = path.join(pkgDir, 'package.json')
+const pkgLockPath = path.join(pkgDir, 'package-lock.json')
 
 // Refuse to run on a dirty tree
 const gitStatus = execFileSync('git', ['status', '--porcelain'], {
@@ -46,8 +47,8 @@ execFileSync('npm', ['version', '--no-git-tag-version', level], {
 const { version } = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
 const tag = `@naholo/cli@${version}`
 
-// Commit the bumped package.json, then tag the commit with the cli-stream prefix.
-execFileSync('git', ['commit', '-m', tag, '--', pkgJsonPath], {
+// Commit the bumped package.json + package-lock.json, then tag the commit with the cli-stream prefix.
+execFileSync('git', ['commit', '-m', tag, '--', pkgJsonPath, pkgLockPath], {
   cwd: repoRoot,
   stdio: 'inherit',
 })
