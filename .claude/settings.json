@@ -29,5 +29,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "naholo-claude-plugin@naholo": true
   }
 }
