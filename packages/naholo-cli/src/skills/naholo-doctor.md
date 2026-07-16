@@ -37,7 +37,7 @@ legacySkillStubs: # ["scope:name", …]; absent when none found
 
 Read `naholoClaudePluginVersion` and `minNaholoCliVersion` from the code fence at the top of this skill (just below the frontmatter), and compare against the payload:
 
-- `naholoClaudePluginVersion` < payload `minPluginVersion` → the plugin is older than this CLI requires → tell the user to update the plugin: run `claude plugin marketplace update naholo` to refresh the catalog, then `claude plugin update naholo-claude-plugin@naholo` (use `--scope project` if throws an error), and restart Claude Code to apply. Then re-run `/naholo-doctor`.
+- `naholoClaudePluginVersion` < payload `minPluginVersion` → the plugin is older than this CLI requires → tell the user to update the plugin with `claude plugin update naholo-claude-plugin@naholo` (add `--scope project` if it errors), then restart Claude Code to apply, then re-run `/naholo-doctor`. Use `update`, not `install` — `install` won't update a plugin that's already installed.
 - payload `version` < `minNaholoCliVersion` → the CLI is older than this plugin requires → tell the user `npm install -g @naholo/cli@latest`, then re-run `/naholo-doctor`.
 
 If both floors hold, the plugin and CLI are compatible.
