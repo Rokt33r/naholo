@@ -33,22 +33,20 @@ naholo init
 naholo covert init
 ```
 
-이어서, Claude Code에서 마켓플레이스를 추가하고, 플러그인을 설치한 뒤, 리로드합니다.
+이어서, 터미널에서 마켓플레이스를 추가하고 플러그인을 설치합니다.
 
-```
-/plugin marketplace add rokt33r/naholo-claude-plugin
-/plugin install naholo-claude-plugin@naholo
-/reload-plugins
-/reload-skills
+```bash
+claude plugin marketplace add rokt33r/naholo-claude-plugin
+claude plugin install naholo-claude-plugin@naholo
 ```
 
-설치가 끝나면, 닥터 스킬로 설정을 확인합니다.
+Claude Code를 시작(또는 재시작)하면 플러그인이 로드됩니다. 그런 다음 닥터 스킬로 설정을 확인합니다.
 
 ```
 /naholo-doctor
 ```
 
-> 설치 완료 후, VS Code 클로드 플러그인에 해당 스킬이 안 보일 경우, `/reload-skills`를 입력하거나 윈도우를 리로드하세요.(Cmd+P 이후 `Developer: Reload Window`를 선택)
+> 설치 완료 후, VS Code 클로드 플러그인에 해당 스킬이 안 보일 경우, 윈도우를 리로드하세요.(Cmd+P 이후 `Developer: Reload Window`를 선택)
 
 > 닥터 스킬은 CLI 버전, 로그인, 프로젝트 설정을 확인하고, 문제가 있으면 해결책을 알려줍니다.
 

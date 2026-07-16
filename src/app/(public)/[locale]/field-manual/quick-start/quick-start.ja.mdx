@@ -33,22 +33,20 @@ naholo init
 naholo covert init
 ```
 
-続いて、Claude Code でマーケットプレイスを追加し、プラグインをインストールして、リロードします。
+続いて、ターミナルでマーケットプレイスを追加し、プラグインをインストールします。
 
-```
-/plugin marketplace add rokt33r/naholo-claude-plugin
-/plugin install naholo-claude-plugin@naholo
-/reload-plugins
-/reload-skills
+```bash
+claude plugin marketplace add rokt33r/naholo-claude-plugin
+claude plugin install naholo-claude-plugin@naholo
 ```
 
-インストールが終わったら、ドクタースキルでセットアップを確認します。
+Claude Code を起動（または再起動）するとプラグインが読み込まれます。続いて、ドクタースキルでセットアップを確認します。
 
 ```
 /naholo-doctor
 ```
 
-> インストール後、VS Code の Claude プラグインにスキルが表示されない場合は、`/reload-skills` を実行するか、ウィンドウをリロードしてください（Cmd+P を押して `Developer: Reload Window` を選択）。
+> インストール後、VS Code の Claude プラグインにスキルが表示されない場合は、ウィンドウをリロードしてください（Cmd+P を押して `Developer: Reload Window` を選択）。
 
 > ドクタースキルは CLI のバージョン、ログイン、プロジェクト設定を確認し、問題があれば解決策を教えてくれます。
 

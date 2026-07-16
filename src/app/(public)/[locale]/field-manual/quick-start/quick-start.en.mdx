@@ -33,22 +33,20 @@ naholo init
 naholo covert init
 ```
 
-Then, in Claude Code, add the marketplace, install the plugin, and reload.
+Then add the marketplace and install the plugin from your terminal.
 
-```
-/plugin marketplace add rokt33r/naholo-claude-plugin
-/plugin install naholo-claude-plugin@naholo
-/reload-plugins
-/reload-skills
+```bash
+claude plugin marketplace add rokt33r/naholo-claude-plugin
+claude plugin install naholo-claude-plugin@naholo
 ```
 
-Once it is installed, verify your setup with the doctor skill.
+Start (or restart) Claude Code so the plugin loads, then verify your setup with the doctor skill.
 
 ```
 /naholo-doctor
 ```
 
-> After installing, if the skill does not show up in the VS Code Claude plugin, run `/reload-skills` or reload the window (press Cmd+P, then select `Developer: Reload Window`).
+> After installing, if the skill does not show up in the VS Code Claude plugin, reload the window (press Cmd+P, then select `Developer: Reload Window`).
 
 > The doctor skill checks your CLI version, login, and project setup, and tells you how to fix anything that is off.
 
