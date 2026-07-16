@@ -39,15 +39,18 @@ Then, in Claude Code, add the marketplace, install the plugin, and reload.
 /plugin marketplace add rokt33r/naholo-claude-plugin
 /plugin install naholo-claude-plugin@naholo
 /reload-plugins
+/reload-skills
 ```
 
 Once it is installed, verify your setup with the doctor skill.
 
 ```
-/naholo-claude-plugin:naholo-doctor
+/naholo-doctor
 ```
 
-The doctor skill checks your CLI version, login, and project setup, and tells you how to fix anything that is off.
+> After installing, if the skill does not show up in the VS Code Claude plugin, run `/reload-skills` or reload the window (press Cmd+P, then select `Developer: Reload Window`).
+
+> The doctor skill checks your CLI version, login, and project setup, and tells you how to fix anything that is off.
 
 ## 1. Create an operation and `/infil`
 

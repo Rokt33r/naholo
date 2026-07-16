@@ -39,15 +39,18 @@ naholo covert init
 /plugin marketplace add rokt33r/naholo-claude-plugin
 /plugin install naholo-claude-plugin@naholo
 /reload-plugins
+/reload-skills
 ```
 
 インストールが終わったら、ドクタースキルでセットアップを確認します。
 
 ```
-/naholo-claude-plugin:naholo-doctor
+/naholo-doctor
 ```
 
-ドクタースキルは CLI のバージョン、ログイン、プロジェクト設定を確認し、問題があれば解決策を教えてくれます。
+> インストール後、VS Code の Claude プラグインにスキルが表示されない場合は、`/reload-skills` を実行するか、ウィンドウをリロードしてください（Cmd+P を押して `Developer: Reload Window` を選択）。
+
+> ドクタースキルは CLI のバージョン、ログイン、プロジェクト設定を確認し、問題があれば解決策を教えてくれます。
 
 ## 1. 作戦の作成と `/infil`
 
