@@ -6,7 +6,7 @@ import {
   writeSkillFile,
 } from '../packages/naholo-cli/src/skills.js'
 
-const PLUGIN_VERSION = '0.1.0'
+const PLUGIN_VERSION = '0.1.1'
 const MIN_CLI_VERSION = '0.12.0'
 const PLUGIN_NAME = 'naholo-claude-plugin'
 const PLUGIN_DESCRIPTION = 'Naholo core skills'
