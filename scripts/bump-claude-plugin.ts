@@ -45,18 +45,12 @@ fs.writeFileSync(
 
 const tag = `naholo-claude-plugin@${version}`
 
-// Commit the bumped script, tag the commit with the plugin-stream prefix, and
-// push both — the tag triggers the release-plugin workflow.
+// Commit the bumped script, tag the commit with the plugin-stream prefix
 execFileSync('git', ['commit', '-m', tag, '--', buildScriptPath], {
   cwd: repoRoot,
   stdio: 'inherit',
 })
 execFileSync('git', ['tag', tag], { cwd: repoRoot, stdio: 'inherit' })
-execFileSync('git', ['push'], { cwd: repoRoot, stdio: 'inherit' })
-execFileSync('git', ['push', 'origin', tag], {
-  cwd: repoRoot,
-  stdio: 'inherit',
-})
 
 console.log(
   `\nBumped naholo-claude-plugin to ${version}, tagged and pushed ${tag}.`,
