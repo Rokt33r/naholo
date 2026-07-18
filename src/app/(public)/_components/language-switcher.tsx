@@ -64,7 +64,7 @@ export function LanguageMenuItems() {
   )
 }
 
-const LOCALIZED_PREFIXES = ['/field-manual']
+const LOCALIZED_PREFIXES = ['/field-manual', '/blog']
 
 function parseLocalePath(pathname: string): {
   locale: 'en' | 'ko' | 'ja'
