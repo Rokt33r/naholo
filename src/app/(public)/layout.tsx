@@ -49,6 +49,12 @@ export default function PublicLayout({
               Patchnotes
             </Link>
             <Link
+              href='/blog'
+              className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
+            >
+              Blog
+            </Link>
+            <Link
               href='/pricing'
               className='hidden text-sm text-zinc-600 hover:text-zinc-900 md:inline dark:text-zinc-400 dark:hover:text-zinc-50'
             >

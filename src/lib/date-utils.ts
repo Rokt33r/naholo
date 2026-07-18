@@ -22,3 +22,7 @@ export function formatIssueDate(date: string | Date): string {
 
   return format(date, 'yyyy MMM')
 }
+
+export function formatPublishDate(date: string | Date): string {
+  return format(date, 'MMM d, yyyy')
+}

@@ -1,0 +1,160 @@
+import { OperateTerminalMockup } from '../../components/landing/mockups/operate-terminal-mockup'
+import { CollectIntelMockup } from '../../components/landing/mockups/collect-intel-mockup'
+import { RetrospectMockup } from '../../components/landing/mockups/retrospect-mockup'
+
+export const meta = {
+  title:
+    'I built an app and some skills. Dev speed doubled, token usage halved.',
+}
+
+# I built an app and some skills. Dev speed doubled, token usage halved.
+
+I'm the CTO of a product security company, and I have two boys, zero and two years old. My days are full of meetings, my evenings belong to the kids so my wife can get a break, and every so often a security story breaks at some random hour, a supply-chain attack targeting react2shell, litellm, tanstack, and I have to check whether any of our clients are exposed. Life is hectic as hell.
+
+<CollectIntelMockup />
+
+So I built myself a memo tool. Nothing fancy, just somewhere to drop a short idea or a bit of feedback the moment I had it, from my clients or my team. It was basically a simple thread based chat app where I talked to myself. Take a memo, review the pile when I finally had a long stretch of free time, tackle one when I had the energy.
+
+Then I started pointing it at itself. Every time the app annoyed me, I dropped a memo. Every time I had an hour, I fixed one. At some point I thought, if I just wired an MCP server to pull those ideas straight into my editor, I could go from memo to working code without paying the context-switch tax every time. So I did. **I built a small CLI that hosts the MCP server and wires my whole config up to the web app.**
+
+That part worked. The planning is where it fell apart.
+
+Claude Code's `/plan` felt like a gamble every single session. I was fighting two dials at once: context size and context resolution. Too much context and the agent starts hallucinating. Too much detail and it has to read a novel to change a few lines. Either way I lose. **Just preparing that first context had become a job in itself.**
+
+So I went back to the origin of the pain. Every ticket, an idea, a piece of feedback, a plan, has a pain buried in it, and they show up at wildly different sizes and levels of detail. The first move is to normalize that, so **for each ticket I get the agent to answer one question: I want to make this, but why?** Summarizing is the one thing AI is genuinely good at no matter how big the context is, so it is great at pulling the original pain back out of a messy ticket. That extracted pain is what I call the baseline.
+
+Next I tried doing the conceptual work, figuring out what solution would actually fit. On its own, that was just daydreaming. It was fine for the obvious tasks, but the moment one needed a slightly complex approach, the abstract plan didn't hold up, and I kept reversing decisions once I hit the concrete plan or the code. So I pushed one step past the concept, into a design real enough to act on. That's when I **borrowed the idea of [Architecture Decision Records](https://adr.github.io/) and started writing Constraints.**
+
+But another problem surfaced, mostly on small tasks: **the agent would force constraints out of thin air, and those fussy little constraints got in the way of the next plan and code change.** So I capped their resolution. A hard length limit: each constraint is two sentences, one for what it is and one for why it needs to exist, and I told it to skip file names and actual code unless that was the only way to say it. That stopped the agent from squeezing out an architecture plan, and it held a steady resolution no matter the context size. It still wasn't perfect. **If a constraint was too tight I'd lift it; if it was too vague I'd dig in,** and either learn something new or catch a slop early, and since no concrete plan or code had happened yet, iterating stayed cheap. Depending on task size, the whole shape usually fit in 200 to 400 words at a glance, so reviews got stress-free and genuinely easy.
+
+Now that I had the shape, I had it write the implementation plan. **I split tasks into single-commit-sized chunks,** shipping one at a time. That worked okay, and changes of about four or five files kept code review easy, but it kept hiccupping. **The agent often wrote the plan at nearly the level of the diff itself, and the burden of reading the same thing twice kept growing until I couldn't ignore it.** I'd rather just read the code. But skip the plan entirely and I was right back to blind vibecoding, stuck in the same root failure again.
+
+So what is a good plan? **A good plan gives clear contracts.** It says how each module talks to the next one. So I made the skill focus only on the top level: exported functions and interfaces. Describe only the change to a contract, in one sentence. We don't care how the work happens inside a module, only how modules meet at the edges. All of a sudden I could think purely about responsibilities.
+
+Of course, some changes need more than one sentence. So I added a window. If the change is about the contract, write pseudocode spotlighting only the contract change. If it's internal flow, sketch it as an ascii diagram. Same for UI, an ascii wireframe. People might ask how anyone's supposed to mock a screen in ascii, but once a task is one commit big, the surface I can touch is tiny, so a rough wireframe is more than enough.
+
+Pseudocode for a module-level contract change
+
+```ts
+// src/lib/operation-search.ts
+type OperationSearchConditions = {
+  // ...
+  exactOperationNumber: number | null // was: operationNumber: string | null
+}
+
+function toggleSearchToken(
+  search: string,
+  kind: 'label' | 'assignee',
+  value: string,
+): string // new — append the token when absent, strip it when present
+```
+
+Function flow preview
+
+```
+active polar sub? ──yes──► usedSeats > seat cap ? seats-exceeded : active
+        └────────no──────► usedSeats > 1        ? suspended      : free
+```
+
+Layout mockup #1 - Operation page structure change (task 1)
+
+```
+before                       after
+┌───────────┬───────────┐    index route             detail route
+│ list panel│ detail /  │    ┌──────────┐           ┌─────────────────┐
+│ (always)  │ "select…" │ →  │nav │list │ row click │nav │bread crumb │
+│           │           │    │    │     │ ────────► │    │op detail   │
+└───────────┴───────────┘    └──────────┘           └─────────────────┘
+```
+
+Layout mockup #2 - Operation page navigation (task 2)
+
+```
+┌──────────────────┐
+│ ⬡ Operations   ✎ │
+│ All operations   │  → ?search cleared
+│ ASSIGNEES        │
+│  (RO) rokt33r(me)│  → ?search=assignee:rokt33r
+│  (JC) junyoung   │
+│ LABELS           │
+│  «bug»           │  → ?search=label:bug
+│  «infra»         │
+└──────────────────┘
+```
+
+> The `nav` region shown in task 1 gets fleshed out in the next task.
+
+Layout mockup #3 - Operation list item (task 3)
+
+```
+◉  #275  Renew operations page      «infra»        (RO)(JC)   11:38
+▲status ▲num ▲title (truncates)     ▲label pills   ▲avatars   ▲date
+```
+
+> The `list` region shown in task 1 gets fleshed out in a later task.
+
+Then a new problem showed up. **Agents love to build the small pieces first and wire everything together at the very end.** To know how the journey goes, I'd have to read every task. Worse, for UI the agent would build the leaf components first, and I couldn't even render them until the whole page existed. That's when it clicked. Agents don't work like people. **They optimize for one-shotting everything at once, while we don't. When a person builds, we start from the big shape and fill in the detail as we need it,** like drawing. Rough sketch first, then more detail, then more, until it's right.
+
+So I flipped the order. Contracts first, the domain schema and the interfaces. Then the big pieces, a whole endpoint or a whole page, standing up with placeholders and skeleton components. Then fill in the detail slowly. Now I read the big picture as I ship it. I don't need to read every task up front. **The code change itself becomes the preview of the next task.** I read the first one, and it previews the second. The second previews the third and the fourth.
+
+One last valve I opened is for when the agent writes code. Every task has a small goal, and **sometimes reaching it means doing something the plan never accounted for.** So I let the agent improvise, but made it flag that in the plan's progress log, same format as the plan, and **because it departs from the plan, I called it a Deviation.** I made it log not just the agent's Deviations but mine too, so I can lightly change a contract when my own thinking shifts mid-build. So there are two kinds: the agent was wrong, or I was. Studying both kept sharpening how I review the plan itself, and the whole experience got more pleasant.
+
+With the whole flow in place, I can handle any context. The agents now work at a fixed resolution no matter how big the context gets, so even a large task still fits in a five-minute review window. **All I have to do is follow the steady path.** The agent's output stays that limited, so I can't really burn out. It even tells me where to chop a task: more than 20 constraints or 10 tasks is usually a good sign to split. So my agents and I both keep our sanity, reviewing everything from idea to plan to code, **with no hallucination and no burnout.**
+
+<RetrospectMockup />
+
+I also started measuring the token cost of each phase, so I
+could judge it by objective numbers instead of just my gut. Across hundreds of
+tickets, the rough average came out like this:
+
+- concept and constraint decisions: 7%
+- cutting tasks: 21%
+- shipping: 65% (usually higher when the issue is big)
+- other: 7%
+
+Which makes the whole thing obvious. When I catch a problem in the 7% or the 21%, **fixing it costs a tenth, or at most half, the tokens.** And because each task only describes module-level contracts, changing the plan later costs far less. It all adds up: my token usage dropped a lot. During work hours I run three agents at once, each on its own project and worktree, and **I still can't manage to use more than 30% of my $100 Claude x5 plan.** (Before my parental leave last year I'd blow through even the x20 plan every time, and I was reaching for Sonnet.)
+
+So now I'm really enjoying coding again. Even with a CTO's load of meetings and clients' security incidents to deal with, I still ship my own code consistently, fully reviewed. And this side project I ship after work, whittling the plan and code down in the gaps while I look after my two boys. The agent still slips sometimes, but every step has a hard limit, so I roll it back before it grows out of control. And following the workflow, the agent tames itself within the session, so even when it strays I nudge it back easily. Even if the context gets big enough that it starts hallucinating, it's no big deal: since a ticket's whole context lives in one plan file, I just start a fresh agent without `/compact`. It already understands the workflow, so loading that file is enough to carry on. And with no `/compact`, there's no wait for it, and no more hallucinations from a bad summary that drops the important parts and keeps the useless ones.
+
+<OperateTerminalMockup />
+
+This month I finally talked my team into using it. They were skeptical, which is fair. The thing is a web app plus a set of skills plus a CLI that hands tools and commands to agents, and it's genuinely hard to say in one sentence what it even is. Then they tried it. Two to three times the throughput, mostly because the stress dropped and they stopped getting fried, and the buffer, the extra time they tack onto every estimate to cover the unexpected, shrank right along with it. **A five-day task landed in a day and a half, and their token usage dropped 30 to 60% per task, most dramatically on the bigger ones.**
+
+The other thing people notice is that **there's almost nothing to learn up front.** The flow is simple and the agent guides them through it. I've seen "AI heroes" share dozens of skills for dozens of scenarios. I give five core skills, and they cover almost everything, from a rough idea or a raw complaint all the way down to shipped code.
+
+```sh
+# core skills
+/infil   (Infiltration) pull context down from the web app
+/warno   (WARNING ORDER) lock the concept and the constraints
+/opord   (OPERATION ORDER) cut the tasks
+/splash  (the call for an artillery or air strike, "splash out / splash over") implement each task
+/exfil   (Exfiltration) push context back up to the web app
+
+# extra skills
+/recon   draft a plan change
+/chop    split an issue
+/fob     (Forward Operating Base) file a ticket straight from the codebase
+/frago   (FRAGMENTARY ORDER) change constraints and tasks
+```
+
+So why the military words?
+
+1. My ROK army experience just popped into my head. (I don't miss it at all though.)
+2. I love Call of Duty. Honestly can't wait for "Modern Warfare 사" at the end of the year.
+3. The military decision making process (MDMP) handed me all sorts of hints, so I swapped the vocabulary over too.
+
+The mapping ended up like this:
+
+- issue → operation
+- member → operator
+- concept and constraints → WARNING ORDER (WARNO)
+- tasks → OPERATION ORDER (OPORD)
+- epic → campaign (in the works)
+- milestone → rallypoint (in the works)
+- plan change → FRAGMENTARY ORDER (FRAGO)
+
+The bonus is that my team now talks in this ridiculous tacticooool way in meetings, and honestly, I love it. **"For this op, I've got the WARNO ready, mind reviewing it?"**
+
+So if you're stressed, or you just want to enjoy building again, leaning back but without the irresponsible vibecoding, [give it a shot](https://naholo.app). It's free for a solo user. If you like it, share it with your team, and the collaboration features are getting stronger too. And it's all open source, so come by the [GitHub repo](https://github.com/rokt33r/naholo), star it, fork it.
+
+Thanks for reading.

@@ -163,6 +163,7 @@
     "landingTitle": "naholo — coding ops, end to end",
     "landingDescription": "AI coding without the spiral. naholo runs your coding ops end to end: infil into the codebase, brief the task, ship in splashes, exfil with the diff.",
     "primerTitle": "Field Manual — naholo",
-    "quickStartTitle": "Quick Start — Field Manual — naholo"
+    "quickStartTitle": "Quick Start — Field Manual — naholo",
+    "blogTitle": "Blog — naholo"
   }
 }

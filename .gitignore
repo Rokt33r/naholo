@@ -51,3 +51,5 @@ public/cli/
 
 # claude plugin build
 /claude-plugin-dist
+
+/temp
