@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { getPost, listAllPosts, type Locale } from '@/lib/blog'
 import { localeAlternates } from '@/i18n/metadata'
 import { formatPublishDate } from '@/lib/date-utils'
+import { ScrollToTopButton } from './_components/scroll-to-top-button'
 
 export function generateStaticParams() {
   return listAllPosts().map((post) => ({ slug: post.slug }))
@@ -57,6 +58,7 @@ export default async function BlogArticlePage({
       <article className='prose mt-4 max-w-none dark:prose-invert'>
         <Content />
       </article>
+      <ScrollToTopButton />
     </div>
   )
 }
