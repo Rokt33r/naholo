@@ -7,9 +7,8 @@ import * as BuiltNaholoJa from '@/content/blog/1-built-naholo.ja.mdx'
 const posts: BlogPost[] = [
   {
     slug: '1-built-naholo',
-    publishedAt: '2026-07-18',
+    publishedAt: '2026-07-20',
     content: { en: BuiltNaholoPost, ko: BuiltNaholoKo, ja: BuiltNaholoJa },
-    draft: true,
   },
 ]
 
