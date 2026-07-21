@@ -87,6 +87,76 @@ export async function resolveProjectOperatorIds(
   return rows.map((row) => row.id)
 }
 
+export async function isProjectOperatorId(
+  projectId: string,
+  projectOperatorId: string,
+): Promise<boolean> {
+  const operator = await db.query.projectOperators.findFirst({
+    columns: { id: true },
+    where: (t, { and, eq }) =>
+      and(eq(t.id, projectOperatorId), eq(t.projectId, projectId)),
+  })
+  return operator != null
+}
+
+export async function assignOperatorToOperations(data: {
+  projectId: string
+  projectOperatorId: string
+  operationNumbers: number[]
+  sourceClientId?: string
+}): Promise<{ opNumbers: number[] }> {
+  const operations = await filterValidProjectOperations(
+    data.projectId,
+    data.operationNumbers,
+  )
+  if (operations.length === 0) {
+    return { opNumbers: [] }
+  }
+
+  await db
+    .insert(operationAssignees)
+    .values(
+      operations.map((operation) => ({
+        operationId: operation.id,
+        projectOperatorId: data.projectOperatorId,
+      })),
+    )
+    .onConflictDoNothing()
+
+  publishBulkAssigneeChange(operations, data.projectId, data.sourceClientId)
+
+  return { opNumbers: operations.map((operation) => operation.number) }
+}
+
+export async function unassignOperatorFromOperations(data: {
+  projectId: string
+  projectOperatorId: string
+  operationNumbers: number[]
+  sourceClientId?: string
+}): Promise<{ opNumbers: number[] }> {
+  const operations = await filterValidProjectOperations(
+    data.projectId,
+    data.operationNumbers,
+  )
+  if (operations.length === 0) {
+    return { opNumbers: [] }
+  }
+
+  await db.delete(operationAssignees).where(
+    and(
+      inArray(
+        operationAssignees.operationId,
+        operations.map((operation) => operation.id),
+      ),
+      eq(operationAssignees.projectOperatorId, data.projectOperatorId),
+    ),
+  )
+
+  publishBulkAssigneeChange(operations, data.projectId, data.sourceClientId)
+
+  return { opNumbers: operations.map((operation) => operation.number) }
+}
+
 function publishAssigneeChange(
   operationId: string,
   projectId: string,
@@ -94,4 +164,29 @@ function publishAssigneeChange(
 ): void {
   publishOperationEvent(operationId, 'operation-updated', sourceClientId)
   publishProjectEvent(projectId, 'operations-list-changed', sourceClientId)
+}
+
+function publishBulkAssigneeChange(
+  operations: { id: string }[],
+  projectId: string,
+  sourceClientId?: string,
+): void {
+  for (const operation of operations) {
+    publishOperationEvent(operation.id, 'operation-updated', sourceClientId)
+  }
+  publishProjectEvent(projectId, 'operations-list-changed', sourceClientId)
+}
+
+async function filterValidProjectOperations(
+  projectId: string,
+  operationNumbers: number[],
+): Promise<{ id: string; number: number }[]> {
+  if (operationNumbers.length === 0) {
+    return []
+  }
+  return db.query.operations.findMany({
+    columns: { id: true, number: true },
+    where: (t, { and, eq, inArray }) =>
+      and(eq(t.projectId, projectId), inArray(t.number, operationNumbers)),
+  })
 }
