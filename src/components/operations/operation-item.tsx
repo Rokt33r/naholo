@@ -8,19 +8,14 @@ import { LabelBadge } from '@/components/labels/label-badge'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { buildSearchToken } from '@/lib/operation-search'
 import type { OperationListItem } from '@/hooks/use-operations'
-import { type MouseEvent } from 'react'
+import { type KeyboardEvent, type MouseEvent } from 'react'
 
 type OperationItemProps = {
   operation: OperationListItem
   projectSlug: string
-  isActive: boolean
 }
 
-export function OperationItem({
-  operation,
-  projectSlug,
-  isActive,
-}: OperationItemProps) {
+export function OperationItem({ operation, projectSlug }: OperationItemProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -33,6 +28,13 @@ export function OperationItem({
     )
   }
 
+  const handleRowKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleClick()
+    }
+  }
+
   // Apply a filter instead of opening the operation.
   const handleSearchableTokenClick = (event: MouseEvent, token: string) => {
     event.stopPropagation()
@@ -42,12 +44,12 @@ export function OperationItem({
   }
 
   return (
-    <button
+    <div
+      role='button'
+      tabIndex={0}
       onClick={handleClick}
-      className={cn(
-        'flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left transition-colors hover:bg-accent',
-        isActive && 'bg-accent/50 hover:bg-accent',
-      )}
+      onKeyDown={handleRowKeyDown}
+      className='flex h-11 w-full cursor-pointer items-center gap-2.5 pr-2 text-left'
     >
       {operation.closed ? (
         <CircleCheck className='size-4 shrink-0 text-purple-600' />
@@ -113,6 +115,6 @@ export function OperationItem({
       <span className='w-11 shrink-0 text-right text-xs text-muted-foreground'>
         {formatIssueDate(operation.updatedAt)}
       </span>
-    </button>
+    </div>
   )
 }

@@ -9,7 +9,9 @@ import {
 } from 'next/navigation'
 import { LandPlot, SquarePen } from 'lucide-react'
 import { useProjectContext } from '@/components/app/project-context'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { OperationItem } from '@/components/operations/operation-item'
 import {
@@ -86,6 +88,31 @@ export default function OperationsIndexPage() {
     })
   }, [operations, searchInput, sort, direction])
 
+  const [selectedOpIds, setSelectedOpIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    setSelectedOpIds(new Set())
+  }, [projectSlug, filter, sort, direction])
+
+  const selectedOperations = useMemo(
+    () =>
+      sortedOperations.filter((operation) => selectedOpIds.has(operation.id)),
+    [sortedOperations, selectedOpIds],
+  )
+  const selectionActive = selectedOperations.length > 0
+
+  const handleToggleSelect = (operationId: string) => {
+    setSelectedOpIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(operationId)) {
+        next.delete(operationId)
+      } else {
+        next.add(operationId)
+      }
+      return next
+    })
+  }
+
   const handleFilterChange = (newFilter: 'open' | 'closed') => {
     const params = new URLSearchParams(searchParams)
     params.set('filter', newFilter)
@@ -153,12 +180,37 @@ export default function OperationsIndexPage() {
         ) : (
           <div>
             {sortedOperations.map((operation) => (
-              <OperationItem
+              <div
                 key={operation.id}
-                operation={operation}
-                projectSlug={projectSlug}
-                isActive={operation.number === currentOperationNumber}
-              />
+                className={cn(
+                  'group flex items-center rounded-md transition-colors hover:bg-accent',
+                  operation.number === currentOperationNumber &&
+                    'bg-accent/50 hover:bg-accent',
+                )}
+              >
+                <label
+                  htmlFor={`select-op-${operation.id}`}
+                  className='flex w-7 shrink-0 cursor-pointer items-center justify-center self-stretch'
+                >
+                  <Checkbox
+                    id={`select-op-${operation.id}`}
+                    checked={selectedOpIds.has(operation.id)}
+                    onCheckedChange={() => handleToggleSelect(operation.id)}
+                    aria-label={`Select operation #${operation.number}`}
+                    className={cn(
+                      !selectedOpIds.has(operation.id) &&
+                        !selectionActive &&
+                        'opacity-0 group-hover:opacity-100',
+                    )}
+                  />
+                </label>
+                <div className='min-w-0 flex-1'>
+                  <OperationItem
+                    operation={operation}
+                    projectSlug={projectSlug}
+                  />
+                </div>
+              </div>
             ))}
           </div>
         )}
