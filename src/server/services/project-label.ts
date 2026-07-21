@@ -26,11 +26,19 @@ export async function listProjectLabels(
   })
 }
 
-/**
- * Return the subset of `ids` that belong to the project — invalid ids are
- * silently dropped.
- */
-export async function resolveProjectLabelIds(
+export async function isProjectLabelId(
+  projectId: string,
+  labelId: string,
+): Promise<boolean> {
+  const label = await db.query.projectLabels.findFirst({
+    columns: { id: true },
+    where: (t, { and, eq }) =>
+      and(eq(t.id, labelId), eq(t.projectId, projectId)),
+  })
+  return label != null
+}
+
+export async function filterValidProjectLabelIds(
   projectId: string,
   labelIds: string[],
 ): Promise<string[]> {
