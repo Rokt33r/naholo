@@ -201,6 +201,64 @@ export async function deleteOperationProjectLabels(data: {
   return ok()
 }
 
+export async function attachLabelToOperations(data: {
+  projectId: string
+  projectLabelId: string
+  operationNumbers: number[]
+  sourceClientId?: string
+}): Promise<{ opNumbers: number[] }> {
+  const operations = await filterValidProjectOperations(
+    data.projectId,
+    data.operationNumbers,
+  )
+  if (operations.length === 0) {
+    return { opNumbers: [] }
+  }
+
+  await db
+    .insert(operationProjectLabels)
+    .values(
+      operations.map((operation) => ({
+        operationId: operation.id,
+        projectLabelId: data.projectLabelId,
+      })),
+    )
+    .onConflictDoNothing()
+
+  publishBulkLabelChange(operations, data.projectId, data.sourceClientId)
+
+  return { opNumbers: operations.map((operation) => operation.number) }
+}
+
+export async function detachLabelFromOperations(data: {
+  projectId: string
+  projectLabelId: string
+  operationNumbers: number[]
+  sourceClientId?: string
+}): Promise<{ opNumbers: number[] }> {
+  const operations = await filterValidProjectOperations(
+    data.projectId,
+    data.operationNumbers,
+  )
+  if (operations.length === 0) {
+    return { opNumbers: [] }
+  }
+
+  await db.delete(operationProjectLabels).where(
+    and(
+      inArray(
+        operationProjectLabels.operationId,
+        operations.map((operation) => operation.id),
+      ),
+      eq(operationProjectLabels.projectLabelId, data.projectLabelId),
+    ),
+  )
+
+  publishBulkLabelChange(operations, data.projectId, data.sourceClientId)
+
+  return { opNumbers: operations.map((operation) => operation.number) }
+}
+
 function publishLabelChange(
   operationId: string,
   projectId: string,
@@ -208,4 +266,29 @@ function publishLabelChange(
 ): void {
   publishOperationEvent(operationId, 'operation-updated', sourceClientId)
   publishProjectEvent(projectId, 'operations-list-changed', sourceClientId)
+}
+
+function publishBulkLabelChange(
+  operations: { id: string }[],
+  projectId: string,
+  sourceClientId?: string,
+): void {
+  for (const operation of operations) {
+    publishOperationEvent(operation.id, 'operation-updated', sourceClientId)
+  }
+  publishProjectEvent(projectId, 'operations-list-changed', sourceClientId)
+}
+
+async function filterValidProjectOperations(
+  projectId: string,
+  operationNumbers: number[],
+): Promise<{ id: string; number: number }[]> {
+  if (operationNumbers.length === 0) {
+    return []
+  }
+  return db.query.operations.findMany({
+    columns: { id: true, number: true },
+    where: (t, { and, eq, inArray }) =>
+      and(eq(t.projectId, projectId), inArray(t.number, operationNumbers)),
+  })
 }
