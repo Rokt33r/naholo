@@ -1,4 +1,4 @@
-import { extractHeadingBody } from './markdown-utils.js'
+import { extractHeadingBody } from './markdown-utils'
 
 export type ParsedOperationMd = {
   number: number

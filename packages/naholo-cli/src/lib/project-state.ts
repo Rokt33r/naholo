@@ -6,12 +6,12 @@ import {
   getCovertOpsDir,
   readCovertOpsConfig,
   type CovertOpsProjectConfig,
-} from '../covert-config.js'
-import type { ProjectConfig } from '../project-config.js'
+} from '../covert-config'
+import type { ProjectConfig } from '../project-config'
 import {
   localAgentTranscriptEntrySchema,
   type LocalAgentTranscriptEntry,
-} from './agent-transcripts.js'
+} from './agent-transcripts'
 
 export type HookSource = 'claude-code-stop'
 

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
-import { NoProjectStateCliError, withErrorHandling } from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
-import { getActiveProfile } from '../../profile.js'
+import { NoProjectStateCliError, withErrorHandling } from '../../errors'
+import { getProjectState } from '../../lib/project-state'
+import { getActiveProfile } from '../../profile'
 import manualText from './manual.md'
 
 export const bootCommand = new Command('boot')

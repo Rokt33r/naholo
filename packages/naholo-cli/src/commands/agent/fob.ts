@@ -1,12 +1,12 @@
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
-import { getCliContext } from '../../context.js'
+import { getCliContext } from '../../context'
 import {
   CliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
+} from '../../errors'
+import { getProjectState } from '../../lib/project-state'
 
 export const fobCommand = new Command('fob')
   .description(

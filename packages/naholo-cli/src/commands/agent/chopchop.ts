@@ -1,22 +1,22 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
-import { getCliContext } from '../../context.js'
+import { getCliContext } from '../../context'
 import {
   CliError,
   NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { composeNewOpOperationMd, parseChopMd } from '../../lib/chop-md.js'
-import { getProjectState, type ProjectState } from '../../lib/project-state.js'
+} from '../../errors'
+import { composeNewOpOperationMd, parseChopMd } from '../../lib/chop-md'
+import { getProjectState, type ProjectState } from '../../lib/project-state'
 import {
   composeParentOperationMd,
   parseConstraintLabels,
   parseOperationMd,
   pruneCarvedConstraintsFromBlock,
-} from '../../lib/operation-md.js'
-import { pushOp } from '../../lib/push-op.js'
+} from '../../lib/operation-md'
+import { pushOp } from '../../lib/push-op'
 
 export const chopchopCommand = new Command('chopchop')
   .description(

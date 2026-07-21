@@ -2,19 +2,19 @@ import fs from 'node:fs'
 import path from 'node:path'
 import checkbox from '@inquirer/checkbox'
 import { Command } from 'commander'
-import { unregisterNaholoMcpForProject } from '../../claude-code-config.js'
-import { CliError, withErrorHandling } from '../../errors.js'
+import { unregisterNaholoMcpForProject } from '../../claude-code-config'
+import { CliError, withErrorHandling } from '../../errors'
 import {
   readClaudeSettings,
   removeNaholoCovertPermissionsFromClaudeSettings,
   removeNaholoStopHookFromClaudeSettings,
   writeClaudeSettings,
-} from '../../lib/claude-settings.js'
+} from '../../lib/claude-settings'
 import {
   getCovertOpsDir,
   readCovertOpsConfig,
   removeCovertOpsProjectConfig,
-} from '../../covert-config.js'
+} from '../../covert-config'
 
 export const covertExitCommand = new Command('exit')
   .description('Remove covert mode registration for a project path')

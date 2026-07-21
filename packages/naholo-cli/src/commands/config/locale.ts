@@ -1,7 +1,7 @@
 import { Command } from 'commander'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { pickLocale } from '../../locale.js'
-import { getActiveProfile, writeProfile } from '../../profile.js'
+import { CliError, withErrorHandling } from '../../errors'
+import { pickLocale } from '../../locale'
+import { getActiveProfile, writeProfile } from '../../profile'
 
 export const localeCommand = new Command('locale')
   .description('Choose a locale for the active profile')

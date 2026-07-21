@@ -5,8 +5,8 @@ import {
   NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
+} from '../../errors'
+import { getProjectState } from '../../lib/project-state'
 
 function formatLocalTimestamp(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')

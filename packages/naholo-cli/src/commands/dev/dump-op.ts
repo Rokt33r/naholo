@@ -2,9 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { readGlobalConfig } from '../../global-config.js'
-import { getActiveProfile } from '../../profile.js'
+import { CliError, withErrorHandling } from '../../errors'
+import { readGlobalConfig } from '../../global-config'
+import { getActiveProfile } from '../../profile'
 
 export const dumpOpCommand = new Command('dump-op')
   .description(

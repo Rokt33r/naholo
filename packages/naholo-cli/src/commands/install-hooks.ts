@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { Command } from 'commander'
-import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
+import { NoProjectStateCliError, withErrorHandling } from '../errors'
 import {
   addNaholoStopHookToClaudeSettings,
   getProjectClaudeSettingsPath,
@@ -10,8 +10,8 @@ import {
   readClaudeSettings,
   removeNaholoStopHookFromClaudeSettings,
   writeClaudeSettings,
-} from '../lib/claude-settings.js'
-import { getProjectState } from '../lib/project-state.js'
+} from '../lib/claude-settings'
+import { getProjectState } from '../lib/project-state'
 
 export const installHooksCommand = new Command('install-hooks')
   .description(

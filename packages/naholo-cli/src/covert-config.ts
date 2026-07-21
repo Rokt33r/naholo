@@ -1,11 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { parse, stringify } from 'yaml'
-import { ensureNaholoHomeDir, getNaholoHomeDir } from './global-config.js'
-import type {
-  ProjectConfig,
-  UploadTranscriptsOnExfil,
-} from './project-config.js'
+import { ensureNaholoHomeDir, getNaholoHomeDir } from './global-config'
+import type { ProjectConfig, UploadTranscriptsOnExfil } from './project-config'
 
 export interface CovertOpsProjectConfig extends ProjectConfig {
   codeName: string

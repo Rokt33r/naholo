@@ -3,8 +3,8 @@ import {
   type McpServer,
 } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { NaholoClient } from 'naholo-api/client'
-import type { ProjectState } from '../lib/project-state.js'
-import { formatTasksMarkdown } from '../lib/tasks-markdown.js'
+import type { ProjectState } from '../lib/project-state'
+import { formatTasksMarkdown } from '../lib/tasks-markdown'
 
 export function registerResources(
   server: McpServer,

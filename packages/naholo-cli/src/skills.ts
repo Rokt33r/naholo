@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { CliError } from './errors.js'
+import { CliError } from './errors'
 
 const CLAUDE_SKILLS_DIR = '.claude/skills'
 

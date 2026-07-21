@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { ProjectState } from './project-state.js'
+import type { ProjectState } from './project-state'
 
 const STOP_HOOK_COMMAND = 'naholo agent claude-code-stop'
 const NAHOLO_BASE_ALLOW = ['Bash(naholo agent *)', 'mcp__naholo__*']

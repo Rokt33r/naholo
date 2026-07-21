@@ -1,11 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { getCliContext } from '../context.js'
-import { NoProjectStateCliError } from '../errors.js'
-import { getProjectState } from '../lib/project-state.js'
-import { version } from '../version.js'
-import { registerResources } from './resources.js'
-import { registerTools } from './tools.js'
+import { getCliContext } from '../context'
+import { NoProjectStateCliError } from '../errors'
+import { getProjectState } from '../lib/project-state'
+import { version } from '../version'
+import { registerResources } from './resources'
+import { registerTools } from './tools'
 
 export async function startMcpServer(): Promise<void> {
   const server = new McpServer({

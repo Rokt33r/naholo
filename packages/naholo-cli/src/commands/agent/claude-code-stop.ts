@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 import { Command } from 'commander'
-import { withErrorHandling } from '../../errors.js'
+import { withErrorHandling } from '../../errors'
 import {
   type LocalSubagentTranscriptEntry,
   listSubagentTranscriptFiles,
   resolveTranscriptMeta,
-} from '../../lib/agent-transcripts.js'
-import { getProjectState, type ProjectState } from '../../lib/project-state.js'
+} from '../../lib/agent-transcripts'
+import { getProjectState, type ProjectState } from '../../lib/project-state'
 
 interface HookPayload {
   session_id?: unknown

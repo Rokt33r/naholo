@@ -1,14 +1,14 @@
 import select from '@inquirer/select'
 import { Command } from 'commander'
-import { setCovertProjectConfigUploadMode } from '../covert-config.js'
-import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
-import { getProjectClaudeSettingsPath } from '../lib/claude-settings.js'
-import { installNaholoHooks, uninstallNaholoHooks } from './install-hooks.js'
-import { getProjectState } from '../lib/project-state.js'
+import { setCovertProjectConfigUploadMode } from '../covert-config'
+import { NoProjectStateCliError, withErrorHandling } from '../errors'
+import { getProjectClaudeSettingsPath } from '../lib/claude-settings'
+import { installNaholoHooks, uninstallNaholoHooks } from './install-hooks'
+import { getProjectState } from '../lib/project-state'
 import {
   setProjectConfigUploadMode,
   type UploadTranscriptsOnExfil,
-} from '../project-config.js'
+} from '../project-config'
 
 export const projectConfigCommand = new Command('project-config')
   .description("View and edit the current project's config interactively")

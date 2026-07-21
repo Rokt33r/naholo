@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { CliContext } from '../context.js'
-import { NoInfilledOpCliError } from '../errors.js'
-import type { ProjectState } from './project-state.js'
-import { parseTasksMarkdown } from './tasks-markdown.js'
+import type { CliContext } from '../context'
+import { NoInfilledOpCliError } from '../errors'
+import type { ProjectState } from './project-state'
+import { parseTasksMarkdown } from './tasks-markdown'
 
 export interface PushResult {
   opNum: number

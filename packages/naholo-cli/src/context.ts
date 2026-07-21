@@ -1,7 +1,7 @@
 import { NaholoClient } from 'naholo-api/client'
-import { CliError } from './errors.js'
-import { readGlobalConfig, type GlobalConfig } from './global-config.js'
-import { getActiveProfile, type Profile } from './profile.js'
+import { CliError } from './errors'
+import { readGlobalConfig, type GlobalConfig } from './global-config'
+import { getActiveProfile, type Profile } from './profile'
 
 export interface CliContext {
   globalConfig: GlobalConfig

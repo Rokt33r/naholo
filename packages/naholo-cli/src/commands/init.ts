@@ -3,7 +3,7 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
-import { CliError, withErrorHandling } from '../errors.js'
+import { CliError, withErrorHandling } from '../errors'
 import {
   addNaholoPermissionsToClaudeSettings,
   addNaholoStopHookToClaudeSettings,
@@ -11,16 +11,16 @@ import {
   readClaudeSettings,
   removeNaholoStopHookFromClaudeSettings,
   writeClaudeSettings,
-} from '../lib/claude-settings.js'
-import { writeProjectMcpJson } from '../lib/mcp-json.js'
-import { getProjectState } from '../lib/project-state.js'
-import { getActiveProfile } from '../profile.js'
+} from '../lib/claude-settings'
+import { writeProjectMcpJson } from '../lib/mcp-json'
+import { getProjectState } from '../lib/project-state'
+import { getActiveProfile } from '../profile'
 import {
   writeProjectConfigInCwdNaholoDir,
   writeGitignoreInCwdNaholoDir,
   type ProjectConfig,
   type UploadTranscriptsOnExfil,
-} from '../project-config.js'
+} from '../project-config'
 
 export const initCommand = new Command('init')
   .description('Initialize Naholo project in the current directory')
