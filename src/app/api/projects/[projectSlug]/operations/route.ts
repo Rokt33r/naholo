@@ -4,7 +4,7 @@ import { mapApiError } from '@/server/errors'
 import { requireProjectOperator } from '@/server/auth/permissions'
 import { listOperations, createOperation } from '@/server/services/operation'
 import { resolveProjectOperatorIds } from '@/server/services/assignee'
-import { resolveProjectLabelIds } from '@/server/services/project-label'
+import { filterValidProjectLabelIds } from '@/server/services/project-label'
 import { getSourceClientId } from '@/server/realtime/publish'
 
 type RouteContext = {
@@ -72,7 +72,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
         ? await resolveProjectOperatorIds(project.id, assigneeIds)
         : []
     const validLabelIds =
-      labelIds != null ? await resolveProjectLabelIds(project.id, labelIds) : []
+      labelIds != null
+        ? await filterValidProjectLabelIds(project.id, labelIds)
+        : []
 
     const sourceClientId = getSourceClientId(request)
 

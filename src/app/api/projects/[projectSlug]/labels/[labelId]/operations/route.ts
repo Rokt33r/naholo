@@ -5,7 +5,7 @@ import { requireProjectOperator } from '@/server/auth/permissions'
 import {
   attachLabelToOperations,
   detachLabelFromOperations,
-  resolveProjectLabelIds,
+  isProjectLabelId,
 } from '@/server/services/project-label'
 import { getSourceClientId } from '@/server/realtime/publish'
 
@@ -40,8 +40,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const validLabelIds = await resolveProjectLabelIds(project.id, [labelId])
-    if (!validLabelIds.includes(labelId)) {
+    if (!(await isProjectLabelId(project.id, labelId))) {
       return mapApiError(new NotFoundError('Label'))
     }
 
@@ -78,8 +77,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const validLabelIds = await resolveProjectLabelIds(project.id, [labelId])
-    if (!validLabelIds.includes(labelId)) {
+    if (!(await isProjectLabelId(project.id, labelId))) {
       return mapApiError(new NotFoundError('Label'))
     }
 
