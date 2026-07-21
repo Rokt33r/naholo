@@ -37,7 +37,7 @@
     "commander": "^13.1.0",
     "naholo-api": "workspace:*",
     "node-diff3": "^3.2.0",
-    "open": "^10.1.0",
+    "open": "^11.0.0",
     "tsup": "^8.5.1",
     "typescript": "^5",
     "update-notifier": "^7.3.1",
