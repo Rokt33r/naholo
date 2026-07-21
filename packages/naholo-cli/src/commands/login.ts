@@ -5,10 +5,10 @@ import { Command } from 'commander'
 import crypto from 'node:crypto'
 import http from 'node:http'
 import os from 'node:os'
-import { CliError, withErrorHandling } from '../errors.js'
-import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config.js'
-import { pickLocale } from '../locale.js'
-import { listProfiles, readProfile, writeProfile } from '../profile.js'
+import { CliError, withErrorHandling } from '../errors'
+import { ensureNaholoHomeDir, setDefaultProfile } from '../global-config'
+import { pickLocale } from '../locale'
+import { listProfiles, readProfile, writeProfile } from '../profile'
 
 export const loginCommand = new Command('login')
   .description('Authenticate with a Naholo server')

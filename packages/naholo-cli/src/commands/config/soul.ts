@@ -1,7 +1,7 @@
 import { Command } from 'commander'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { getActiveProfile, writeProfile } from '../../profile.js'
-import { pickSoul } from '../../soul.js'
+import { CliError, withErrorHandling } from '../../errors'
+import { getActiveProfile, writeProfile } from '../../profile'
+import { pickSoul } from '../../soul'
 
 export const soulCommand = new Command('soul')
   .description('Choose a soul for the active profile')

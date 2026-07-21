@@ -1,5 +1,5 @@
 import type { Task } from 'naholo-api/types'
-import { parseTasksMarkdown } from './tasks-markdown.js'
+import { parseTasksMarkdown } from './tasks-markdown'
 
 export interface MergeTasksResult {
   merged: string

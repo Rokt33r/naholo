@@ -3,8 +3,8 @@ import {
   NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
+} from '../../errors'
+import { getProjectState } from '../../lib/project-state'
 
 export const opCommand = new Command('op')
   .description('Print the infilled operation status as YAML')

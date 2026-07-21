@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
-import { CliError, withErrorHandling } from '../errors.js'
-import { getActiveProfile } from '../profile.js'
+import { CliError, withErrorHandling } from '../errors'
+import { getActiveProfile } from '../profile'
 
 export const whoamiCommand = new Command('whoami')
   .description('Show current user and profile info')

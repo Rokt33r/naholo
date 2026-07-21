@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { parse, stringify } from 'yaml'
-import { getNaholoHomeDir, getDefaultProfileName } from './global-config.js'
+import { getNaholoHomeDir, getDefaultProfileName } from './global-config'
 
 export interface Profile {
   baseUrl: string

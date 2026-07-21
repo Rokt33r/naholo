@@ -16,7 +16,7 @@ import type {
   SyncTasksResult,
   UpdateTaskInput,
   Operator,
-} from './types.js'
+} from './types'
 
 export class NaholoClient {
   public baseUrl: string

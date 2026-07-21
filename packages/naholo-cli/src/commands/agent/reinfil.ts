@@ -3,16 +3,16 @@ import path from 'node:path'
 import { Command } from 'commander'
 import type { OperationLog } from 'naholo-api/types'
 import { stringify as yamlStringify } from 'yaml'
-import { getCliContext } from '../../context.js'
+import { getCliContext } from '../../context'
 import {
   NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { mergeTasks } from '../../lib/merge-tasks.js'
-import { getProjectState, type ProjectState } from '../../lib/project-state.js'
-import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
-import { threeWayMerge } from '../../lib/three-way-merge.js'
+} from '../../errors'
+import { mergeTasks } from '../../lib/merge-tasks'
+import { getProjectState, type ProjectState } from '../../lib/project-state'
+import { formatTasksMarkdown } from '../../lib/tasks-markdown'
+import { threeWayMerge } from '../../lib/three-way-merge'
 
 function writeLogsYaml(
   projectState: ProjectState,

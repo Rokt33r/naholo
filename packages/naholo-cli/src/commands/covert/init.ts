@@ -4,8 +4,8 @@ import select from '@inquirer/select'
 import { Command } from 'commander'
 import { NaholoClient } from 'naholo-api/client'
 import type { ProjectWithOperator } from 'naholo-api/types'
-import { registerNaholoMcpForProject } from '../../claude-code-config.js'
-import { CliError, withErrorHandling } from '../../errors.js'
+import { registerNaholoMcpForProject } from '../../claude-code-config'
+import { CliError, withErrorHandling } from '../../errors'
 import {
   addNaholoCovertPermissionsToClaudeSettings,
   addNaholoStopHookToClaudeSettings,
@@ -13,18 +13,18 @@ import {
   readClaudeSettings,
   removeNaholoStopHookFromClaudeSettings,
   writeClaudeSettings,
-} from '../../lib/claude-settings.js'
-import { getActiveProfile } from '../../profile.js'
+} from '../../lib/claude-settings'
+import { getActiveProfile } from '../../profile'
 import {
   collectExistingCodeNames,
   getCovertOpsConfigPath,
   getCovertOpsDir,
   readCovertOpsConfig,
   writeCovertOpsConfig,
-} from '../../covert-config.js'
-import type { UploadTranscriptsOnExfil } from '../../project-config.js'
-import { generateCodeName } from '../../lib/codename.js'
-import { getProjectState } from '../../lib/project-state.js'
+} from '../../covert-config'
+import type { UploadTranscriptsOnExfil } from '../../project-config'
+import { generateCodeName } from '../../lib/codename'
+import { getProjectState } from '../../lib/project-state'
 
 export const covertInitCommand = new Command('init')
   .description('Register the current directory for covert mode')

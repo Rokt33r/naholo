@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { withErrorHandling } from '../../errors.js'
+import { withErrorHandling } from '../../errors'
 import manualText from './manual.md'
 
 export const manCommand = new Command('man')

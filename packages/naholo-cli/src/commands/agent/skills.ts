@@ -1,7 +1,7 @@
 import { Command } from 'commander'
-import { coreSkills } from '../../core-skills.js'
-import { CliError, withErrorHandling } from '../../errors.js'
-import { splitSkill } from '../../skills.js'
+import { coreSkills } from '../../core-skills'
+import { CliError, withErrorHandling } from '../../errors'
+import { splitSkill } from '../../skills'
 
 export const skillsCommand = new Command('skills')
   .description('Print the body of a bundled core skill')

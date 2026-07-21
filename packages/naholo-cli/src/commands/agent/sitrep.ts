@@ -1,13 +1,13 @@
 import { Command } from 'commander'
-import { getCliContext } from '../../context.js'
+import { getCliContext } from '../../context'
 import {
   CliError,
   NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
-import { pushOp } from '../../lib/push-op.js'
+} from '../../errors'
+import { getProjectState } from '../../lib/project-state'
+import { pushOp } from '../../lib/push-op'
 
 export const sitrepCommand = new Command('sitrep')
   .description('Push the infilled operation and post an operation log')

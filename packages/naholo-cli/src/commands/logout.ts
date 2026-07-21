@@ -1,7 +1,7 @@
 import { Command } from 'commander'
-import { CliError, withErrorHandling } from '../errors.js'
-import { getDefaultProfileName, setDefaultProfile } from '../global-config.js'
-import { deleteProfile, readProfile } from '../profile.js'
+import { CliError, withErrorHandling } from '../errors'
+import { getDefaultProfileName, setDefaultProfile } from '../global-config'
+import { deleteProfile, readProfile } from '../profile'
 
 export const logoutCommand = new Command('logout')
   .description('Log out and remove stored credentials')

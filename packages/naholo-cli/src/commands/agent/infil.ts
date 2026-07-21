@@ -2,14 +2,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
-import { getCliContext } from '../../context.js'
+import { getCliContext } from '../../context'
 import {
   CliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
-import { formatTasksMarkdown } from '../../lib/tasks-markdown.js'
+} from '../../errors'
+import { getProjectState } from '../../lib/project-state'
+import { formatTasksMarkdown } from '../../lib/tasks-markdown'
 
 export const infilCommand = new Command('infil')
   .description('Initial fetch of an operation from server to local')

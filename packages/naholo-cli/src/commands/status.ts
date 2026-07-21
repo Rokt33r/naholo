@@ -1,10 +1,10 @@
 import path from 'node:path'
 import { Command } from 'commander'
 import { stringify as yamlStringify } from 'yaml'
-import { getCliContext } from '../context.js'
-import { getCovertOpsConfigPath } from '../covert-config.js'
-import { NoProjectStateCliError, withErrorHandling } from '../errors.js'
-import { getProjectState } from '../lib/project-state.js'
+import { getCliContext } from '../context'
+import { getCovertOpsConfigPath } from '../covert-config'
+import { NoProjectStateCliError, withErrorHandling } from '../errors'
+import { getProjectState } from '../lib/project-state'
 
 export const statusCommand = new Command('status')
   .description('Show project and operator info')

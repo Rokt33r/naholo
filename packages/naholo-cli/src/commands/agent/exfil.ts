@@ -1,14 +1,14 @@
 import fs from 'node:fs'
 import { Command } from 'commander'
 import { redactTranscript } from 'naholo-agent-transcripts/claude-code'
-import { getCliContext } from '../../context.js'
+import { getCliContext } from '../../context'
 import {
   NoInfilledOpCliError,
   NoProjectStateCliError,
   withErrorHandling,
-} from '../../errors.js'
-import { getProjectState } from '../../lib/project-state.js'
-import { pushOp } from '../../lib/push-op.js'
+} from '../../errors'
+import { getProjectState } from '../../lib/project-state'
+import { pushOp } from '../../lib/push-op'
 
 export const exfilCommand = new Command('exfil')
   .description(
