@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { OperatorAvatar } from '@/components/operators/operator-avatar'
 import { useOperators } from '@/hooks/use-operators'
 import {
@@ -123,12 +124,22 @@ export function BulkAssigneeDialog({
             </div>
           ) : (
             filteredOperators.map((operator) => (
-              <button
+              <div
                 key={operator.id}
-                type='button'
+                role='button'
+                tabIndex={0}
                 onClick={() => handleToggle(operator)}
-                disabled={pendingOperatorId === operator.id}
-                className='flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50'
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    handleToggle(operator)
+                  }
+                }}
+                className={cn(
+                  'flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground',
+                  pendingOperatorId === operator.id &&
+                    'pointer-events-none opacity-50',
+                )}
               >
                 <Checkbox
                   checked={operatorState(operator.id)}
@@ -139,7 +150,7 @@ export function BulkAssigneeDialog({
                 <span className='truncate text-xs text-muted-foreground'>
                   {operator.callsign}
                 </span>
-              </button>
+              </div>
             ))
           )}
         </div>

@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { useLabels, useCreateLabel } from '@/hooks/use-labels'
 import {
   useBulkAttachOperationLabel,
@@ -131,12 +132,21 @@ export function BulkLabelDialog({
         </div>
         <div className='max-h-72 overflow-y-auto p-1'>
           {filteredLabels.map((label) => (
-            <button
+            <div
               key={label.id}
-              type='button'
+              role='button'
+              tabIndex={0}
               onClick={() => handleToggle(label)}
-              disabled={pendingLabelId === label.id}
-              className='flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50'
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  handleToggle(label)
+                }
+              }}
+              className={cn(
+                'flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground',
+                pendingLabelId === label.id && 'pointer-events-none opacity-50',
+              )}
             >
               <Checkbox
                 checked={labelState(label.id)}
@@ -147,7 +157,7 @@ export function BulkLabelDialog({
                 style={{ backgroundColor: label.color }}
               />
               <span className='truncate'>{label.name}</span>
-            </button>
+            </div>
           ))}
 
           {filteredLabels.length === 0 && trimmedQuery === '' ? (
