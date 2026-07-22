@@ -221,6 +221,7 @@ export default function OperationsIndexPage() {
 
       {selectionActive && (
         <OperationsBulkActionBar
+          projectSlug={projectSlug}
           selectedOperations={selectedOperations}
           onClearSelection={clearSelection}
         />
