@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AppModeMenu } from '@/components/app/app-mode-menu'
 import { OperationItem } from '@/components/operations/operation-item'
+import { OperationsBulkActionBar } from '@/components/operations/operations-bulk-action-bar'
 import {
   OperationsSearchbar,
   type OperationSortDirection,
@@ -112,6 +113,8 @@ export default function OperationsIndexPage() {
       return next
     })
   }
+
+  const clearSelection = () => setSelectedOpIds(new Set())
 
   const handleFilterChange = (newFilter: 'open' | 'closed') => {
     const params = new URLSearchParams(searchParams)
@@ -215,6 +218,13 @@ export default function OperationsIndexPage() {
           </div>
         )}
       </div>
+
+      {selectionActive && (
+        <OperationsBulkActionBar
+          selectedOperations={selectedOperations}
+          onClearSelection={clearSelection}
+        />
+      )}
     </div>
   )
 }
