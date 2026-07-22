@@ -1,8 +1,9 @@
 'use client'
 
-import { Users, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BulkLabelDialog } from '@/components/operations/bulk-label-dialog'
+import { BulkAssigneeDialog } from '@/components/operations/bulk-assignee-dialog'
 import type { OperationListItem } from '@/hooks/use-operations'
 
 export function OperationsBulkActionBar({
@@ -24,10 +25,10 @@ export function OperationsBulkActionBar({
           projectSlug={projectSlug}
           selectedOperations={selectedOperations}
         />
-        <Button variant='outline' size='sm'>
-          <Users className='size-4' />
-          <span className='hidden sm:inline'>Manage assignees</span>
-        </Button>
+        <BulkAssigneeDialog
+          projectSlug={projectSlug}
+          selectedOperations={selectedOperations}
+        />
         <Button
           variant='ghost'
           size='icon'
